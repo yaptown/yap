@@ -287,7 +287,7 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
     for (frequency_index, (spur_gram, freq)) in
         language_pack.gram_frequencies.entries.iter().enumerate()
     {
-        if !language_pack.is_visible(*spur_gram) {
+        if !language_pack.is_visible(*spur_gram, course.target_language) {
             continue;
         }
         let gram_def = match language_pack.gram_definitions.get(spur_gram) {
@@ -403,30 +403,25 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
         }
 
         // Extract morphology and prefix for single-word dictionary entries
-        let (morphology, prefix) = if !is_phrase {
+        let morphology = if !is_phrase {
             if let GramDefinition::Dictionary(dict) = gram_def {
-                let morph = dict.morphology.first().map(|m| MorphologyInfo {
+                dict.morphology.first().map(|m| MorphologyInfo {
                     gender: m.gender.map(|g| format!("{g:?}").to_lowercase()),
                     number: m.number.map(|n| format!("{n:?}").to_lowercase()),
                     tense: m.tense.map(|t| format!("{t:?}").to_lowercase()),
                     person: m.person.map(|p| format!("{p:?}").to_lowercase()),
                     mood: m.mood.map(|md| format!("{md:?}").to_lowercase()),
                     case: m.case.map(|c| format!("{c:?}").to_lowercase()),
-                });
-                let pfx = dict
-                    .morphology
-                    .first()
-                    .and_then(|m| {
-                        het_pos.and_then(|p| m.get_prefix(&display_text, p, target_language))
-                    })
-                    .map(|wp| format!("{}{}", wp.prefix, wp.separator));
-                (morph, pfx)
+                })
             } else {
-                (None, None)
+                None
             }
         } else {
-            (None, None)
+            None
         };
+        let prefix = language_pack
+            .word_prefix(spur_gram.gram, target_language)
+            .map(|wp| format!("{}{}", wp.prefix, wp.separator));
 
         // Populate conjugation index for single-word dictionary entries with morphology.
         // Use het_word (the normalized heteronym word) rather than display_text (raw surface

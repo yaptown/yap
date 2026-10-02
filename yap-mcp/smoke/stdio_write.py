@@ -6,13 +6,14 @@ Usage (run setup_test_user.py first to reset the test account):
     YAP_USER_EMAIL=yap-mcp-test@popovit.ch python3 yap-mcp/smoke/stdio_write.py target/debug/yap-mcp
 
 Adds a card, reviews it, then fetches the uploaded rows and asserts their
-JSON shape matches a real web-app ReviewCard event field-for-field.
+JSON shape contains a V4 ReviewCards event with the explicit reviewed cards.
 """
 import json
 import os
 import subprocess
 import sys
 import threading
+import uuid
 import urllib.request
 
 BIN = sys.argv[1]
@@ -77,10 +78,17 @@ due = json.loads(body)
 assert due["cards"], "added card should be due immediately"
 entry = due["cards"][0]
 
-err, body = tool("log_review", {
-    "language": entry["language"], "card": entry["card"], "rating": "good",
-})
+review_request = {
+    "language": entry["language"],
+    "reviews": [{"card": item["card"], "rating": "good"} for item in due["cards"][:2]],
+    "idempotency_token": uuid.uuid4().hex,
+}
+err, body = tool("log_review", review_request)
 show(f"log_review good (error={err}, want False)", body)
+assert not err, body
+retry_request = dict(review_request, reviews=[dict(review, rating="again") for review in review_request["reviews"]])
+retry_err, retry_body = tool("log_review", retry_request)
+assert not retry_err and retry_body == body, "retry must replay the original result without another event"
 
 err, body = tool("add_cards", {"language": top["language"], "grams": [top["senses"][0]["gram"]]})
 show(f"re-add same card (error={err}, expect already_in_deck)", body)
@@ -112,15 +120,9 @@ for page in range(1, 20):
         break
     users.extend(batch)
 test_id = next(u["id"] for u in users if u["email"] == test_email)
-andre_id = next(u["id"] for u in users if u["email"] == "andre@popovit.ch")
 
 mcp_rows = get(f"/rest/v1/events?user_id=eq.{test_id}&stream_id=eq.reviews&order=id.asc")
 print(f"\n=== {len(mcp_rows)} uploaded review rows on server ===")
-
-web_rows = get(
-    f"/rest/v1/events?user_id=eq.{andre_id}&stream_id=eq.reviews&order=id.desc&limit=200"
-)
-web_review = next(r for r in web_rows if "ReviewCard" in json.dumps(r["event"]))
 
 def event_shape(row_event):
     e = row_event if isinstance(row_event, dict) else json.loads(row_event)
@@ -132,7 +134,9 @@ def event_shape(row_event):
         "content_keys": sorted(inner.get("content", {}).keys()),
     }
 
-mcp_review = next(r for r in mcp_rows if "ReviewCard" in json.dumps(r["event"]))
-print("mcp:", json.dumps(event_shape(mcp_review["event"])))
-print("web:", json.dumps(event_shape(web_review["event"])))
+mcp_review = next(r for r in mcp_rows if '"ReviewCards"' in json.dumps(r["event"]))
+shape = event_shape(mcp_review["event"])
+assert shape["content_type"] == "ReviewCards", shape
+assert shape["content_keys"] == ["reviews", "type"], shape
+print("mcp:", json.dumps(shape))
 print("\nwrite smoke test complete")

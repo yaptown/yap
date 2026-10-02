@@ -23,7 +23,7 @@ extension EnvironmentValues {
     var submitting = false
     /// Account/course scope; nil means reducer drafts cannot touch persistence.
     var pendingReviewKey: String?
-    var rate: (CardIndicator_Gram_String_String, Rating) -> Void = { _, _ in log("rate") }
+    var rate: ([CardReview]) -> Void = { _ in log("rate") }
     var completeTranslationPerfect: (String, [UInt64], Double) -> Bool = { _, _, _ in log("translation perfect"); return false }
     var completeTranslationWrong: (String, String, ManualTranslationGrade, [UInt64], Double) -> Bool = { _, _, _, _, _ in log("translation wrong"); return false }
     var completeTranscription: ([PartGraded], Double) -> Bool = { _, _ in log("transcription"); return false }

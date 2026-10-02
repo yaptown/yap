@@ -1090,7 +1090,7 @@ fn manual_add_label(count: u32, card_type: CardType, course: Course) -> String {
     )
 }
 
-pub use deck_event::current::CardIndicator;
+pub use deck_event::current::{CardIndicator, CardReview};
 
 pub use tiers::TierInfo;
 
@@ -1560,6 +1560,26 @@ impl weapon::AppState for Deck {
                                     CardData::Added { fsrs_card }
                                 });
                         });
+                    }
+                }
+            }
+            LanguageEventContent::ReviewCards { reviews } => {
+                let mut first = true;
+                for review in reviews {
+                    if let Some(card) = review.card.get_interned(&context.language_pack)
+                        && context.is_card_valid(&card)
+                    {
+                        if first {
+                            if let Some(kind) = card.get_flashcard_type() {
+                                *deck
+                                    .stats
+                                    .flashcard_type_seen_count
+                                    .entry(kind)
+                                    .or_insert(0) += 1;
+                            }
+                            first = false;
+                        }
+                        deck.log_review(card, review.rating, *timestamp, context);
                     }
                 }
             }
@@ -3689,23 +3709,24 @@ impl Deck {
         })
     }
 
-    pub fn review_card(
-        &self,
-        reviewed: CardIndicator<Gram<String>, String>,
-        rating: Rating,
-    ) -> Option<DeckEvent> {
-        let indicator = reviewed.get_interned(&self.context.language_pack)?;
-        let reviewed = indicator.resolve(
-            &self.context.language_pack.string_rodeo,
-            &self.context.language_pack.gram_rodeo,
-        );
-        self.cards.get(&indicator).map(|_| {
-            DeckEvent::Language(LanguageEvent {
-                target_language: self.context.course.target_language,
-                native_language: self.context.course.native_language,
-                content: LanguageEventContent::ReviewCard { reviewed, rating },
+    pub fn review_cards(&self, reviews: Vec<CardReview>) -> Option<DeckEvent> {
+        let pack = &self.context.language_pack;
+        let reviews: Vec<_> = reviews
+            .into_iter()
+            .filter_map(|review| {
+                let indicator = review.card.get_interned(pack)?;
+                self.cards.get(&indicator)?;
+                Some(CardReview {
+                    card: indicator.resolve(&pack.string_rodeo, &pack.gram_rodeo),
+                    rating: review.rating,
+                })
             })
-        })
+            .collect();
+        (!reviews.is_empty()).then_some(DeckEvent::Language(LanguageEvent {
+            target_language: self.context.course.target_language,
+            native_language: self.context.course.native_language,
+            content: LanguageEventContent::ReviewCards { reviews },
+        }))
     }
 
     pub fn translate_sentence_perfect(
@@ -4359,22 +4380,35 @@ impl Regressions {
 
 #[bridgerton::bridge(transparent)]
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct FlashcardMeaning {
+    /// Every Added card this row stands for (a redundancy set collapses into
+    /// one row); the row's rating applies to all of them.
+    pub cards: Vec<CardIndicator<Gram<String>, String>>,
+    pub definition: DefinitionView,
+    /// "Multiword" or the part of speech.
+    pub label: Option<String>,
+    pub is_new: bool,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 pub enum CardContent {
     Gram {
         gram: Vec<Literal<String>>,
-        definition: DefinitionView,
         /// Pre-computed grammatical prefix (e.g., article for nouns, subject pronoun
         /// for verbs). Computed server-side so the frontend doesn't have to call
         /// into the WASM module just to render the card front.
         prefix: Option<WordPrefix>,
-        /// Breakdown of the gram: `(surface, canonical, gloss)` per piece.
+        /// Breakdown of the front: `(surface, canonical, gloss)` per piece.
         /// Canonical is `Some` only when it differs from the surface (so the
         /// frontend can skip rendering that row entirely if everything
         /// matches). Gloss is optional: punctuation atoms in multi-word grams
         /// leave the native-language cell blank.
         #[allow(clippy::type_complexity)]
         breakdown: Option<Vec<(String, Option<String>, Option<String>)>>,
+        /// Every meaning in the deck that shares this front, most frequent first.
+        meanings: Vec<FlashcardMeaning>,
     },
     Listening {
         possible_grams: Vec<(bool, Vec<Literal<String>>, Vec<DefinitionView>)>,
@@ -5824,7 +5858,12 @@ mod tests {
             &deck.context.language_pack.string_rodeo,
             &deck.context.language_pack.gram_rodeo,
         );
-        let event = deck.review_card(resolved, Rating::Good).unwrap();
+        let event = deck
+            .review_cards(vec![CardReview {
+                card: resolved,
+                rating: Rating::Good,
+            }])
+            .unwrap();
         let deck = apply_deck_event(deck, event, t1);
         assert_eq!(deck.locked_count(), 9);
         assert!(!deck.locked_cards.contains(&locked_card));
@@ -5844,7 +5883,12 @@ mod tests {
                 &deck.context.language_pack.gram_rodeo,
             );
             for (rating, minutes) in [(Rating::Again, 0), (Rating::Easy, 5)] {
-                let event = deck.review_card(resolved.clone(), rating).unwrap();
+                let event = deck
+                    .review_cards(vec![CardReview {
+                        card: resolved.clone(),
+                        rating,
+                    }])
+                    .unwrap();
                 deck =
                     apply_deck_event(deck, event, timestamp + chrono::Duration::minutes(minutes));
             }
@@ -5896,7 +5940,12 @@ mod tests {
             &deck.context.language_pack.string_rodeo,
             &deck.context.language_pack.gram_rodeo,
         );
-        let event = deck.review_card(card, Rating::Easy).unwrap();
+        let event = deck
+            .review_cards(vec![CardReview {
+                card,
+                rating: Rating::Easy,
+            }])
+            .unwrap();
         let known = apply_deck_event(deck, event, now);
         let IdleScreenView::Idle(more) =
             known.idle_screen_view(vec![], None, true, true, timestamp)

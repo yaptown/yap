@@ -109,8 +109,8 @@ import Observation
         for key in ["yap-cant-listen-timestamp", "yap-cant-speak-timestamp"] { UserDefaults.standard.removeObject(forKey: key) }
         refreshRestrictions()
     }
-    func rate(_ indicator: CardIndicator_Gram_String_String, _ rating: Rating) {
-        guard active, !submitting, let event = deck.review_card(reviewed: indicator, rating: rating) else { return }
+    func rate(_ reviews: [CardReview]) {
+        guard active, !submitting, let event = deck.review_cards(reviews: reviews) else { return }
         submitting = true
         session.addDeckEvent(event)
         print("Yap review appended: events=\(session.weapon?.num_events ?? 0)")

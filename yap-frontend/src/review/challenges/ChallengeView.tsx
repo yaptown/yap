@@ -15,7 +15,7 @@ type Props = Omit<
   "challenge" | "onComplete"
 > & {
   challenge: Challenge<Gram<string>>;
-  onRating: ComponentProps<typeof PronunciationChallenge>["onRating"];
+  onRating: NonNullable<ComponentProps<typeof FlashcardChallenge>["onRating"]>;
   onCantSpeak: () => void;
   totalCount: number;
   onTranslationComplete: ComponentProps<

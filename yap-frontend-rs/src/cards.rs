@@ -309,9 +309,11 @@ mod tests {
         let event = DeckEvent::Language(crate::LanguageEvent {
             target_language: deck.context.course.target_language,
             native_language: deck.context.course.native_language,
-            content: crate::LanguageEventContent::ReviewCard {
-                reviewed: resolved,
-                rating,
+            content: crate::LanguageEventContent::ReviewCards {
+                reviews: vec![crate::CardReview {
+                    card: resolved,
+                    rating,
+                }],
             },
         });
         apply(deck, event, step)

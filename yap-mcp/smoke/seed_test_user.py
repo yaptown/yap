@@ -94,7 +94,7 @@ assert not err, f"get_due_cards failed: {body}"
 due = json.loads(body)["cards"]
 for entry, rating in zip(due, RATINGS):
     err, body = tool("log_review", {
-        "language": entry["language"], "card": entry["card"], "rating": rating,
+        "language": entry["language"], "reviews": [{"card": entry["card"], "rating": rating}],
     })
     assert not err, f"log_review failed: {body}"
     print(f"reviewed {entry.get('display_text', '?')}: {rating}")

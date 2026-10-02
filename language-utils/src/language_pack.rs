@@ -11,7 +11,6 @@ use lasso::Spur;
 use rustc_hash::FxHashMap;
 use std::collections::BTreeMap;
 use std::hash::Hash;
-use std::num::NonZeroU32;
 use std::sync::Arc;
 
 /// Runtime-only index, independent of the pack's frequency ordering.
@@ -90,7 +89,9 @@ pub struct FrequencyList {
 /// back together by [`LanguagePack::from_parts`].
 #[derive(Debug)]
 pub struct LanguagePack {
-    pub redundant_senses: FxHashMap<SpurGram, Vec<Vec<NonZeroU32>>>,
+    pub redundant_senses: FxHashMap<Spur, Vec<Vec<TaggedGram<SpurGram>>>>,
+    pub prefixed_text: FxHashMap<SpurGram, Spur>,
+    pub grams_with_prefixed_text: FxHashMap<Spur, Vec<TaggedGram<SpurGram>>>,
     lexicon: Arc<LanguagePackLexicon>,
     pub strokes: crate::StrokeTable,
     pub string_rodeo: lasso::RodeoReader,
@@ -198,6 +199,16 @@ impl LanguagePack {
             .or_else(|| self.senses_of(gram).first().copied())
     }
 
+    /// Canonical front prefix: the most frequent sense, independent of deck eligibility.
+    pub fn word_prefix(
+        &self,
+        gram: SpurGram,
+        language: crate::Language,
+    ) -> Option<crate::features::WordPrefix> {
+        let definition = self.gram_definitions.get(self.senses_of(gram).first()?)?;
+        crate::compute_word_prefix(&self.resolve_gram(&gram), definition, language)
+    }
+
     pub fn senses_of(&self, gram: SpurGram) -> &[TaggedGram<SpurGram>] {
         self.senses
             .get(&gram)
@@ -208,37 +219,40 @@ impl LanguagePack {
     /// The senses of `gram` worth showing in a dictionary: every sense that is not
     /// in a redundancy set, plus the most frequent member of each set. Frequency
     /// order, like `senses_of`.
-    pub fn visible_senses(&self, gram: SpurGram) -> Vec<TaggedGram<SpurGram>> {
+    pub fn visible_senses(
+        &self,
+        gram: SpurGram,
+        language: crate::Language,
+    ) -> Vec<TaggedGram<SpurGram>> {
         self.senses_of(gram)
             .iter()
             .copied()
-            .filter(|sense| self.is_visible(*sense))
+            .filter(|sense| self.is_visible(*sense, language))
             .collect()
     }
 
-    /// Whether a dictionary should show this sense: it is the most frequent
-    /// member of its redundancy set (every sense outside a set is its own).
-    pub fn is_visible(&self, sense: TaggedGram<SpurGram>) -> bool {
+    /// Show the most frequent set member on each unprefixed dictionary page.
+    /// A sense outside a redundancy set is its own representative.
+    pub fn is_visible(&self, sense: TaggedGram<SpurGram>, language: crate::Language) -> bool {
         let set = self.redundant_with(sense);
-        self.senses_of(sense.gram)
-            .iter()
-            .find(|candidate| set.contains(candidate))
-            == Some(&sense)
+        if set.len() == 1 {
+            return true;
+        }
+        let display = self.resolve_gram(&sense.gram).to_display_string(language);
+        // A redundancy set may span pages (est and il est); never hide a page.
+        set.into_iter()
+            .filter(|member| self.resolve_gram(&member.gram).to_display_string(language) == display)
+            .min_by_key(|member| self.gram_frequencies.entries.get_index_of(member))
+            == Some(sense)
     }
 
     /// All members of this sense's redundancy set, or just the sense itself.
     pub fn redundant_with(&self, sense: TaggedGram<SpurGram>) -> Vec<TaggedGram<SpurGram>> {
-        if let Some(id) = sense.sense
-            && let Some(sets) = self.redundant_senses.get(&sense.gram)
-            && let Some(set) = sets.iter().find(|set| set.contains(&id))
+        if let Some(text) = self.prefixed_text.get(&sense.gram)
+            && let Some(sets) = self.redundant_senses.get(text)
+            && let Some(set) = sets.iter().find(|set| set.contains(&sense))
         {
-            return set
-                .iter()
-                .map(|id| TaggedGram {
-                    gram: sense.gram,
-                    sense: Some(*id),
-                })
-                .collect();
+            return set.clone();
         }
         vec![sense]
     }
@@ -565,9 +579,18 @@ impl LanguagePack {
 
     pub fn new(language_data: ConsolidatedLanguageData, course: Course) -> Self {
         let target_language = course.target_language;
+        let texts = crate::word_prefix::prefixed_texts(
+            &language_data.gram_frequencies.entries,
+            &language_data.gram_dictionary,
+            &language_data.phrasebook,
+            target_language,
+        );
         let rodeo = {
             let mut rodeo = lasso::Rodeo::new();
             language_data.intern(&mut rodeo);
+            for text in texts.values() {
+                rodeo.get_or_intern(text);
+            }
             rodeo.into_reader()
         };
 
@@ -1122,16 +1145,43 @@ impl LanguagePack {
             })
             .collect();
 
+        let prefixed_text: FxHashMap<_, _> = texts
+            .iter()
+            .filter_map(|(gram, text)| {
+                Some((
+                    gram.get_interned(&rodeo)?.get_interned(&gram_rodeo)?,
+                    rodeo.get(text)?,
+                ))
+            })
+            .collect();
+        let mut grams_with_prefixed_text: FxHashMap<_, Vec<_>> = FxHashMap::default();
+        for (&gram, _) in gram_frequencies.entries.iter() {
+            if let Some(&text) = prefixed_text.get(&gram.gram) {
+                grams_with_prefixed_text.entry(text).or_default().push(gram);
+            }
+        }
         let redundant_senses = language_data
             .redundant_senses
             .iter()
-            .filter_map(|(gram, sets)| {
-                let gram = gram.get_interned(&rodeo)?.get_interned(&gram_rodeo)?;
-                Some((gram, sets.clone()))
+            .filter_map(|(text, sets)| {
+                let text = rodeo.get(text)?;
+                let sets = sets
+                    .iter()
+                    .filter_map(|set| {
+                        let members: Vec<_> = set
+                            .iter()
+                            .filter_map(|gram| gram.get_interned(&rodeo)?.get_interned(&gram_rodeo))
+                            .collect();
+                        (members.len() >= 2).then_some(members)
+                    })
+                    .collect();
+                Some((text, sets))
             })
             .collect();
 
         Self {
+            prefixed_text,
+            grams_with_prefixed_text,
             redundant_senses,
             lexicon: Arc::new(LanguagePackLexicon {
                 spur_space_fingerprint: 0,
@@ -1259,10 +1309,10 @@ pub struct LanguagePackCore {
 /// See [`LanguagePackCore`] for the spur-space contract between the halves.
 #[derive(Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct LanguagePackSentences {
-    /// Per bare gram, groups of sense ids a dictionary need only show one of
-    /// (judged per course, since redundancy depends on the native glosses).
-    /// Display-only: scheduling and card identity ignore it.
-    pub redundant_senses: FxHashMap<SpurGram, Vec<Vec<NonZeroU32>>>,
+    /// Cross-gram redundancy sets keyed by exact prefixed text, judged per course.
+    pub redundant_senses: FxHashMap<Spur, Vec<Vec<TaggedGram<SpurGram>>>>,
+    pub prefixed_text: FxHashMap<SpurGram, Spur>,
+    pub grams_with_prefixed_text: FxHashMap<Spur, Vec<TaggedGram<SpurGram>>>,
     /// Downloaded stroke forms; not needed by the placement-test core.
     pub strokes: crate::StrokeTable,
     /// Fingerprint of the core spur space this half was built against.
@@ -1387,6 +1437,8 @@ impl LanguagePack {
     /// the exhaustive destructure below makes forgetting one a compile error.
     pub fn split(self) -> (LanguagePackCore, LanguagePackSentences) {
         let LanguagePack {
+            prefixed_text,
+            grams_with_prefixed_text,
             redundant_senses,
             lexicon,
             strokes,
@@ -1625,9 +1677,24 @@ impl LanguagePack {
                 })
                 .collect();
 
+        let prefixed_text = sorted(prefixed_text)
+            .into_iter()
+            .map(|(gram, text)| (r.bare_g(gram), r.s(text)))
+            .collect();
+        let grams_with_prefixed_text = sorted(grams_with_prefixed_text)
+            .into_iter()
+            .map(|(text, grams)| (r.s(text), grams.into_iter().map(|gram| r.g(gram)).collect()))
+            .collect();
         let redundant_senses = sorted(redundant_senses)
             .into_iter()
-            .map(|(gram, sets)| (r.bare_g(gram), sets))
+            .map(|(text, sets)| {
+                (
+                    r.s(text),
+                    sets.into_iter()
+                        .map(|set| set.into_iter().map(|gram| r.g(gram)).collect())
+                        .collect(),
+                )
+            })
             .collect();
 
         // Sweep everything else the old rodeos held (strings/grams referenced
@@ -1711,6 +1778,8 @@ impl LanguagePack {
                 morphemes,
             },
             LanguagePackSentences {
+                prefixed_text,
+                grams_with_prefixed_text,
                 redundant_senses,
                 strokes,
                 spur_space_fingerprint: fingerprint,
@@ -1756,6 +1825,8 @@ impl LanguagePack {
         let (written_ease_order, listening_ease_order) = ease_orders(&gram_frequencies);
 
         let pack = LanguagePack {
+            prefixed_text: FxHashMap::default(),
+            grams_with_prefixed_text: FxHashMap::default(),
             redundant_senses: FxHashMap::default(),
             lexicon: Arc::new(LanguagePackLexicon {
                 spur_space_fingerprint,
@@ -1850,6 +1921,8 @@ impl LanguagePack {
         };
 
         LanguagePack {
+            prefixed_text: sentences.prefixed_text,
+            grams_with_prefixed_text: sentences.grams_with_prefixed_text,
             redundant_senses: sentences.redundant_senses,
             lexicon: self.lexicon.clone(),
             string_rodeo,
@@ -2095,21 +2168,19 @@ mod sense_tests {
         let bare = pack.intern_gram(&gram("bank")).unwrap();
         let senses = pack.senses_of(bare).to_vec();
         assert_eq!(senses[0].sense.unwrap().get(), 2);
-        assert_eq!(pack.visible_senses(bare), senses);
+        assert_eq!(pack.visible_senses(bare, Language::English), senses);
         assert_eq!(pack.redundant_with(senses[0]), vec![senses[0]]);
-        pack.redundant_senses.insert(
-            bare,
-            vec![vec![
-                NonZeroU32::new(1).unwrap(),
-                NonZeroU32::new(2).unwrap(),
-            ]],
-        );
+        pack.redundant_senses
+            .insert(pack.prefixed_text[&bare], vec![vec![senses[1], senses[0]]]);
         let standalone = TaggedGram {
             gram: bare,
             sense: NonZeroU32::new(3),
         };
         pack.senses.get_mut(&bare).unwrap().push(standalone);
-        assert_eq!(pack.visible_senses(bare), vec![senses[0], standalone]);
+        assert_eq!(
+            pack.visible_senses(bare, Language::English),
+            vec![senses[0], standalone]
+        );
         assert_eq!(pack.redundant_with(senses[0]), vec![senses[1], senses[0]]);
         assert_eq!(pack.redundant_with(standalone), vec![standalone]);
         let untagged = TaggedGram {
@@ -2124,9 +2195,15 @@ mod sense_tests {
         let core = LanguagePack::from_parts(core, None);
         let bare = core.intern_gram(&gram("bank")).unwrap();
         assert!(core.redundant_senses.is_empty());
-        assert_eq!(core.visible_senses(bare), core.senses_of(bare));
+        assert_eq!(
+            core.visible_senses(bare, Language::English),
+            core.senses_of(bare)
+        );
         let full = core.with_sentences(sentences);
-        assert_eq!(full.visible_senses(bare), vec![full.senses_of(bare)[0]]);
+        assert_eq!(
+            full.visible_senses(bare, Language::English),
+            vec![full.senses_of(bare)[0]]
+        );
         assert_eq!(full.redundant_with(full.senses_of(bare)[0]).len(), 2);
     }
 

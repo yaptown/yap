@@ -30,8 +30,11 @@ real course entry is rejected; the server never guesses.
 - `add_cards` — add words to the deck as flashcards, by `(language, gram)`.
 - `get_due_cards` — list due cards; each entry carries its `language` + `card`
   object to pass back to `log_review`.
-- `log_review` — record a review result (`again`/`hard`/`good`/`easy`/`remembered`).
-  Appends a real `ReviewCard` event, so FSRS scheduling updates for real.
+- `log_review` — record `reviews: [{card, rating}]` with the course language
+  and optional presentation idempotency token. Ratings are
+  `again`/`hard`/`good`/`easy`/`remembered`. Include every card in the written
+  meaning rows reviewed; listening/pronunciation use singleton lists.
+  Appends one immutable `ReviewCards` event and schedules each explicit card.
 - `get_sentences` — example sentences containing a gram, with translations and
   source attribution (Anki/Tatoeba/manual/songs/movies): a
   `comprehensible_sentences` list otherwise composed only of words the user

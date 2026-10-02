@@ -234,7 +234,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         let screen = withCards.review_screen_view(inputs: screenInputs)
         check(screen.total_count == UInt64(cards.count) && screen.target_language == .French)
         if case .Challenge = screen.step {} else { fatalError("expected a challenge") }
-        let reviewed = withCards.review_card(reviewed: cards[0].card_indicator, rating: .Good)
+        let reviewed = withCards.review_cards(reviews: [CardReview(card: cards[0].card_indicator, rating: .Good)])
         check(reviewed != nil)
         let beforeReviewInputs = reopened.deck_inputs_key(course: course)
         reopened.add_deck_event(event: reviewed!)

@@ -3,7 +3,8 @@ import { FlashcardChallenge } from "@/review/challenges/FlashcardChallenge";
 import { app } from "./bridge";
 import { useLogReview } from "./useLogReview";
 import type { FlashcardChallenge as FlashcardChallengeData, Rating } from "./types";
-import type { CardContent, Literal } from "../../../yap-frontend-rs/pkg";
+import { flashcardReviews } from "@/review/challenges/flashcardReviews";
+import type { CardContent, CardReview, Literal } from "../../../yap-frontend-rs/pkg";
 
 // The widget owns no flashcard UI of its own: it renders the app's real
 // FlashcardChallenge component (full card back, morphology, homophone grid, drag-to-grade)
@@ -89,7 +90,17 @@ export function WidgetFlashcard({ challenge }: { challenge: FlashcardChallengeDa
         accessToken={undefined}
         autoplayed={autoplayed}
         setAutoplayed={() => setAutoplayed(true)}
-        onRating={(rating: Rating) => void grade(rating)}
+        onRating={(rating: Rating, meaningRatings?: Rating[]) =>
+          void grade(
+            rating,
+            flashcardReviews(
+              challenge.content,
+              challenge.card as CardReview["card"],
+              rating,
+              meaningRatings,
+            ),
+          )
+        }
         onCantListen={challenge.kind === "listening" ? cantListen : undefined}
       />
       {grading && (

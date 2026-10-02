@@ -188,9 +188,31 @@ impl Iterator for DayChallengeIterator {
             // Answer the challenge, marking new flashcards as forgotten once
             let event = match challenge {
                 Challenge::FlashCardReview {
-                    indicator, is_new, ..
+                    indicator,
+                    is_new,
+                    flashcard,
+                    ..
+                } => {
+                    let rating = if is_new {
+                        Rating::Again
+                    } else {
+                        Rating::Remembered
+                    };
+                    let cards = match flashcard.content {
+                        crate::CardContent::Gram { meanings, .. } => meanings
+                            .into_iter()
+                            .flat_map(|meaning| meaning.cards)
+                            .collect(),
+                        _ => vec![indicator],
+                    };
+                    self.deck_mut().review_cards(
+                        cards
+                            .into_iter()
+                            .map(|card| crate::CardReview { card, rating })
+                            .collect(),
+                    )
                 }
-                | Challenge::PronunciationChallenge {
+                Challenge::PronunciationChallenge {
                     indicator, is_new, ..
                 } => {
                     let rating = if is_new {
@@ -198,7 +220,10 @@ impl Iterator for DayChallengeIterator {
                     } else {
                         Rating::Remembered
                     };
-                    self.deck_mut().review_card(indicator, rating)
+                    self.deck_mut().review_cards(vec![crate::CardReview {
+                        card: indicator,
+                        rating,
+                    }])
                 }
                 Challenge::TranslateComprehensibleSentence(TranslateComprehensibleSentence {
                     target_language,

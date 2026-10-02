@@ -9,7 +9,8 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 /// Event kinds that represent the user actually studying, as opposed to
 /// onboarding or deck bookkeeping.
-const REVIEW_KINDS: [&str; 3] = [
+const REVIEW_KINDS: [&str; 4] = [
+    "ReviewCards",
     "ReviewCard",
     "TranslationChallenge",
     "TranscriptionChallenge",

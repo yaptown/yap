@@ -1,5 +1,5 @@
 // Mirror of present_card / present_translation's structuredContent.challenge
-// (see yap-mcp/src/server.rs). The card object is opaque: passed back
+// (see yap-mcp/src/server.rs). Card objects are opaque: passed back
 // verbatim to log_review / grade_translation, never inspected here.
 import type {
   AudioRequest,

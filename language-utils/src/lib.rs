@@ -1,5 +1,7 @@
 pub mod clip_content_ratings;
 pub mod features;
+pub mod word_prefix;
+pub use word_prefix::{compute_word_prefix, prefixed_text};
 pub mod indexmap;
 pub mod language_pack;
 pub use language_pack::PACKS_ORIGIN;
@@ -2497,8 +2499,8 @@ pub struct PronunciationClip {
 /// Consolidated data structure containing all generated language data
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ConsolidatedLanguageData {
-    /// Learner-facing redundancy sets, keyed by the bare gram.
-    pub redundant_senses: BTreeMap<Gram<String>, Vec<Vec<std::num::NonZeroU32>>>,
+    /// Learner-facing redundancy sets, keyed by the exact prefixed front.
+    pub redundant_senses: BTreeMap<String, Vec<Vec<TaggedGram<Gram<String>>>>>,
     /// Downloaded stroke forms for the course's writable units.
     pub strokes: StrokeTable,
     /// All target language sentences from Anki cards

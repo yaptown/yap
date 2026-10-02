@@ -91,21 +91,6 @@
                   "whitespace": ""
                 }
               ],
-              "definition": {
-                "headword": "j'ai une",
-                "is_phrase": true,
-                "morphology_label": "",
-                "senses": [
-                  {
-                    "meaning": "I have a",
-                    "note": null,
-                    "example": {
-                      "target": "J'ai une question à vous poser.",
-                      "native": "I have a question to ask you."
-                    }
-                  }
-                ]
-              },
               "prefix": null,
               "breakdown": [
                 [
@@ -123,6 +108,40 @@
                   "un",
                   "a, an"
                 ]
+              ],
+              "meanings": [
+                {
+                  "cards": [
+                    {
+                      "type": "WrittenGram",
+                      "gram": {
+                        "gram": [
+                          {"Tok": {"text": "j'", "word_type": {"type": "Heteronym", "word": "je", "lemma": "je", "pos": "PRON"}}},
+                          {"Tok": {"text": "ai", "word_type": {"type": "Heteronym", "word": "ai", "lemma": "avoir", "pos": "VERB"}}},
+                          {"Tok": {"text": "une", "word_type": {"type": "Heteronym", "word": "une", "lemma": "un", "pos": "DET"}}}
+                        ],
+                        "sense": null
+                      }
+                    }
+                  ],
+                  "label": "Multiword",
+                  "is_new": true,
+                  "definition": {
+                    "headword": "j'ai une",
+                    "is_phrase": true,
+                    "morphology_label": "",
+                    "senses": [
+                      {
+                        "meaning": "I have a",
+                        "note": null,
+                        "example": {
+                          "target": "J'ai une question à vous poser.",
+                          "native": "I have a question to ask you."
+                        }
+                      }
+                    ]
+                  }
+                }
               ]
             },
             "audio": {

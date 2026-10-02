@@ -1,6 +1,6 @@
 //! Shared self-graded challenge presentation, matching the web.
 
-use language_utils::{Language, PartOfSpeech, PatternPosition, PronunciationGuide, WordType};
+use language_utils::{Language, PartOfSpeech, PatternPosition, PronunciationGuide};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -31,6 +31,14 @@ pub struct FlashcardView {
     pub again_label: String,
     pub remembered_label: String,
     pub cant_listen_label: Option<String>,
+    /// The rest are set only when a written card has several meanings, which
+    /// the learner grades one by one: a badge on meanings they haven't
+    /// reviewed yet, the grade buttons once some meanings are marked (they
+    /// apply to the unmarked ones), and the single button once all are.
+    pub new_label: Option<String>,
+    pub again_rest_label: Option<String>,
+    pub remembered_rest_label: Option<String>,
+    pub continue_label: Option<String>,
 }
 
 fn grade_labels(is_new: bool) -> (String, String) {
@@ -41,7 +49,7 @@ fn grade_labels(is_new: bool) -> (String, String) {
     }
 }
 
-fn part_of_speech_label(pos: PartOfSpeech) -> &'static str {
+pub(crate) fn part_of_speech_label(pos: PartOfSpeech) -> &'static str {
     match pos {
         PartOfSpeech::Adj => "Adjective",
         PartOfSpeech::Adp => "Adposition",
@@ -71,39 +79,30 @@ pub fn flashcard_view(
     native_language: Language,
 ) -> FlashcardView {
     let disclosure = get_flashcard_disclosure(total_card_count, times_type_seen);
-    let (again_label, remembered_label) = grade_labels(is_new);
+    let multiple =
+        matches!(&flashcard.content, CardContent::Gram { meanings, .. } if meanings.len() > 1);
+    let (again_label, remembered_label) = if multiple {
+        ("Forgot all".into(), "Remembered all".into())
+    } else {
+        grade_labels(is_new)
+    };
     let (subtitle, tutorial, reveal_label, listening_header, cant_listen_label) = match flashcard
         .content
     {
-        CardContent::Gram {
-            gram, definition, ..
-        } => {
-            let subtitle = if definition.is_phrase {
-                Some("(Multiword)".into())
-            } else {
-                gram.iter()
-                    .find_map(|literal| match &literal.word.word_type {
-                        WordType::Heteronym(heteronym) => {
-                            Some(format!("({})", part_of_speech_label(heteronym.pos)))
-                        }
-                        WordType::Other(_) => None,
-                    })
-            };
-            (
-                subtitle,
-                TutorialPrompt {
-                    before: "Guess what \"".into(),
-                    target: Some(language_utils::literals_to_text(&gram).trim().to_owned()),
-                    after: "\" means…".into(),
-                },
-                format!(
-                    "Show {}",
-                    get_language_metadata(native_language).common_name
-                ),
-                None,
-                None,
-            )
-        }
+        CardContent::Gram { gram, .. } => (
+            None,
+            TutorialPrompt {
+                before: "Guess what \"".into(),
+                target: Some(language_utils::literals_to_text(&gram).trim().to_owned()),
+                after: "\" means…".into(),
+            },
+            format!(
+                "Show {}",
+                get_language_metadata(native_language).common_name
+            ),
+            None,
+            None,
+        ),
         CardContent::Listening { possible_grams } => {
             let language = get_language_metadata(target_language).common_name;
             (
@@ -133,6 +132,10 @@ pub fn flashcard_view(
         again_label,
         remembered_label,
         cant_listen_label,
+        new_label: multiple.then(|| "New".into()),
+        again_rest_label: multiple.then(|| "Forgot the rest".into()),
+        remembered_rest_label: multiple.then(|| "Remembered the rest".into()),
+        continue_label: multiple.then(|| "Continue".into()),
     }
 }
 
@@ -213,7 +216,7 @@ pub fn pronunciation_view(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use language_utils::{Heteronym, Literal, OtherWord, OtherWordType, Word};
+    use language_utils::{Heteronym, Literal, OtherWord, OtherWordType, Word, WordType};
     use serde_json::json;
 
     fn gram(phrase: bool) -> CardContent {
@@ -229,12 +232,17 @@ mod tests {
                 },
                 whitespace: language_utils::Whitespace::Space,
             }],
-            definition: crate::DefinitionView {
-                headword: "bonjour".into(),
-                is_phrase: phrase,
-                morphology_label: String::new(),
-                senses: vec![],
-            },
+            meanings: vec![crate::FlashcardMeaning {
+                cards: vec![],
+                definition: crate::DefinitionView {
+                    headword: "bonjour".into(),
+                    is_phrase: phrase,
+                    morphology_label: String::new(),
+                    senses: vec![],
+                },
+                label: Some(if phrase { "Multiword" } else { "Interjection" }.into()),
+                is_new: true,
+            }],
             prefix: None,
             breakdown: None,
         }
@@ -257,7 +265,7 @@ mod tests {
     #[test]
     fn gram_subtitle_tutorial_and_reveal_match_web() {
         let view = flash(gram(false), true, 1, 0);
-        assert_eq!(view.subtitle.as_deref(), Some("(Interjection)"));
+        assert_eq!(view.subtitle, None);
         assert_eq!(
             view.tutorial_prompt,
             Some(TutorialPrompt {
@@ -277,14 +285,9 @@ mod tests {
         assert_eq!(view.reveal_label, "Show English");
         assert!(view.require_answer_reveal);
         assert_eq!(view.cant_listen_label, None);
-        assert_eq!(
-            flash(gram(true), true, 1, 0).subtitle.as_deref(),
-            Some("(Multiword)")
-        );
+        assert_eq!(flash(gram(true), true, 1, 0).subtitle.as_deref(), None);
         let CardContent::Gram {
-            mut gram,
-            definition,
-            ..
+            mut gram, meanings, ..
         } = gram(false)
         else {
             unreachable!()
@@ -294,7 +297,7 @@ mod tests {
         });
         let no_pos = CardContent::Gram {
             gram: gram.clone(),
-            definition: definition.clone(),
+            meanings: meanings.clone(),
             prefix: None,
             breakdown: None,
         };
@@ -313,7 +316,7 @@ mod tests {
         let view = flash(
             CardContent::Gram {
                 gram,
-                definition,
+                meanings,
                 prefix: None,
                 breakdown: None,
             },
@@ -321,14 +324,37 @@ mod tests {
             1,
             0,
         );
-        assert_eq!(
-            view.subtitle.as_deref(),
-            Some("(Subordinating Conjunction)")
-        );
+        assert_eq!(view.subtitle.as_deref(), None);
         assert_eq!(
             view.tutorial_prompt.unwrap().target.as_deref(),
             Some("bonjour que")
         );
+    }
+
+    #[test]
+    fn multiple_meanings_have_bulk_labels() {
+        let mut content = gram(false);
+        let CardContent::Gram { meanings, .. } = &mut content else {
+            unreachable!()
+        };
+        meanings.push(meanings[0].clone());
+        for is_new in [false, true] {
+            let view = flash(content.clone(), is_new, 1, 0);
+            assert_eq!(view.again_label, "Forgot all");
+            assert_eq!(view.remembered_label, "Remembered all");
+            assert_eq!(view.again_rest_label.as_deref(), Some("Forgot the rest"));
+            assert_eq!(
+                view.remembered_rest_label.as_deref(),
+                Some("Remembered the rest")
+            );
+            assert_eq!(view.new_label.as_deref(), Some("New"));
+            assert_eq!(view.continue_label.as_deref(), Some("Continue"));
+        }
+        let view = flash(gram(false), true, 1, 0);
+        assert!(view.new_label.is_none());
+        assert!(view.again_rest_label.is_none());
+        assert!(view.remembered_rest_label.is_none());
+        assert!(view.continue_label.is_none());
     }
 
     #[test]

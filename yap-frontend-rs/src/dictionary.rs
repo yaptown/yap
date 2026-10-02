@@ -1,6 +1,6 @@
-use language_utils::features::{Morphology, WordPrefix};
+use language_utils::features::WordPrefix;
 use language_utils::text_cleanup::remove_accents_lowercase;
-use language_utils::{Atom, Gram, GramDefinition, Language, WordType};
+use language_utils::{GramDefinition, Language};
 use rustc_hash::{FxHashMap, FxHashSet};
 use yap_frontend_reducers::{DefinitionView, definition_view};
 
@@ -8,48 +8,6 @@ use crate::{
     AudioRequest, CardData, CardIndicator, Deck, DeckEvent, LanguageEvent, LanguageEventContent,
 };
 use language_utils::{TtsProvider, TtsRequest};
-
-/// Compute the grammatical prefix for a gram, given its definition
-/// and target language.
-///
-/// For single-word grams (one `Atom::Tok`), uses the per-heteronym single-word
-/// prefix — articles for nouns, subject pronouns for verbs, etc. — based on the
-/// gram's heteronym and the first morphology entry from the dictionary definition.
-/// Single-word prefixes only apply to Dictionary entries (Phrasebook entries lack
-/// per-word morphology).
-///
-/// For multi-word grams (more than one `Atom::Tok`), uses the language-level
-/// multiword prefix (e.g., Korean auxiliary connective endings on compound verbs).
-/// Multi-word prefixes work for both Dictionary and Phrasebook entries since they
-/// only depend on the gram's atom-level heteronym tags.
-pub(crate) fn compute_word_prefix(
-    gram: &Gram<String>,
-    definition: &GramDefinition,
-    target_language: Language,
-) -> Option<WordPrefix> {
-    let dict_def = match definition {
-        GramDefinition::Dictionary(d) => Some(d),
-        GramDefinition::Phrasebook(_) => None,
-    };
-
-    match gram.atoms() {
-        // Single-word gram: per-heteronym single-word prefix, only meaningful for
-        // Dictionary entries (which carry per-word morphology).
-        [Atom::Tok(word)] => {
-            let WordType::Heteronym(h) = &word.word_type else {
-                return None;
-            };
-            let morphology = dict_def.and_then(|d| d.morphology.first());
-            morphology.and_then(|m| m.get_prefix(&h.word, h.pos, target_language))
-        }
-        // Single-atom gram with no Tok: nothing to compute.
-        [_] => None,
-        // No grams: nothing to compute
-        [] => None,
-        // Multi-word gram: language-level multiword prefix.
-        _ => Morphology::get_multiword_prefix(gram, target_language),
-    }
-}
 
 /// Get dictionary words ordered by frequency (most common first).
 /// Optionally filters by search query (accent-insensitive) and limits results.
@@ -86,7 +44,7 @@ impl Deck {
             let Some(gram_def) = language_pack.gram_definitions.get(spur_gram) else {
                 continue;
             };
-            if !language_pack.is_visible(*spur_gram) {
+            if !language_pack.is_visible(*spur_gram, target_language) {
                 continue;
             }
             let word = words
@@ -154,7 +112,7 @@ impl Deck {
             .entries
             .get_index(frequency_index)?;
         let mut senses: Vec<_> = language_pack
-            .visible_senses(spur_gram.gram)
+            .visible_senses(spur_gram.gram, target_language)
             .iter()
             .filter_map(|sense_gram| {
                 let definition =
@@ -166,6 +124,14 @@ impl Deck {
                 let is_in_deck = language_pack
                     .redundant_with(*sense_gram)
                     .iter()
+                    .filter(|member| {
+                        language_pack
+                            .resolve_gram(&member.gram)
+                            .to_display_string(target_language)
+                            == language_pack
+                                .resolve_gram(&sense_gram.gram)
+                                .to_display_string(target_language)
+                    })
                     .any(|gram| {
                         let card = CardIndicator::WrittenGram { gram: *gram };
                         matches!(self.cards.get(&card), Some(CardData::Added { .. }))
@@ -186,16 +152,11 @@ impl Deck {
             .collect();
         senses.sort_unstable_by_key(|sense| sense.frequency_index);
         let primary = senses.first()?;
-        let (primary_gram, _) = language_pack
-            .gram_frequencies
-            .entries
-            .get_index(primary.frequency_index)?;
-        let gram_def = language_pack.gram_definitions.get(primary_gram)?;
         let resolved_gram = language_pack.resolve_gram(&spur_gram.gram);
         Some(DictionaryWord {
             display_text: resolved_gram.to_display_string(target_language),
             frequency_index: primary.frequency_index,
-            prefix: compute_word_prefix(&resolved_gram, gram_def, target_language),
+            prefix: language_pack.word_prefix(spur_gram.gram, target_language),
             is_phrase: primary.definition.is_phrase,
             target_language,
             senses,
@@ -209,7 +170,10 @@ impl Deck {
             .gram_frequencies
             .entries
             .iter()
-            .filter(|(spur_gram, _)| language_pack.gram_definitions.contains_key(spur_gram))
+            .filter(|(spur_gram, _)| {
+                language_pack.gram_definitions.contains_key(spur_gram)
+                    && language_pack.is_visible(**spur_gram, self.context.course.target_language)
+            })
             .map(|(spur_gram, _)| spur_gram.gram)
             .collect::<FxHashSet<_>>()
             .len()
@@ -324,6 +288,7 @@ impl DictionaryWord {
 mod tests {
     use super::*;
     use crate::{Context, DeckState};
+    use language_utils::{Atom, Gram, WordType};
     use language_utils::{
         ConsolidatedLanguageData, Course, DictionaryEntry, GramFrequencyEntry, GramFrequencyList,
         GramVocabEntry, Heteronym, PartOfSpeech, PronunciationData, TaggedGram, TargetToNativeWord,
@@ -507,11 +472,14 @@ mod tests {
         let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
         let bare = pack.gram_frequencies.entries.get_index(1).unwrap().0.gram;
         pack.redundant_senses.insert(
-            bare,
-            vec![vec![
-                NonZeroU32::new(1).unwrap(),
-                NonZeroU32::new(2).unwrap(),
-            ]],
+            pack.prefixed_text[&bare],
+            vec![
+                pack.senses_of(bare)
+                    .iter()
+                    .copied()
+                    .filter(|sense| sense.sense.is_some_and(|id| id.get() <= 2))
+                    .collect(),
+            ],
         );
         assert!(
             deck.get_gram_dictionary_entries(Some("shore".into()), 10)
@@ -571,6 +539,7 @@ mod tests {
 mod translation_sense_tests {
     use super::*;
     use crate::{CardData, Context, DeckEvent, DeckState};
+    use language_utils::{Atom, Gram, WordType};
     use language_utils::{
         ConsolidatedLanguageData, Course, DictionaryEntry, GramFrequencyEntry, GramFrequencyList,
         GramVocabEntry, Heteronym, MultiwordTermMatch, PartOfSpeech, SentenceGram, SentenceGrams,
@@ -609,6 +578,10 @@ mod translation_sense_tests {
             gram("river", 0),
             gram("river bank", 0),
         ];
+        deck_with_entries(&entries)
+    }
+
+    fn deck_with_entries(entries: &[TaggedGram<Gram<String>>]) -> Deck {
         let encoded = |grams, multiword_terms| SentenceGrams {
             grams,
             capitalize_first: true,
@@ -752,12 +725,12 @@ mod translation_sense_tests {
         let event = deck.add_gram_by_frequency_index(index).unwrap();
         deck = replay(deck, event);
         let event = deck
-            .review_card(
-                CardIndicator::WrittenGram {
+            .review_cards(vec![crate::CardReview {
+                card: CardIndicator::WrittenGram {
                     gram: gram(text, sense),
                 },
-                crate::Rating::Remembered,
-            )
+                rating: crate::Rating::Remembered,
+            }])
             .unwrap();
         replay(deck, event)
     }
@@ -857,6 +830,234 @@ mod translation_sense_tests {
             assert_eq!(card(&deck, "bank", 2).lapses, before[1].lapses);
             assert_eq!(card(&deck, "bank", 2).reps, before[1].reps + 1);
         }
+    }
+
+    #[test]
+    fn written_front_newness_and_meaning_rows_include_trigger_not_ghosts() {
+        let mut deck = deck();
+        let first = indicator(&deck, "bank", 1);
+        let second = indicator(&deck, "bank", 2);
+        assert!(
+            crate::challenge::CardContext::new(&deck, second)
+                .unwrap()
+                .is_new
+        );
+        let CardIndicator::WrittenGram { gram: trigger } = second else {
+            unreachable!()
+        };
+        let flash = deck
+            .get_review_info(vec![], 0.0)
+            .written_gram_flashcard(&deck, trigger);
+        let crate::CardContent::Gram { meanings, .. } = flash.content else {
+            unreachable!()
+        };
+        assert_eq!(meanings.len(), 1);
+        assert_eq!(
+            meanings[0].cards,
+            vec![CardIndicator::WrittenGram {
+                gram: gram("bank", 2)
+            }]
+        );
+        assert!(meanings[0].is_new);
+
+        // A sentence review creates a reviewed Ghost for the other sense.
+        deck = replay(
+            deck,
+            DeckEvent::Language(LanguageEvent {
+                target_language: Language::English,
+                native_language: Language::French,
+                content: LanguageEventContent::ReviewCards {
+                    reviews: vec![crate::CardReview {
+                        card: CardIndicator::WrittenGram {
+                            gram: gram("bank", 1),
+                        },
+                        rating: crate::Rating::Again,
+                    }],
+                },
+            }),
+        );
+        assert!(matches!(
+            deck.cards.get(&first),
+            Some(CardData::Ghost { .. })
+        ));
+        assert!(
+            !crate::challenge::CardContext::new(&deck, second)
+                .unwrap()
+                .is_new
+        );
+        assert!(
+            crate::challenge::CardContext::new(
+                &deck,
+                CardIndicator::ListeningGram { gram: trigger.gram }
+            )
+            .is_none()
+        );
+        let event = deck.add_gram_by_frequency_index(1).unwrap();
+        deck = replay(deck, event);
+        assert!(
+            !crate::challenge::CardContext::new(&deck, second)
+                .unwrap()
+                .is_new
+        );
+        let flash = deck
+            .get_review_info(vec![], 0.0)
+            .written_gram_flashcard(&deck, trigger);
+        let crate::CardContent::Gram { meanings, .. } = flash.content else {
+            unreachable!()
+        };
+        assert_eq!(meanings.len(), 1); // Ghost is not a row.
+        assert!(meanings[0].is_new); // The newly added sense itself is still New.
+
+        let event = deck.add_gram_by_frequency_index(0).unwrap();
+        deck = replay(deck, event);
+        let flash = deck
+            .get_review_info(vec![], 0.0)
+            .written_gram_flashcard(&deck, trigger);
+        let crate::CardContent::Gram { meanings, .. } = flash.content else {
+            unreachable!()
+        };
+        assert_eq!(meanings.len(), 2);
+        assert!(!meanings[0].is_new);
+        assert!(meanings[1].is_new);
+        let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
+        let one = pack.resolve_entry(&gram("bank", 1)).unwrap();
+        let two = pack.resolve_entry(&gram("bank", 2)).unwrap();
+        pack.redundant_senses
+            .insert(pack.prefixed_text[&one.gram], vec![vec![two, one]]);
+        let flash = deck
+            .get_review_info(vec![], 0.0)
+            .written_gram_flashcard(&deck, trigger);
+        let crate::CardContent::Gram { meanings, .. } = flash.content else {
+            unreachable!()
+        };
+        assert_eq!(meanings.len(), 1);
+        assert_eq!(meanings[0].cards.len(), 2);
+        assert!(!meanings[0].is_new);
+    }
+
+    #[test]
+    fn cross_pos_front_collapses_only_eligible_members_in_frequency_order() {
+        let noun = gram("bank", 1);
+        let mut verb = gram("bank", 1);
+        let Atom::Tok(word) = &mut verb.gram.0[0] else {
+            unreachable!()
+        };
+        let WordType::Heteronym(h) = &mut word.word_type else {
+            unreachable!()
+        };
+        h.pos = PartOfSpeech::Verb;
+        let mut deck = deck_with_entries(&[noun.clone(), verb.clone()]);
+        let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
+        let first = pack.resolve_entry(&noun).unwrap();
+        let second = pack.resolve_entry(&verb).unwrap();
+        assert_ne!(first.gram, second.gram);
+        assert_eq!(
+            pack.prefixed_text[&first.gram],
+            pack.prefixed_text[&second.gram]
+        );
+        pack.redundant_senses
+            .insert(pack.prefixed_text[&first.gram], vec![vec![second, first]]);
+        let event = deck.add_gram_by_frequency_index(0).unwrap();
+        deck = replay(deck, event);
+        // The unadded trigger joins the eligible Added member before collapsing.
+        let flash = deck
+            .get_review_info(vec![], 0.0)
+            .written_gram_flashcard(&deck, second);
+        let crate::CardContent::Gram { meanings, .. } = flash.content else {
+            unreachable!()
+        };
+        assert_eq!(meanings.len(), 1);
+        assert_eq!(meanings[0].label.as_deref(), Some("Noun"));
+        assert_eq!(
+            meanings[0].cards,
+            vec![
+                CardIndicator::WrittenGram { gram: noun },
+                CardIndicator::WrittenGram { gram: verb }
+            ]
+        );
+        let event = deck
+            .review_cards(
+                meanings[0]
+                    .cards
+                    .iter()
+                    .rev()
+                    .cloned()
+                    .map(|card| crate::CardReview {
+                        card,
+                        rating: crate::Rating::Again,
+                    })
+                    .collect(),
+            )
+            .unwrap();
+        let DeckEvent::Language(LanguageEvent {
+            content: LanguageEventContent::ReviewCards { reviews },
+            ..
+        }) = &event
+        else {
+            unreachable!()
+        };
+        assert_eq!(reviews.len(), 1); // The unadded trigger is not persisted.
+        let deck = replay(deck, event);
+        assert!(
+            deck.cards
+                .get(&CardIndicator::WrittenGram { gram: second })
+                .is_none()
+        ); // Replay never expands the redundancy set.
+        assert!(
+            !crate::challenge::CardContext::new(&deck, CardIndicator::WrittenGram { gram: second })
+                .unwrap()
+                .is_new
+        );
+    }
+
+    #[test]
+    fn bulk_review_folds_explicit_cards_and_counts_one_review() {
+        let deck = deck();
+        let reviews = vec![
+            crate::CardReview {
+                card: CardIndicator::ListeningGram {
+                    gram: gram("absent", 0).gram,
+                },
+                rating: crate::Rating::Again,
+            },
+            crate::CardReview {
+                card: CardIndicator::WrittenGram {
+                    gram: gram("bank", 1),
+                },
+                rating: crate::Rating::Again,
+            },
+            crate::CardReview {
+                card: CardIndicator::WrittenGram {
+                    gram: gram("bank", 2),
+                },
+                rating: crate::Rating::Good,
+            },
+        ];
+        assert!(deck.review_cards(reviews.clone()).is_none()); // not added or ghost yet
+        let before = deck.stats.total_reviews;
+        let deck = replay(
+            deck,
+            DeckEvent::Language(LanguageEvent {
+                target_language: Language::English,
+                native_language: Language::French,
+                content: LanguageEventContent::ReviewCards { reviews },
+            }),
+        );
+        assert!(!deck.cards[&indicator(&deck, "bank", 1)].is_new());
+        assert!(!deck.cards[&indicator(&deck, "bank", 2)].is_new());
+        assert_eq!(deck.stats.total_reviews, before + 1);
+        // Like single-card reviews, flashcards aren't sentence challenges.
+        assert_eq!(deck.stats.past_week_challenges.values().sum::<u32>(), 0);
+        assert_eq!(
+            deck.stats
+                .flashcard_type_seen_count
+                .get(&crate::FlashcardType::WrittenGram),
+            Some(&1)
+        );
+        assert_eq!(
+            deck.stats.flashcard_type_seen_count.values().sum::<u32>(),
+            1
+        );
     }
 
     #[test]

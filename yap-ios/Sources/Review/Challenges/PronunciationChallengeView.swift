@@ -40,7 +40,7 @@ struct PronunciationChallengeView: View {
     private func rate(_ rating: Rating) {
         guard !actions.submitting else { return }
         background.bump(30)
-        audio.stop(); actions.rate(indicator, rating)
+        audio.stop(); actions.rate([CardReview(card: indicator, rating: rating)])
         if rating != .Again { audio.playEffect("success-2") }
     }
 }
