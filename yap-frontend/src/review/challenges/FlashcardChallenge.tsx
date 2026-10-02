@@ -7,13 +7,7 @@ import {
   type Literal,
   type Rating,
 } from "../../../../yap-frontend-rs/pkg";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, ArrowLeft, ArrowRight, ArrowDown } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -416,29 +410,9 @@ export const FlashcardChallenge = function FlashcardChallenge({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showAnswer, canGrade, toggleAnswer, onRating, bumpBackground]);
 
-  const copyWord = () => {
-    const word = match(content)
-      .with({ type: "Gram" }, (c) => gramDisplayText(c.gram))
-      .with({ type: "Listening" }, (c) =>
-        c.possible_grams.length > 0
-          ? gramDisplayText(c.possible_grams[0][1])
-          : undefined,
-      )
-      .exhaustive();
-
-    if (word) {
-      navigator.clipboard
-        .writeText(word)
-        .then(() => toast("Copied to clipboard"))
-        .catch(() => toast("Failed to copy"));
-    } else {
-      toast("No word to copy");
-    }
-  };
-
   return (
     <div className="flex flex-col flex-1 justify-between">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-1 flex-col gap-2">
         {/* Tutorial text above card */}
         {view.tutorial_prompt && (
           <div
@@ -602,8 +576,6 @@ export const FlashcardChallenge = function FlashcardChallenge({
           </Card>
         </motion.div>
 
-        {reportIssue && <ReportIssueLink {...reportIssue} />}
-
         {/* Breakdown (morphemes or words), shown after the card is revealed */}
         {showAnswer &&
           content.type === "Gram" &&
@@ -625,6 +597,8 @@ export const FlashcardChallenge = function FlashcardChallenge({
             <PlayfulArrow direction="up" flipStart size={70} />
           </div>
         )}
+
+        {reportIssue && <ReportIssueLink {...reportIssue} />}
       </div>
 
       <div className="flex flex-col sticky bottom-0">
@@ -652,8 +626,7 @@ export const FlashcardChallenge = function FlashcardChallenge({
               </>
             )}
             <div className={!canGrade ? "hidden" : "quick-fade-in"}>
-              <div className="flex gap-2">
-                <div className="grid flex-1 grid-cols-2">
+              <div className="grid grid-cols-2">
                   <Button
                     onClick={() => {
                       if (!canGrade) return;
@@ -692,37 +665,6 @@ export const FlashcardChallenge = function FlashcardChallenge({
                       </kbd>
                     </span>
                   </Button>
-                </div>
-                {/* The main row is always Again/Remembered; Hard/Good/Easy live here. */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-14 w-14"
-                      aria-label="More grades"
-                    >
-                      <MoreHorizontal className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {view.menu_grades.map((grade) => (
-                      <DropdownMenuItem
-                        key={grade.rating}
-                        onClick={() => {
-                          if (!canGrade) return;
-                          bumpBackground(30.0);
-                          onRating(grade.rating);
-                        }}
-                      >
-                        {grade.label}
-                      </DropdownMenuItem>
-                    ))}
-                    <DropdownMenuItem onClick={copyWord}>
-                      Copy word
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
             </div>
           </div>

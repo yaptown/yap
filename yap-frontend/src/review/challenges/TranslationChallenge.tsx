@@ -560,7 +560,7 @@ export const TranslationChallenge = memo(function TranslationChallenge({
 
   return (
     <div className="flex flex-col flex-1 justify-between">
-      <div>
+      <div className="flex flex-1 flex-col gap-2">
         <Card animate className="p-5 relative gap-2">
           {view.badge && (
             <Badge className="absolute -top-2 -left-2 -rotate-12 z-10 shadow-sm text-sm">
@@ -675,15 +675,15 @@ export const TranslationChallenge = memo(function TranslationChallenge({
           )}
         </Card>
 
-        <ReportIssueLink
-          label={report_issue_copy().menu_label}
-          onClick={() => setShowReportModal(true)}
-        />
-
         {/* Movie posters - hidden after grading */}
         {editing && (
           <MoviePosterGrid movieData={movieData} deck={deck} />
         )}
+
+        <ReportIssueLink
+          label={report_issue_copy().menu_label}
+          onClick={() => setShowReportModal(true)}
+        />
       </div>
 
       <div className="sticky bottom-0">

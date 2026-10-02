@@ -84,7 +84,6 @@ struct TranscriptionChallengeView: View {
                     SentenceVerdictView(headline: nil, correctLabel: view.correct_label, correct: sentence.target_language).equatable()
                 }
             }
-            ReportIssueLink(subject: .Transcription(sentence))
             if editing, let tip = screen.keyboard_tip, !keyboardTipDismissed {
                 HStack(spacing: 8) {
                     (Text("Tip:").fontWeight(.medium) + Text(" " + tip)).font(.subheadline).foregroundStyle(Color.yapMuted)
@@ -100,7 +99,7 @@ struct TranscriptionChallengeView: View {
             }
         } actions: {
             if view.verdict == nil {
-                Button(view.cant_listen_label) { actions.cantListen() }.font(.footnote).foregroundStyle(Color.yapMuted).frame(minHeight: 44).disabled(view.is_grading)
+                CantListenButton(label: view.cant_listen_label) { actions.cantListen() }.disabled(view.is_grading)
                 HStack {
                     Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)
                         .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
@@ -110,6 +109,8 @@ struct TranscriptionChallengeView: View {
                 Button { complete() } label: { Text(view.verdict?.continue_label ?? "").frame(maxWidth: .infinity) }.disabled(!view.can_continue || actions.submitting)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             }
+        } footer: {
+            ReportIssueLink(subject: .Transcription(sentence))
         }
         .onAppear {
             if let data = storage?.load(Data.self), let saved = try? PendingReview.decode(data, as: TranscriptionState.self) {
@@ -137,15 +138,19 @@ struct TranscriptionChallengeView: View {
         let shape = RoundedRectangle(cornerRadius: 6)
         return Text(text.isEmpty ? view.placeholder : text).font(fieldFont)
             .foregroundStyle(Color.yapMuted).opacity(text.isEmpty ? 1 : 0)
+            .padding(.horizontal, 12).padding(.vertical, 4)
+            .frame(minWidth: blanks.count == 1 ? 256 : 128)
+            // The field spans the whole chip, not just the twin's text: a text
+            // field needs a few points more than its text, and an unfocused
+            // one that's even slightly too narrow shows "…" instead.
             .overlay {
                 TextField("", text: Binding(get: { text }, set: { send(.InputChanged(index: UInt64(index), text: $0)) }))
                     .textFieldStyle(.plain).font(fieldFont).multilineTextAlignment(.center).focused($focused, equals: index)
                     .autocorrectionDisabled().textInputAutocapitalization(index == 0 ? .sentences : .never)
                     .submitLabel(index == blanks.last ? .done : .next).onSubmit { advance(index) }
                     .disabled(!blank.editable)
+                    .padding(.horizontal, 4)
             }
-            .padding(.horizontal, 12).padding(.vertical, 4)
-            .frame(minWidth: blanks.count == 1 ? 256 : 128)
             .background(field(blank.tint), in: shape)
             .overlay { shape.strokeBorder(focused == index ? Color.yapAccent.opacity(0.5) : Color.yapInput, lineWidth: 1) }
             .overlay(alignment: .bottom) {

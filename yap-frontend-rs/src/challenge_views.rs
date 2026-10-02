@@ -19,13 +19,6 @@ pub struct TutorialPrompt {
 
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct GradeOption {
-    pub rating: Rating,
-    pub label: String,
-}
-
-#[bridgerton::bridge(transparent)]
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct FlashcardView {
     pub subtitle: Option<String>,
     pub tutorial_prompt: Option<TutorialPrompt>,
@@ -37,7 +30,6 @@ pub struct FlashcardView {
     pub known_label: String,
     pub again_label: String,
     pub remembered_label: String,
-    pub menu_grades: Vec<GradeOption>,
     pub cant_listen_label: Option<String>,
 }
 
@@ -140,17 +132,6 @@ pub fn flashcard_view(
         known_label: "(known)".into(),
         again_label,
         remembered_label,
-        menu_grades: [
-            (Rating::Easy, "Easy"),
-            (Rating::Good, "Good"),
-            (Rating::Hard, "Hard"),
-        ]
-        .into_iter()
-        .map(|(rating, label)| GradeOption {
-            rating,
-            label: label.into(),
-        })
-        .collect(),
         cant_listen_label,
     }
 }
@@ -398,17 +379,6 @@ mod tests {
                     assert_eq!(view.tutorial_hidden_hint.is_some(), seen < 2);
                     assert_eq!(view.tutorial_revealed_hint.is_some(), seen < 2);
                     assert_eq!(view.require_answer_reveal, count < 50 || seen < 10);
-                    assert_eq!(
-                        view.menu_grades
-                            .iter()
-                            .map(|grade| (grade.rating, grade.label.as_str()))
-                            .collect::<Vec<_>>(),
-                        vec![
-                            (Rating::Easy, "Easy"),
-                            (Rating::Good, "Good"),
-                            (Rating::Hard, "Hard")
-                        ]
-                    );
                 }
             }
         }

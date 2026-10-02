@@ -68,7 +68,6 @@ struct FlashcardChallengeView: View {
             if revealed, case let .Gram(_, _, _, breakdown) = flashcard.content, let breakdown, !breakdown.isEmpty {
                 MorphemeBreakdownView(parts: breakdown, alignment: .center, revealDelay: 1.5).padding(.top, 12)
             }
-            ReportIssueLink(subject: .Flashcard(flashcard.content))
             if !revealed, let hint = view.tutorial_hidden_hint {
                 TutorialHint(text: hint, pointing: .up).fadeIn(duration: 0.3, delay: 1.5)
             }
@@ -77,23 +76,14 @@ struct FlashcardChallengeView: View {
                 TutorialHint(text: hint, pointing: .down, arrowSize: 96).fadeIn(duration: 0.3, delay: 1.5)
             }
             if !revealed, let label = view.cant_listen_label {
-                Button(label) { actions.cantListen() }.font(.footnote).foregroundStyle(Color.yapMuted).frame(minHeight: 44)
+                CantListenButton(label: label) { actions.cantListen() }
             }
             if canGrade {
-                HStack(spacing: 8) {
-                    GradeButtons(againLabel: view.again_label, rememberedLabel: view.remembered_label, rate: rate)
-                    // The web's main row is always Again/Remembered; Hard/Good/Easy live in its menu.
-                    Menu {
-                        ForEach(Array(view.menu_grades.enumerated()), id: \.offset) { _, grade in
-                            Button(grade.label) { rate(grade.rating) }
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis").font(.headline).frame(width: 56, height: 56)
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    }.accessibilityLabel("More grades").foregroundStyle(Color.yapText)
-                }
-                .disabled(actions.submitting).fadeIn(duration: 0.2)
+                GradeButtons(againLabel: view.again_label, rememberedLabel: view.remembered_label, rate: rate)
+                    .disabled(actions.submitting).fadeIn(duration: 0.2)
             }
+        } footer: {
+            ReportIssueLink(subject: .Flashcard(flashcard.content))
         }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in

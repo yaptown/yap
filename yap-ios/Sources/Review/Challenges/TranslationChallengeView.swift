@@ -65,7 +65,6 @@ struct TranslationChallengeView: View {
                     reviewCount: screen.total_reviews, autoplay: !editing, available: $hasClip, movieId: $clipMovieId)
                 ReviewDefinitionsView(definitions: view.definitions).equatable()
             }
-            ReportIssueLink(subject: .Translation(sentence))
             if editing {
                 MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId)).equatable()
             }
@@ -81,6 +80,8 @@ struct TranslationChallengeView: View {
                     if view.is_grading { Button("Cancel") { send(.CancelGrading) } }
                 }
             }
+        } footer: {
+            ReportIssueLink(subject: .Translation(sentence))
         }
         .onAppear {
             if let data = storage?.load(Data.self), let saved = try? PendingReview.decode(data, as: TranslationState.self) { state = saved }

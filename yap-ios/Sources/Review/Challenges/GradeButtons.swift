@@ -36,3 +36,17 @@ private struct GradeHalfStyle: ButtonStyle {
             .opacity(isEnabled ? 1 : 0.5)
     }
 }
+
+/// Translucent so the report link it passes over while scrolling shows
+/// through softly instead of clashing with its text.
+struct CantListenButton: View {
+    let label: String
+    let action: () -> Void
+    var body: some View {
+        Button(label, systemImage: "speaker.slash", action: action)
+            .font(.footnote).foregroundStyle(Color.yapMuted)
+            .padding(.horizontal, 16).frame(minHeight: 36)
+            .background(.ultraThinMaterial, in: Capsule())
+            .frame(minHeight: 44)
+    }
+}

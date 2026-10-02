@@ -171,7 +171,10 @@ export function VerdictHeadline({
   );
 }
 
-/** Below a challenge card, out of the way of the answer. */
+/**
+ * Ends a challenge's scrolling content: pushed to the bottom of the column
+ * so it rests just above the sticky actions, which pass over it on scroll.
+ */
 export function ReportIssueLink({
   label,
   onClick,
@@ -180,7 +183,7 @@ export function ReportIssueLink({
   onClick: () => void;
 }) {
   return (
-    <div className="flex justify-end">
+    <div className="mt-auto flex justify-end">
       <button
         type="button"
         onClick={onClick}

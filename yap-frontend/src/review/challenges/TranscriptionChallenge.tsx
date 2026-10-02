@@ -452,7 +452,7 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
 
   return (
     <div className="flex flex-col flex-1 justify-between">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-1 flex-col gap-2">
         <Card animate className="p-5 relative gap-0">
           {challenge.second_chance && (
             <Badge className="absolute -top-2 -left-2 -rotate-12 z-10 shadow-sm text-sm">
@@ -628,11 +628,6 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
           </div>
         </Card>
 
-        <ReportIssueLink
-          label={report_issue_copy().menu_label}
-          onClick={() => setShowReportModal(true)}
-        />
-
         {audioError && onCantListen && editing && (
           <AudioErrorBanner onSkip={onCantListen} />
         )}
@@ -656,6 +651,11 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
 
         {/* Movie posters - hidden after grading */}
         {editing && <MoviePosterGrid movieData={movieData} deck={deck} />}
+
+        <ReportIssueLink
+          label={report_issue_copy().menu_label}
+          onClick={() => setShowReportModal(true)}
+        />
       </div>
 
       <div className="mt-4 flex flex-col gap-2 sticky bottom-0">

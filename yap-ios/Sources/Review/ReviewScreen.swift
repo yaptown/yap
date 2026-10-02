@@ -97,22 +97,37 @@ extension EnvironmentValues {
     @Entry var embeddedInHome = false
 }
 
-struct ReviewStepScrollView<Content: View, Actions: View>: View {
+struct ReviewStepScrollView<Content: View, Actions: View, Footer: View>: View {
     @Environment(\.embeddedInHome) private var embeddedInHome
     @ViewBuilder let content: () -> Content
     @ViewBuilder let actions: () -> Actions
+    /// Ends the scrolling content, resting just above the pinned actions
+    /// when the content is short; the actions pass over it as it scrolls.
+    @ViewBuilder var footer: () -> Footer
     var body: some View {
         if embeddedInHome {
-            VStack(spacing: 12, content: content)
+            VStack(spacing: 12) { content(); footer() }
         } else {
             scrolling
         }
     }
     private var scrolling: some View {
-        ScrollView {
-            VStack(spacing: 12, content: content).padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity)
+        GeometryReader { viewport in
+            ScrollView {
+                VStack(spacing: 12) {
+                    content()
+                    Spacer(minLength: 0)
+                    footer()
+                }.padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity, minHeight: viewport.size.height)
+            }
         }.bottomBar {
             VStack(spacing: 12, content: actions).padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity)
         }
+    }
+}
+
+extension ReviewStepScrollView where Footer == EmptyView {
+    init(@ViewBuilder content: @escaping () -> Content, @ViewBuilder actions: @escaping () -> Actions) {
+        self.init(content: content, actions: actions, footer: { EmptyView() })
     }
 }
