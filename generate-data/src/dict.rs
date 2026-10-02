@@ -16,7 +16,16 @@ static CHAT_CLIENT_LUNA: LazyLock<ChatClient> =
 static CHAT_CLIENT_TERRA: LazyLock<ChatClient> =
     LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-terra"));
 
-/// How a course's dictionary-family prompts read and which model answers them.
+/// Frequent words go to Terra, the rest to Luna.
+fn client(frequency: u32, threshold: u32) -> &'static ChatClient {
+    if frequency > threshold {
+        &CHAT_CLIENT_TERRA
+    } else {
+        &CHAT_CLIENT_LUNA
+    }
+}
+
+/// How a course's dictionary-family prompts read.
 /// Every course shares one dictionary prompt, naming its variety. The phrasebook and
 /// sense prompts keep their historical wording byte for byte for most courses,
 /// because the prompt is the tysm cache key; revised courses get the newer wording.
@@ -27,9 +36,6 @@ struct DictionaryPolicy {
     variety: &'static str,
     /// Whether the phrasebook and sense prompts use the revised wording.
     revised: bool,
-    /// Send every request to Terra rather than only frequent words. For a small
-    /// corpus the frequency cutoff otherwise leaves even the first cards on Luna.
-    always_terra: bool,
 }
 
 impl DictionaryPolicy {
@@ -39,39 +45,23 @@ impl DictionaryPolicy {
             name: language.prompt_name(),
             variety: "",
             revised: false,
-            always_terra: false,
         };
         match language {
             Language::Hindi => Self {
                 revised: true,
-                always_terra: true,
                 ..historical
             },
             Language::PortugueseEuropean => Self {
                 name: "European Portuguese (Portugal)",
                 variety: " Write examples as people in Portugal speak, e.g. tu and vocês for address and words like cão and autocarro where they fit; words shared with Brazil are welcome too.",
                 revised: true,
-                ..historical
             },
             Language::SpanishPeninsular => Self {
                 name: "Spanish as spoken in Spain",
                 variety: " Write examples as people in Spain speak, e.g. vosotros and words like coche and ordenador where they fit; words shared with Latin America are welcome too.",
                 revised: true,
-                ..historical
             },
             _ => historical,
-        }
-    }
-
-    fn uses_terra(&self, frequency: u32, threshold: u32) -> bool {
-        self.always_terra || frequency > threshold
-    }
-
-    fn client(&self, frequency: u32, threshold: u32) -> &'static ChatClient {
-        if self.uses_terra(frequency, threshold) {
-            &CHAT_CLIENT_TERRA
-        } else {
-            &CHAT_CLIENT_LUNA
         }
     }
 
@@ -274,7 +264,7 @@ Write the notes in {native_language}.{variety}"#,
     );
     let (terra, luna): (Vec<_>, Vec<_>) = target_language_heteronyms
         .into_iter()
-        .partition(|(_, frequency)| policy.uses_terra(*frequency, 500));
+        .partition(|(_, frequency)| *frequency > 500);
     let mut entries = generate_dictionary_group(
         &CHAT_CLIENT_TERRA,
         &terra,
@@ -475,7 +465,7 @@ pub async fn create_gram_phrasebook(
                 };
 
                 let policy = DictionaryPolicy::for_language(target_language);
-                let chat_client = policy.client(freq, 250);
+                let chat_client = client(freq, 250);
 
                 // kind of ugly, but the old system prompt is bad, but it's too expensive to regenerate all of them so i'll just do it for the most important words
                 let system_prompt= format!(r#"The input is a {target_language} multi-word term along with example sentences showing its usage. Generate a phrasebook entry for it, to be used in an app for beginner {target_language} learners (whose native language is {native_language}).
@@ -656,7 +646,7 @@ pub async fn create_sense_definitions(
                 usage.kind, usage.gloss
             );
             let threshold = if gram.gram.len() == 1 { 500 } else { 250 };
-            let client = policy.client(entry.count, threshold);
+            let client = client(entry.count, threshold);
             // A failed sense (or a cache miss in cache-only mode) is skipped
             // like every other definition stage, not fatal to the run.
             let result = if gram.gram.len() == 1 {
@@ -714,7 +704,6 @@ mod tests {
                 Language::Hindi | Language::PortugueseEuropean | Language::SpanishPeninsular
             );
             assert_eq!(policy.revised, revised);
-            assert_eq!(policy.always_terra, language == Language::Hindi);
             if !revised {
                 assert_eq!(policy.name, language.prompt_name());
                 assert_eq!(policy.example_guidance(), "");
