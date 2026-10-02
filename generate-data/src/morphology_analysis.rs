@@ -4628,7 +4628,7 @@ pub mod gold_morphology {
                 ("คุณ", vec![person_polite(Second, Formal)]),
                 ("เธอ", vec![person_polite(Second, Informal), person(Third)]), // "you" (close) or "she"
                 ("นาย", vec![person_polite(Second, Informal)]),
-                ("แก", vec![person_polite(Second, Informal)]),
+                ("แก", vec![person_polite(Second, Intimate)]), // close friends; rude to strangers
                 ("มึง", vec![person_polite(Second, Intimate)]), // vulgar/very close
                 ("เจ้า", vec![person_polite(Second, Informal)]),
                 (
