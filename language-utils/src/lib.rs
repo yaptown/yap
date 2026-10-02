@@ -3203,6 +3203,14 @@ impl PhonemeLabelSource {
 }
 
 impl Language {
+    /// Whether ordinary writing separates words with spaces.
+    pub fn uses_word_spaces(self) -> bool {
+        !matches!(
+            self,
+            Self::ChineseSimplified | Self::ChineseTraditional | Self::Japanese | Self::Thai
+        )
+    }
+
     /// True if `text` contains Han characters that belong exclusively to the
     /// *other* Chinese script (e.g. Traditional-only characters when `self` is
     /// `ChineseSimplified`). Always false for non-Chinese languages. Used to
@@ -5580,6 +5588,26 @@ mod capitalization_tests {
 #[cfg(test)]
 mod predict_whitespace_tests {
     use super::*;
+
+    #[test]
+    fn word_spaces_follow_the_writing_system() {
+        for language in [
+            Language::Thai,
+            Language::Japanese,
+            Language::ChineseSimplified,
+            Language::ChineseTraditional,
+        ] {
+            assert!(!language.uses_word_spaces());
+        }
+        for language in [
+            Language::French,
+            Language::English,
+            Language::Korean,
+            Language::Hindi,
+        ] {
+            assert!(language.uses_word_spaces());
+        }
+    }
 
     fn word(text: &str, pos: PartOfSpeech) -> Word<String> {
         Word {

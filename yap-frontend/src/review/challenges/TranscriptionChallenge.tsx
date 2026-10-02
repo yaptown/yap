@@ -169,10 +169,11 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
                   grade.autograding_error,
                 );
               apply(
-                transcription_transition(stateRef.current, {
-                  type: "Graded",
-                  grade,
-                }),
+                transcription_transition(
+                  stateRef.current,
+                  { type: "Graded", grade },
+                  targetLanguage,
+                ),
               );
             });
             break;
@@ -206,9 +207,9 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
   const send = useCallback(
     (event: TranscriptionEvent) => {
       if (event.type === "CancelGrading") gradingGenerationRef.current++;
-      applyStep(transcription_transition(stateRef.current, event));
+      applyStep(transcription_transition(stateRef.current, event, targetLanguage));
     },
-    [applyStep],
+    [applyStep, targetLanguage],
   );
 
   // The host keys this component by challenge; resume only its initial snapshot.
