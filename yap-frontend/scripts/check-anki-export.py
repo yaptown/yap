@@ -65,7 +65,7 @@ def check_sql(package, plan, directory):
     with zipfile.ZipFile(package) as archive:
         assert set(archive.namelist()) == {"collection.anki2", "media", "0", "1", "2", "3", "4", "5"}
         media = json.loads(archive.read("media"))
-        assert set(media.values()) == {"human.ogg", "poster.jpg", "tts.wav", "word.wav", "subs.vtt", "masked.vtt"}, media
+        assert set(media.values()) == {"human.ogg", "poster.jpg", "tts.wav", "word.wav", "_yap-subs-clip.vtt", "_yap-subs-clip-masked.vtt"}, media
         for key in media:
             assert archive.read(key)
         archive.extract("collection.anki2", directory)
@@ -122,7 +122,7 @@ def check_sql(package, plan, directory):
             assert html.unescape(fields[0]) == raw
             if note["type"] == "Word":
                 assert html.unescape(fields[1]) == note["definition"]
-                assert fields[5] == ("subs.vtt" if index == 0 else "")
+                assert fields[5] == ("_yap-subs-clip.vtt" if index == 0 else "")
                 wanted_ordinals = [0]
             else:
                 for field, key in [(1, "translation"), (2, "target_word"), (3, "target_gloss")]:
@@ -132,8 +132,8 @@ def check_sql(package, plan, directory):
                     assert fields[7] == "[sound:tts.wav]"
                 if index == 4:
                     assert fields[7] == "" and fields[9] == ""
-                assert fields[10] == ("" if index == 4 else "subs.vtt")
-                assert fields[11] == "masked.vtt"
+                assert fields[10] == ("" if index == 4 else "_yap-subs-clip.vtt")
+                assert fields[11] == "_yap-subs-clip-masked.vtt"
                 wanted_ordinals = ([0] if note["include_reading"] else []) + (
                     [1] if note["include_listening"] and index != 4 else []
                 )
@@ -161,6 +161,9 @@ def check_variant(root, variant):
         try:
             for iteration in range(2):
                 result = import_package(collection, package)
+                # Template-only tracks must actually survive import, not just render in the HTML.
+                for filename in ("_yap-subs-clip.vtt", "_yap-subs-clip-masked.vtt"):
+                    assert (Path(collection.media.dir()) / filename).is_file(), filename
                 assert counts(collection) == (5, plan["stats"]["card_count"] - int(variant != "reading"))
                 assert len(result.log.new) == (5 if iteration == 0 else 0)
                 for note in plan["notes"]:
@@ -202,7 +205,7 @@ def check_variant(root, variant):
                     tracks = [attrs for tag, attrs in Tags(markup).tags if tag == "track"]
                     field = "masked_subtitles" if not is_word and card.ord == 1 and not back else "subtitles"
                     filename = note.get(field)
-                    expected = [] if not filename or filename == "missing.vtt" else [filename]
+                    expected = [] if not filename or filename == "_yap-subs-missing.vtt" else [filename]
                     assert [track["src"] for track in tracks] == expected, (note, tracks)
                     assert all(tag != "audio" for tag, _ in Tags(markup).tags)
             media = collection.media.check()

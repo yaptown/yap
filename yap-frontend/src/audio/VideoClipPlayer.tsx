@@ -9,6 +9,7 @@ import {
   get_clip,
   get_clip_manifest_version,
   invalidate_clip_cache,
+  transcription_mask_cue,
   type ClipSubtitleCue,
   type Deck,
   type Language,
@@ -248,7 +249,9 @@ export function VideoClipPlayer({
             }`}
           >
             <TargetLanguageText language={language}>
-              {currentCue.role === "sentence" ? maskedSentence ?? currentCue.text : currentCue.text}
+              {currentCue.role === "sentence" && maskedSentence !== undefined
+                ? transcription_mask_cue(currentCue.text, text, maskedSentence)
+                : currentCue.text}
             </TargetLanguageText>
           </span>
         </div>

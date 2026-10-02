@@ -70,8 +70,8 @@ async function writeFixtures(buildApkg, output) {
   const wav = new Uint8Array([82, 73, 70, 70, 0, 0, 0, 0, 87, 65, 86, 69, 1, 2, 3]);
   const bundled = new Map([
     ["human.ogg", new Uint8Array([79, 103, 103, 83, 1, 2, 3])],
-    ["subs.vtt", new TextEncoder().encode("WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n<c.sentence>bonjour</c>\n")],
-    ["masked.vtt", new TextEncoder().encode("WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n<c.sentence>____</c>\n")],
+    ["_yap-subs-clip.vtt", new TextEncoder().encode("WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n<c.sentence>bonjour</c>\n")],
+    ["_yap-subs-clip-masked.vtt", new TextEncoder().encode("WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n<c.sentence>____</c>\n")],
     ["poster.jpg", new Uint8Array([255, 216, 255, 217])],
   ]);
   let fetched = [];
@@ -97,7 +97,7 @@ async function writeFixtures(buildApkg, output) {
     source: { title: hostileText, year: 2001, imdb_id: "tt0001", poster_filename: "poster.jpg" },
     clip_url: "https://mock.invalid/video.mp4?d=fake&v=1", tts,
     include_reading: true, include_listening: true,
-    subtitles: index === 4 ? "missing.vtt" : "subs.vtt", masked_subtitles: "masked.vtt",
+    subtitles: index === 4 ? "_yap-subs-missing.vtt" : "_yap-subs-clip.vtt", masked_subtitles: "_yap-subs-clip-masked.vtt",
     tags: ["yap", "yap::fra-eng", "yap::sentence", "yap::film::Amélie_2001"],
   });
   const base = {
@@ -106,7 +106,7 @@ async function writeFixtures(buildApkg, output) {
     notes: [
       { type: "Word", ...identity(0), word: `Mot ${hostileText}`, definition: hostileText,
         source: sentence(2, "").source, clip_url: sentence(2, "").clip_url,
-        audio: "human.ogg", subtitles: "subs.vtt", tags: ["yap", "yap::fra-eng", "yap::word", "yap::pos::noun", "yap::frequency::top-100"] },
+        audio: "human.ogg", subtitles: "_yap-subs-clip.vtt", tags: ["yap", "yap::fra-eng", "yap::word", "yap::pos::noun", "yap::frequency::top-100"] },
       { type: "Word", ...identity(1), word: `Autre ${hostileText}`, definition: hostileText,
         audio: "word.mp3", tags: ["yap", "yap::fra-eng", "yap::word", "yap::pos::phrase", "yap::frequency::rare"] },
       sentence(2, "tts.mp3"),
@@ -118,9 +118,9 @@ async function writeFixtures(buildApkg, output) {
       { filename: "poster.jpg", source: { type: "Poster", imdb_id: "tt0001" } },
       { filename: "tts.mp3", source: { type: "Tts", url: "https://mock.invalid/bundle" } },
       { filename: "word.mp3", source: { type: "Tts", url: "https://mock.invalid/word" } },
-      { filename: "subs.vtt", source: { type: "Subtitles", clip_id: "clip", masked_sentence: null } },
-      { filename: "masked.vtt", source: { type: "Subtitles", clip_id: "clip", masked_sentence: "____" } },
-      { filename: "missing.vtt", source: { type: "Subtitles", clip_id: "missing", masked_sentence: null } },
+      { filename: "_yap-subs-clip.vtt", source: { type: "Subtitles", clip_id: "clip", sentence: "bonjour", masked_sentence: null } },
+      { filename: "_yap-subs-clip-masked.vtt", source: { type: "Subtitles", clip_id: "clip", sentence: "bonjour", masked_sentence: "____" } },
+      { filename: "_yap-subs-missing.vtt", source: { type: "Subtitles", clip_id: "missing", sentence: "bonjour", masked_sentence: null } },
       { filename: "failed.mp3", source: { type: "Tts", url: "https://mock.invalid/fail" } },
     ],
     stats: { sentence_count: 3, word_count: 2, card_count: 8 },
@@ -145,7 +145,7 @@ async function writeFixtures(buildApkg, output) {
       const progress = [];
       fetched = [];
       const blob = await buildApkg(plan, async source => {
-        if (source.type === "Subtitles") return source.clip_id === "missing" ? undefined : bundled.get(source.masked_sentence ? "masked.vtt" : "subs.vtt");
+        if (source.type === "Subtitles") return source.clip_id === "missing" ? undefined : bundled.get(source.masked_sentence ? "_yap-subs-clip-masked.vtt" : "_yap-subs-clip.vtt");
         const filename = source.type === "Poster" ? "poster.jpg" : "human.ogg";
         assert(source.type !== "Tts");
         return bundled.get(filename);

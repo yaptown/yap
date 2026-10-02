@@ -22,6 +22,11 @@ pub struct TranscriptionSubmission {
 }
 
 #[bridgerton::bridge]
+pub fn transcription_mask_cue(cue_text: String, sentence: String, masked: String) -> String {
+    transcription_challenge::mask_cue(&cue_text, &sentence, &masked)
+}
+
+#[bridgerton::bridge]
 pub fn prepare_transcription_submission(
     parts: Vec<Part>,
     inputs: Vec<TranscriptionInput>,

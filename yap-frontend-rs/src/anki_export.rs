@@ -149,6 +149,7 @@ pub enum AnkiMediaSource {
     },
     Subtitles {
         clip_id: String,
+        sentence: String,
         masked_sentence: Option<String>,
     },
 }
@@ -491,11 +492,13 @@ fn clip_presentation(
     tags: &mut Vec<String>,
 ) -> (Option<AnkiSource>, String, String) {
     let clip = clips::clip_for_sentence(language, text).unwrap();
-    let subtitles = format!("yap-subs-{}.vtt", clip.clip_id);
+    // Anki only imports and retains template-only media when its name starts with '_'.
+    let subtitles = format!("_yap-subs-{}.vtt", clip.clip_id);
     bundled.push(AnkiBundledMedia {
         filename: subtitles.clone(),
         source: AnkiMediaSource::Subtitles {
             clip_id: clip.clip_id.clone(),
+            sentence: text.to_owned(),
             masked_sentence: None,
         },
     });
@@ -624,12 +627,16 @@ impl Deck {
             }
             AnkiMediaSource::Subtitles {
                 clip_id,
+                sentence,
                 masked_sentence,
             } => {
                 let cues = clips::download_subtitles(language, &clip_id, None)
                     .await
                     .ok()?;
-                Some(clips::subtitles_webvtt(&cues, masked_sentence.as_deref()).into_bytes())
+                Some(
+                    clips::subtitles_webvtt(&cues, &sentence, masked_sentence.as_deref())
+                        .into_bytes(),
+                )
             }
             AnkiMediaSource::Tts { .. } => None,
         }
@@ -1140,11 +1147,12 @@ impl PlannerState {
                 .transcription_challenge_for_sentence(gram.gram, sentence)
                 .unwrap();
             let clip = clips::clip_for_sentence(language, &text).unwrap();
-            let filename = format!("yap-subs-{}-masked.vtt", clip.clip_id);
+            let filename = format!("_yap-subs-{}-masked.vtt", clip.clip_id);
             bundled.push(AnkiBundledMedia {
                 filename: filename.clone(),
                 source: AnkiMediaSource::Subtitles {
                     clip_id: clip.clip_id,
+                    sentence: text.clone(),
                     masked_sentence: Some(
                         language_utils::transcription_challenge::masked_sentence(&challenge.parts),
                     ),
@@ -1557,20 +1565,21 @@ mod tests {
                 let AnkiMediaSource::Subtitles {
                     clip_id,
                     masked_sentence: None,
+                    ..
                 } = &plain.source
                 else {
                     panic!("verbatim subtitle track")
                 };
-                assert_eq!(*subtitles, format!("yap-subs-{clip_id}.vtt"));
+                assert_eq!(*subtitles, format!("_yap-subs-{clip_id}.vtt"));
                 if let Some(masked) = masked {
                     let media = plan
                         .bundled
                         .iter()
                         .find(|media| &media.filename == masked)
                         .unwrap();
-                    assert_eq!(*masked, format!("yap-subs-{clip_id}-masked.vtt"));
+                    assert_eq!(*masked, format!("_yap-subs-{clip_id}-masked.vtt"));
                     assert!(
-                        matches!(&media.source, AnkiMediaSource::Subtitles { clip_id: id, masked_sentence: Some(text) } if id == clip_id && text.contains("____"))
+                        matches!(&media.source, AnkiMediaSource::Subtitles { clip_id: id, masked_sentence: Some(text), .. } if id == clip_id && text.contains("____"))
                     );
                 }
             }

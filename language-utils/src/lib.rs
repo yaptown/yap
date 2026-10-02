@@ -1621,6 +1621,38 @@ pub mod transcription_challenge {
         }
 
         #[test]
+        fn cue_masking_preserves_neighbouring_sentences() {
+            assert_eq!(
+                mask_cue(
+                    "Non, Jo. Le marchand de couleurs d'abord.",
+                    "Non, Jo.",
+                    "____, Jo."
+                ),
+                "____, Jo. Le marchand de couleurs d'abord."
+            );
+            assert_eq!(
+                mask_cue(
+                    "Catherine, c'est pour toi. C'est Guy.",
+                    "C'est Guy.",
+                    "________ Guy."
+                ),
+                "Catherine, c'est pour toi. ________ Guy."
+            );
+            assert_eq!(
+                mask_cue(
+                    "Je n'irai pas. Je n'irai pas.",
+                    "Je n'irai pas.",
+                    "____ ____."
+                ),
+                "____ ____. ____ ____."
+            );
+            assert_eq!(
+                mask_cue("Different subtitle wording.", "C'est Guy.", "________ Guy."),
+                "________ Guy."
+            );
+        }
+
+        #[test]
         fn masking_preserves_provided_text_and_each_literals_whitespace() {
             let parts = [
                 Part::Provided {
@@ -1638,6 +1670,15 @@ pub mod transcription_challenge {
             ];
             assert_eq!(masked_sentence(&parts), "Salut, ____ ____!\u{202f}____");
             assert_eq!(masked_sentence(&[]), "");
+        }
+    }
+
+    /// Keep neighbouring sentences in a cue; unmatched wording must not reveal the answer.
+    pub fn mask_cue(cue_text: &str, sentence: &str, masked: &str) -> String {
+        if cue_text.contains(sentence) {
+            cue_text.replace(sentence, masked)
+        } else {
+            masked.to_owned()
         }
     }
 
