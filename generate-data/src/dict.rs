@@ -1,12 +1,10 @@
+use crate::corpus_samples::{CorpusIndex, SampleCache};
 use futures::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{
     Atom, Course, DictionaryDefinition, Gram, GramFrequencyEntry, Heteronym,
-    PhrasebookDefinitionEntry, PhrasebookDefinitionEntryV2, SentenceGram, SentenceGrams,
-    TargetToNativeWord, WordType,
+    PhrasebookDefinitionEntry, PhrasebookDefinitionEntryV2, TargetToNativeWord, WordType,
 };
-use rustc_hash::FxHashMap;
-use sentence_sampler::sample_to_target;
 use std::{collections::BTreeMap, sync::LazyLock};
 use tysm::chat_completions::{ChatClient, ChatMessage};
 
@@ -113,7 +111,7 @@ fn normalize_phrase(entry: &mut PhrasebookDefinitionEntry, native: language_util
 async fn generate_dictionary_group(
     client: &ChatClient,
     entries: &[(Heteronym<String>, u32)],
-    samples: &BTreeMap<Heteronym<String>, Vec<String>>,
+    samples: &SampleCache<Heteronym<String>>,
     system_prompt: &str,
     policy: DictionaryPolicy,
     progress: &ProgressBar,
@@ -124,7 +122,8 @@ async fn generate_dictionary_group(
             system_prompt,
             entries,
             |(heteronym, _)| {
-                let sentences = samples[heteronym]
+                let sentences = samples
+                    .get(heteronym)
                     .iter()
                     .enumerate()
                     .map(|(i, sentence)| format!("{}. {sentence}", i + 1))
@@ -187,17 +186,11 @@ async fn generate_dictionary_group(
     Ok(accepted)
 }
 
-/// `heteronym_sentences` is a persistent cache of heteronym -> corpus sentences,
-/// revalidated against the current course corpus, so a word's prompt (and so its
-/// cached entry) only changes when one of its sentences leaves the corpus.
 pub async fn create_gram_dictionary(
     course: Course,
     gram_frequencies: &[GramFrequencyEntry<String>],
-    encoded_sentences: &[(
-        String,
-        SentenceGrams<language_utils::TaggedGram<Gram<String>>>,
-    )],
-    heteronym_sentences: &mut BTreeMap<Heteronym<String>, Vec<String>>,
+    corpus: &CorpusIndex<'_>,
+    heteronym_sentences: &mut SampleCache<Heteronym<String>>,
 ) -> anyhow::Result<BTreeMap<Heteronym<String>, DictionaryDefinition>> {
     let target_language_heteronyms = extract_single_atom_heteronyms(gram_frequencies);
     let Course {
@@ -207,24 +200,22 @@ pub async fn create_gram_dictionary(
 
     // Every single-atom gram of a heteronym (each sense, each capitalization)
     // witnesses it, so the pool covers all the ways the word is used.
-    let gram_to_sentences = build_gram_to_sentences_index(encoded_sentences);
     let mut pools: BTreeMap<&Heteronym<String>, Vec<&str>> = BTreeMap::new();
     for entry in gram_frequencies {
         if let [Atom::Tok(word)] = entry.gram.gram.0.as_slice()
             && let WordType::Heteronym(heteronym) = &word.word_type
-            && let Some(sentences) = gram_to_sentences.get(&entry.gram.gram)
         {
-            pools.entry(heteronym).or_default().extend(sentences);
+            pools
+                .entry(heteronym)
+                .or_default()
+                .extend(corpus.witnesses(&entry.gram.gram));
         }
     }
     for heteronym in target_language_heteronyms.keys() {
         let mut pool = pools.remove(heteronym).unwrap_or_default();
         pool.sort_unstable();
         pool.dedup();
-        revalidate_samples(
-            heteronym_sentences.entry(heteronym.clone()).or_default(),
-            &pool,
-        );
+        heteronym_sentences.refresh(heteronym, &pool);
     }
 
     let count = target_language_heteronyms.len();
@@ -329,87 +320,17 @@ fn extract_single_atom_heteronyms(
     heteronym_frequencies
 }
 
-fn build_gram_to_sentences_index<'a>(
-    encoded_sentences: &'a [(
-        String,
-        SentenceGrams<language_utils::TaggedGram<Gram<String>>>,
-    )],
-) -> FxHashMap<&'a Gram<String>, Vec<&'a str>> {
-    let mut index: FxHashMap<&'a Gram<String>, Vec<&'a str>> = FxHashMap::default();
-
-    for (sentence_text, sentence_grams) in encoded_sentences {
-        for gram in &sentence_grams.grams {
-            let gram_ref = match gram {
-                SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => g,
-            };
-            index
-                .entry(&gram_ref.gram)
-                .or_default()
-                .push(sentence_text.as_str());
-        }
-        // A high-confidence match witnesses its gram as well as the encoded
-        // stream does — and for a citation gram, whose matches are variant
-        // occurrences rewritten to it (`pipeline::apply_citations`), matches
-        // are the only witnesses: the citation form itself rarely occurs
-        // literally, so without these its definition would be generated with
-        // no example sentences at all.
-        for term in &sentence_grams.multiword_terms {
-            index
-                .entry(&term.gram.gram)
-                .or_default()
-                .push(sentence_text.as_str());
-        }
-    }
-    // A sentence can witness the same gram twice (encoded + match, or two
-    // match positions); pushes for one sentence are adjacent, so `dedup`
-    // suffices to keep the example pool duplicate-free.
-    for sentences in index.values_mut() {
-        sentences.dedup();
-    }
-
-    index
-}
-
-fn revalidate_samples(samples: &mut Vec<String>, pool: &[&str]) {
-    // A valid nonempty selection is part of the prompt cache key; leave it alone.
-    if !samples.is_empty() && samples.iter().all(|s| pool.contains(&s.as_str())) {
-        return;
-    }
-    samples.retain(|s| pool.contains(&s.as_str()));
-    let candidates: Vec<_> = pool
-        .iter()
-        .copied()
-        .filter(|s| !samples.iter().any(|old| old == s))
-        .collect();
-    samples.extend(
-        sample_to_target(
-            candidates,
-            5usize.saturating_sub(samples.len()),
-            |s: &&str| *s,
-        )
-        .into_iter()
-        .map(str::to_owned),
-    );
-}
-
-/// `gram_sentences` is a persistent cache of gram -> example sentences, revalidated
-/// against the current course corpus before it is used in prompts.
 pub async fn create_gram_phrasebook(
     course: Course,
     gram_frequencies: &[GramFrequencyEntry<String>],
-    encoded_sentences: &[(
-        String,
-        SentenceGrams<language_utils::TaggedGram<Gram<String>>>,
-    )],
-    gram_sentences: &mut BTreeMap<Gram<String>, Vec<String>>,
+    corpus: &CorpusIndex<'_>,
+    gram_sentences: &mut SampleCache<Gram<String>>,
 ) -> anyhow::Result<Vec<(Gram<String>, PhrasebookDefinitionEntry)>> {
     let Course {
         native_language,
         target_language,
         ..
     } = course;
-
-    let gram_to_sentences = build_gram_to_sentences_index(encoded_sentences);
 
     let mut multi_atom_grams: BTreeMap<Gram<String>, u32> = BTreeMap::new();
     for entry in gram_frequencies {
@@ -423,9 +344,7 @@ pub async fn create_gram_phrasebook(
     }
 
     for gram in multi_atom_grams.keys() {
-        let pool = gram_to_sentences.get(gram).cloned().unwrap_or_default();
-        let samples = gram_sentences.entry(gram.clone()).or_default();
-        revalidate_samples(samples, &pool);
+        gram_sentences.refresh(gram, corpus.witnesses(gram));
     }
 
     let count = multi_atom_grams.len();
@@ -447,10 +366,7 @@ pub async fn create_gram_phrasebook(
                 + CHAT_CLIENT_LUNA.cost().unwrap_or(0.0);
             pb.set_message(format!("{cost:.2} ({gram_text})"));
 
-            let example_sentences = gram_sentences
-                .get(gram)
-                .cloned()
-                .unwrap_or_default();
+            let example_sentences = gram_sentences.get(gram).to_vec();
 
             async move {
                 let examples_text = if example_sentences.is_empty() {
@@ -604,6 +520,7 @@ pub async fn create_sense_definitions(
     course: Course,
     frequencies: &[GramFrequencyEntry<String>],
     inventories: &BTreeMap<Gram<String>, crate::usage_discovery::UsageInventory>,
+    corpus: &CorpusIndex<'_>,
 ) -> anyhow::Result<(
     BTreeMap<language_utils::TaggedGram<Gram<String>>, TargetToNativeWord>,
     BTreeMap<language_utils::TaggedGram<Gram<String>>, PhrasebookDefinitionEntry>,
@@ -625,7 +542,13 @@ pub async fn create_sense_definitions(
         async move {
             let gram = &entry.gram;
             let usage = &inventories[&gram.gram].usages[gram.sense.unwrap().get() as usize - 1];
-            let mut anchors: Vec<_> = usage.anchors.iter().collect();
+            // The inventory is shared by a language's dialects and outlives
+            // bans, so keep only anchors still in this course's corpus.
+            let mut anchors: Vec<_> = usage
+                .anchors
+                .iter()
+                .filter(|anchor| corpus.contains(&anchor.sentence))
+                .collect();
             anchors.sort_by_key(|anchor| !anchor.gold);
             let examples = anchors
                 .iter()
@@ -709,19 +632,6 @@ mod tests {
                 assert_eq!(policy.example_guidance(), "");
             }
         }
-    }
-
-    #[test]
-    fn samples_retain_order_and_replace_only_stale_members() {
-        let mut samples = vec!["current b".into(), "current a".into()];
-        let pool = ["current a", "current b", "new"];
-        revalidate_samples(&mut samples, &pool);
-        assert_eq!(samples, ["current b", "current a"]);
-        samples.push("Brazilian sentence removed by dialect filter".into());
-        revalidate_samples(&mut samples, &pool);
-        assert_eq!(samples, ["current b", "current a", "new"]);
-        revalidate_samples(&mut samples, &[]);
-        assert!(samples.is_empty());
     }
 
     #[test]
