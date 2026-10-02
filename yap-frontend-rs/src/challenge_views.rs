@@ -4,7 +4,7 @@ use language_utils::{Language, PartOfSpeech, PatternPosition, PronunciationGuide
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    CardContent, FlashCard, PronunciationCue, Rating, get_flashcard_disclosure,
+    CardContent, FlashCard, PronunciationCue, get_flashcard_disclosure,
     learning_metadata::get_language_metadata, should_show_challenge_tutorial,
 };
 
