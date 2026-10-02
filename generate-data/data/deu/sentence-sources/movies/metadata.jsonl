@@ -133,14 +133,14 @@
 {"id":"tt0070040","title":"Der Geist des Bienenstocks","year":1973,"original_language":"es","rotten_tomatoes_score":93}
 {"id":"tt0287467","title":"Sprich mit ihr","year":2002,"original_language":"es","rotten_tomatoes_score":91}
 {"id":"tt0117883","title":"Tesis - Faszination des Grauens","year":1996,"original_language":"es","rotten_tomatoes_score":83}
-{"id":"tt1016150","title":"Im Westen nichts Neues","year":2022,"original_language":"de","rotten_tomatoes_score":90}
+{"id":"tt1016150","title":"Im Westen nichts Neues","year":2022,"original_language":"de","rotten_tomatoes_score":90,"variety":"deu"}
 {"id":"tt0088323","title":"Die unendliche Geschichte","year":1984,"original_language":"de","rotten_tomatoes_score":84}
-{"id":"tt0405094","title":"Das Leben der Anderen","year":2006,"original_language":"de","rotten_tomatoes_score":92}
-{"id":"tt1063669","title":"Die Welle","year":2008,"original_language":"de","rotten_tomatoes_score":67}
-{"id":"tt0301357","title":"Good Bye, Lenin!","year":2003,"original_language":"de","rotten_tomatoes_score":91}
-{"id":"tt0130827","title":"Lola rennt","year":1998,"original_language":"de","rotten_tomatoes_score":93}
+{"id":"tt0405094","title":"Das Leben der Anderen","year":2006,"original_language":"de","rotten_tomatoes_score":92,"variety":"deu"}
+{"id":"tt1063669","title":"Die Welle","year":2008,"original_language":"de","rotten_tomatoes_score":67,"variety":"deu"}
+{"id":"tt0301357","title":"Good Bye, Lenin!","year":2003,"original_language":"de","rotten_tomatoes_score":91,"variety":"deu"}
+{"id":"tt0130827","title":"Lola rennt","year":1998,"original_language":"de","rotten_tomatoes_score":93,"variety":"deu"}
 {"id":"tt0082096","title":"Das Boot","year":1981,"original_language":"de","rotten_tomatoes_score":98}
-{"id":"tt0022100","title":"M - Eine Stadt sucht einen Mörder","year":1931,"original_language":"de","rotten_tomatoes_score":100}
+{"id":"tt0022100","title":"M - Eine Stadt sucht einen Mörder","year":1931,"original_language":"de","rotten_tomatoes_score":100,"variety":"deu"}
 {"id":"tt0013442","title":"Nosferatu, eine Symphonie des Grauens","year":1922,"original_language":"de","rotten_tomatoes_score":97}
 {"id":"tt2987732","title":"Fack ju Göhte","year":2013,"original_language":"de","rotten_tomatoes_score":null}
 {"id":"tt3042408","title":"Who Am I – Kein System ist sicher","year":2014,"original_language":"de","rotten_tomatoes_score":null}
@@ -148,17 +148,17 @@
 {"id":"tt4226388","title":"Victoria","year":2015,"original_language":"de","rotten_tomatoes_score":82}
 {"id":"tt0068182","title":"Aguirre, der Zorn Gottes","year":1972,"original_language":"de","rotten_tomatoes_score":96}
 {"id":"tt4048272","title":"Toni Erdmann","year":2016,"original_language":"de","rotten_tomatoes_score":93}
-{"id":"tt4176826","title":"Er ist wieder da","year":2015,"original_language":"de","rotten_tomatoes_score":null}
-{"id":"tt6763252","title":"Der Hauptmann","year":2018,"original_language":"de","rotten_tomatoes_score":83}
+{"id":"tt4176826","title":"Er ist wieder da","year":2015,"original_language":"de","rotten_tomatoes_score":null,"variety":"deu"}
+{"id":"tt6763252","title":"Der Hauptmann","year":2018,"original_language":"de","rotten_tomatoes_score":83,"variety":"deu"}
 {"id":"tt0813547","title":"Die Fälscher","year":2007,"original_language":"de","rotten_tomatoes_score":93}
 {"id":"tt1149362","title":"Das weiße Band - Eine deutsche Kindergeschichte","year":2009,"original_language":"de","rotten_tomatoes_score":85}
 {"id":"tt0078875","title":"Die Blechtrommel","year":1979,"original_language":"de","rotten_tomatoes_score":84}
 {"id":"tt8535968","title":"Systemsprenger","year":2019,"original_language":"de","rotten_tomatoes_score":94}
 {"id":"tt0250258","title":"Das Experiment","year":2001,"original_language":"de","rotten_tomatoes_score":72}
-{"id":"tt0363163","title":"Der Untergang","year":2004,"original_language":"de","rotten_tomatoes_score":90}
-{"id":"tt0765432","title":"Der Baader Meinhof Komplex","year":2008,"original_language":"de","rotten_tomatoes_score":85}
-{"id":"tt0347048","title":"Gegen die Wand","year":2004,"original_language":"de","rotten_tomatoes_score":null}
-{"id":"tt1954701","title":"Oh Boy","year":2012,"original_language":"de","rotten_tomatoes_score":77}
+{"id":"tt0363163","title":"Der Untergang","year":2004,"original_language":"de","rotten_tomatoes_score":90,"variety":"deu"}
+{"id":"tt0765432","title":"Der Baader Meinhof Komplex","year":2008,"original_language":"de","rotten_tomatoes_score":85,"variety":"deu"}
+{"id":"tt0347048","title":"Gegen die Wand","year":2004,"original_language":"de","rotten_tomatoes_score":null,"variety":"deu"}
+{"id":"tt1954701","title":"Oh Boy","year":2012,"original_language":"de","rotten_tomatoes_score":77,"variety":"deu"}
 {"id":"tt6751668","title":"Parasite","year":2019,"original_language":"ko","rotten_tomatoes_score":99}
 {"id":"tt4016934","title":"Die Taschendiebin","year":2016,"original_language":"ko","rotten_tomatoes_score":96}
 {"id":"tt0364569","title":"Oldboy","year":2003,"original_language":"ko","rotten_tomatoes_score":82}
@@ -365,4 +365,4 @@
 {"id":"tt0104431","title":"Kevin - Allein in New York","year":1992,"original_language":"en","rotten_tomatoes_score":35}
 {"id":"tt0816692","title":"Interstellar","year":2014,"original_language":"en","rotten_tomatoes_score":73}
 {"id":"tt0241527","title":"Harry Potter und der Stein der Weisen","year":2001,"original_language":"en","rotten_tomatoes_score":80}
-{"id":"tt0083946","title":"Fitzcarraldo","year":1982,"original_language":"de","rotten_tomatoes_score":null}
+{"id":"tt0083946","title":"Fitzcarraldo","year":1982,"original_language":"de","rotten_tomatoes_score":null,"variety":"deu"}

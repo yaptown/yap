@@ -135,12 +135,12 @@
 {"id":"tt0817225","title":"密阳","year":2007,"original_language":"ko","rotten_tomatoes_score":94}
 {"id":"tt0310775","title":"我要复仇","year":2002,"original_language":"ko","rotten_tomatoes_score":53}
 {"id":"tt0373074","title":"功夫","year":2004,"original_language":"cn","rotten_tomatoes_score":90}
-{"id":"tt0190332","title":"卧虎藏龙","year":2000,"original_language":"zh","rotten_tomatoes_score":96}
+{"id":"tt0190332","title":"卧虎藏龙","year":2000,"original_language":"zh","rotten_tomatoes_score":96,"variety":"zho-hans"}
 {"id":"tt0299977","title":"英雄","year":2002,"original_language":"zh","rotten_tomatoes_score":null}
-{"id":"tt0385004","title":"十面埋伏","year":2004,"original_language":"zh","rotten_tomatoes_score":87}
+{"id":"tt0385004","title":"十面埋伏","year":2004,"original_language":"zh","rotten_tomatoes_score":87,"variety":"zho-hans"}
 {"id":"tt0101640","title":"大红灯笼高高挂","year":1991,"original_language":"zh","rotten_tomatoes_score":97}
 {"id":"tt0808357","title":"色‧戒","year":2007,"original_language":"zh","rotten_tomatoes_score":73}
-{"id":"tt0106332","title":"霸王别姬","year":1993,"original_language":"zh","rotten_tomatoes_score":90}
+{"id":"tt0106332","title":"霸王别姬","year":1993,"original_language":"zh","rotten_tomatoes_score":90,"variety":"zho-hans"}
 {"id":"tt0118694","title":"花样年华","year":2000,"original_language":"cn","rotten_tomatoes_score":92}
 {"id":"tt0109424","title":"重庆森林","year":1994,"original_language":"cn","rotten_tomatoes_score":89}
 {"id":"tt0338564","title":"无间道","year":2002,"original_language":"cn","rotten_tomatoes_score":94}
@@ -156,7 +156,7 @@
 {"id":"tt0092263","title":"英雄本色","year":1986,"original_language":"cn","rotten_tomatoes_score":95}
 {"id":"tt0089374","title":"警察故事","year":1985,"original_language":"cn","rotten_tomatoes_score":90}
 {"id":"tt0103285","title":"黄飞鸿之一：壮志凌云","year":1991,"original_language":"cn","rotten_tomatoes_score":90}
-{"id":"tt0244316","title":"一一","year":2000,"original_language":"zh","rotten_tomatoes_score":null}
+{"id":"tt0244316","title":"一一","year":2000,"original_language":"zh","rotten_tomatoes_score":null,"variety":"zho-hans"}
 {"id":"tt0101258","title":"阿飞正传","year":1990,"original_language":"cn","rotten_tomatoes_score":91}
 {"id":"tt0212712","title":"2046","year":2004,"original_language":"zh","rotten_tomatoes_score":87}
 {"id":"tt1462900","title":"一代宗师","year":2013,"original_language":"zh","rotten_tomatoes_score":78}
@@ -164,14 +164,14 @@
 {"id":"tt0209189","title":"一个都不能少","year":1999,"original_language":"zh","rotten_tomatoes_score":96}
 {"id":"tt0235060","title":"我的父亲母亲","year":1999,"original_language":"zh","rotten_tomatoes_score":89}
 {"id":"tt0215369","title":"洗澡","year":1999,"original_language":"zh","rotten_tomatoes_score":87}
-{"id":"tt0107156","title":"喜宴","year":1993,"original_language":"zh","rotten_tomatoes_score":94}
+{"id":"tt0107156","title":"喜宴","year":1993,"original_language":"zh","rotten_tomatoes_score":94,"variety":"zho-hans"}
 {"id":"tt0111786","title":"阳光灿烂的日子","year":1994,"original_language":"zh","rotten_tomatoes_score":null}
 {"id":"tt0434008","title":"黑社会","year":2005,"original_language":"cn","rotten_tomatoes_score":86}
 {"id":"tt1267160","title":"海角七号","year":2008,"original_language":"zh","rotten_tomatoes_score":null}
 {"id":"tt2036416","title":"那些年，我们一起追的女孩","year":2011,"original_language":"zh","rotten_tomatoes_score":null}
 {"id":"tt8033592","title":"后来的我们","year":2018,"original_language":"zh","rotten_tomatoes_score":60}
 {"id":"tt5290882","title":"唐人街探案","year":2015,"original_language":"zh","rotten_tomatoes_score":null}
-{"id":"tt7605074","title":"流浪地球","year":2019,"original_language":"zh","rotten_tomatoes_score":70}
+{"id":"tt7605074","title":"流浪地球","year":2019,"original_language":"zh","rotten_tomatoes_score":70,"variety":"zho-hans"}
 {"id":"tt28151876","title":"热辣滚烫","year":2024,"original_language":"zh","rotten_tomatoes_score":82}
 {"id":"tt21148018","title":"满江红","year":2023,"original_language":"zh","rotten_tomatoes_score":94}
 {"id":"tt9288776","title":"白蛇：缘起","year":2019,"original_language":"zh","rotten_tomatoes_score":70}
@@ -271,14 +271,14 @@
 {"id":"tt0071129","title":"阿玛柯德","year":1973,"original_language":"it","rotten_tomatoes_score":88}
 {"id":"tt0091670","title":"牺牲","year":1986,"original_language":"sv","rotten_tomatoes_score":88}
 {"id":"tt0050986","title":"野草莓","year":1957,"original_language":"sv","rotten_tomatoes_score":94}
-{"id":"tt0234837","title":"Suzhou River","year":2000,"original_language":"zh","rotten_tomatoes_score":null}
-{"id":"tt0446059","title":"Fearless","year":2006,"original_language":"zh","rotten_tomatoes_score":null}
-{"id":"tt10627720","title":"Ne Zha","year":2019,"original_language":"zh","rotten_tomatoes_score":null}
-{"id":"tt0111797","title":"Eat Drink Man Woman","year":1994,"original_language":"zh","rotten_tomatoes_score":null}
-{"id":"tt0116426","title":"The God of Cookery","year":1996,"original_language":"zh","rotten_tomatoes_score":null}
-{"id":"tt4967094","title":"Our Times","year":2015,"original_language":"zh","rotten_tomatoes_score":null}
-{"id":"tt6054290","title":"SoulMate","year":2016,"original_language":"zh","rotten_tomatoes_score":null}
-{"id":"tt10883506","title":"A Sun","year":2019,"original_language":"zh","rotten_tomatoes_score":null}
-{"id":"tt7362036","title":"Dying to Survive","year":2018,"original_language":"zh","rotten_tomatoes_score":null}
-{"id":"tt25434854","title":"Deep Sea","year":2023,"original_language":"zh","rotten_tomatoes_score":null}
-{"id":"tt16345484","title":"I Am What I Am","year":2021,"original_language":"zh","rotten_tomatoes_score":null}
+{"id":"tt0234837","title":"Suzhou River","year":2000,"original_language":"zh","rotten_tomatoes_score":null,"variety":"zho-hans"}
+{"id":"tt0446059","title":"Fearless","year":2006,"original_language":"zh","rotten_tomatoes_score":null,"variety":"zho-hans"}
+{"id":"tt10627720","title":"Ne Zha","year":2019,"original_language":"zh","rotten_tomatoes_score":null,"variety":"zho-hans"}
+{"id":"tt0111797","title":"Eat Drink Man Woman","year":1994,"original_language":"zh","rotten_tomatoes_score":null,"variety":"zho-hans"}
+{"id":"tt0116426","title":"The God of Cookery","year":1996,"original_language":"zh","rotten_tomatoes_score":null,"variety":"zho-hans"}
+{"id":"tt4967094","title":"Our Times","year":2015,"original_language":"zh","rotten_tomatoes_score":null,"variety":"zho-hans"}
+{"id":"tt6054290","title":"SoulMate","year":2016,"original_language":"zh","rotten_tomatoes_score":null,"variety":"zho-hans"}
+{"id":"tt10883506","title":"A Sun","year":2019,"original_language":"zh","rotten_tomatoes_score":null,"variety":"zho-hans"}
+{"id":"tt7362036","title":"Dying to Survive","year":2018,"original_language":"zh","rotten_tomatoes_score":null,"variety":"zho-hans"}
+{"id":"tt25434854","title":"Deep Sea","year":2023,"original_language":"zh","rotten_tomatoes_score":null,"variety":"zho-hans"}
+{"id":"tt16345484","title":"I Am What I Am","year":2021,"original_language":"zh","rotten_tomatoes_score":null,"variety":"zho-hans"}
