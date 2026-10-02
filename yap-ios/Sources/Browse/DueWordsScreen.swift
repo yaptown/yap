@@ -4,7 +4,7 @@ struct DueWordsScreen: View {
     let review: ReviewModel
     var view: DueWordsScreenView? = nil
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 10)) { _ in
+        TimelineView(.every(10)) { _ in
             let now = ReviewModel.now
             let view = self.view ?? review.deck.due_words_view(banned: review.banned, timestamp_ms: now)
             ScrollView {

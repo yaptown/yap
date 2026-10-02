@@ -6,7 +6,7 @@ struct StatsScreen: View {
     let showDue: () -> Void
     var view: StatsScreenView? = nil
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 10)) { _ in
+        TimelineView(.every(10)) { _ in
             let now = ReviewModel.now
             let view = self.view ?? review.deck.stats_screen_view(banned: review.banned, timestamp_ms: now)
             ScrollViewReader { proxy in

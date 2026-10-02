@@ -20,7 +20,7 @@ struct ReviewScreen: View {
                             .buttonStyle(.bordered)
                     }.padding(.top, 12)
                 }
-                TimelineView(.periodic(from: .now, by: 1)) { context in
+                TimelineView(.every(1)) { context in
                     if let weapon = host.weapon {
                         let sync = weapon.sync_status(online: host.online, now_ms: context.date.timeIntervalSince1970 * 1000,
                             manual_sync_in_flight: false, host_sync_error: host.syncError)

@@ -17,7 +17,7 @@ struct SettingsScreen: View {
     @State private var deleteFailed = false
     @FocusState private var editingName: Bool
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
+        TimelineView(.every(1)) { context in
             let sync = session.weapon?.sync_status(online: session.online, now_ms: context.date.timeIntervalSince1970 * 1000,
                 manual_sync_in_flight: syncing, host_sync_error: session.syncError)
             ScrollView {

@@ -35,7 +35,7 @@ struct HomeScreen: View {
         return wrapped
     }
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 10)) { _ in
+        TimelineView(.every(10)) { _ in
             let view = screenView()
             GeometryReader { geometry in
                 ScrollView {
@@ -143,7 +143,7 @@ private struct SyncDot: View {
     @Environment(\.reviewHost!) private var host
     let open: () -> Void
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
+        TimelineView(.every(1)) { context in
             if let sync = host.weapon?.sync_status(online: host.online, now_ms: context.date.timeIntervalSince1970 * 1000,
                                                    manual_sync_in_flight: false, host_sync_error: host.syncError),
                let indicator = sync.indicator {

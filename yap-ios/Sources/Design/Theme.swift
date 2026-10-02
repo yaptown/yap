@@ -195,3 +195,13 @@ extension ToolbarItem {
         if #available(iOS 26, *) { sharedBackgroundVisibility(.hidden) } else { self }
     }
 }
+
+extension TimelineSchedule where Self == PeriodicTimelineSchedule {
+    /// A periodic schedule anchored to launch. `.periodic(from: .now, …)` is a new
+    /// schedule on every body pass, and a changed schedule refreshes its timeline at
+    /// once; two of them on screen kept refreshing each other tens of thousands of
+    /// times a second, pinning the main thread and heating the phone.
+    static func every(_ seconds: TimeInterval) -> PeriodicTimelineSchedule { .periodic(from: timelineAnchor, by: seconds) }
+}
+
+private let timelineAnchor = Date()
