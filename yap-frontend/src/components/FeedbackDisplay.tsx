@@ -40,7 +40,7 @@ export function FeedbackDisplay({
 
   // The encouragement heads the feedback in the verdict's tint.
   return (
-    <div className="space-y-3 text-lg leading-relaxed animate-fade-in">
+    <div className="space-y-3 animate-fade-in">
       {encouragement && (
         <div className={`font-semibold ${toneText[tone]}`}>
           <Markdown rehypePlugins={[rehypeRaw]} components={components}>

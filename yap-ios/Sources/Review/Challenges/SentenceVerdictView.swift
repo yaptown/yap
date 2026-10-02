@@ -88,7 +88,7 @@ struct FeedbackSection: View, Equatable {
                     Text(markdown(encouragement)).fontWeight(.semibold).foregroundStyle(tone.foreground)
                 }
                 if let explanation, !explanation.isEmpty { Text(markdown(explanation)) }
-            }.frame(maxWidth: .infinity, alignment: .leading).fadeIn(duration: 0.25)
+            }.font(.callout).frame(maxWidth: .infinity, alignment: .leading).fadeIn(duration: 0.25)
         }
     }
 }
