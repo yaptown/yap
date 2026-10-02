@@ -3397,6 +3397,8 @@ impl Deck {
                 movies.push(MovieMetadataBasic {
                     id: movie_metadata.id.clone(),
                     title: movie_metadata.title.clone(),
+                    poster_path: None,
+                    localizations: Default::default(),
                     year: movie_metadata.year,
                     // Normalized here as well as on ingest, so packs built
                     // before that existed still hand the frontend a code it

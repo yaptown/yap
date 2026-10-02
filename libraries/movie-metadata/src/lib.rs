@@ -1,5 +1,7 @@
 //! Shared movie metadata providers and on-disk metadata/poster refresh.
 
+mod localization;
+
 use anyhow::{Context, Result, anyhow};
 use language_utils::{Language, MovieMetadataBasic};
 use serde::Deserialize;
@@ -77,7 +79,9 @@ impl OmdbClient {
 /// TMDB API Movie Response
 #[derive(Debug, Deserialize)]
 pub struct TmdbMovie {
+    pub id: u64,
     pub title: String,
+    pub original_title: String,
     pub release_date: Option<String>,
     pub poster_path: Option<String>,
     /// Normalized to real ISO 639-1 on the way in, so freshly written
@@ -95,6 +99,8 @@ impl TmdbMovie {
         MovieMetadataBasic {
             id: imdb_id.to_owned(),
             title: self.title.clone(),
+            poster_path: self.poster_path.clone(),
+            localizations: Default::default(),
             year: self
                 .release_date
                 .as_deref()
@@ -182,14 +188,19 @@ pub fn append_movie_metadata(
         let mut row: serde_json::Value =
             serde_json::from_slice(line).with_context(|| format!("parsing {}", path.display()))?;
         if row["id"] == movie.id {
-            let Some(variety) = &movie.variety else {
-                return Ok(false);
-            };
-            if row["variety"] == *variety {
+            let old = row.clone();
+            if let Some(variety) = &movie.variety {
+                row["variety"] = variety.clone().into();
+            }
+            if !movie.localizations.is_empty() {
+                row["title"] = movie.title.clone().into();
+                row["poster_path"] = serde_json::to_value(&movie.poster_path)?;
+                row["localizations"] = serde_json::to_value(&movie.localizations)?;
+            }
+            if row == old {
                 return Ok(false);
             }
             if !dry_run {
-                row["variety"] = variety.clone().into();
                 let mut updated = existing[..start].to_vec();
                 serde_json::to_writer(&mut updated, &row)?;
                 if line.ends_with(b"\n") {
@@ -280,12 +291,16 @@ fn subtitle_ids(movies_dir: &Path) -> Result<BTreeSet<String>> {
 /// Fill missing metadata and posters without rewriting rows or retrying existing
 /// Rotten Tomatoes scores. Provider failures are reported per film so a missing
 /// poster cannot block a pack build; local I/O and malformed metadata are errors.
+/// Languages with regional varieties also fill each variety's title and poster.
 pub async fn refresh(
     movies_dir: &Path,
     language: Language,
     tmdb: &TmdbClient,
     omdb: &OmdbClient,
 ) -> Result<RefreshReport> {
+    if let Some(varieties) = localization::varieties(language) {
+        return localization::refresh(movies_dir, varieties, tmdb, omdb).await;
+    }
     let metadata_path = movies_dir.join("metadata.jsonl");
     let existing = read_optional(&metadata_path)?.unwrap_or_default();
     let mut metadata = BTreeSet::new();
@@ -352,6 +367,8 @@ mod tests {
         MovieMetadataBasic {
             id: "tt1234567".into(),
             title: "A title\nwith a newline".into(),
+            poster_path: None,
+            localizations: Default::default(),
             year: Some(2001),
             original_language: Some("fr".into()),
             variety: None,
@@ -384,6 +401,31 @@ mod tests {
         assert_eq!(rows[1]["rotten_tomatoes_score"], 98);
         assert_eq!(rows[1]["unknown"], true);
         assert_eq!(rows[1]["variety"], "spa-es");
+        assert!(!append_movie_metadata(&path, &film, false).unwrap());
+    }
+
+    #[test]
+    fn localization_refresh_preserves_authoritative_and_unknown_fields() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("metadata.jsonl");
+        fs::write(&path, r#"{"id":"tt1234567","title":"Old localized title","variety":"por-pt","rotten_tomatoes_score":98,"unknown":true}"#).unwrap();
+        let mut film = movie();
+        film.title = "Original title".into();
+        film.poster_path = Some("/original.jpg".into());
+        film.localizations.insert(
+            "por-pt".into(),
+            language_utils::MovieLocalization {
+                title: "Portugal title".into(),
+                poster_path: Some("/pt.jpg".into()),
+            },
+        );
+        assert!(append_movie_metadata(&path, &film, false).unwrap());
+        let row: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        assert_eq!(row["title"], "Original title");
+        assert_eq!(row["localizations"]["por-pt"]["poster_path"], "/pt.jpg");
+        assert_eq!(row["variety"], "por-pt");
+        assert_eq!(row["rotten_tomatoes_score"], 98);
+        assert_eq!(row["unknown"], true);
         assert!(!append_movie_metadata(&path, &film, false).unwrap());
     }
 
@@ -516,7 +558,7 @@ mod tests {
         assert!(!dir.path().join("metadata.jsonl").exists());
         fs::write(dir.path().join("metadata.jsonl"), "bad json").unwrap();
         assert!(
-            refresh(dir.path(), Language::French, &tmdb, &omdb)
+            refresh(dir.path(), Language::French, &tmdb, &omdb,)
                 .await
                 .is_err()
         );

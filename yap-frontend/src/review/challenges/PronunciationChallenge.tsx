@@ -2,6 +2,7 @@ import type {
   CueSegment,
   PronunciationCue,
   PronunciationView,
+  HighlightedRun,
   Language,
   Rating,
 } from "../../../../yap-frontend-rs/pkg";
@@ -112,8 +113,7 @@ export function PronunciationChallenge({
                       key={index}
                       cue={example.cue}
                       culturalContext={example.cultural_context}
-                      pattern={view.pattern}
-                      position={view.position}
+                      highlightedSegments={example.highlighted_segments}
                       targetLanguage={targetLanguage}
                       nativeLanguage={nativeLanguage}
                       accessToken={accessToken}
@@ -186,8 +186,7 @@ export function PronunciationChallenge({
 function PronunciationRow({
   cue,
   culturalContext,
-  pattern,
-  position,
+  highlightedSegments,
   targetLanguage,
   nativeLanguage,
   accessToken,
@@ -196,8 +195,7 @@ function PronunciationRow({
 }: {
   cue: PronunciationCue;
   culturalContext: string | undefined;
-  pattern: string;
-  position: "Beginning" | "End" | "Anywhere";
+  highlightedSegments: HighlightedRun[][];
   targetLanguage: Language;
   nativeLanguage: Language;
   accessToken: string | undefined;
@@ -209,9 +207,6 @@ function PronunciationRow({
   // this row's clip, after which it stays as the word the voice used. It's per
   // row because the swap is meant to be explained by the audio just heard.
   const [connectorHeard, setConnectorHeard] = useState(false);
-  const firstExample = cue.segments.findIndex(
-    (segment) => segment.role === "Example",
-  );
   // The connector words are one contiguous run, so the first index is enough
   // to find them and to know where the swap goes.
   const firstConnector = cue.segments.findIndex(
@@ -220,10 +215,8 @@ function PronunciationRow({
   const connectorSegments = cue.segments.filter(
     (segment) => segment.role === "Connector",
   );
-  let lastExample = -1;
   let current = -1;
   cue.segments.forEach((segment, index) => {
-    if (segment.role === "Example") lastExample = index;
     if (
       positionMs !== null &&
       segment.start_ms != null &&
@@ -235,26 +228,6 @@ function PronunciationRow({
   // One word as the voice says it: dimmed until the playhead reaches it, lit
   // while it's being said, with the pattern picked out inside example words.
   const spokenWord = (segment: CueSegment, index: number) => {
-    let patternIndex = -1;
-    if (segment.role === "Example") {
-      const word = segment.text.toLowerCase();
-      const needle = pattern.toLowerCase();
-      if (
-        position === "Beginning" &&
-        index === firstExample &&
-        word.startsWith(needle)
-      ) {
-        patternIndex = 0;
-      } else if (
-        position === "End" &&
-        index === lastExample &&
-        word.endsWith(needle)
-      ) {
-        patternIndex = segment.text.length - pattern.length;
-      } else if (position === "Anywhere") {
-        patternIndex = word.indexOf(needle);
-      }
-    }
     const timed = positionMs !== null && segment.start_ms != null;
     const unspoken =
       positionMs !== null &&
@@ -277,19 +250,14 @@ function PronunciationRow({
         <span
           className={`${style} transition-[color,opacity] duration-100 ${unspoken ? "opacity-50" : ""} ${color}`}
         >
-          {patternIndex < 0 ? (
-            segment.text
-          ) : (
-            <>
-              {segment.text.slice(0, patternIndex)}
-              <span className="bg-caution/30 rounded px-0.5">
-                {segment.text.slice(
-                  patternIndex,
-                  patternIndex + pattern.length,
-                )}
+          {highlightedSegments[index].map((run, runIndex) =>
+            run.highlighted ? (
+              <span key={runIndex} className="bg-caution/30 rounded px-0.5">
+                {run.text}
               </span>
-              {segment.text.slice(patternIndex + pattern.length)}
-            </>
+            ) : (
+              <Fragment key={runIndex}>{run.text}</Fragment>
+            ),
           )}
         </span>
       </TargetLanguageText>

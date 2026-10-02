@@ -19,7 +19,29 @@ pub fn eligibility(language: Language, pattern: &str, example: &str) -> Result<(
     eligible_texts(language, example, &spoken)
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum VerificationPolicy {
+    PhonemeAndTranscript,
+    Transcript,
+}
+
+impl VerificationPolicy {
+    fn for_language(language: Language) -> Self {
+        match language.phoneme_label_source() {
+            language_utils::PhonemeLabelSource::Unvalidated => Self::Transcript,
+            _ => Self::PhonemeAndTranscript,
+        }
+    }
+}
+
 fn eligible_texts(language: Language, example: &str, spoken: &str) -> Result<()> {
+    if VerificationPolicy::for_language(language) == VerificationPolicy::Transcript {
+        anyhow::ensure!(
+            whisper::whisper_language(language).is_some(),
+            "no transcript verifier for {language:?}"
+        );
+        return Ok(());
+    }
     // An empty example is used only to preflight the immutable cue before
     // asking for replacements. Real examples are checked independently.
     if !example.is_empty() {
@@ -31,24 +53,35 @@ fn eligible_texts(language: Language, example: &str, spoken: &str) -> Result<()>
 
 #[derive(serde::Serialize)]
 struct CueAttempt {
-    #[serde(flatten)]
-    phoneme: ClipVerification,
+    source: String,
+    synthesis_error: Option<String>,
+    phoneme: Option<ClipVerification>,
     #[serde(skip_serializing_if = "Option::is_none")]
     whisper: Option<crate::pronunciation_whisper::Verification>,
 }
 
 impl CueAttempt {
     fn passed(&self) -> bool {
-        self.phoneme.passed() && self.whisper.as_ref().is_none_or(|w| w.verdict.passed())
+        self.synthesis_error.is_none()
+            && (self.phoneme.is_some() || self.whisper.is_some())
+            && self.phoneme.as_ref().is_none_or(ClipVerification::passed)
+            && self.whisper.as_ref().is_none_or(|w| w.verdict.passed())
     }
 
     fn reason(&self) -> &str {
-        self.phoneme.failure_reason.as_deref().unwrap_or_else(|| {
-            self.whisper
-                .as_ref()
-                .filter(|w| !w.verdict.passed())
-                .map_or("passed", |w| w.verdict.reasoning.as_str())
-        })
+        self.synthesis_error
+            .as_deref()
+            .or_else(|| {
+                self.phoneme
+                    .as_ref()
+                    .and_then(|p| p.failure_reason.as_deref())
+            })
+            .unwrap_or_else(|| {
+                self.whisper
+                    .as_ref()
+                    .filter(|w| !w.verdict.passed())
+                    .map_or("passed", |w| w.verdict.reasoning.as_str())
+            })
     }
 }
 
@@ -70,7 +103,7 @@ impl CueOutcome {
         self.target_error.clone().unwrap_or_else(|| {
             self.attempts
                 .iter()
-                .map(|a| format!("{}: {}", a.phoneme.wav_path, a.reason()))
+                .map(|a| format!("{}: {}", a.source, a.reason()))
                 .collect::<Vec<_>>()
                 .join("; ")
         })
@@ -104,20 +137,13 @@ pub async fn generate_pronunciation_audio(
     http: &reqwest::Client,
     results_log: &Path,
 ) -> Result<FxHashMap<String, PronunciationClip>> {
-    let language = course.target_language;
-    if language.g2p_lang().is_none() {
-        for guide in &pronunciation_data.guides {
-            eprintln!(
-                "{language:?}: dropped pronunciation guide {:?} ({:?}): no G2P ground truth",
-                guide.pattern, guide.position
-            );
-        }
-        println!(
-            "{language:?}: 0 verified pronunciation clips; dropped all {} guides (no G2P ground truth)",
-            pronunciation_data.guides.len()
-        );
-        pronunciation_data.guides.clear();
+    if pronunciation_data.guides.is_empty() {
         return Ok(FxHashMap::default());
+    }
+    let language = course.target_language;
+    let policy = VerificationPolicy::for_language(language);
+    if policy == VerificationPolicy::Transcript {
+        eligible_texts(language, "", "")?;
     }
     // Snapshot before filtering. Generation produces one initial candidate set;
     // eligibility and audio retries share this one bound and tried-word set.
@@ -136,18 +162,39 @@ pub async fn generate_pronunciation_audio(
         .iter()
         .map(|g| g.example_words.len())
         .sum();
+    let pronunciations: HashMap<_, _> = word_to_pronunciation
+        .iter()
+        .map(|(w, p)| (w.to_lowercase(), p.clone()))
+        .collect();
     let mut text_rejections = BTreeMap::new();
-    // Saved-guide reruns obey the same spelling/position contract as fresh
-    // LLM output, before a shared spoken-text cache can make them playable.
-    for guide in &mut pronunciation_data.guides {
-        let reasons = crate::pronunciation_patterns::reject_invalid_examples(
-            &mut guide.example_words,
-            &guide.pattern,
-            guide.position,
-            language,
-        );
-        text_rejections.insert((guide.pattern.clone(), guide.position), reasons);
-    }
+    // Saved guides and newly generated ones obey the same pre-TTS gate.
+    let inventory = &pronunciation_data.sounds;
+    let checked: Vec<_> = futures::stream::iter(&mut pronunciation_data.guides)
+        .map(|guide| {
+            let pronunciations = &pronunciations;
+            async move {
+                let mut reasons = crate::pronunciation_patterns::reject_invalid_examples(
+                    &mut guide.example_words,
+                    &guide.pattern,
+                    guide.position,
+                    language,
+                );
+                reasons.extend(
+                    crate::pronunciation_patterns::pedagogical_check(
+                        course,
+                        guide,
+                        inventory,
+                        pronunciations,
+                    )
+                    .await?,
+                );
+                anyhow::Ok(((guide.pattern.clone(), guide.position), reasons))
+            }
+        })
+        .buffered(10)
+        .try_collect()
+        .await?;
+    text_rejections.extend(checked);
     let mut requests = BTreeMap::new();
     for guide in &pronunciation_data.guides {
         for example in &guide.example_words {
@@ -167,16 +214,16 @@ pub async fn generate_pronunciation_audio(
             );
         }
     }
-    let pronunciations: HashMap<_, _> = word_to_pronunciation
-        .iter()
-        .map(|(w, p)| (w.to_lowercase(), p.clone()))
-        .collect();
-    let ctx = phoneme_verify::VerifyContext::new(
-        http,
-        crate::cache_remote::store(),
-        &pronunciations,
-        language,
-    )?;
+    let store = crate::cache_remote::store();
+    let ctx = match policy {
+        VerificationPolicy::PhonemeAndTranscript => Some(phoneme_verify::VerifyContext::new(
+            http,
+            store.clone(),
+            &pronunciations,
+            language,
+        )?),
+        VerificationPolicy::Transcript => None,
+    };
     let keys = phoneme_verify::TtsKeys::from_env();
     let (language_code, voice_name) = language.google_tts_voice();
     let voice = phoneme_verify::TtsVoice {
@@ -197,13 +244,19 @@ pub async fn generate_pronunciation_audio(
         let generated: Vec<_> = futures::stream::iter(requests)
             .map(|(spoken, (segments, pattern, example))| {
                 let ctx = &ctx;
+                let store = &store;
                 let keys = &keys;
                 let style = &style;
                 async move {
                     let mut outcome = CueOutcome {
                         text: spoken.clone(),
                         passed: false,
-                        target_identity: phoneme_verify::model_target_identity(),
+                        target_identity: match policy {
+                            VerificationPolicy::PhonemeAndTranscript => {
+                                phoneme_verify::model_target_identity()
+                            }
+                            VerificationPolicy::Transcript => "whisper-transcript".into(),
+                        },
                         target_error: None,
                         attempts: Vec::new(),
                         timing_error: None,
@@ -239,15 +292,29 @@ pub async fn generate_pronunciation_audio(
                         },
                     ];
                     for candidate in candidates {
-                        let (bytes, verification) = phoneme_verify::synthesize_verified(
-                            ctx,
-                            "tts-pronunciation",
-                            &candidate,
-                            &spoken,
-                            keys,
-                        )
-                        .await?;
-                        let whisper = if verification.passed() {
+                        let (bytes, phoneme, synthesis_error) = match ctx {
+                            Some(ctx) => {
+                                let (bytes, verification) = phoneme_verify::synthesize_verified(
+                                    ctx,
+                                    "tts-pronunciation",
+                                    &candidate,
+                                    &spoken,
+                                    keys,
+                                )
+                                .await?;
+                                (bytes, Some(verification), None)
+                            }
+                            None => {
+                                let (bytes, defect) = phoneme_verify::synthesize(
+                                    http, store, &candidate, &spoken, keys,
+                                )
+                                .await?;
+                                (bytes, None, defect)
+                            }
+                        };
+                        let whisper = if synthesis_error.is_none()
+                            && phoneme.as_ref().is_none_or(ClipVerification::passed)
+                        {
                             crate::pronunciation_whisper::verify(
                                 http, &bytes, language, &pattern, &example,
                             )
@@ -256,19 +323,22 @@ pub async fn generate_pronunciation_audio(
                             None
                         };
                         let verification = CueAttempt {
-                            phoneme: verification,
+                            source: candidate.label(),
+                            synthesis_error,
+                            phoneme,
                             whisper,
                         };
                         if verification.passed() {
                             let spoken_segments: Vec<_> =
                                 segments.iter().map(|s| s.spoken.as_str()).collect();
-                            let timed: Vec<_> = match phoneme_verify::segment_timings(
-                                ctx,
-                                &bytes,
-                                &spoken_segments,
-                            )
-                            .await
-                            {
+                            let timings = match ctx {
+                                Some(ctx) => {
+                                    phoneme_verify::segment_timings(ctx, &bytes, &spoken_segments)
+                                        .await
+                                }
+                                None => Ok(Vec::new()),
+                            };
+                            let timed: Vec<_> = match timings {
                                 Ok(timings) => segments
                                     .iter()
                                     .zip(timings)
@@ -390,12 +460,44 @@ pub async fn generate_pronunciation_audio(
             // removed below must never be tried again in another round.
             let mut examples = new_examples(examples, &mut tried[index]);
             total_examples += examples.len();
-            let rejected = crate::pronunciation_patterns::reject_invalid_examples(
+            let mut rejected = crate::pronunciation_patterns::reject_invalid_examples(
                 &mut examples,
                 &guide.pattern,
                 guide.position,
                 language,
             );
+            if examples.is_empty() {
+                text_rejections
+                    .entry((guide.pattern.clone(), guide.position))
+                    .or_default()
+                    .extend(rejected);
+                continue;
+            }
+            let new_targets: BTreeSet<_> = examples.iter().map(|e| e.target.clone()).collect();
+            let mut candidate_guide = guide.clone();
+            candidate_guide.example_words.retain(|e| {
+                verified.contains_key(&language_utils::pronunciation_challenge_spoken_text(
+                    language,
+                    &guide.pattern,
+                    &e.target,
+                ))
+            });
+            candidate_guide.example_words.extend(examples);
+            rejected.extend(
+                crate::pronunciation_patterns::pedagogical_check(
+                    course,
+                    &mut candidate_guide,
+                    &pronunciation_data.sounds,
+                    &pronunciations,
+                )
+                .await?,
+            );
+            guide.description = candidate_guide.description;
+            let (mut examples, retained): (Vec<_>, Vec<_>) = candidate_guide
+                .example_words
+                .into_iter()
+                .partition(|e| new_targets.contains(&e.target));
+            guide.example_words = retained;
             text_rejections
                 .entry((guide.pattern.clone(), guide.position))
                 .or_default()
@@ -615,6 +717,29 @@ mod tests {
             Language::French,
         );
         assert!(data.guides.is_empty());
+    }
+
+    #[test]
+    fn european_portuguese_uses_transcripts_without_brazilian_g2p() {
+        assert_eq!(
+            VerificationPolicy::for_language(Language::PortugueseEuropean),
+            VerificationPolicy::Transcript
+        );
+        assert!(Language::PortugueseEuropean.g2p_lang().is_none());
+        assert!(eligibility(Language::PortugueseEuropean, "ão", "cão").is_ok());
+        assert_eq!(
+            VerificationPolicy::for_language(Language::French),
+            VerificationPolicy::PhonemeAndTranscript
+        );
+        assert!(
+            !CueAttempt {
+                source: "test".into(),
+                synthesis_error: None,
+                phoneme: None,
+                whisper: None
+            }
+            .passed()
+        );
     }
 
     #[test]

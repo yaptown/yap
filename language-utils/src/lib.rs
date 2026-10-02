@@ -6,7 +6,9 @@ pub mod indexmap;
 pub mod language_pack;
 pub use language_pack::PACKS_ORIGIN;
 pub mod minimal_pairs;
+pub mod morphology_label;
 pub mod profile;
+pub mod pronunciation_pattern;
 pub mod strokes;
 pub mod text_cleanup;
 pub use strokes::{Stroke, StrokeGlyph, StrokeStandard, StrokeTable};
@@ -496,14 +498,28 @@ where
         .map(|code| normalize_original_language(&code).to_owned()))
 }
 
+/// A regional release's title and poster. The map key is the course language code.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Eq, PartialEq, Ord, PartialOrd)]
+pub struct MovieLocalization {
+    pub title: String,
+    pub poster_path: Option<String>,
+}
+
 /// Basic movie metadata without poster bytes, for serialization to files
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Eq, PartialEq, Ord, PartialOrd)]
 pub struct MovieMetadataBasic {
     /// Unique identifier (IMDb ID, e.g., "tt0211915")
     pub id: String,
-    /// Movie title
+    /// Original release title, used when a course has no regional localization.
     pub title: String,
+    /// Original-language poster, used when a regional poster is unavailable.
+    #[serde(default)]
+    pub poster_path: Option<String>,
+    /// Explicit regional releases; an absent entry uses the original title/poster.
+    #[serde(default)]
+    pub localizations: BTreeMap<String, MovieLocalization>,
     /// Release year
     pub year: Option<u16>,
     /// Original language of the movie (ISO 639-1 code, e.g., "en", "fr").
@@ -3866,14 +3882,16 @@ impl Language {
         match self {
             Language::French => "fr-FR",
             Language::English => "en-US",
-            Language::SpanishLatinAmerican | Language::SpanishPeninsular => "es-ES",
+            Language::SpanishLatinAmerican => "es-MX",
+            Language::SpanishPeninsular => "es-ES",
             Language::German => "de-DE",
             Language::Korean => "ko-KR",
             Language::ChineseSimplified => "zh-CN",
             Language::ChineseTraditional => "zh-TW",
             Language::Japanese => "ja-JP",
             Language::Russian => "ru-RU",
-            Language::PortugueseBrazilian | Language::PortugueseEuropean => "pt-BR",
+            Language::PortugueseBrazilian => "pt-BR",
+            Language::PortugueseEuropean => "pt-PT",
             Language::Italian => "it-IT",
             Language::Hindi => "hi-IN",
             Language::Thai => "th-TH",
@@ -6237,7 +6255,10 @@ mod dialect_tests {
             language.google_tts_voice(),
             ("es-US", "es-US-Chirp3-HD-Achernar")
         );
-        assert_eq!(language.tmdb_language_code(), "es-ES");
+        assert_eq!(language.tmdb_language_code(), "es-MX");
+        assert_eq!(Language::SpanishPeninsular.tmdb_language_code(), "es-ES");
+        assert_eq!(Language::PortugueseBrazilian.tmdb_language_code(), "pt-BR");
+        assert_eq!(Language::PortugueseEuropean.tmdb_language_code(), "pt-PT");
         assert_eq!(
             serde_json::from_value::<Language>(serde_json::json!("SpanishLatinAmerican")).unwrap(),
             language

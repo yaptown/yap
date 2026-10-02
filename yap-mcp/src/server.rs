@@ -1384,7 +1384,7 @@ impl YapMcp {
                     "language": language,
                     "native_language": native_language,
                     "card": card,
-                    "view": yap_frontend_rs::pronunciation_view(pattern.clone(), guide, cues, is_new, times_type_seen),
+                    "view": yap_frontend_rs::pronunciation_view(pattern.clone(), guide, cues, is_new, times_type_seen, state.context.course.target_language),
                 },
             });
             let mut result = CallToolResult::success(vec![ContentBlock::text(format!(

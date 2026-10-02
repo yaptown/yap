@@ -143,6 +143,8 @@ pub fn flashcard_view(
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PronunciationExample {
     pub cue: PronunciationCue,
+    /// Original-text runs aligned with cue.segments; hosts only render these.
+    pub highlighted_segments: Vec<Vec<language_utils::pronunciation_pattern::HighlightedRun>>,
     pub cultural_context: Option<String>,
 }
 
@@ -170,28 +172,32 @@ pub fn pronunciation_view(
     cues: Vec<PronunciationCue>,
     is_new: bool,
     times_type_seen: u32,
+    target_language: Language,
 ) -> PronunciationView {
+    let display_pattern =
+        language_utils::pronunciation_pattern::display_pattern(&pattern, target_language);
+    let suffix = display_pattern.strip_prefix(&pattern).unwrap();
     let (positioned_pattern, position_note) = match guide.position {
         PatternPosition::Beginning => (
-            format!("{pattern}___"),
+            format!("{pattern}___{suffix}"),
             Some("Appears at the beginning of words".into()),
         ),
         PatternPosition::End => (
-            format!("___{pattern}"),
+            format!("___{pattern}{suffix}"),
             Some("Appears at the end of words".into()),
         ),
-        PatternPosition::Anywhere => (pattern.clone(), None),
+        PatternPosition::Anywhere => (display_pattern.clone(), None),
     };
     let tutorial = should_show_challenge_tutorial(times_type_seen);
     let (again_label, remembered_label) = grade_labels(is_new);
     PronunciationView {
         tutorial_prompt: tutorial.then(|| TutorialPrompt {
             before: "Let's practice saying \"".into(),
-            target: Some(pattern.clone()),
+            target: Some(display_pattern),
             after: "\"".into(),
         }),
         tutorial_grade_prompt: tutorial.then(|| "How was your pronunciation?".into()),
-        pattern,
+        pattern: pattern.clone(),
         position: guide.position,
         positioned_pattern,
         position_note,
@@ -201,6 +207,12 @@ pub fn pronunciation_view(
             .zip(cues)
             .take(3)
             .map(|(example, cue)| PronunciationExample {
+                highlighted_segments: pronunciation_highlights(
+                    &cue,
+                    &pattern,
+                    guide.position,
+                    target_language,
+                ),
                 cue,
                 cultural_context: (!example.cultural_context.is_empty())
                     .then_some(example.cultural_context),
@@ -211,6 +223,46 @@ pub fn pronunciation_view(
         remembered_label,
         cant_speak_label: "Can't speak now".into(),
     }
+}
+
+fn pronunciation_highlights(
+    cue: &PronunciationCue,
+    pattern: &str,
+    position: PatternPosition,
+    language: Language,
+) -> Vec<Vec<language_utils::pronunciation_pattern::HighlightedRun>> {
+    use language_utils::{
+        CueSegmentRole,
+        pronunciation_pattern::{HighlightedRun, highlighted_runs},
+    };
+    let first = cue
+        .segments
+        .iter()
+        .position(|s| s.role == CueSegmentRole::Example);
+    let last = cue
+        .segments
+        .iter()
+        .rposition(|s| s.role == CueSegmentRole::Example);
+    cue.segments
+        .iter()
+        .enumerate()
+        .map(|(index, segment)| {
+            if segment.role == CueSegmentRole::Example
+                && match position {
+                    PatternPosition::Anywhere => true,
+                    PatternPosition::Beginning => Some(index) == first,
+                    PatternPosition::End => Some(index) == last,
+                }
+            {
+                highlighted_runs(&segment.text, pattern, position, language)
+            } else {
+                vec![HighlightedRun {
+                    text: segment.text.clone(),
+                    highlighted: false,
+                }]
+            }
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -444,7 +496,8 @@ mod tests {
                 for seen in [0, 1, 2, 10] {
                     let mut guide = guide();
                     guide.position = position;
-                    let view = pronunciation_view("r".into(), guide, vec![], new, seen);
+                    let view =
+                        pronunciation_view("r".into(), guide, vec![], new, seen, Language::French);
                     assert_eq!(view.pattern, "r");
                     assert_eq!(view.position, position);
                     assert_eq!(view.positioned_pattern, positioned);
@@ -477,6 +530,41 @@ mod tests {
     }
 
     #[test]
+    fn korean_display_explains_jamo_without_changing_identity_or_audio() {
+        let mut guide = guide();
+        guide.pattern = "ㅡ".into();
+        guide.position = PatternPosition::Anywhere;
+        guide.example_words.push(language_utils::WordPair {
+            target: "극".into(),
+            native: "theatre".into(),
+            position: language_utils::SoundPosition::Middle,
+            cultural_context: String::new(),
+        });
+        let mut cue = cue();
+        cue.segments = vec![crate::CueSegment {
+            text: "극".into(),
+            role: language_utils::CueSegmentRole::Example,
+            start_ms: None,
+        }];
+        let audio = cue.audio.clone();
+        let view = pronunciation_view("ㅡ".into(), guide, vec![cue], true, 0, Language::Korean);
+        assert_eq!(view.pattern, "ㅡ");
+        assert_eq!(view.positioned_pattern, "ㅡ (eu)");
+        assert_eq!(
+            view.tutorial_prompt.unwrap().target.as_deref(),
+            Some("ㅡ (eu)")
+        );
+        assert_eq!(view.examples[0].cue.audio, audio);
+        assert_eq!(
+            view.examples[0].highlighted_segments[0],
+            vec![language_utils::pronunciation_pattern::HighlightedRun {
+                text: "극".into(),
+                highlighted: true
+            }]
+        );
+    }
+
+    #[test]
     fn pronunciation_examples_zip_cues_and_limit_to_three() {
         for examples in 0..=5 {
             for cues in 0..=5 {
@@ -500,7 +588,8 @@ mod tests {
                         ..cue()
                     })
                     .collect();
-                let view = pronunciation_view("r".into(), guide, cues.clone(), false, 2);
+                let view =
+                    pronunciation_view("r".into(), guide, cues.clone(), false, 2, Language::French);
                 assert_eq!(view.examples.len(), examples.min(cues.len()).min(3));
                 assert_eq!(view.description, None);
                 for (index, example) in view.examples.iter().enumerate() {

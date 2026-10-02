@@ -57,6 +57,7 @@ export function ChallengeView({
         currentChallenge.cues,
         currentChallenge.is_new,
         currentChallenge.times_type_seen,
+        targetLanguage,
       )}
       onRating={onRating}
       accessToken={accessToken}

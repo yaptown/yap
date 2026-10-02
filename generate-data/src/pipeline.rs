@@ -135,13 +135,12 @@ fn deduplicate_patterns<P: Eq + Hash + Clone>(
 /// A course's output directories, created and canonicalized — a pure
 /// derivation of the course.
 pub struct CourseDirs {
-    /// Everything derived from the sentence corpus alone — the sentences,
-    /// their tokenizations, multiword terms, etymology, morphemes. Dialects
-    /// of one language share a corpus (`Language::corpus_code`), so they
-    /// share this directory and none of that is computed twice.
+    /// Shared corpus-derived caches: tokenizations, multiword terms, etymology,
+    /// and morphemes. Dialects share `Language::corpus_code()` so these expensive
+    /// per-text computations are reused without sharing course-filtered outputs.
     pub corpus_dir: PathBuf,
-    /// What genuinely differs between dialects: pronunciation and what is
-    /// built on it (homophones, minimal pairs, audio), plus frequencies.
+    /// Dialect-filtered sentence/source diagnostics, frequencies, pronunciation,
+    /// and what is built on it (homophones, minimal pairs, audio).
     pub target_language_dir: PathBuf,
     pub native_specific_dir: PathBuf,
 }
@@ -415,7 +414,11 @@ pub async fn segment_corpus(
 ) -> anyhow::Result<SegmentedCorpus> {
     let course = *course;
     let mut timer = crate::StageTimer::new();
-    let CourseDirs { corpus_dir, .. } = course_dirs(&course)?;
+    let CourseDirs {
+        corpus_dir,
+        target_language_dir,
+        ..
+    } = course_dirs(&course)?;
     let banned_words = load_banned_words(&course)?;
 
     // The sentence set: sentence_corpus app sentences, deduplicated by text (last
@@ -430,7 +433,7 @@ pub async fn segment_corpus(
         panic!("Too few sentences: {}", sources_by_text.len());
     }
     {
-        let file = File::create(corpus_dir.join("target_language_sentences.jsonl"))
+        let file = File::create(target_language_dir.join("target_language_sentences.jsonl"))
             .context("Failed to create target language sentences file")?;
         let mut writer = BufWriter::new(file);
         for text in sources_by_text.keys() {
@@ -438,7 +441,7 @@ pub async fn segment_corpus(
         }
         writer.flush()?;
 
-        let file = File::create(corpus_dir.join("sentence_sources.jsonl"))
+        let file = File::create(target_language_dir.join("sentence_sources.jsonl"))
             .context("Failed to create sentence sources file")?;
         let mut writer = BufWriter::new(file);
         for (text, source) in &sources_by_text {
@@ -806,7 +809,7 @@ pub async fn segment_corpus(
             .await
             .context("Failed to grade slot patterns")?;
 
-        let summary_path = corpus_dir.join("slot_patterns.tsv");
+        let summary_path = target_language_dir.join("slot_patterns.tsv");
         slot_analysis::write_summary(&summary_path, &graded)
             .context("Failed to write slot pattern summary")?;
 

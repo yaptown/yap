@@ -735,6 +735,16 @@ async fn main() -> anyhow::Result<()> {
                     if let Some(custom_def) = custom_definitions.get(&heteronym) {
                         def = custom_def.clone();
                     }
+                    for definition in &mut def.definitions {
+                        generate_data::dict::normalize_english_gloss(
+                            &mut definition.native,
+                            course.native_language,
+                        );
+                        generate_data::dict::normalize_english_gloss(
+                            &mut definition.example_sentence_native_language,
+                            course.native_language,
+                        );
+                    }
                     // Only keep entries that have morphology
                     let morph = morphology.get(&heteronym)?.clone();
                     let segments = etymology_segmentations
@@ -1546,12 +1556,34 @@ async fn main() -> anyhow::Result<()> {
             let mut movies = FxHashMap::default();
             for basic in generate_data::target_sentences::course_movies(&movies_dir)? {
                 // Convert to full MovieMetadata and load poster bytes from separate file
+                let localization = basic.localizations.get(course.target_language.code());
+                let title = localization
+                    .map_or(&basic.title, |entry| &entry.title)
+                    .clone();
+                let original_poster = posters_dir.join(format!("{}.jpg", basic.id));
+                let poster_path = if let Some(localization) = localization {
+                    localization.poster_path.as_ref().map(|_| {
+                        let regional = posters_dir.join(format!(
+                            "{}.{}.jpg",
+                            basic.id,
+                            course.target_language.code()
+                        ));
+                        if regional.exists() {
+                            regional
+                        } else {
+                            original_poster.clone()
+                        }
+                    })
+                } else {
+                    Some(original_poster)
+                };
                 let mut movie: language_utils::MovieMetadata = basic.into();
+                movie.title = title;
                 movie.variety = movie
                     .variety
                     .or_else(|| sentence_corpus.movie_varieties.get(&movie.id).copied());
-                let poster_path = posters_dir.join(format!("{}.jpg", movie.id));
-                if poster_path.exists()
+                if let Some(poster_path) = poster_path
+                    && poster_path.exists()
                     && let Ok(bytes) = std::fs::read(&poster_path)
                 {
                     // Resize and encode as lossy WebP for smaller file size
