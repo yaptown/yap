@@ -83,7 +83,7 @@ impl NextCardsIterator {
         let early_term_n = (limit * 3).max(100);
 
         let comprehensible_written = deck.get_comprehensible_written_grams(true);
-        let cards = deck.cards.clone();
+        let cards = (*deck.cards).clone();
         let context = &deck.context;
         let regressions = &deck.regressions;
 
