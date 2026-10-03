@@ -108,6 +108,11 @@ fn derive_webm(dir: &Path, meta: &Value) -> Result<Value> {
             "-1",
             "-map_chapters",
             "-1",
+            // 3D releases tag frames with stereo-3D side data, which the WebM
+            // muxer rejects. Every other clip passes through untouched, so
+            // this isn't in WEBM_RECIPE: adding it would only re-derive them.
+            "-vf",
+            "sidedata=mode=delete:type=STEREO3D",
             "-c:v",
             "libvpx-vp9",
             "-b:v",
