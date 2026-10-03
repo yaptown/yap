@@ -103,7 +103,9 @@ fn derive_webm(dir: &Path, meta: &Value) -> Result<Value> {
             "-map",
             "0:v:0",
             "-map",
-            "0:a:0",
+            // Optional: a few old encodes have no audio track, and the WebM
+            // mirrors the MP4 rather than failing the whole pass on them.
+            "0:a:0?",
             "-map_metadata",
             "-1",
             "-map_chapters",
