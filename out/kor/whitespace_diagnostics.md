@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 1589021
-Total errors: 83457
+Total predictions: 1589044
+Total errors: 83459
 Accuracy: 94.75%
 
 ## Error Patterns (sorted by frequency)
@@ -2990,6 +2990,14 @@ Accuracy: 94.75%
   - 그게 다예요
   - 그게 다예요, 더 없어요
 
+### "때" + "요" (16 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - 그거 넣을 때요
+  - 내가 토마신 또래였을 때요
+  - 네, 자전거로 도주할 때요
+
 ### "뜻" + "이지" (16 occurrences)
 - Predicted: Space
 - Actual: None
@@ -3325,14 +3333,6 @@ Accuracy: 94.75%
   - 난 말 안장에 가로질러 누워 있었고 타타르가 둘이서 내 머리를 비틀고 있었죠
   - 남편이 해외에 나가있기 때문에 거의 둘이서 있을 예정이니 잘 부탁드립니다
   - 내게 생각이 있네, 클레리치 둘이서 여기 남아 살게나
-
-### "때" + "요" (15 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - 그거 넣을 때요
-  - 내가 토마신 또래였을 때요
-  - 네, 자전거로 도주할 때요
 
 ### "때문" + "인가" (15 occurrences)
 - Predicted: Space
@@ -197956,6 +197956,12 @@ Accuracy: 94.75%
 - Actual: None
 - Examples:
   - 안녕하세요, 은주 씨, 한성현입니다
+
+### "한세월" + "까진" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - 이분은 한세월 걸려서 깨달았거든요 한세월까진 아니죠
 
 ### "한수케" + "에게" (1 occurrences)
 - Predicted: Space

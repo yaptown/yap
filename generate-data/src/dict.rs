@@ -1,5 +1,4 @@
 use crate::corpus_samples::{CorpusIndex, SampleCache};
-use futures::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{
     Atom, Course, DictionaryDefinition, Gram, GramFrequencyEntry, Heteronym,
@@ -13,15 +12,6 @@ static CHAT_CLIENT_LUNA: LazyLock<ChatClient> =
 
 static CHAT_CLIENT_TERRA: LazyLock<ChatClient> =
     LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-terra"));
-
-/// Frequent words go to Terra, the rest to Luna.
-fn client(frequency: u32, threshold: u32) -> &'static ChatClient {
-    if frequency > threshold {
-        &CHAT_CLIENT_TERRA
-    } else {
-        &CHAT_CLIENT_LUNA
-    }
-}
 
 /// How a course's dictionary-family prompts read.
 /// Every course shares one dictionary prompt, naming its variety. The phrasebook and
@@ -347,44 +337,47 @@ pub async fn create_gram_phrasebook(
         gram_sentences.refresh(gram, corpus.witnesses(gram));
     }
 
-    let count = multi_atom_grams.len();
+    struct Term<'a> {
+        gram: &'a Gram<String>,
+        freq: u32,
+        text: String,
+        examples: String,
+    }
+    let terms: Vec<Term> = multi_atom_grams
+        .iter()
+        .map(|(gram, &freq)| {
+            let example_sentences = gram_sentences.get(gram);
+            let examples = if example_sentences.is_empty() {
+                String::from("(No example sentences available)")
+            } else {
+                example_sentences
+                    .iter()
+                    .enumerate()
+                    .map(|(i, s)| format!("{}. {}", i + 1, s))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            };
+            Term {
+                gram,
+                freq,
+                text: gram.to_display_string(target_language),
+                examples,
+            }
+        })
+        .collect();
 
-    let pb = ProgressBar::new(count as u64);
+    let pb = ProgressBar::new(terms.len() as u64);
     pb.set_style(
         ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} gram phrasebook entries ({per_sec}, ${msg}, {eta})")
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} gram phrasebook entries ({eta})")
             .unwrap()
             .progress_chars("#>-"),
     );
-    pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
-    let mut phrasebook = futures::stream::iter(multi_atom_grams.iter())
-        .map(|(gram, &freq)| {
-            let pb = pb.clone();
-            let gram_text = gram.to_display_string(target_language);
-            let cost = CHAT_CLIENT_TERRA.cost().unwrap_or(0.0)
-                + CHAT_CLIENT_LUNA.cost().unwrap_or(0.0);
-            pb.set_message(format!("{cost:.2} ({gram_text})"));
-
-            let example_sentences = gram_sentences.get(gram).to_vec();
-
-            async move {
-                let examples_text = if example_sentences.is_empty() {
-                    String::from("(No example sentences available)")
-                } else {
-                    example_sentences
-                        .iter()
-                        .enumerate()
-                        .map(|(i, s)| format!("{}. {}", i + 1, s))
-                        .collect::<Vec<_>>()
-                        .join("\n")
-                };
-
-                let policy = DictionaryPolicy::for_language(target_language);
-                let chat_client = client(freq, 250);
-
-                // kind of ugly, but the old system prompt is bad, but it's too expensive to regenerate all of them so i'll just do it for the most important words
-                let system_prompt= format!(r#"The input is a {target_language} multi-word term along with example sentences showing its usage. Generate a phrasebook entry for it, to be used in an app for beginner {target_language} learners (whose native language is {native_language}).
+    let policy = DictionaryPolicy::for_language(target_language);
+    // kind of ugly, but the old system prompt is bad, but it's too expensive to regenerate all of them so i'll just do it for the most important words
+    let system_prompt = format!(
+        r#"The input is a {target_language} multi-word term along with example sentences showing its usage. Generate a phrasebook entry for it, to be used in an app for beginner {target_language} learners (whose native language is {native_language}).
 
 Think about the word and its meaning based on how it's used in the example sentences, and what is likely to be relevant to a beginner learner. Your thoughts will not be shown to the user. Then, write the word, then provide the meaning as the closest {native_language} equivalent word or short phrase — just like a dictionary translation (e.g. "just did", "what" or "that which", "as soon as"). Skip any preamble like "the {target_language} term [term] is often used to indicate that...", or "a question phrase equivalent to..." and just give the {native_language} equivalent. {meanings_rule}
 
@@ -434,83 +427,118 @@ Of course, their native language is {native_language}, so you should write the m
         native_language = native_language.prompt_name(),
         target_language = policy.name,
         meanings_rule = policy.meanings_rule(),
-        example_guidance = policy.example_guidance());
+        example_guidance = policy.example_guidance()
+    );
 
-                let response: Result<PhrasebookDefinitionEntry, _> = if freq > 100  {
-                    let response: Result<PhrasebookDefinitionEntryV2, _> = chat_client
-                        .chat_with_system_prompt(
-                            system_prompt,
-                            format!(
-                                "multiword term: `{gram_text}`\n\nExample sentences:\n{examples_text}"
-                            ),
-                        )
-                        .await
-                        .inspect_err(|e| {
-                            println!("error: {e:#?}");
-                        });
-                    response.map(|entry| PhrasebookDefinitionEntry {
-                        target_language_multi_word_term: entry.target_language_multi_word_term,
-                        meaning: entry.meanings.first().cloned().unwrap_or_default(),
-                        additional_notes: entry.additional_notes,
-                        target_language_example: entry.target_language_example,
-                        native_language_example: entry.native_language_example,
-                        informal: entry.informal,
-                        compositional: entry.compositional,
-                        cognate: entry.cognate,
-                        false_cognate: entry.false_cognate,
-                        can_be_translated_literally: entry.can_be_translated_literally,
-                    })
-                } else {
-                    chat_client
-                        .chat_with_system_prompt(
-                            system_prompt,
-                            format!(
-                                "multiword term: `{gram_text}`\n\nExample sentences:\n{examples_text}"
-                            ),
-                        )
-                        .await
-                        .inspect_err(|e| {
-                            println!("error: {e:#?}");
-                        })
-                };
-
-                let response = if let Ok(ref resp) = response {
-                    if !policy.revised && !resp.target_language_example.to_lowercase().contains(&gram_text.to_lowercase()) {
-                        let previous_json = serde_json::to_string(resp).unwrap_or_default();
-                        chat_client.chat_with_messages(vec![
-                            ChatMessage::system(format!("You are a {target_language} phrasebook entry generator for {native_language} speakers.", native_language = native_language.prompt_name(), target_language = target_language.prompt_name())),
-                            ChatMessage::user(format!(
-                                "I asked you to generate a phrasebook entry for the {target_language} multi-word term `{gram_text}`, and you gave me this response:\n\n{previous_json}\n\nHowever, your target_language_example `{example}` does not contain the exact term `{gram_text}`. Please regenerate the entire response with the same format, making sure target_language_example contains the exact term `{gram_text}`. Here are some example sentences for inspiration that use the term:\n{examples_text}", target_language = target_language.prompt_name(),
-                                example = resp.target_language_example,
-                            )),
-                        ]).await.inspect_err(|e| {
-                            println!("retry error: {e:#?}");
-                        })
-                    } else {
-                        response
-                    }
-                } else {
-                    response
-                };
-
-                pb.inc(1);
-
-                (response, gram)
-            }
-        })
-        .buffer_unordered(15)
-        .collect::<Vec<_>>()
-        .await
+    // Frequent terms get the multi-meaning V2 schema, and the most frequent
+    // go to Terra. One Batch API job per (client, schema), all in flight at once.
+    let prompt = |term: &Term| {
+        format!(
+            "multiword term: `{}`\n\nExample sentences:\n{}",
+            term.text, term.examples
+        )
+    };
+    let (v2, v1): (Vec<&Term>, Vec<&Term>) = terms.iter().partition(|term| term.freq > 100);
+    let (v2_terra, v2_luna): (Vec<&Term>, Vec<&Term>) =
+        v2.into_iter().partition(|term| term.freq > 250);
+    let progress = crate::BatchProgress::new(&pb, 3);
+    let (v2_terra_out, v2_luna_out, v1_out) = futures::try_join!(
+        CHAT_CLIENT_TERRA.batch_chat_with_system_prompt_fn::<_, _, PhrasebookDefinitionEntryV2>(
+            system_prompt.as_str(),
+            &v2_terra,
+            |term| prompt(term),
+            |batch| progress.report(0, v2_terra.len(), batch),
+        ),
+        CHAT_CLIENT_LUNA.batch_chat_with_system_prompt_fn::<_, _, PhrasebookDefinitionEntryV2>(
+            system_prompt.as_str(),
+            &v2_luna,
+            |term| prompt(term),
+            |batch| progress.report(1, v2_luna.len(), batch),
+        ),
+        CHAT_CLIENT_LUNA.batch_chat_with_system_prompt_fn::<_, _, PhrasebookDefinitionEntry>(
+            system_prompt.as_str(),
+            &v1,
+            |term| prompt(term),
+            |batch| progress.report(2, v1.len(), batch),
+        ),
+    )?;
+    pb.finish();
+    let first_pass = v2_terra_out
         .into_iter()
-        .filter_map(|(response, gram)| response.ok().map(|entry| (gram.clone(), entry)))
-        .collect::<Vec<_>>();
+        .chain(v2_luna_out)
+        .map(|(term, response)| {
+            let response = response.map(|entry| PhrasebookDefinitionEntry {
+                target_language_multi_word_term: entry.target_language_multi_word_term,
+                meaning: entry.meanings.first().cloned().unwrap_or_default(),
+                additional_notes: entry.additional_notes,
+                target_language_example: entry.target_language_example,
+                native_language_example: entry.native_language_example,
+                informal: entry.informal,
+                compositional: entry.compositional,
+                cognate: entry.cognate,
+                false_cognate: entry.false_cognate,
+                can_be_translated_literally: entry.can_be_translated_literally,
+            });
+            (*term, response)
+        })
+        .chain(v1_out.into_iter().map(|(term, response)| (*term, response)));
+
+    // Historical prompts ask again when the example lacks the exact term.
+    let mut phrasebook = Vec::new();
+    let mut retries: Vec<(&Term, PhrasebookDefinitionEntry)> = Vec::new();
+    for (term, response) in first_pass {
+        match response {
+            Ok(entry)
+                if !policy.revised
+                    && !entry
+                        .target_language_example
+                        .to_lowercase()
+                        .contains(&term.text.to_lowercase()) =>
+            {
+                retries.push((term, entry))
+            }
+            Ok(entry) => phrasebook.push((term.gram.clone(), entry)),
+            Err(e) => println!("error: {e:#?}"),
+        }
+    }
+    let retry_messages = |(term, entry): &(&Term, PhrasebookDefinitionEntry)| {
+        let previous_json = serde_json::to_string(entry).unwrap_or_default();
+        let target_language = target_language.prompt_name();
+        vec![
+            ChatMessage::system(format!(
+                "You are a {target_language} phrasebook entry generator for {native_language} speakers.",
+                native_language = native_language.prompt_name()
+            )),
+            ChatMessage::user(format!(
+                "I asked you to generate a phrasebook entry for the {target_language} multi-word term `{gram_text}`, and you gave me this response:\n\n{previous_json}\n\nHowever, your target_language_example `{example}` does not contain the exact term `{gram_text}`. Please regenerate the entire response with the same format, making sure target_language_example contains the exact term `{gram_text}`. Here are some example sentences for inspiration that use the term:\n{examples_text}",
+                gram_text = term.text,
+                example = entry.target_language_example,
+                examples_text = term.examples,
+            )),
+        ]
+    };
+    let (terra_retries, luna_retries): (Vec<_>, Vec<_>) =
+        retries.into_iter().partition(|(term, _)| term.freq > 250);
+    let (terra_retried, luna_retried) = futures::try_join!(
+        CHAT_CLIENT_TERRA.batch_chat_with_messages_fn::<_, PhrasebookDefinitionEntry>(
+            &terra_retries,
+            retry_messages,
+            |_| {}
+        ),
+        CHAT_CLIENT_LUNA.batch_chat_with_messages_fn::<_, PhrasebookDefinitionEntry>(
+            &luna_retries,
+            retry_messages,
+            |_| {}
+        ),
+    )?;
+    for ((term, _), response) in terra_retried.into_iter().chain(luna_retried) {
+        match response {
+            Ok(entry) => phrasebook.push((term.gram.clone(), entry)),
+            Err(e) => println!("retry error: {e:#?}"),
+        }
+    }
 
     phrasebook.sort_by(|(a, _), (b, _)| a.cmp(b));
-
-    pb.finish_with_message(format!(
-        "{:.2}",
-        CHAT_CLIENT_TERRA.cost().unwrap_or(0.0) + CHAT_CLIENT_LUNA.cost().unwrap_or(0.0)
-    ));
 
     for (_, entry) in &mut phrasebook {
         normalize_phrase(entry, native_language);
@@ -536,14 +564,10 @@ pub async fn create_sense_definitions(
         course.native_language.prompt_name(),
         policy.example_guidance(),
     );
-    let entries = futures::stream::iter(
-        frequencies
-            .iter()
-            .filter(|entry| entry.gram.sense.is_some()),
-    )
-    .map(|entry| {
-        let system = &system;
-        async move {
+    let prompts: Vec<(&GramFrequencyEntry<String>, String)> = frequencies
+        .iter()
+        .filter(|entry| entry.gram.sense.is_some())
+        .map(|entry| {
             let gram = &entry.gram;
             let usage = &inventories[&gram.gram].usages[gram.sense.unwrap().get() as usize - 1];
             // The inventory is shared by a language's dialects and outlives
@@ -572,45 +596,73 @@ pub async fn create_sense_definitions(
                 "{identity}\nkind: {}\ngloss: {}\nAnchor sentences:\n{examples}",
                 usage.kind, usage.gloss
             );
-            let threshold = if gram.gram.len() == 1 { 500 } else { 250 };
-            let client = client(entry.count, threshold);
-            // A failed sense (or a cache miss in cache-only mode) is skipped
-            // like every other definition stage, not fatal to the run.
-            let result = if gram.gram.len() == 1 {
-                client
-                    .chat_with_system_prompt::<TargetToNativeWord>(system, prompt)
-                    .await
-                    .map(|definition| (gram.clone(), Some(definition), None))
-            } else {
-                client
-                    .chat_with_system_prompt::<PhrasebookDefinitionEntry>(system, prompt)
-                    .await
-                    .map(|definition| (gram.clone(), None, Some(definition)))
-            };
-            result
-                .inspect_err(|e| {
-                    eprintln!(
-                        "sense definition failed for '{}' sense {}: {e}",
-                        gram.gram.to_display_string(course.target_language),
-                        gram.sense.unwrap()
-                    )
-                })
-                .ok()
-        }
-    })
-    .buffer_unordered(32)
-    .collect::<Vec<Option<_>>>()
-    .await;
+            (entry, prompt)
+        })
+        .collect();
+    // One Batch API job per (client, schema), all in flight at once.
+    let is_terra = |(entry, _): &&(&GramFrequencyEntry<String>, String)| {
+        let threshold = if entry.gram.gram.len() == 1 { 500 } else { 250 };
+        entry.count > threshold
+    };
+    let (words, phrases): (Vec<_>, Vec<_>) = prompts
+        .iter()
+        .partition(|(entry, _)| entry.gram.gram.len() == 1);
+    let (terra_words, luna_words): (Vec<_>, Vec<_>) = words.into_iter().partition(is_terra);
+    let (terra_phrases, luna_phrases): (Vec<_>, Vec<_>) = phrases.into_iter().partition(is_terra);
+    let prompt = |item: &&(&GramFrequencyEntry<String>, String)| item.1.clone();
+    let (terra_words, luna_words, terra_phrases, luna_phrases) = futures::try_join!(
+        CHAT_CLIENT_TERRA.batch_chat_with_system_prompt_fn::<_, _, TargetToNativeWord>(
+            system.as_str(),
+            &terra_words,
+            prompt,
+            |_| {}
+        ),
+        CHAT_CLIENT_LUNA.batch_chat_with_system_prompt_fn::<_, _, TargetToNativeWord>(
+            system.as_str(),
+            &luna_words,
+            prompt,
+            |_| {}
+        ),
+        CHAT_CLIENT_TERRA.batch_chat_with_system_prompt_fn::<_, _, PhrasebookDefinitionEntry>(
+            system.as_str(),
+            &terra_phrases,
+            prompt,
+            |_| {}
+        ),
+        CHAT_CLIENT_LUNA.batch_chat_with_system_prompt_fn::<_, _, PhrasebookDefinitionEntry>(
+            system.as_str(),
+            &luna_phrases,
+            prompt,
+            |_| {}
+        ),
+    )?;
+    // A failed sense (or a cache miss in cache-only mode) is skipped like
+    // every other definition stage, not fatal to the run.
+    let report = |entry: &GramFrequencyEntry<String>, e: &dyn std::fmt::Display| {
+        eprintln!(
+            "sense definition failed for '{}' sense {}: {e}",
+            entry.gram.gram.to_display_string(course.target_language),
+            entry.gram.sense.unwrap()
+        )
+    };
     let mut dictionary = BTreeMap::new();
-    let mut phrasebook = BTreeMap::new();
-    for (gram, definition, phrase) in entries.into_iter().flatten() {
-        if let Some(mut definition) = definition {
-            normalize_definition(&mut definition, course.native_language);
-            dictionary.insert(gram.clone(), definition);
+    for ((entry, _), response) in terra_words.into_iter().chain(luna_words) {
+        match response {
+            Ok(mut definition) => {
+                normalize_definition(&mut definition, course.native_language);
+                dictionary.insert(entry.gram.clone(), definition);
+            }
+            Err(e) => report(entry, &e),
         }
-        if let Some(mut phrase) = phrase {
-            normalize_phrase(&mut phrase, course.native_language);
-            phrasebook.insert(gram, phrase);
+    }
+    let mut phrasebook = BTreeMap::new();
+    for ((entry, _), response) in terra_phrases.into_iter().chain(luna_phrases) {
+        match response {
+            Ok(mut phrase) => {
+                normalize_phrase(&mut phrase, course.native_language);
+                phrasebook.insert(entry.gram.clone(), phrase);
+            }
+            Err(e) => report(entry, &e),
         }
     }
     Ok((dictionary, phrasebook))
