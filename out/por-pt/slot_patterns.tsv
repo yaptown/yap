@@ -1,0 +1,7 @@
+term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
+tirar algo	filled	1084	9	12	0.75	yes	Espero que tires muitas fotos!	tires … fotos
+tirar algo	clitic	84	12	12	1.00	yes		
+acontecer a alguém	clitic	31	12	12	1.00	yes		
+o melhor de alguém	filled	20	9	12	0.75	yes	Acha que eu sou burro de ficar sem o melhor de nós?	o … melhor … de … nós
+acontecer a alguém	filled	19	12	12	1.00	yes		
+do jeito de alguém	clitic	11	11	11	1.00	yes		

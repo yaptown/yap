@@ -11,7 +11,7 @@ use lasso::Spur;
 use crate::{
     AudioRequest, CardContent, CardIndicator, Challenge, ComprehensibleSentence, Deck, FlashCard,
     ReviewInfo, SentenceChallengeType, TranscribeComprehensibleSentence,
-    TranslateComprehensibleSentence, dictionary::compute_word_prefix,
+    TranslateComprehensibleSentence,
 };
 
 /// The proper nouns from a sentence, in the shape [`TtsRequest`] wants for its
@@ -28,13 +28,31 @@ fn verification_hints(
 
 pub struct CardContext {
     pub indicator: CardIndicator<SpurGram, Spur>,
+    /// Written cards introduce a prefixed text once, across all its meanings.
+    /// Other card types use their own FSRS state.
     pub is_new: bool,
     pub times_type_seen: u32,
 }
 
 impl CardContext {
     pub fn new(deck: &Deck, indicator: CardIndicator<SpurGram, Spur>) -> Option<Self> {
-        let is_new = deck.cards.get(&indicator)?.is_new();
+        let is_new = if let CardIndicator::WrittenGram { gram } = indicator {
+            let pack = &deck.context.language_pack;
+            pack.gram_definitions.get(&gram)?;
+            if let Some(text) = pack.prefixed_text.get(&gram.gram)
+                && let Some(members) = pack.grams_with_prefixed_text.get(text)
+            {
+                members.iter().all(|gram| {
+                    deck.cards
+                        .get(&CardIndicator::WrittenGram { gram: *gram })
+                        .is_none_or(|card| card.is_new())
+                })
+            } else {
+                deck.cards.get(&indicator).is_none_or(|card| card.is_new())
+            }
+        } else {
+            deck.cards.get(&indicator)?.is_new()
+        };
         let times_type_seen = indicator
             .get_flashcard_type()
             .and_then(|ft| deck.stats.flashcard_type_seen_count.get(&ft).copied())
@@ -112,6 +130,7 @@ fn group_listening_candidates(
 impl ReviewInfo {
     pub fn listening_gram_flashcard(&self, deck: &Deck, gram: SpurGram) -> FlashCard {
         let language_pack: &Arc<LanguagePack> = &deck.context.language_pack;
+        let target_language = deck.context.course.target_language;
 
         let gram_atoms = language_pack.gram_rodeo.resolve(&gram);
 
@@ -158,8 +177,9 @@ impl ReviewInfo {
                     .filter_map(|sense| language_pack.gram_frequencies.entries.get(sense))
                     .map(|frequency| u64::from(frequency.count))
                     .sum(),
-                literals: atoms_to_literals(resolved.as_ref(), deck.context.course.target_language),
-                definitions: senses
+                literals: atoms_to_literals(resolved.as_ref(), target_language),
+                definitions: language_pack
+                    .visible_senses(candidate_gram, target_language)
                     .iter()
                     .filter_map(|sense| language_pack.gram_definitions.get(sense).cloned())
                     .map(definition_view)
@@ -233,22 +253,6 @@ impl ReviewInfo {
     pub fn written_gram_flashcard(&self, deck: &Deck, gram: TaggedGram<SpurGram>) -> FlashCard {
         let language_pack: &Arc<LanguagePack> = &deck.context.language_pack;
 
-        let definition = language_pack
-            .gram_definitions
-            .get(&gram)
-            .cloned()
-            .unwrap_or_else(|| {
-                let resolved = language_pack
-                    .gram_rodeo
-                    .resolve(&gram.gram)
-                    .resolve(&language_pack.string_rodeo);
-                panic!(
-                    "Gram {:?} (display: {:?}) has no definition",
-                    resolved,
-                    resolved.to_display_string(deck.context.course.target_language)
-                )
-            });
-
         let gram_resolved = language_pack
             .gram_rodeo
             .resolve(&gram.gram)
@@ -256,22 +260,75 @@ impl ReviewInfo {
         let literals =
             atoms_to_literals(gram_resolved.as_ref(), deck.context.course.target_language);
 
-        let prefix = compute_word_prefix(
-            &gram_resolved,
-            &definition,
-            deck.context.course.target_language,
-        );
-
-        // Morpheme-level breakdown for single heteronyms, word-level for
-        // multi-atom grams. Punctuation atoms in multi-word grams render with
-        // `None` gloss.
-        let breakdown = language_pack.compute_breakdown(gram.gram);
-
+        let prefix = language_pack.word_prefix(gram.gram, deck.context.course.target_language);
+        let mut eligible: Vec<_> = language_pack
+            .prefixed_text
+            .get(&gram.gram)
+            .and_then(|text| language_pack.grams_with_prefixed_text.get(text))
+            .into_iter()
+            .flatten()
+            .copied()
+            .filter(|member| {
+                *member == gram
+                    || matches!(
+                        deck.cards
+                            .get(&CardIndicator::WrittenGram { gram: *member }),
+                        Some(crate::CardData::Added { .. })
+                    )
+            })
+            .collect();
+        if !eligible.contains(&gram) {
+            eligible.push(gram);
+        }
+        eligible.sort_by_key(|member| language_pack.gram_frequencies.entries.get_index_of(member));
+        let mut consumed = std::collections::BTreeSet::new();
+        let mut meanings = Vec::new();
+        for representative in &eligible {
+            if consumed.contains(representative) {
+                continue;
+            }
+            let set = language_pack.redundant_with(*representative);
+            let members: Vec<_> = eligible
+                .iter()
+                .filter(|member| set.contains(member))
+                .copied()
+                .collect();
+            consumed.extend(members.iter().copied());
+            let definition = language_pack.gram_definitions[representative].clone();
+            let resolved = language_pack.resolve_gram(&representative.gram);
+            let label = if matches!(definition, GramDefinition::Phrasebook(_)) {
+                Some("Multiword".to_owned())
+            } else {
+                resolved
+                    .heteronym()
+                    .map(|h| crate::challenge_views::part_of_speech_label(h.pos).to_owned())
+            };
+            let is_new = members.iter().all(|member| {
+                deck.cards
+                    .get(&CardIndicator::WrittenGram { gram: *member })
+                    .is_none_or(|card| card.is_new())
+            });
+            meanings.push(crate::FlashcardMeaning {
+                cards: members
+                    .into_iter()
+                    .map(|gram| {
+                        CardIndicator::WrittenGram { gram }
+                            .resolve(&language_pack.string_rodeo, &language_pack.gram_rodeo)
+                    })
+                    .collect(),
+                definition: definition_view(definition),
+                label,
+                is_new,
+            });
+        }
         let content = CardContent::Gram {
             gram: literals,
-            definition: definition_view(definition),
             prefix,
-            breakdown,
+            // Morpheme-level breakdown for single heteronyms, word-level for
+            // multi-atom grams. Punctuation atoms in multi-word grams render with
+            // `None` gloss.
+            breakdown: language_pack.compute_breakdown(gram.gram),
+            meanings,
         };
 
         let audio_text = gram_resolved.to_display_string(deck.context.course.target_language);

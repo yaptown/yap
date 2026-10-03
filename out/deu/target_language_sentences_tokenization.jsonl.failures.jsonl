@@ -118,7 +118,7 @@
 {"sentence":"Das Leben großartiger Menschen.","failure_count":3}
 {"sentence":"Das Phon [b] existiert in der Sprache lediglich als Allophon von /p/.","failure_count":1}
 {"sentence":"Das Problem liegt in Toms völligem Verhandlungsunwillen.","failure_count":3}
-{"sentence":"Das Restaurant an den Sous-Chef übergeht, Sie also!","failure_count":2}
+{"sentence":"Das Restaurant an den Sous-Chef übergeht, Sie also!","failure_count":3}
 {"sentence":"Das bin ich, äh, das ist hier.","failure_count":1}
 {"sentence":"Das geb ich dir nicht mehr.","failure_count":1}
 {"sentence":"Das geb ich ja zu.","failure_count":3}
@@ -189,7 +189,7 @@
 {"sentence":"Die Demonstration am Bahnhof hat die Reisenden beeinträchtigt.","failure_count":1}
 {"sentence":"Die Eintrittskarten sind meinen, gib sie mir zurück.","failure_count":1}
 {"sentence":"Die Entscheidung, für die Briten zu kämpfen, erwies sich als Fehler.","failure_count":1}
-{"sentence":"Die Han-Truppen nehmen unser Land ein.","failure_count":2}
+{"sentence":"Die Han-Truppen nehmen unser Land ein.","failure_count":3}
 {"sentence":"Die Hunde beschnüffelten sich schwanzwedelnd.","failure_count":1}
 {"sentence":"Die Katze scheint über die Maßen glücklich zu sein.","failure_count":1}
 {"sentence":"Die Kinder haben den Vorzug einer guten Erziehung genossen.","failure_count":1}
@@ -280,7 +280,7 @@
 {"sentence":"Ein Regenbogen bei Nacht?","failure_count":1}
 {"sentence":"Ein Violinist, den ich kenne, sagt, er besitze eine Stradivari.","failure_count":1}
 {"sentence":"Ein ausgewogenes Verhältnis zwischen Berufs- und Privatleben ist wichtig.","failure_count":1}
-{"sentence":"Ein ganz anderes Etwas, nicht?","failure_count":2}
+{"sentence":"Ein ganz anderes Etwas, nicht?","failure_count":3}
 {"sentence":"Ein globaler Gegenschlag wurde bereits eingeleitet,.","failure_count":1}
 {"sentence":"Ein großer Felsen stieg aus der See empor.","failure_count":3}
 {"sentence":"Eine Art Party im oberen Geschoss hielt mich gestern Abend bis um eins wach.","failure_count":1}
@@ -335,7 +335,7 @@
 {"sentence":"Es steht in allen Büchern.","failure_count":1}
 {"sentence":"Es tut mir Leid, aber du wirst deine Mama für lange Zeit nicht sehen.","failure_count":1}
 {"sentence":"Es tut mir leid, aber wir sind heute ausgebucht.","failure_count":1}
-{"sentence":"Es tut mir leid, dass ich deine Gefühle verletzte.","failure_count":2}
+{"sentence":"Es tut mir leid, dass ich deine Gefühle verletzte.","failure_count":3}
 {"sentence":"Es war ein unflätiger Angriff.","failure_count":1}
 {"sentence":"Es wird bald Tag.","failure_count":3}
 {"sentence":"Es wird hier immer schlimmer.","failure_count":1}
@@ -414,7 +414,7 @@
 {"sentence":"Hier ist der Auspuff verzogen, hier nicht.","failure_count":1}
 {"sentence":"Hier sind die Pfirsiche sehr lecker!","failure_count":1}
 {"sentence":"Hier, glaub ich, ist eine strengre Wachsamkeit vonnöten.","failure_count":1}
-{"sentence":"Hoffen Sie wirklich auf Ihre Hilfe?","failure_count":2}
+{"sentence":"Hoffen Sie wirklich auf Ihre Hilfe?","failure_count":3}
 {"sentence":"Hoffen wir das Letztere.","failure_count":3}
 {"sentence":"Hoffen wir einfach, daß wir nächstesmal mehr Glück haben!","failure_count":3}
 {"sentence":"Hoffen wir mal, dass Tom nichts merkt!","failure_count":3}
@@ -527,7 +527,7 @@
 {"sentence":"Ich muss Meghna finden.","failure_count":1}
 {"sentence":"Ich muss zugeben, dass ich Tom bei unserer ersten Begegnung nicht mochte.","failure_count":3}
 {"sentence":"Ich musste so lachen, dass mir fast die Tränen kamen.","failure_count":1}
-{"sentence":"Ich möchte mit deiner neuen Freundin tanzen.","failure_count":2}
+{"sentence":"Ich möchte mit deiner neuen Freundin tanzen.","failure_count":3}
 {"sentence":"Ich möchte von der wahren Größe des ehrwürdigen Elijah Muhammad reden.","failure_count":1}
 {"sentence":"Ich möchte wissen, ob euch mein neues Lied gefällt.","failure_count":1}
 {"sentence":"Ich packe euch Dampfbrötchen ein.","failure_count":1}
@@ -542,7 +542,7 @@
 {"sentence":"Ich sag's dir schon, wenn du störst.","failure_count":3}
 {"sentence":"Ich sag's dir später.","failure_count":3}
 {"sentence":"Ich sag's dir, damit du weder beunruhigt bist noch was dagegen tun kannst.","failure_count":3}
-{"sentence":"Ich sag's dir, der guckt schon die ganze Zeit hier rüber.","failure_count":2}
+{"sentence":"Ich sag's dir, der guckt schon die ganze Zeit hier rüber.","failure_count":3}
 {"sentence":"Ich sag's dir, du Arsch, beweg deinen Hintern raus!","failure_count":3}
 {"sentence":"Ich sag's dir, komm.","failure_count":3}
 {"sentence":"Ich sag's dir, schlaf lieber nachts.","failure_count":3}
@@ -800,7 +800,6 @@
 {"sentence":"Requiem II Shuya's Traum.","failure_count":3}
 {"sentence":"Robert Fischer muss eine positive emotionale Reaktion entwickeln.","failure_count":1}
 {"sentence":"Robinson ist ein praktisch veranlagter, verständiger und mutiger Mann.","failure_count":1}
-{"sentence":"Rubens hat das Neue noch nicht mal begonnen.","failure_count":2}
 {"sentence":"Rußland stoppte die Invasion von Mongolenhorden.","failure_count":3}
 {"sentence":"Sag ihm, dass er Wort halten muss!","failure_count":1}
 {"sentence":"Sag's den anderen!","failure_count":3}
@@ -817,7 +816,7 @@
 {"sentence":"Sag's ihr, Bartholomew.","failure_count":3}
 {"sentence":"Sag's ihr, Harry!","failure_count":3}
 {"sentence":"Sag's ihr.","failure_count":3}
-{"sentence":"Sag's mir, ja?","failure_count":2}
+{"sentence":"Sag's mir, ja?","failure_count":3}
 {"sentence":"Sag's mir, was ist passiert?","failure_count":3}
 {"sentence":"Sag's mir, wer besitzt ihn?","failure_count":3}
 {"sentence":"Sag's uns!","failure_count":3}

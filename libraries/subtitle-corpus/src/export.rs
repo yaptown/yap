@@ -2094,6 +2094,8 @@ pub fn export_yap(
         let metadata = language_utils::MovieMetadataBasic {
             id: movie.imdb_id.clone(),
             title: movie.title.clone(),
+            poster_path: None,
+            localizations: Default::default(),
             year: movie.year,
             original_language: Some(language.iso_639_1().to_owned()),
             variety: Some(language.code().to_owned()),

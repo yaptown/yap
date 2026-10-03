@@ -1835,10 +1835,10 @@ mod tests {
         let scheduled = deck.get_all_cards_summary();
         assert_eq!(deck.home_screen_view(inputs()).cards.value, "0");
         let event = deck
-            .review_card(
-                scheduled[0].card_indicator.clone(),
-                current::Rating::Remembered,
-            )
+            .review_cards(vec![crate::CardReview {
+                card: scheduled[0].card_indicator.clone(),
+                rating: current::Rating::Remembered,
+            }])
             .unwrap();
         let deck = apply(deck, event);
         // Already-known cards leave the schedule but still count as studied.

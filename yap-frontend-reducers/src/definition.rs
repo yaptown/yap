@@ -1,62 +1,12 @@
 //! Shared definition presentation, matching the web.
 
 use language_utils::GramDefinition;
-use language_utils::features::{Gender, Morphology, Person, Polite, Tense};
+use language_utils::features::Morphology;
 
-/// Only person, gender, tense, politeness, and case are displayed, in that order.
+/// All displayable readings, with agreement kept together per alternative.
 #[bridgerton::bridge]
-pub fn morphology_label(morphology: Morphology) -> String {
-    let mut parts = Vec::new();
-
-    if let Some(person) = morphology.person {
-        parts.push(match person {
-            Person::Zeroth => "0th-person",
-            Person::First => "1st-person",
-            Person::Second => "2nd-person",
-            Person::Third => "3rd-person",
-            Person::Fourth => "4th-person",
-        });
-    }
-
-    if let Some(gender) = morphology.gender {
-        parts.push(match gender {
-            Gender::Masculine => "masculine",
-            Gender::Feminine => "feminine",
-            Gender::Neuter => "neuter",
-            Gender::Common => "common",
-        });
-    }
-
-    if let Some(tense) = morphology.tense {
-        parts.push(match tense {
-            Tense::Past => "past tense",
-            Tense::Present => "present tense",
-            Tense::Future => "future tense",
-            Tense::Imperfect => "imperfect tense",
-            Tense::Pluperfect => "pluperfect tense",
-        });
-    }
-
-    if let Some(politeness) = morphology.politeness {
-        parts.push(match politeness {
-            Polite::Intimate => "intimate",
-            Polite::Informal => "informal",
-            Polite::Formal => "formal",
-            Polite::Elev => "elevated",
-            Polite::Humb => "humble",
-        });
-    }
-
-    // All 37 web caseMap labels are the lowercased variant name; this also
-    // supplies the same fallback for any additional Rust case variants.
-    let case = morphology
-        .case
-        .map(|case| format!("{case:?}").to_lowercase());
-    if let Some(case) = case.as_deref() {
-        parts.push(case);
-    }
-
-    parts.join(", ")
+pub fn morphology_label(morphology: Vec<Morphology>) -> String {
+    language_utils::morphology_label::morphology_label(&morphology)
 }
 
 /// An example sentence in the target and native languages.
@@ -96,12 +46,7 @@ pub fn definition_view(definition: GramDefinition) -> DefinitionView {
         GramDefinition::Dictionary(entry) => DefinitionView {
             headword: entry.target_language_word,
             is_phrase: false,
-            morphology_label: entry
-                .morphology
-                .into_iter()
-                .next()
-                .map(morphology_label)
-                .unwrap_or_default(),
+            morphology_label: morphology_label(entry.morphology),
             senses: entry
                 .definitions
                 .into_iter()
@@ -132,21 +77,21 @@ pub fn definition_view(definition: GramDefinition) -> DefinitionView {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use language_utils::features::{Aspect, Case, Mood, Number};
+    use language_utils::features::{Aspect, Case, Gender, Mood, Number, Person, Polite, Tense};
 
     #[test]
     fn empty_morphology_has_no_label() {
-        assert_eq!(morphology_label(Morphology::default()), "");
+        assert_eq!(morphology_label(vec![Morphology::default()]), "");
     }
 
     #[test]
     fn person_precedes_tense() {
         assert_eq!(
-            morphology_label(Morphology {
+            morphology_label(vec![Morphology {
                 person: Some(Person::First),
                 tense: Some(Tense::Past),
                 ..Default::default()
-            }),
+            }]),
             "1st-person, past tense"
         );
     }
@@ -154,7 +99,7 @@ mod tests {
     #[test]
     fn displays_only_web_fields_in_order() {
         assert_eq!(
-            morphology_label(Morphology {
+            morphology_label(vec![Morphology {
                 person: Some(Person::Third),
                 gender: Some(Gender::Feminine),
                 tense: Some(Tense::Pluperfect),
@@ -163,13 +108,13 @@ mod tests {
                 number: Some(Number::Plural),
                 mood: Some(Mood::Indicative),
                 aspect: Some(Aspect::Perfect),
-            }),
-            "3rd-person, feminine, pluperfect tense, humble, superessive"
+            }]),
+            "3rd-person plural feminine humble, pluperfect tense, superessive"
         );
     }
 
     #[test]
-    fn dictionary_projection_preserves_senses_and_uses_only_first_morphology() {
+    fn dictionary_projection_preserves_senses_and_all_morphology_readings() {
         let definition = GramDefinition::Dictionary(language_utils::DictionaryEntry {
             target_language_word: "parle".into(),
             definitions: vec![
@@ -207,7 +152,7 @@ mod tests {
             DefinitionView {
                 headword: "parle".into(),
                 is_phrase: false,
-                morphology_label: "1st-person".into(),
+                morphology_label: "1st-person / past tense".into(),
                 senses: vec![
                     DefinitionSense {
                         meaning: "speak".into(),
@@ -229,10 +174,9 @@ mod tests {
             unreachable!()
         };
         entry.morphology[0] = Morphology::default();
-        assert!(
-            definition_view(GramDefinition::Dictionary(entry.clone()))
-                .morphology_label
-                .is_empty()
+        assert_eq!(
+            definition_view(GramDefinition::Dictionary(entry.clone())).morphology_label,
+            "past tense"
         );
         entry.morphology.clear();
         entry.definitions[0].note = None;

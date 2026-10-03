@@ -1089,28 +1089,21 @@ impl TtsSynthesis {
     }
 }
 
-/// Synthesize (or load from the cache) one clip and verify it against
-/// `spoken_text`: the same words the voice was given, phonemized as the
-/// reference. The returned audio is Ogg Opus whichever provider made it,
-/// ready to embed in a language pack.
-///
-/// A provider's own refusal to produce usable audio — Cloud TTS exhausting
-/// its defect retries, Gemini declining a prompt or answering without audio
-/// — comes back as a failed [`ClipVerification`], cached like any other
-/// outcome, so the caller moves on to its next candidate. Transport errors
-/// and exhausted rate-limit backoff are `Err`: the run can't tell good audio
-/// from bad and should stop rather than quietly fall through.
-pub async fn synthesize_verified(
-    ctx: &VerifyContext<'_>,
-    actor: &str,
+/// Synthesize or load a provider-independent cached clip without requiring a
+/// phoneme label source. The optional reason reports a provider audio defect;
+/// callers must reject it before performing their own verification.
+/// Transport failures are errors, not evidence that the text is unvoicable.
+pub async fn synthesize(
+    http: &reqwest::Client,
+    store: &osmo::Store,
     synthesis: &TtsSynthesis,
     spoken_text: &str,
     keys: &TtsKeys,
-) -> Result<(Vec<u8>, ClipVerification)> {
+) -> Result<(Vec<u8>, Option<String>)> {
     let cache_key = synthesis.cache_key();
     let label = synthesis.label();
 
-    let (audio_bytes, tts_note) = if let Some(s) = ctx.store.read(&cache_key).await
+    let (audio_bytes, tts_note) = if let Some(s) = store.read(&cache_key).await
         && let Ok(cached) = serde_json::from_slice::<CachedTts>(&s)
     {
         let bytes = base64::engine::general_purpose::STANDARD
@@ -1165,7 +1158,7 @@ pub async fn synthesize_verified(
                     })?;
                     let client = google_speech::gemini::GeminiClient::with_http(
                         api_key.to_string(),
-                        ctx.http.clone(),
+                        http.clone(),
                     );
                     let request = google_speech::gemini::GeminiTtsRequest {
                         style: style.clone(),
@@ -1197,7 +1190,7 @@ pub async fn synthesize_verified(
             passed,
             last_defect: last_defect.clone(),
         };
-        ctx.store
+        store
             .write(
                 &cache_key,
                 serde_json::to_string(&to_cache)
@@ -1215,6 +1208,20 @@ pub async fn synthesize_verified(
         (bytes, note)
     };
 
+    Ok((audio_bytes, tts_note))
+}
+
+/// Synthesize using the shared audio cache, then verify with validated phoneme labels.
+pub async fn synthesize_verified(
+    ctx: &VerifyContext<'_>,
+    actor: &str,
+    synthesis: &TtsSynthesis,
+    spoken_text: &str,
+    keys: &TtsKeys,
+) -> Result<(Vec<u8>, ClipVerification)> {
+    let (audio_bytes, tts_note) =
+        synthesize(ctx.http, &ctx.store, synthesis, spoken_text, keys).await?;
+    let label = synthesis.label();
     // If the provider gave up, skip verification entirely. Running wav2vec2
     // on near-silent or truncated audio invites the model to hallucinate
     // plausible phonemes (the `pas` case: TTS returned 0.19s of -50 dB

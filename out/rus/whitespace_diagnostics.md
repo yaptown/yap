@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 3007985
-Total errors: 7199
+Total predictions: 3016913
+Total errors: 7203
 Accuracy: 99.76%
 
 ## Error Patterns (sorted by frequency)
@@ -13560,6 +13560,12 @@ Accuracy: 99.76%
 - Examples:
   - Книги - мои друзья.
 
+### "Князь Таврический" + "»" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - А ты пароход «Князь Таврический» помнишь?
+
 ### "Ковентри" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -18390,6 +18396,12 @@ Accuracy: 99.76%
 - Examples:
   - Роликовые коньки - забава, а также это хорошее упражнение.
 
+### "коня" + "»" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - И я хочу, чтобы тебе бог послал дорогой халат и красивую сбрую для коня».
+
 ### "копейка" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -18497,6 +18509,12 @@ Accuracy: 99.76%
 - Actual: None
 - Examples:
   - Иногда мне приходит в голову что-то вроде «вечного круговорота».
+
+### "крутон" + "»" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - А гренка в нашем ресторане называется «крутон».
 
 ### "куб" + "-" (1 occurrences)
 - Predicted: None
@@ -19241,6 +19259,12 @@ Accuracy: 99.76%
 - Actual: None
 - Examples:
   - Но всё это нереально.
+
+### "не" + "ту" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Дорога есть, теперь бабки нету.
 
 ### "небу" + "--" (1 occurrences)
 - Predicted: None

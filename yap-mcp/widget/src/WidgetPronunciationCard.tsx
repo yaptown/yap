@@ -60,7 +60,9 @@ export function WidgetPronunciationCard({
     <div className="max-w-md mx-auto min-h-[24rem] flex flex-col">
       <PronunciationChallenge
         view={challenge.view}
-        onRating={(rating: Rating) => void grade(rating)}
+        onRating={(rating: Rating) =>
+          void grade(rating, [{ card: challenge.card, rating }])
+        }
         accessToken={undefined}
         onCantSpeak={cantSpeak}
         targetLanguage={challenge.language}

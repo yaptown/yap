@@ -162,6 +162,7 @@ pub fn migrating_chat_client(model: &str) -> tysm::chat_completions::ChatClient 
 pub use phoneme_verify as audio_verification;
 pub mod books;
 pub mod cache_remote;
+pub mod corpus_samples;
 pub mod custom_phrasebook;
 pub mod dialect;
 pub mod dict;
@@ -183,6 +184,7 @@ mod pronunciation_whisper;
 pub mod pronunciations;
 pub mod proper_noun_definitions;
 pub mod read_anki;
+pub mod sense_redundancy;
 pub mod slot_analysis;
 pub mod strokes;
 pub mod target_sentences;

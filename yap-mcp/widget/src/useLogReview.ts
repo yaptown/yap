@@ -9,8 +9,13 @@ import type { Language } from "../../../yap-frontend-rs/pkg";
 
 interface GradeableChallenge {
   language: Language;
-  card: unknown;
   nonce: string;
+}
+
+/** One card and its rating, passed verbatim to log_review. */
+export interface Review {
+  card: unknown;
+  rating: Rating;
 }
 
 export function useLogReview(
@@ -39,7 +44,7 @@ export function useLogReview(
   }, []);
 
   const grade = useCallback(
-    async (rating: Rating) => {
+    async (rating: Rating, reviews: Review[]) => {
       if (!claim()) return;
       setGrading(true);
       setGradeError(null);
@@ -48,8 +53,7 @@ export function useLogReview(
           name: "log_review",
           arguments: {
             language: challenge.language,
-            card: challenge.card,
-            rating,
+            reviews,
             // The server-minted nonce is this card's idempotency key: a retried
             // grade (lost response, or a widget reload replaying the tool result)
             // logs the review only once.
@@ -74,8 +78,12 @@ export function useLogReview(
           // narration only; fine without it
         }
         setGraded(recorded);
+        // A card with several meanings can be graded meaning by meaning.
+        const mixed = new Set(reviews.map((review) => review.rating)).size > 1;
+        const forgot = reviews.filter((review) => review.rating === "again").length;
         const summary =
           `user graded «${display}» as ${recorded}` +
+          (mixed ? ` (forgot ${forgot} of its ${reviews.length} cards)` : "") +
           (remaining !== undefined ? ` — ${remaining} cards still due` : "");
         await app.updateModelContext({ content: [{ type: "text", text: summary }] });
       } catch (e) {

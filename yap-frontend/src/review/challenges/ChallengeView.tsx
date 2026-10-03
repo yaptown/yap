@@ -15,7 +15,7 @@ type Props = Omit<
   "challenge" | "onComplete"
 > & {
   challenge: Challenge<Gram<string>>;
-  onRating: ComponentProps<typeof PronunciationChallenge>["onRating"];
+  onRating: NonNullable<ComponentProps<typeof FlashcardChallenge>["onRating"]>;
   onCantSpeak: () => void;
   totalCount: number;
   onTranslationComplete: ComponentProps<
@@ -57,6 +57,7 @@ export function ChallengeView({
         currentChallenge.cues,
         currentChallenge.is_new,
         currentChallenge.times_type_seen,
+        targetLanguage,
       )}
       onRating={onRating}
       accessToken={accessToken}

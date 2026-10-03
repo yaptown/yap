@@ -231,6 +231,13 @@ pub enum SentenceListSelection {
 
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd)]
+pub struct CardReview {
+    pub card: CardIndicator<Gram<String>, String>,
+    pub rating: Rating,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd)]
 #[serde(tag = "type")]
 pub enum LanguageEventContent {
     /// Record only; exporting does not add cards or count as learning activity.
@@ -252,6 +259,10 @@ pub enum LanguageEventContent {
         #[serde(default, alias = "goal")]
         sentence_list: Option<SentenceListSelection>,
     },
+    ReviewCards {
+        reviews: Vec<CardReview>,
+    },
+    /// Historical single-card events remain readable; new clients write ReviewCards.
     ReviewCard {
         reviewed: CardIndicator<Gram<String>, String>,
         rating: Rating,

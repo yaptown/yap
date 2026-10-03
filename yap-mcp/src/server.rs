@@ -771,14 +771,19 @@ pub struct GetDueCardsParams {
 }
 
 #[derive(Serialize, Deserialize, JsonSchema)]
-pub struct LogReviewParams {
-    /// The target language of the card, e.g. "French".
-    language: String,
-    /// The card object exactly as returned by get_due_cards.
+pub struct ReviewInput {
+    /// Exact card identity from the presented meaning's cards (or a singleton listening/pronunciation card).
     card: Verbatim<Card>,
-    /// How the review went: "again" (forgot), "hard", "good", or "easy".
-    /// "remembered" is a simple success when finer grading doesn't apply.
+    /// again, hard, good, easy, or remembered.
     rating: String,
+}
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+pub struct LogReviewParams {
+    /// The target language of the cards, e.g. "French".
+    language: String,
+    /// All explicitly reviewed cards and their ratings. Expand the presented meaning rows' cards.
+    reviews: Vec<ReviewInput>,
     /// Optional idempotency key for one review. Supplied by the review
     /// widget so that a retried submit (or a call whose response was lost
     /// after the event was recorded) records the review only once. Omit for
@@ -1178,7 +1183,7 @@ impl YapMcp {
     #[tool(
         title = "List due flashcards",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::GetDueCardsOut>(),
-        description = "List the user's currently-due yap flashcards, most overdue first. Each entry carries its language and card object; pass both verbatim to log_review after quizzing the user. Gram cards can be quizzed with example sentences from get_sentences.",
+        description = "List the user's currently-due yap flashcards, most overdue first. Each entry carries its language and card object; pass the language and a reviews list of card/rating pairs to log_review after quizzing the user. Gram cards can be quizzed with example sentences from get_sentences.",
         annotations(
             title = "List due flashcards",
             read_only_hint = true,
@@ -1293,7 +1298,7 @@ impl YapMcp {
     #[tool(
         title = "Present a card",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::PresentOut>(),
-        description = "Present one card to the user as an interactive widget: a written/listening card quizzes the single gram (word) with audio (a human recording when the course has one) and a reveal; a pronunciation card shows the letter-sound pattern with example words and their audio. The widget records the user's own grade via log_review — so after presenting, do NOT log a review for this card yourself; the outcome is reported back to you. For a written card the user has seen before, prefer present_translation instead, like the yap app does.",
+        description = "Present one card to the user as an interactive widget: a written card quizzes all added meanings sharing its prefixed text; a listening card quizzes the spoken gram, with audio (a human recording when the course has one) and a reveal; a pronunciation card shows the letter-sound pattern with example words and their audio. The widget records the user's own grade via log_review — so after presenting, do NOT log a review for this card yourself; the outcome is reported back to you. For a written card the user has seen before, prefer present_translation instead, like the yap app does.",
         annotations(
             title = "Present a card",
             read_only_hint = true,
@@ -1379,7 +1384,7 @@ impl YapMcp {
                     "language": language,
                     "native_language": native_language,
                     "card": card,
-                    "view": yap_frontend_rs::pronunciation_view(pattern.clone(), guide, cues, is_new, times_type_seen),
+                    "view": yap_frontend_rs::pronunciation_view(pattern.clone(), guide, cues, is_new, times_type_seen, state.context.course.target_language),
                 },
             });
             let mut result = CallToolResult::success(vec![ContentBlock::text(format!(
@@ -1751,7 +1756,7 @@ impl YapMcp {
     #[tool(
         title = "Log a review",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::LogReviewOut>(),
-        description = "Record the result of reviewing one card. This updates real spaced-repetition scheduling on the user's account, so only call it after actually quizzing the user, with an honest rating.",
+        description = "Record all card ratings for one presented challenge. Written fronts can teach several meanings; include every card from the meaning rows actually reviewed. Listening and pronunciation reviews contain one card. This updates real spaced-repetition scheduling on the user's account, so only call it after actually quizzing the user, with honest ratings.",
         annotations(
             title = "Log a review",
             read_only_hint = false,
@@ -1765,18 +1770,29 @@ impl YapMcp {
         ctx: RequestContext<RoleServer>,
         Parameters(params): Parameters<LogReviewParams>,
     ) -> CallToolResult {
-        let rating = match parse_rating(&params.rating) {
-            Ok(r) => r,
-            Err(e) => return error(e),
-        };
+        let mut reviews = Vec::new();
+        for review in &params.reviews {
+            let rating = match parse_rating(&review.rating) {
+                Ok(r) => r,
+                Err(e) => return error(e),
+            };
+            reviews.push(yap_frontend_rs::CardReview {
+                card: (*review.card).clone(),
+                rating,
+            });
+        }
+        if reviews.is_empty() {
+            return error("reviews must not be empty");
+        }
         let slot = match self.state_slot(&ctx).await {
             Ok(slot) => slot,
             Err(e) => return error(e),
         };
         const TOOL: &str = "log_review";
-        // The card under review is the presentation's immutable identity; the
-        // mutable rating is excluded so a retry replays the first review.
-        let identity = json!([&*params.card, &params.language]).to_string();
+        // Submitted card identities define the presentation; ratings are excluded
+        // so a retry replays the first review, even when some cards are filtered out.
+        let cards: Vec<_> = params.reviews.iter().map(|review| &*review.card).collect();
+        let identity = json!([cards, &params.language]).to_string();
         let mut state = slot.lock().await;
         // Sync first, so a retry after a failed upload drives the pending
         // flush before we short-circuit on the cached response.
@@ -1793,21 +1809,35 @@ impl YapMcp {
         if let Err(e) = state.check_language(&params.language) {
             return error(e);
         }
-        let Verbatim(card) = params.card;
         let deck = state.deck();
-        let Some(before) = deck.find_card_summary(&card) else {
-            return error(
-                "that card is not an active card in the deck. Use get_due_cards to see reviewable cards.",
-            );
+        let Some(yap_frontend_rs::DeckEvent::Language(event)) = deck.review_cards(reviews) else {
+            return error("no reviewed cards are present in the deck");
         };
+        let LanguageEventContent::ReviewCards { reviews } = &event.content else {
+            unreachable!()
+        };
+        let first = &reviews[0];
+        let card = first.card.clone();
+        let rating = format!("{:?}", first.rating).to_lowercase();
+        let before = deck.find_card_summary(&card);
+        let reviewed = before
+            .as_ref()
+            .map(|summary| summary.card_text())
+            .unwrap_or_else(|| match &card {
+                CardIndicator::WrittenGram { gram } => {
+                    gram.to_display_string(state.context.course.target_language)
+                }
+                CardIndicator::ListeningGram { gram } => {
+                    gram.to_display_string(state.context.course.target_language)
+                }
+                CardIndicator::LetterPronunciation { pattern, .. } => pattern.clone(),
+            });
         let now_ms = Utc::now().timestamp_millis() as f64;
-        let was_due = before.due_timestamp_ms() <= now_ms;
+        let was_due = before
+            .as_ref()
+            .is_some_and(|summary| summary.due_timestamp_ms() <= now_ms);
 
-        let content = LanguageEventContent::ReviewCard {
-            reviewed: card.clone(),
-            rating,
-        };
-        let synced = state.append_event(content).await;
+        let synced = state.append_event(event.content).await;
 
         let deck = state.deck();
         let after = deck.find_card_summary(&card);
@@ -1815,8 +1845,8 @@ impl YapMcp {
             .due_card_summaries(Utc::now().timestamp_millis() as f64)
             .len();
         let result = ok_typed(&LogReviewOut {
-            reviewed: before.card_text(),
-            rating: params.rating.clone(),
+            reviewed,
+            rating,
             was_due,
             fsrs_state: after.as_ref().map(|a| a.state().to_string()),
             next_due: after.and_then(|a| {
@@ -2226,7 +2256,7 @@ impl ServerHandler for YapMcp {
              \n\
              Typical review session: get_due_cards, then for each card quiz the user \
              (get_sentences can supply an example sentence that the user should fully \
-             understand), then log_review with an honest rating.\n\
+             understand), then log_review with a reviews list of explicit card/rating pairs.\n\
              \n\
              Words are identified by (language, gram), where a gram is the exact token \
              sequence — word + lemma + part of speech — plus its sense number, returned by search_dictionary and \

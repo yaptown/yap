@@ -15,6 +15,7 @@ import { useDeck, useDeckSelection } from "@/core/useDeck";
 import { useReportDeckSwitching, useWeapon, useWeaponState } from "@/core/weapon";
 import { readChallengeRestrictions } from "@/lib/challenge-restrictions";
 import { playSoundEffect } from "@/lib/sound-effects";
+import { flashcardReviews } from "./challenges/flashcardReviews";
 import {
   get_audio_cache_version,
   get_clip_manifest_version,
@@ -367,7 +368,7 @@ function useStudyController(
     (event: DeckEvent) => { if (canWrite()) weapon.add_deck_event(event); },
     [weapon, canWrite],
   );
-  const onRating = useCallback((rating: Rating): boolean => {
+  const onRating = useCallback((rating: Rating, meaningRatings?: Rating[]): boolean => {
     if (!canWrite() || submitting.current.deck !== deck || submitting.current.inFlight) return false;
     const currentChallenge = getCurrentChallenge();
     if (
@@ -381,7 +382,16 @@ function useStudyController(
       );
       return false;
     }
-    const event = deck.review_card(currentChallenge.indicator, rating);
+    const event = deck.review_cards(
+      currentChallenge.type === "FlashCardReview"
+        ? flashcardReviews(
+            currentChallenge.flashcard.content,
+            currentChallenge.indicator,
+            rating,
+            meaningRatings,
+          )
+        : [{ card: currentChallenge.indicator, rating }],
+    );
     if (!event) return false;
     submitting.current.inFlight = true;
     addEvent(event);

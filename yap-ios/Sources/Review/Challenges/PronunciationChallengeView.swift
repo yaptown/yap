@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PronunciationChallengeView: View {
     @Environment(BackgroundController.self) private var background
+    @Environment(\.reviewScreen!) private var screen
     @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewHost!) private var host
     @Environment(\.reviewActions!) private var actions
@@ -12,7 +13,7 @@ struct PronunciationChallengeView: View {
     let isNew: Bool
     let timesSeen: UInt32
     private var view: PronunciationView {
-        pronunciation_view(pattern: pattern, guide: guide, cues: cues, is_new: isNew, times_type_seen: timesSeen)
+        pronunciation_view(pattern: pattern, guide: guide, cues: cues, is_new: isNew, times_type_seen: timesSeen, target_language: screen.target_language)
     }
     var body: some View {
         ReviewStepScrollView {
@@ -40,7 +41,7 @@ struct PronunciationChallengeView: View {
     private func rate(_ rating: Rating) {
         guard !actions.submitting else { return }
         background.bump(30)
-        audio.stop(); actions.rate(indicator, rating)
+        audio.stop(); actions.rate([CardReview(card: indicator, rating: rating)])
         if rating != .Again { audio.playEffect("success-2") }
     }
 }
@@ -49,8 +50,7 @@ private struct PronunciationRow: View {
     @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewScreen!) private var screen
     let cue: PronunciationCue
-    let pattern: String
-    let position: PatternPosition
+    let highlightedSegments: [[HighlightedRun]]
     let context: String?
     @State private var connectorHeard = false
     private var playing: Bool { audio.currentRequest == cue.audio && audio.isPlaying }
@@ -62,20 +62,14 @@ private struct PronunciationRow: View {
     private func spokenWord(_ index: Int) -> AttributedString {
         let segment = cue.segments[index]
         let current = playing ? cue.segments.lastIndex { $0.start_ms.map { Double($0) <= audio.currentTime * 1000 } ?? false } : nil
-        let firstExample = cue.segments.firstIndex { $0.role == .Example }
-        let lastExample = cue.segments.lastIndex { $0.role == .Example }
-        var word = AttributedString(segment.text)
+        var word = highlightedSegments[index].reduce(into: AttributedString()) { result, run in
+            var text = AttributedString(run.text)
+            if run.highlighted { text.backgroundColor = .yapCaution.opacity(0.3) }
+            result += text
+        }
         word.foregroundColor = current == index ? .yapAccent : segment.role == .Connector ? .yapMuted : .yapText
         word.font = .body.weight(segment.role == .Example ? .semibold : .regular)
         if playing, let start = segment.start_ms, audio.currentTime * 1000 < Double(start) { word.foregroundColor = .yapMuted.opacity(0.5) }
-        if segment.role == .Example {
-            let options: String.CompareOptions = position == .End ? [.caseInsensitive, .backwards] : [.caseInsensitive]
-            if let range = word.range(of: pattern, options: options),
-               position == .Anywhere || (position == .Beginning && index == firstExample && range.lowerBound == word.startIndex)
-                || (position == .End && index == lastExample && range.upperBound == word.endIndex) {
-                word[range].backgroundColor = .yapCaution.opacity(0.3)
-            }
-        }
         word += AttributedString(trailingSpace(index))
         return word
     }
@@ -121,7 +115,7 @@ private struct PronunciationCard: View, Equatable {
                 Text(note).font(.caption).foregroundStyle(Color.yapMuted).frame(maxWidth: .infinity)
             }
             ForEach(Array(view.examples.enumerated()), id: \.offset) { _, example in
-                PronunciationRow(cue: example.cue, pattern: view.pattern, position: view.position,
+                PronunciationRow(cue: example.cue, highlightedSegments: example.highlighted_segments,
                                  context: example.cultural_context)
             }
             if let description = view.description { Text(markdown(description)).font(.subheadline) }

@@ -2,6 +2,7 @@
 {"sentence":"А ваше имя?..","failure_count":3}
 {"sentence":"А вот где у тебя что-то подставить под нерв седалищный, я не вижу.","failure_count":3}
 {"sentence":"А вы оптимист!..","failure_count":3}
+{"sentence":"А может?..","failure_count":3}
 {"sentence":"А твои друзья из ВУза, часто их видишь?","failure_count":3}
 {"sentence":"А ты должен будешь сказать, что пришло тебе в голову, первую ассоциацию.","failure_count":3}
 {"sentence":"А ты?..","failure_count":3}
@@ -124,7 +125,7 @@
 {"sentence":"Если твой отец заметит!..","failure_count":3}
 {"sentence":"Если ты сдашься сейчас, мы не причиним тебе вреда.","failure_count":3}
 {"sentence":"Есть люди, которым гораздо хуже, но они справляются.","failure_count":3}
-{"sentence":"Есть пустыни и Балканы острова и океаны ля-ля-ля-ля-ля-ля-ля.","failure_count":2}
+{"sentence":"Есть пустыни и Балканы острова и океаны ля-ля-ля-ля-ля-ля-ля.","failure_count":3}
 {"sentence":"Есть пустыни и балканы острова и океаны ля-ля-ля-ля-ля-ля-ля.","failure_count":3}
 {"sentence":"Ещё раз!..","failure_count":3}
 {"sentence":"Её единственное преступление состоит в том,..","failure_count":3}
@@ -230,7 +231,7 @@
 {"sentence":"Не думайте, что мне не стыдно, что я вот такая к алтарю иду.","failure_count":3}
 {"sentence":"Не думаю, что нас друг другу представляли.","failure_count":3}
 {"sentence":"Не значит ли это, что должен был быть некий первичный двигатель ?","failure_count":3}
-{"sentence":"Не значит ли это, что должен был быть некий первичный двигатель?","failure_count":2}
+{"sentence":"Не значит ли это, что должен был быть некий первичный двигатель?","failure_count":3}
 {"sentence":"Не канючь, и детями не жалоби.","failure_count":3}
 {"sentence":"Не может быть!..","failure_count":3}
 {"sentence":"Не может свою дозу проглотить!?","failure_count":3}
@@ -242,6 +243,7 @@
 {"sentence":"Не терять времени!..","failure_count":3}
 {"sentence":"Не только в делах бизнеса, но в личной жизни тоже.","failure_count":3}
 {"sentence":"Не трогайте!..","failure_count":3}
+{"sentence":"Не, не, не, не надо, нормально все, езжайте!","failure_count":3}
 {"sentence":"Нельзя!..","failure_count":3}
 {"sentence":"Нет!..","failure_count":3}
 {"sentence":"Нет, нет, нет, нет-нет-нет-нет-нет!!!","failure_count":3}
@@ -275,6 +277,7 @@
 {"sentence":"Одно название.","failure_count":3}
 {"sentence":"Одно сплошное телевидение.","failure_count":3}
 {"sentence":"Одно это должно добавить скорости узлов пять.","failure_count":3}
+{"sentence":"Ой, пришло, пришло, пришло-о-о!","failure_count":3}
 {"sentence":"Ой, это еще что такое!?","failure_count":3}
 {"sentence":"Он взглядом поймал меня, пялящегося на него, и я покраснел.","failure_count":3}
 {"sentence":"Он ищет его, ищет.","failure_count":3}
@@ -308,7 +311,7 @@
 {"sentence":"По системе йогов.","failure_count":3}
 {"sentence":"По сообщению новостей, он был съеден акулами.","failure_count":3}
 {"sentence":"По-видимому пахнет керосином.","failure_count":3}
-{"sentence":"По-видимому это твоя поездка.","failure_count":2}
+{"sentence":"По-видимому это твоя поездка.","failure_count":3}
 {"sentence":"Победа!..","failure_count":3}
 {"sentence":"Повелитель!..","failure_count":3}
 {"sentence":"Поверь мне!..","failure_count":3}
@@ -388,6 +391,7 @@
 {"sentence":"Так вот что означает твоё ДМ,..","failure_count":3}
 {"sentence":"Так вот, он заинтересовался Фехнером, погибшем в Океане Соляриса.","failure_count":3}
 {"sentence":"Так я заставил Джимми и Томми вложится со мной.","failure_count":3}
+{"sentence":"Так, что о-о-о-о?!","failure_count":3}
 {"sentence":"Талант?..","failure_count":3}
 {"sentence":"Тебе что нибудь принести?","failure_count":3}
 {"sentence":"Терпи!..","failure_count":3}
@@ -453,7 +457,7 @@
 {"sentence":"Четверо рабов несут господина и два мешка из города в поместье.","failure_count":3}
 {"sentence":"Четыре?..","failure_count":3}
 {"sentence":"Чжоу ЮЙ!..","failure_count":3}
-{"sentence":"Чжоу Юй!..","failure_count":2}
+{"sentence":"Чжоу Юй!..","failure_count":3}
 {"sentence":"Чжугэ Лян!..","failure_count":3}
 {"sentence":"Читайте Тургенева, мы скопцы воспитывали скопцов, так по-вашему?","failure_count":3}
 {"sentence":"Что за-?!","failure_count":3}
@@ -494,7 +498,7 @@
 {"sentence":"Я беззащитный!..","failure_count":3}
 {"sentence":"Я благодарно Вам за то, что Вы спасли моего Эдди, правда благодарна,..","failure_count":3}
 {"sentence":"Я буду секретаршей в приемной Доктора Милтона Коссвела.","failure_count":3}
-{"sentence":"Я буду секретаршей в приемной доктора Милтона Коссвела.","failure_count":2}
+{"sentence":"Я буду секретаршей в приемной доктора Милтона Коссвела.","failure_count":3}
 {"sentence":"Я бы хотел чаю.","failure_count":3}
 {"sentence":"Я бы хотела познакомить тебя с тётей Лаудена.","failure_count":3}
 {"sentence":"Я вас великодушно помилую.","failure_count":3}

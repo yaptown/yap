@@ -96,15 +96,14 @@ show(f"add_cards fake gram (error={err}, want True)", body)
 # Bogus card / bad rating must be rejected
 err, body = tool("log_review", {
     "language": top["language"],
-    "card": {"type": "WrittenGram", "gram": fake},
-    "rating": "good",
+    "reviews": [{"card": {"type": "WrittenGram", "gram": fake}, "rating": "good"}],
 })
 show(f"log_review unknown card (error={err}, want True)", body)
 
 if due["cards"]:
     entry = due["cards"][0]
     err, body = tool("log_review", {
-        "language": entry["language"], "card": entry["card"], "rating": "sideways",
+        "language": entry["language"], "reviews": [{"card": entry["card"], "rating": "sideways"}],
     })
     show(f"log_review real card bad rating (error={err}, want True)", body)
 

@@ -88,18 +88,7 @@ function grammarSummary(sense: any): string {
   const parts: string[] = [];
   if (sense.pos && !sense.is_phrase) parts.push(posLabel(sense.pos));
   if (sense.morphology && !sense.is_phrase) {
-    const m = sense.morphology;
-    // Group: gender/number, then tense/mood/person
-    const inflection: string[] = [];
-    if (m.person) inflection.push(m.person);
-    if (m.gender) inflection.push(m.gender);
-    if (m.number) inflection.push(m.number);
-    if (inflection.length > 0) parts.push(inflection.join(' '));
-    const verbInfo: string[] = [];
-    if (m.tense) verbInfo.push(m.tense);
-    if (m.mood) verbInfo.push(m.mood);
-    if (m.case) verbInfo.push(m.case);
-    if (verbInfo.length > 0) parts.push(verbInfo.join(' '));
+    parts.push(sense.morphology);
   }
   if (sense.is_phrase) parts.push('phrase');
   return parts.join(' · ');

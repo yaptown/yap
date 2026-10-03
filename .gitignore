@@ -65,6 +65,7 @@ out/*/dictionary.jsonl
 out/*/gram_dictionary.jsonl
 out/*/gram_frequencies.jsonl
 out/*/gram_phrasebook.jsonl
+out/*/redundant_senses.jsonl
 out/*/phrasebook.jsonl
 out/*/proper_noun_definitions.jsonl
 out/*/encoded_sentences.jsonl

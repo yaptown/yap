@@ -388,100 +388,20 @@ async fn main() -> anyhow::Result<()> {
         // Create gram phrasebook (for multi-atom grams), excluding grams that already
         // have MWE phrasebook entries
         let gram_phrasebook_file = native_specific_dir.join("gram_phrasebook.jsonl");
-        let gram_sentences_file = native_specific_dir.join("gram_sentences.jsonl");
-
-        // Load cached gram -> example sentences mapping
-        // Try new format (keyed by Gram) first, fall back to old format (keyed by display text)
-        let mut gram_sentences: BTreeMap<Gram<String>, Vec<String>> = if gram_sentences_file
-            .exists()
-        {
-            let file =
-                File::open(&gram_sentences_file).context("Failed to open gram sentences file")?;
-            let mut lines = BufReader::new(file).lines();
-
-            // Check first line to detect format
-            let first_line = lines.next().and_then(|l| l.ok());
-            let is_new_format = first_line.as_ref().is_some_and(|line| {
-                serde_json::from_str::<(Gram<String>, Vec<String>)>(line).is_ok()
-            });
-
-            let all_lines = first_line.into_iter().chain(lines.map_while(Result::ok));
-
-            if is_new_format {
-                all_lines
-                    .filter_map(|line| {
-                        serde_json::from_str::<(Gram<String>, Vec<String>)>(&line).ok()
-                    })
-                    .collect()
-            } else {
-                // Migrate from old format (display text keys):
-                // For monosemantic grams, reuse old sentences; polysemantic ones will be re-sampled
-                let old_format: BTreeMap<String, Vec<String>> = all_lines
-                    .filter_map(|line| serde_json::from_str::<(String, Vec<String>)>(&line).ok())
-                    .collect();
-
-                // Count how many multi-atom grams share each display text
-                let mut display_text_counts: BTreeMap<String, u32> = BTreeMap::new();
-                for entry in &filtered_gram_frequencies {
-                    if entry.gram.gram.len() > 1 {
-                        *display_text_counts
-                            .entry(entry.gram.gram.to_display_string(lang))
-                            .or_default() += 1;
-                    }
-                }
-
-                // Only migrate monosemantic entries
-                let mut migrated = BTreeMap::new();
-                for entry in &filtered_gram_frequencies {
-                    if entry.gram.gram.len() > 1 {
-                        let display_text = entry.gram.gram.to_display_string(lang);
-                        let is_monosemantic =
-                            display_text_counts.get(&display_text).copied().unwrap_or(0) <= 1;
-                        if is_monosemantic && let Some(sentences) = old_format.get(&display_text) {
-                            migrated.insert(entry.gram.gram.clone(), sentences.clone());
-                        }
-                    }
-                }
-                let polysemantic_count = display_text_counts
-                    .values()
-                    .filter(|&&count| count > 1)
-                    .count();
-                println!(
-                    "Migrated {} gram sentence entries from old format (display text keys), {} polysemantic display texts will be re-sampled",
-                    migrated.len(),
-                    polysemantic_count
-                );
-                migrated
-            }
-        } else {
-            BTreeMap::new()
-        };
-
+        let corpus = generate_data::corpus_samples::CorpusIndex::new(&encoded_sentences_with_grams);
+        let mut gram_sentences = generate_data::corpus_samples::SampleCache::<Gram<String>>::load(
+            native_specific_dir.join("gram_sentences.jsonl"),
+        )?;
         let mut gram_phrasebook = generate_data::dict::create_gram_phrasebook(
             *course,
             &filtered_gram_frequencies,
-            &encoded_sentences_with_grams,
+            &corpus,
             &mut gram_sentences,
         )
         .await
         .context("Failed to create gram phrasebook")?;
         generate_data::custom_phrasebook::apply(source_data_path, *course, &mut gram_phrasebook)?;
-
-        // Write updated gram sentences cache
-        {
-            let mut file = File::create(&gram_sentences_file)
-                .context("Failed to create gram sentences file")?;
-            for (gram, sentences) in &gram_sentences {
-                let json = serde_json::to_string(&(gram, sentences))
-                    .context("Failed to serialize gram sentences entry")?;
-                writeln!(file, "{json}").context("Failed to write gram sentences entry to file")?;
-            }
-            println!(
-                "Wrote {} gram sentence entries to {:?}",
-                gram_sentences.len(),
-                gram_sentences_file
-            );
-        }
+        gram_sentences.save()?;
         {
             let mut file = File::create(&gram_phrasebook_file)
                 .context("Failed to create gram phrasebook file")?;
@@ -724,10 +644,20 @@ async fn main() -> anyhow::Result<()> {
             language_utils::Heteronym<String>,
             language_utils::DictionaryEntry,
         > = {
-            let raw_dictionary =
-                generate_data::dict::create_gram_dictionary(*course, &filtered_gram_frequencies)
-                    .await
-                    .context("Failed to create gram dictionary")?;
+            let mut heteronym_sentences = generate_data::corpus_samples::SampleCache::<
+                language_utils::Heteronym<String>,
+            >::load(
+                native_specific_dir.join("heteronym_sentences.jsonl")
+            )?;
+            let raw_dictionary = generate_data::dict::create_gram_dictionary(
+                *course,
+                &filtered_gram_frequencies,
+                &corpus,
+                &mut heteronym_sentences,
+            )
+            .await
+            .context("Failed to create gram dictionary")?;
+            heteronym_sentences.save()?;
             // Reuse the morphology we computed earlier (before etymology).
             raw_dictionary
                 .into_iter()
@@ -735,6 +665,16 @@ async fn main() -> anyhow::Result<()> {
                     // Apply custom definitions if available
                     if let Some(custom_def) = custom_definitions.get(&heteronym) {
                         def = custom_def.clone();
+                    }
+                    for definition in &mut def.definitions {
+                        generate_data::dict::normalize_english_gloss(
+                            &mut definition.native,
+                            course.native_language,
+                        );
+                        generate_data::dict::normalize_english_gloss(
+                            &mut definition.example_sentence_native_language,
+                            course.native_language,
+                        );
                     }
                     // Only keep entries that have morphology
                     let morph = morphology.get(&heteronym)?.clone();
@@ -791,9 +731,9 @@ async fn main() -> anyhow::Result<()> {
             *course,
             &filtered_gram_frequencies,
             &inventories,
+            &corpus,
         )
         .await?;
-        phrasebook.extend(sense_phrases);
         let sense_dictionary: BTreeMap<_, _> = sense_definitions
             .into_iter()
             .filter_map(|(gram, definition)| {
@@ -810,6 +750,7 @@ async fn main() -> anyhow::Result<()> {
                 Some((gram, entry))
             })
             .collect();
+        phrasebook.extend(sense_phrases);
         let gram_dictionary_set: std::collections::HashSet<_> =
             gram_dictionary.keys().cloned().collect();
 
@@ -867,6 +808,25 @@ async fn main() -> anyhow::Result<()> {
         };
 
         gram_keyed_dictionary.extend(sense_dictionary);
+        let redundant_senses = generate_data::sense_redundancy::find_redundant_senses(
+            *course,
+            &gram_keyed_dictionary,
+            &phrasebook,
+            &inventories,
+            &gram_frequencies,
+        )
+        .await?;
+        let mut redundancy_file = BufWriter::new(std::fs::File::create(
+            native_specific_dir.join("redundant_senses.jsonl"),
+        )?);
+        for (text, sets) in &redundant_senses {
+            serde_json::to_writer(
+                &mut redundancy_file,
+                &serde_json::json!({"text": text, "sets": sets}),
+            )?;
+            writeln!(redundancy_file)?;
+        }
+        redundancy_file.flush()?;
 
         // Filter gram_vocabulary to remove learnable grams without definitions
         let defined_gram_set: std::collections::HashSet<TaggedGram<Gram<String>>> =
@@ -1528,12 +1488,34 @@ async fn main() -> anyhow::Result<()> {
             let mut movies = FxHashMap::default();
             for basic in generate_data::target_sentences::course_movies(&movies_dir)? {
                 // Convert to full MovieMetadata and load poster bytes from separate file
+                let localization = basic.localizations.get(course.target_language.code());
+                let title = localization
+                    .map_or(&basic.title, |entry| &entry.title)
+                    .clone();
+                let original_poster = posters_dir.join(format!("{}.jpg", basic.id));
+                let poster_path = if let Some(localization) = localization {
+                    localization.poster_path.as_ref().map(|_| {
+                        let regional = posters_dir.join(format!(
+                            "{}.{}.jpg",
+                            basic.id,
+                            course.target_language.code()
+                        ));
+                        if regional.exists() {
+                            regional
+                        } else {
+                            original_poster.clone()
+                        }
+                    })
+                } else {
+                    Some(original_poster)
+                };
                 let mut movie: language_utils::MovieMetadata = basic.into();
+                movie.title = title;
                 movie.variety = movie
                     .variety
                     .or_else(|| sentence_corpus.movie_varieties.get(&movie.id).copied());
-                let poster_path = posters_dir.join(format!("{}.jpg", movie.id));
-                if poster_path.exists()
+                if let Some(poster_path) = poster_path
+                    && poster_path.exists()
                     && let Ok(bytes) = std::fs::read(&poster_path)
                 {
                     // Resize and encode as lossy WebP for smaller file size
@@ -1715,10 +1697,8 @@ async fn main() -> anyhow::Result<()> {
                 };
 
                 // Get example sentences with translations
-                let Some(sentences) = gram_sentences.get(&gram.gram) else {
-                    continue;
-                };
-                let examples: Vec<language_utils::ShowcaseExampleSentence> = sentences
+                let examples: Vec<language_utils::ShowcaseExampleSentence> = gram_sentences
+                    .get(&gram.gram)
                     .iter()
                     .filter_map(|s| {
                         let native = translations_map.get(s.as_str())?.first()?;
@@ -1832,6 +1812,7 @@ async fn main() -> anyhow::Result<()> {
 
         // Create consolidated data structure
         let consolidated_data = language_utils::ConsolidatedLanguageData {
+            redundant_senses,
             strokes,
             target_language_sentences,
             translations,

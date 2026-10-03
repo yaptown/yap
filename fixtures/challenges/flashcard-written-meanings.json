@@ -1,0 +1,247 @@
+{
+  "screen": "Review",
+  "view": {
+    "show_account_prompt": false,
+    "native_language": "English",
+    "target_language": "French",
+    "step": {
+      "type": "Challenge",
+      "view": {
+        "challenge": {
+          "type": "FlashCardReview",
+          "indicator": {
+            "type": "WrittenGram",
+            "gram": {
+              "gram": [
+                {
+                  "Tok": {
+                    "text": "est",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "est",
+                      "lemma": "être",
+                      "pos": "VERB"
+                    }
+                  }
+                }
+              ],
+              "sense": 1
+            }
+          },
+          "flashcard": {
+            "content": {
+              "type": "Gram",
+              "gram": [
+                {
+                  "word": {
+                    "text": "est",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "est",
+                      "lemma": "être",
+                      "pos": "VERB"
+                    }
+                  },
+                  "whitespace": ""
+                }
+              ],
+              "prefix": {
+                "prefix": "il",
+                "separator": " "
+              },
+              "breakdown": [
+                [
+                  "est",
+                  "être",
+                  "to be"
+                ]
+              ],
+              "meanings": [
+                {
+                  "cards": [
+                    {
+                      "type": "WrittenGram",
+                      "gram": {
+                        "gram": [
+                          {
+                            "Tok": {
+                              "text": "il",
+                              "word_type": {
+                                "type": "Heteronym",
+                                "word": "il",
+                                "lemma": "il",
+                                "pos": "PRON"
+                              }
+                            }
+                          },
+                          {
+                            "Tok": {
+                              "text": "est",
+                              "word_type": {
+                                "type": "Heteronym",
+                                "word": "est",
+                                "lemma": "être",
+                                "pos": "VERB"
+                              }
+                            }
+                          }
+                        ],
+                        "sense": null
+                      }
+                    },
+                    {
+                      "type": "WrittenGram",
+                      "gram": {
+                        "gram": [
+                          {
+                            "Tok": {
+                              "text": "il",
+                              "word_type": {
+                                "type": "Heteronym",
+                                "word": "il",
+                                "lemma": "il",
+                                "pos": "PRON"
+                              }
+                            }
+                          },
+                          {
+                            "Tok": {
+                              "text": "est",
+                              "word_type": {
+                                "type": "Heteronym",
+                                "word": "est",
+                                "lemma": "être",
+                                "pos": "AUX"
+                              }
+                            }
+                          }
+                        ],
+                        "sense": null
+                      }
+                    }
+                  ],
+                  "definition": {
+                    "headword": "il est",
+                    "is_phrase": true,
+                    "morphology_label": "",
+                    "senses": [
+                      {
+                        "meaning": "he is",
+                        "note": null,
+                        "example": {
+                          "target": "Il est très fatigué aujourd'hui.",
+                          "native": "He is very tired today."
+                        }
+                      }
+                    ]
+                  },
+                  "label": "Multiword",
+                  "is_new": false
+                },
+                {
+                  "cards": [
+                    {
+                      "type": "WrittenGram",
+                      "gram": {
+                        "gram": [
+                          {
+                            "Tok": {
+                              "text": "est",
+                              "word_type": {
+                                "type": "Heteronym",
+                                "word": "est",
+                                "lemma": "être",
+                                "pos": "VERB"
+                              }
+                            }
+                          }
+                        ],
+                        "sense": 1
+                      }
+                    }
+                  ],
+                  "definition": {
+                    "headword": "est",
+                    "is_phrase": false,
+                    "morphology_label": "3rd-person, singular, present tense",
+                    "senses": [
+                      {
+                        "meaning": "is",
+                        "note": null,
+                        "example": {
+                          "target": "La réponse est oui.",
+                          "native": "The answer is yes."
+                        }
+                      }
+                    ]
+                  },
+                  "label": "Verb",
+                  "is_new": false
+                },
+                {
+                  "cards": [
+                    {
+                      "type": "WrittenGram",
+                      "gram": {
+                        "gram": [
+                          {
+                            "Tok": {
+                              "text": "est",
+                              "word_type": {
+                                "type": "Heteronym",
+                                "word": "est",
+                                "lemma": "être",
+                                "pos": "AUX"
+                              }
+                            }
+                          }
+                        ],
+                        "sense": null
+                      }
+                    }
+                  ],
+                  "definition": {
+                    "headword": "est",
+                    "is_phrase": false,
+                    "morphology_label": "3rd-person, singular, present tense",
+                    "senses": [
+                      {
+                        "meaning": "has",
+                        "note": null,
+                        "example": {
+                          "target": "Il est parti tôt ce matin.",
+                          "native": "He has left early this morning."
+                        }
+                      }
+                    ]
+                  },
+                  "label": "Auxiliary",
+                  "is_new": true
+                }
+              ]
+            },
+            "audio": {
+              "request": {
+                "text": "est",
+                "language": "French",
+                "is_ssml": false,
+                "speed": 1.0
+              },
+              "provider": "Google"
+            }
+          },
+          "is_new": false,
+          "times_type_seen": 57
+        },
+        "transcription": null,
+        "translation": null
+      }
+    },
+    "progress": 0.0,
+    "total_reviews": 0,
+    "total_count": 0,
+    "keyboard_tip": "Enable the French keyboard on your device to easily type accented characters",
+    "offer_engagement": false,
+    "online": true
+  }
+}
