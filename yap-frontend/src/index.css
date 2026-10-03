@@ -243,10 +243,15 @@ ol {
 }
 
 /* Per-language font size adjustments for target language text.
-   CJK characters render smaller at the same font size as Latin text.
-   Uses em so it scales relative to whatever the parent's font-size is. */
-[lang="ko"], [lang="ja"], [lang="zh"] {
+   CJK, Devanagari and Thai render smaller at the same font size as Latin text.
+   Uses em so it scales relative to whatever the parent's font-size is. `|=`
+   also matches script subtags like zh-Hant; `:lang()` would compound the em on
+   every nested element. */
+[lang|="ko"], [lang|="ja"], [lang|="zh"] {
   font-size: 1.55em;
+}
+[lang|="hi"], [lang|="th"] {
+  font-size: 1.2em;
 }
 
 /* Home's search bar morphs into the dictionary's: both carry this class, and

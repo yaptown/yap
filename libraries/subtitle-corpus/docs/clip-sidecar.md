@@ -1,7 +1,7 @@
 # Clip sidecar schema (format 5)
 
 One JSON per served video clip, stored as `<id>/meta.json` alongside
-`hi.mp4`, `lo.mp4` and `poster.jpg`. Cut generously (neighbor sentences as context when the
+`hi.mp4`, `lo.mp4`, `lo.webm` and `poster.jpg`. Cut generously (neighbor sentences as context when the
 gap is ≤ ~2s, total ≤ ~15s); the sidecar — not the file boundary — defines what
 the clip *is*. The app seeks to `critical.start_ms` by default and offers the
 padding as opt-in context.
@@ -80,12 +80,17 @@ The stamp is deliberately not the clips provenance: a re-map under a new
 segmenter or gate that lands on the same span costs a sidecar rewrite, not
 a day of re-encoding. The sidecar itself is always regenerated and left
 untouched when it comes out byte-identical. Publish lists orphan candidates;
-only a separate `prune --apply` deletes them. Upload markers store the four files' content hashes and
+only a separate `prune --apply` deletes them. Upload markers store the five files' content hashes and
 re-upload each file whose bytes changed. Better to recalculate than to
 trust a cache whose inputs may have moved.
 
 Format 5 adds enrichment without changing `media.stamp` or the encode recipe:
 
+- `media.renditions.webm` is `{file: "lo.webm", height, bytes, stamp}`: a
+  VP9/Opus transcode of `lo.mp4` with a keyframe at the critical start, for
+  desktop Anki, whose Qt WebEngine can't decode H.264/AAC. Exported decks list
+  it after the MP4; the app keeps using `lo.mp4`. Its stamp covers the WebM
+  recipe, media stamp and critical start. Served as `video/webm`.
 - `media.poster` is `{file, bytes, stamp}` for `poster.jpg`, accurately sought
   from `hi.mp4` at `critical.start_ms`, at most 720px wide. A matching stamp
   (media, timestamp, recipe) and existing file allow reuse. Served as `image/jpeg`.

@@ -250,7 +250,7 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             character_type: Some("Cyrillic".into()),
             i_speak: "Я говорю по-русски".into(),
             yaptown_name: "Yap.Город".into(),
-            lets_go: "Пойдем!".into(),
+            lets_go: "Пойдём!".into(),
         },
         Korean => LanguageMetadata {
             iso_code: language.code().into(),

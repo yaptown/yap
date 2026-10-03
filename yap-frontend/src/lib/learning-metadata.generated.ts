@@ -229,7 +229,7 @@ export const LANGUAGE_METADATA = {
     characterType: 'Cyrillic',
     iSpeak: 'Я говорю по-русски',
     yaptownName: 'Yap.Город',
-    letsGo: 'Пойдем!'
+    letsGo: 'Пойдём!'
   },
   Korean: {
     isoCode: 'kor',

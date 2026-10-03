@@ -40,7 +40,7 @@ struct VideoClipView: View {
                         .aspectRatio(16 / 9, contentMode: .fit)
                         .overlay(alignment: .bottom) {
                             if playing, let cue {
-                                Text(cue.role == "sentence" ? maskedSentence ?? cue.text : cue.text)
+                                Text(cue.role == "sentence" ? maskedSentence.map { transcription_mask_cue(cue_text: cue.text, sentence: text, masked: $0) } ?? cue.text : cue.text)
                                     .font(.callout.weight(.medium))
                                     .foregroundStyle(cue.role == "sentence" ? .yellow : .white)
                                     .padding(6).background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: 6))

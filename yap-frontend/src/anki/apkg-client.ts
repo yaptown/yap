@@ -9,11 +9,11 @@ export function nextModificationTime(): number {
   return lastModified;
 }
 
-/** Only pack-backed media crosses the main thread; fetch, SQL, ZIP and Blob
- * creation all run in the worker. The deck itself never leaves this thread. */
+/** Pack media and subtitle sidecars resolve through the deck on the main thread.
+ * TTS, SQL, ZIP and Blob creation run in the worker. */
 export async function buildApkg(
   plan: AnkiDeckPlan,
-  fetchBundled: (source: AnkiMediaSource) => Uint8Array | undefined,
+  fetchBundled: (source: AnkiMediaSource) => Promise<Uint8Array | undefined>,
   onProgress: (progress: MediaProgress) => void,
 ): Promise<Blob> {
   const worker = new Worker(new URL("./apkg-worker.ts", import.meta.url), { type: "module" });
@@ -22,11 +22,11 @@ export async function buildApkg(
       const send = (message: PackageRequest, transfer: Transferable[] = []) => worker.postMessage(message, transfer);
       worker.onerror = (event) => reject(new Error(event.message));
       worker.onmessageerror = () => reject(new Error("Could not read the Anki worker response."));
-      worker.onmessage = ({ data }: MessageEvent<PackageResponse>) => {
+      worker.onmessage = async ({ data }: MessageEvent<PackageResponse>) => {
         try {
           switch (data.type) {
             case "media": {
-              const bytes = fetchBundled(data.source);
+              const bytes = await fetchBundled(data.source);
               // Bridge-returned bytes are owned JS arrays, not WASM memory.
               send({ type: "media", id: data.id, bytes }, bytes ? [bytes.buffer as ArrayBuffer] : []);
               break;

@@ -1,6 +1,6 @@
 use crate::{ProperNounGroup, Sound, VerdictHeadline, VerdictTone, proper_noun_groups};
 use language_utils::{
-    Course, ProperNounDefinition,
+    Course, Language, ProperNounDefinition,
     text_cleanup::{normalize_for_grading, remove_accents_lowercase},
     transcription_challenge::{self, Grade, Part, PartGraded, PartSubmitted, WordGrade},
 };
@@ -19,6 +19,11 @@ pub struct TranscriptionInput {
 pub struct TranscriptionSubmission {
     pub request: Vec<PartSubmitted>,
     pub all_blanks_filled: bool,
+}
+
+#[bridgerton::bridge]
+pub fn transcription_mask_cue(cue_text: String, sentence: String, masked: String) -> String {
+    transcription_challenge::mask_cue(&cue_text, &sentence, &masked)
 }
 
 #[bridgerton::bridge]
@@ -79,10 +84,44 @@ pub fn failed_transcription_review(
     submission: Vec<transcription_challenge::PartSubmitted>,
     course: Course,
 ) -> transcription_challenge::Grade {
+    let mut grade = local_transcription_review(submission, course.target_language);
+    grade.autograding_error = Some("The LLM was not able to grade this transcription".to_string());
+    grade
+}
+
+fn local_transcription_review(submission: Vec<PartSubmitted>, target_language: Language) -> Grade {
     let results = submission
         .into_iter()
         .map(|part| match part {
             transcription_challenge::PartSubmitted::AskedToTranscribe { parts, submission } => {
+                if !target_language.uses_word_spaces() {
+                    let normalize = |text: &str| {
+                        normalize_for_grading(text, target_language)
+                            .chars()
+                            .filter(|c| !c.is_whitespace())
+                            .collect::<String>()
+                    };
+                    let expected: String =
+                        parts.iter().map(|part| part.word.text.as_str()).collect();
+                    let perfect = normalize(&expected) == normalize(&submission);
+                    return PartGraded::AskedToTranscribe {
+                        parts: parts
+                            .into_iter()
+                            .map(|part| {
+                                let grade = if perfect {
+                                    WordGrade::Perfect {
+                                        wrote: Some(part.word.text.clone()),
+                                    }
+                                } else {
+                                    // Without word boundaries, don't guess which word was missed.
+                                    WordGrade::Missed {}
+                                };
+                                transcription_challenge::PartGradedPart { heard: part, grade }
+                            })
+                            .collect(),
+                        submission,
+                    };
+                }
                 let submitted_words = submission.split_whitespace().collect::<Vec<_>>();
                 if submitted_words.len() != parts.len() {
                     return transcription_challenge::PartGraded::AskedToTranscribe {
@@ -102,14 +141,12 @@ pub fn failed_transcription_review(
                         .iter()
                         .zip(submitted_words.iter())
                         .map(|(part, &submission)| {
-                            let part_text =
-                                normalize_for_grading(&part.word.text, course.target_language)
-                                    .trim()
-                                    .to_string();
-                            let submission =
-                                normalize_for_grading(submission, course.target_language)
-                                    .trim()
-                                    .to_string();
+                            let part_text = normalize_for_grading(&part.word.text, target_language)
+                                .trim()
+                                .to_string();
+                            let submission = normalize_for_grading(submission, target_language)
+                                .trim()
+                                .to_string();
                             if part_text == submission {
                                 transcription_challenge::PartGradedPart {
                                     heard: part.clone(),
@@ -152,7 +189,7 @@ pub fn failed_transcription_review(
         explanation: None,
         results,
         compare: Vec::new(),
-        autograding_error: Some("The LLM was not able to grade this transcription".to_string()),
+        autograding_error: None,
     }
 }
 
@@ -291,6 +328,7 @@ pub struct VerdictView {
 #[bridgerton::bridge(transparent)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct TranscriptionView {
+    pub masked_sentence: Option<String>,
     pub proper_nouns: Vec<ProperNounGroup>,
     pub cant_listen_label: String,
     /// Shown from the moment grading starts, beside the sentence.
@@ -366,6 +404,7 @@ fn transcription_completion(state: &TranscriptionState) -> Option<TranscriptionE
 pub fn transcription_transition(
     mut state: TranscriptionState,
     event: TranscriptionEvent,
+    target_language: Language,
 ) -> TranscriptionStep {
     let can_continue = matches!(event, TranscriptionEvent::Continue)
         && transcription_view(state.clone()).can_continue;
@@ -388,6 +427,14 @@ pub fn transcription_transition(
                 state.phase = TranscriptionPhase::Grading {
                     completed_at_ms: now_ms,
                 };
+                let grade = local_transcription_review(submission.request.clone(), target_language);
+                if transcription_is_perfect(grade.results.clone()) {
+                    return transcription_transition(
+                        state,
+                        TranscriptionEvent::Graded { grade },
+                        target_language,
+                    );
+                }
                 effects.push(TranscriptionEffect::Autograde {
                     submission: submission.request,
                 });
@@ -590,6 +637,8 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
         None
     };
     TranscriptionView {
+        masked_sentence: editing
+            .then(|| language_utils::transcription_challenge::masked_sentence(&state.parts)),
         proper_nouns: if editing {
             proper_noun_groups(&state.proper_noun_definitions)
         } else {
@@ -625,6 +674,10 @@ mod reducer_tests {
     use super::*;
     use language_utils::{Literal, transcription_challenge::PartGradedPart};
 
+    fn transition(state: TranscriptionState, event: TranscriptionEvent) -> TranscriptionStep {
+        transcription_transition(state, event, Language::French)
+    }
+
     fn literal() -> Literal<String> {
         serde_json::from_value(serde_json::json!({"word":{"text":"chat","word_type":{"type":"Heteronym","word":"chat","lemma":"chat","pos":"NOUN"}},"whitespace":""})).unwrap()
     }
@@ -639,6 +692,16 @@ mod reducer_tests {
             vec![],
         )
     }
+    #[test]
+    fn captions_are_masked_only_while_editing() {
+        assert_eq!(
+            transcription_view(start()).masked_sentence.as_deref(),
+            Some("chat____")
+        );
+        assert_eq!(transcription_view(grading()).masked_sentence, None);
+        assert_eq!(transcription_view(graded()).masked_sentence, None);
+    }
+
     #[test]
     fn proper_nouns_and_skip_copy_are_shared_and_hints_are_editing_only() {
         let definitions = vec![(
@@ -674,18 +737,198 @@ mod reducer_tests {
     }
 
     fn filled() -> TranscriptionState {
-        transcription_transition(
+        transition(
             start(),
             TranscriptionEvent::InputChanged {
                 index: 1,
-                text: " chat ".into(),
+                text: " chien ".into(),
             },
         )
         .state
     }
     fn grading() -> TranscriptionState {
-        transcription_transition(filled(), TranscriptionEvent::Submit { now_ms: 1234.0 }).state
+        transition(filled(), TranscriptionEvent::Submit { now_ms: 1234.0 }).state
     }
+    fn answer(
+        language: Language,
+        words: &[&str],
+        submitted: &str,
+        second: &str,
+    ) -> TranscriptionStep {
+        let parts = words
+            .iter()
+            .map(|text| {
+                let mut part = literal();
+                part.word.text = (*text).into();
+                part
+            })
+            .collect();
+        let mut state = transcription_start(
+            vec![
+                Part::AskedToTranscribe { parts },
+                Part::Provided { part: literal() },
+                Part::AskedToTranscribe {
+                    parts: vec![literal()],
+                },
+            ],
+            vec![],
+        );
+        state.inputs = BTreeMap::from([(0, submitted.into()), (2, second.into())]);
+        transcription_transition(
+            state,
+            TranscriptionEvent::Submit { now_ms: 1234.0 },
+            language,
+        )
+    }
+
+    #[test]
+    fn exact_answers_grade_locally_and_complete_like_ai_answers() {
+        for (language, words, submitted) in [
+            (Language::Thai, vec!["สวัสดี", "ครับ"], "สวัสดีครับ"),
+            (Language::Thai, vec!["สวัสดี", "ครับ"], "สวัสดี \tครับ"),
+            (Language::Thai, vec!["คุณ", "ได้", "ไป"], "คุณได้ไป"),
+            (Language::Thai, vec!["นาย", "ครับ"], "นายครับ"),
+            (Language::French, vec!["un", "chat"], "Un chat!"),
+        ] {
+            let step = answer(language, &words, submitted, "chat");
+            assert_eq!(
+                step.effects,
+                vec![
+                    TranscriptionEffect::PlaySound {
+                        sound: Sound::AiDoneGrading
+                    },
+                    TranscriptionEffect::PlaySound {
+                        sound: Sound::Success
+                    },
+                ]
+            );
+            let TranscriptionPhase::Graded {
+                grade,
+                completed_at_ms,
+                translation_revealed,
+                completing,
+            } = &step.state.phase
+            else {
+                panic!("expected local grade")
+            };
+            assert_eq!(*completed_at_ms, 1234.0);
+            assert!(!translation_revealed && !completing);
+            assert_eq!(grade.autograding_error, None);
+            assert_eq!(grade.encouragement, None);
+            assert_eq!(grade.explanation, None);
+            assert!(grade.compare.is_empty());
+            assert!(matches!(&grade.results[1], PartGraded::Provided { .. }));
+            let PartGraded::AskedToTranscribe { parts, submission } = &grade.results[0] else {
+                panic!()
+            };
+            assert_eq!(submission, submitted);
+            assert_eq!(parts.len(), words.len());
+            for (part, expected) in parts.iter().zip(&words) {
+                assert_eq!(part.heard.word.text, *expected);
+                assert_eq!(
+                    part.grade,
+                    WordGrade::Perfect {
+                        wrote: Some((*expected).into())
+                    }
+                );
+            }
+            let complete = transcription_transition(
+                step.state.clone(),
+                TranscriptionEvent::Continue,
+                language,
+            );
+            assert_eq!(
+                complete.effects,
+                vec![TranscriptionEffect::Complete {
+                    results: grade.results.clone(),
+                    completed_at_ms: 1234.0
+                }]
+            );
+            assert!(
+                transcription_transition(complete.state, TranscriptionEvent::Continue, language)
+                    .effects
+                    .is_empty()
+            );
+        }
+    }
+
+    #[test]
+    fn nonperfect_answers_still_request_ai_for_the_whole_submission() {
+        for (language, words, submitted, second) in [
+            (Language::Thai, vec!["สวัสดี", "ครับ"], "สวัสดีค่ะ", "chat"),
+            (Language::Thai, vec!["สวัสดี", "ครับ"], "สวัสดีครับ", "chien"),
+            (Language::French, vec!["été"], "ete", "chat"),
+            (Language::French, vec!["un", "chat"], "unchat", "chat"),
+            (Language::French, vec!["chat"], "chat chat", "chat"),
+            (Language::French, vec!["chat"], "chat", "chien"),
+        ] {
+            let step = answer(language, &words, submitted, second);
+            assert!(matches!(
+                step.state.phase,
+                TranscriptionPhase::Grading {
+                    completed_at_ms: 1234.0
+                }
+            ));
+            assert_eq!(
+                step.effects,
+                vec![TranscriptionEffect::Autograde {
+                    submission: step.state.submission().request
+                }]
+            );
+        }
+    }
+
+    #[test]
+    fn fallback_shares_local_grades_but_reports_failure() {
+        for (language, words, submitted, expected_grade) in [
+            (
+                Language::Thai,
+                vec!["สวัสดี", "ครับ"],
+                "สวัสดีครับ",
+                WordGrade::Perfect {
+                    wrote: Some("สวัสดี".into()),
+                },
+            ),
+            (
+                Language::Thai,
+                vec!["สวัสดี", "ครับ"],
+                "สวัสดีค่ะ",
+                WordGrade::Missed {},
+            ),
+            (
+                Language::French,
+                vec!["été"],
+                "ete",
+                WordGrade::CorrectWithTypo {
+                    wrote: Some("ete".into()),
+                },
+            ),
+            (
+                Language::French,
+                vec!["un", "chat"],
+                "unchat",
+                WordGrade::Missed {},
+            ),
+        ] {
+            let step = answer(language, &words, submitted, "chat");
+            let grade = failed_transcription_review(
+                step.state.submission().request,
+                Course {
+                    target_language: language,
+                    native_language: Language::English,
+                },
+            );
+            assert_eq!(
+                grade.autograding_error.as_deref(),
+                Some("The LLM was not able to grade this transcription")
+            );
+            let PartGraded::AskedToTranscribe { parts, .. } = &grade.results[0] else {
+                panic!()
+            };
+            assert_eq!(parts[0].grade, expected_grade);
+        }
+    }
+
     fn grade(grades: Vec<WordGrade>) -> Grade {
         Grade {
             results: vec![
@@ -708,7 +951,7 @@ mod reducer_tests {
         }
     }
     fn graded() -> TranscriptionState {
-        transcription_transition(
+        transition(
             grading(),
             TranscriptionEvent::Graded {
                 grade: grade(vec![WordGrade::Perfect {
@@ -720,7 +963,7 @@ mod reducer_tests {
     }
     fn unchanged(state: &TranscriptionState, event: TranscriptionEvent) {
         assert_eq!(
-            transcription_transition(state.clone(), event),
+            transition(state.clone(), event),
             TranscriptionStep {
                 state: state.clone(),
                 effects: vec![]
@@ -742,7 +985,7 @@ mod reducer_tests {
                 },
             );
         }
-        let whitespace = transcription_transition(
+        let whitespace = transition(
             state,
             TranscriptionEvent::InputChanged {
                 index: 1,
@@ -753,10 +996,10 @@ mod reducer_tests {
         unchanged(&whitespace, TranscriptionEvent::Submit { now_ms: 1.0 });
         let state = filled();
         assert!(transcription_view(state.clone()).can_submit);
-        let step = transcription_transition(state, TranscriptionEvent::Submit { now_ms: 1234.0 });
+        let step = transition(state, TranscriptionEvent::Submit { now_ms: 1234.0 });
         assert_eq!(step.state, grading());
         assert!(
-            matches!(&step.effects[..], [TranscriptionEffect::Autograde { submission }] if matches!(&submission[1], PartSubmitted::AskedToTranscribe { submission, .. } if submission == "chat"))
+            matches!(&step.effects[..], [TranscriptionEffect::Autograde { submission }] if matches!(&submission[1], PartSubmitted::AskedToTranscribe { submission, .. } if submission == "chien"))
         );
         unchanged(&step.state, TranscriptionEvent::Submit { now_ms: 5678.0 });
         let view = transcription_view(step.state);
@@ -809,7 +1052,7 @@ mod reducer_tests {
             ),
             (WordGrade::Missed {}, vec![Sound::AiDoneGrading]),
         ] {
-            let step = transcription_transition(
+            let step = transition(
                 grading(),
                 TranscriptionEvent::Graded {
                     grade: grade(vec![word]),
@@ -824,7 +1067,7 @@ mod reducer_tests {
             );
         }
         let original = graded();
-        let changed = transcription_transition(
+        let changed = transition(
             original.clone(),
             TranscriptionEvent::WordGradeChanged {
                 part_index: 1,
@@ -846,8 +1089,7 @@ mod reducer_tests {
                 grade: WordGrade::Perfect { wrote: None },
             },
         );
-        let toggled =
-            transcription_transition(changed.state, TranscriptionEvent::TranslationToggled);
+        let toggled = transition(changed.state, TranscriptionEvent::TranslationToggled);
         assert!(toggled.effects.is_empty());
         assert!(
             transcription_view(toggled.state.clone())
@@ -855,8 +1097,7 @@ mod reducer_tests {
                 .unwrap()
                 .translation_revealed
         );
-        let complete =
-            transcription_transition(toggled.state.clone(), TranscriptionEvent::Continue);
+        let complete = transition(toggled.state.clone(), TranscriptionEvent::Continue);
         let before_view = transcription_view(toggled.state.clone());
         let mut expected = toggled.state;
         if let TranscriptionPhase::Graded { completing, .. } = &mut expected.phase {
@@ -903,10 +1144,9 @@ mod reducer_tests {
         assert_eq!(resumed.state, grading());
         assert_eq!(
             resumed.effects,
-            transcription_transition(filled(), TranscriptionEvent::Submit { now_ms: 1234.0 })
-                .effects
+            transition(filled(), TranscriptionEvent::Submit { now_ms: 1234.0 }).effects
         );
-        let cancelled = transcription_transition(resumed.state, TranscriptionEvent::CancelGrading);
+        let cancelled = transition(resumed.state, TranscriptionEvent::CancelGrading);
         assert_eq!(cancelled.state, filled());
         assert!(cancelled.effects.is_empty());
         unchanged(
@@ -926,7 +1166,7 @@ mod reducer_tests {
         assert_eq!(view.blanks.len(), 1);
         assert_eq!(view.blanks[0].index, 1);
         let verdict = view.verdict.unwrap();
-        assert_eq!(verdict.submission_text, " chat ");
+        assert_eq!(verdict.submission_text, " chien ");
         assert_eq!(verdict.headline.text, "Nailed it!");
         assert_eq!(verdict.continue_label, "Continue");
         assert_eq!(verdict.word_grades[0].selected, 0); // wrote does not affect selection
@@ -977,7 +1217,7 @@ mod reducer_tests {
             ),
         ];
         for (words, tint) in cases {
-            let state = transcription_transition(
+            let state = transition(
                 grading(),
                 TranscriptionEvent::Graded {
                     grade: grade(words),
@@ -1011,7 +1251,7 @@ mod reducer_tests {
             ),
         ];
         for (words, tone) in cases {
-            let state = transcription_transition(
+            let state = transition(
                 grading(),
                 TranscriptionEvent::Graded {
                     grade: grade(words),

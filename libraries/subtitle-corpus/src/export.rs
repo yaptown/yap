@@ -1,13 +1,14 @@
 //! Serve-ready clip export: every passing clip becomes a directory of
-//! `hi.mp4` + `lo.mp4` + `poster.jpg` + `meta.json`, cut generously from the source film
+//! `hi.mp4` + `lo.mp4` + `lo.webm` + `poster.jpg` + `meta.json`, cut generously from the source film
 //! (neighboring subtitle lines as context) with the sidecar — not the file
 //! boundary — defining what the clip *is*. Schema and rationale:
 //! `docs/clip-sidecar.md`.
 //!
 //! Alignment and standalone export read cached responses only. Publish's
-//! post-encode enrichment extracts posters and rates sampled frames plus
-//! subtitles with live, cached requests.
-//! Neither enrichment step changes the encode recipe or its reuse key.
+//! post-encode enrichment derives VP9/Opus `lo.webm` for desktop Anki's Qt
+//! WebEngine (which lacks H.264/AAC), extracts posters, and rates sampled frames
+//! plus subtitles with live, cached requests. The app keeps using MP4.
+//! No enrichment step changes the encode recipe or its reuse key.
 
 use std::collections::{BTreeMap, HashSet};
 use std::ffi::OsString;
@@ -919,7 +920,7 @@ pub async fn prune(dest: PathBuf, bucket: String, manifest: PathBuf, apply: bool
 }
 
 /// Upload one language's exported clips over S3, with SDK-managed retries.
-/// A `.uploaded` marker records each file's xxh3 hash once all four objects
+/// A `.uploaded` marker records each file's xxh3 hash once all five objects
 /// land. Matching markers skip work; stale files already matching bucket MD5
 /// ETags need no put. Objects are immutable by id and get a forever cache;
 /// the index gets a short one.
@@ -937,7 +938,7 @@ async fn upload_lang(lang_dir: &Path, code: &str, r2: &crate::r2::R2) -> Result<
     let mut verified = 0;
     let mut skipped = 0;
     // No detached tasks: the first error drops the remaining futures. Markers
-    // only land after all four files are up, so interrupted dirs are retried.
+    // only land after all five files are up, so interrupted dirs are retried.
     let mut uploads = stream::iter(dirs.iter().map(|dir| {
         let etags = &etags;
         Ok::<_, anyhow::Error>(async move {
@@ -948,6 +949,7 @@ async fn upload_lang(lang_dir: &Path, code: &str, r2: &crate::r2::R2) -> Result<
             let files = [
                 ("hi", "hi.mp4", "video/mp4"),
                 ("lo", "lo.mp4", "video/mp4"),
+                ("webm", "lo.webm", "video/webm"),
                 ("poster", "poster.jpg", "image/jpeg"),
                 ("meta", "meta.json", "application/json"),
             ];

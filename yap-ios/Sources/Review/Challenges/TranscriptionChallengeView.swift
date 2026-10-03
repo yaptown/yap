@@ -53,10 +53,7 @@ struct TranscriptionChallengeView: View {
                 if editing { ProperNounGroupsView(groups: view.proper_nouns).equatable() }
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
                     reviewCount: screen.total_reviews,
-                    maskedSentence: editing ? sentence.parts.map { part in
-                        switch part { case let .Provided(literal): literal.word.text + literal.whitespace
-                        case let .AskedToTranscribe(parts): parts.map { "____" + $0.whitespace }.joined() }
-                    }.joined() : nil, available: $hasClip, movieId: $clipMovieId)
+                    maskedSentence: view.masked_sentence, available: $hasClip, movieId: $clipMovieId)
                 if let verdict = view.verdict {
                     // The typed answer is already inline in the sentence above, so
                     // only the grading list repeats it.
@@ -212,7 +209,7 @@ struct TranscriptionChallengeView: View {
     }
     private func send(_ event: TranscriptionEvent) {
         if case .CancelGrading = event { gradingTask?.cancel() }
-        apply(transcription_transition(state: state, event: event))
+        apply(transcription_transition(state: state, event: event, target_language: screen.target_language))
     }
     private func apply(_ step: TranscriptionStep) {
         let hadVerdict = view.verdict != nil

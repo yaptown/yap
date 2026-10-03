@@ -23,7 +23,7 @@ CREATE INDEX ix_notes_csum ON notes (csum);
 
 const sentenceFields = [
   "Sentence", "Translation", "TargetWord", "TargetGloss", "Glosses", "Source",
-  "ClipUrl", "TtsBundled", "IncludeReading", "IncludeListening",
+  "ClipUrl", "TtsBundled", "IncludeReading", "IncludeListening", "Subtitles", "MaskedSubtitles", "ClipWebmUrl",
 ];
 const css = `
 .card { font-family: sans-serif; text-align: center; line-height: 1.5; padding: 20px; }
@@ -38,8 +38,16 @@ const css = `
 a { color: inherit; }
 .source { font-size: 14px; margin: 8px 0 16px; }
 .source img { display: block; max-height: 90px; margin: 0 auto 4px; }
+::cue { background: rgba(0,0,0,.6); }
+::cue(.sentence) { color: #fcd34d; }
+::cue(.context) { color: rgba(255,255,255,.75); }
 video { display: block; width: 100%; max-width: 480px; margin: 16px auto 0; background: #000; }
 `;
+
+// MP4 first, so AnkiDroid and AnkiMobile play what they always have. Desktop
+// Anki's Qt WebEngine has no H.264/AAC; the codecs string makes it skip the
+// MP4 (a bare video/mp4 type answers "maybe" there) and take the WebM.
+const videoSources = `<source src="{{ClipUrl}}" type='video/mp4; codecs="avc1.64001F, mp4a.40.2"'><source src="{{ClipWebmUrl}}" type='video/webm; codecs="vp9, opus"'>`;
 
 function templates(lang: string): { name: string; ord: number; qfmt: string; afmt: string }[] {
   const sentence = `<div class="sentence"><span lang="${lang}">{{Sentence}}</span></div>`;
@@ -49,13 +57,14 @@ function templates(lang: string): { name: string; ord: number; qfmt: string; afm
   // The clip never autoplays: clips don't reliably start on or cut exactly to
   // the sentence, so the TTS is the prompt and the clip is context. The film
   // (poster + title) sits under it on both sides so the front says which movie.
+  const track = (field: string) => `{{#${field}}}<track kind="subtitles" src="{{${field}}}" default>{{/${field}}}`;
   const side = (name: "Reading" | "Listening", back: boolean) => `
 <div class="eyebrow">${name === "Reading" ? "Translate" : "Listening"}</div>
 {{TtsBundled}}
 ${name === "Reading" ? sentence : ""}
 <hr id="answer">
 ${back ? (name === "Listening" ? sentence : "") + answer : '<p class="hint">Tap to reveal the answer</p>'}
-<video src="{{ClipUrl}}" controls preload="metadata" playsinline></video>
+<video controls preload="metadata" playsinline>${videoSources}${track(name === "Listening" && !back ? "MaskedSubtitles" : "Subtitles")}</video>
 <div class="source">{{Source}}</div>`;
   return (["Reading", "Listening"] as const).map((name, ord) => ({
     name, ord,
@@ -85,10 +94,11 @@ function sourceFor(note: AnkiNote): string {
     + escapeHtml(note.source.title) + (note.source.year ? ` (${note.source.year})` : "") : "";
 }
 
-function fieldsFor(note: AnkiNote, audio: (filename: string) => string, lang: string): string[] {
+function fieldsFor(note: AnkiNote, bundled: (filename: string | undefined) => string, lang: string): string[] {
+  const audio = (filename: string) => { const file = bundled(filename); return file ? `[sound:${file}]` : ""; };
   if (note.type === "Word") {
     const media = audio(note.audio);
-    return [escapeHtml(note.word), escapeHtml(note.definition), media, sourceFor(note), escapeHtml(note.clip_url ?? "")];
+    return [escapeHtml(note.word), escapeHtml(note.definition), media, sourceFor(note), escapeHtml(note.clip?.mp4 ?? ""), escapeHtml(bundled(note.subtitles ?? undefined)), escapeHtml(note.clip?.webm ?? "")];
   }
   const media = audio(note.tts);
   const glosses = note.glosses.map(({ text, gloss, url }) => {
@@ -98,8 +108,9 @@ function fieldsFor(note: AnkiNote, audio: (filename: string) => string, lang: st
   const source = sourceFor(note);
   return [
     escapeHtml(note.sentence), escapeHtml(note.translation), escapeHtml(note.target_word),
-    escapeHtml(note.target_gloss), glosses, source, escapeHtml(note.clip_url), media,
+    escapeHtml(note.target_gloss), glosses, source, escapeHtml(note.clip.mp4), media,
     note.include_reading ? "1" : "", note.include_listening && media ? "1" : "",
+    escapeHtml(bundled(note.subtitles)), escapeHtml(bundled(note.masked_subtitles ?? undefined)), escapeHtml(note.clip.webm),
   ];
 }
 
@@ -112,7 +123,7 @@ export async function buildApkg(
 ): Promise<Blob> {
   const files: Record<string, Uint8Array> = {};
   const media: Record<string, string> = {};
-  const audioFiles = new Map<string, string>();
+  const bundledFiles = new Map<string, string>();
   let mediaIndex = 0;
   const results = await fetchMedia(plan, fetchBundled, onProgress);
   // Completion order must not change the package's media identities.
@@ -123,10 +134,10 @@ export async function buildApkg(
       const key = String(mediaIndex++);
       media[key] = filename;
       files[key] = bytes;
-      audioFiles.set(entry.filename, `[sound:${filename}]`);
+      bundledFiles.set(entry.filename, filename);
     }
   });
-  const audio = (filename: string): string => audioFiles.get(filename) ?? "";
+  const bundled = (filename: string | undefined): string => filename ? bundledFiles.get(filename) ?? "" : "";
   const SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
   const db = new SQL.Database();
   const now = Date.now();
@@ -140,10 +151,10 @@ export async function buildApkg(
     tmpls: tmpls.map((template) => ({ ...template, did: null, bqfmt: "", bafmt: "" })),
     req, vers: [], tags: [], latexPre: "", latexPost: "",
   });
-  const wordClip = '{{#ClipUrl}}<video src="{{ClipUrl}}" controls preload="metadata" playsinline></video>{{#Source}}<div class="source">{{Source}}</div>{{/Source}}{{/ClipUrl}}';
+  const wordClip = `{{#ClipUrl}}<video controls preload="metadata" playsinline>${videoSources}{{#Subtitles}}<track kind="subtitles" src="{{Subtitles}}" default>{{/Subtitles}}</video>{{#Source}}<div class="source">{{Source}}</div>{{/Source}}{{/ClipUrl}}`;
   const models = {
     [sentenceId]: model(sentenceId, `Yap ${plan.course_code} sentences`, sentenceFields, templates(lang), [[0, "all", [8]], [1, "all", [9]]]),
-    [wordId]: model(wordId, `Yap ${plan.course_code} words`, ["Word", "Definition", "AudioBundled", "Source", "ClipUrl"], [{
+    [wordId]: model(wordId, `Yap ${plan.course_code} words`, ["Word", "Definition", "AudioBundled", "Source", "ClipUrl", "Subtitles", "ClipWebmUrl"], [{
       name: "Word", ord: 0,
       // Same shape as the sentence cards: the recording plays on both sides.
       qfmt: `<div class="eyebrow">Word</div>
@@ -179,7 +190,7 @@ export async function buildApkg(
     ]);
     db.run("BEGIN");
     for (const [index, note] of plan.notes.entries()) {
-      const fields = fieldsFor(note, audio, lang);
+      const fields = fieldsFor(note, bundled, lang);
       const text = note.type === "Word" ? note.word : note.sentence;
       const hash = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(text));
       const checksum = new DataView(hash).getUint32(0);

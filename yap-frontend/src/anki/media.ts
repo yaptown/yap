@@ -65,7 +65,7 @@ export async function fetchMedia(
           ? await recording(source.url, controller)
           : await fetchBundled(source);
         controller.signal.throwIfAborted();
-        if (!bytes) {
+        if (!bytes && source.type !== "Subtitles") {
           if (source.type !== "Tts") throw new Error(`Bundled media missing: ${filename}`);
           if (++failures >= MAX_FAILURES) {
             controller.abort(new AudioUnavailableError());

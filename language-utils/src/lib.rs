@@ -1627,6 +1627,99 @@ pub mod transcription_challenge {
         Provided { part: Literal<String> },
     }
 
+    #[cfg(test)]
+    mod caption_tests {
+        use super::*;
+
+        fn literal(text: &str, whitespace: &str) -> Literal<String> {
+            serde_json::from_value(serde_json::json!({
+            "word": {"text": text, "word_type": {"type": "Heteronym", "word": text, "lemma": text, "pos": "NOUN"}},
+            "whitespace": whitespace,
+        })).unwrap()
+        }
+
+        #[test]
+        fn cue_masking_preserves_neighbouring_sentences() {
+            assert_eq!(
+                mask_cue(
+                    "Non, Jo. Le marchand de couleurs d'abord.",
+                    "Non, Jo.",
+                    "____, Jo."
+                ),
+                "____, Jo. Le marchand de couleurs d'abord."
+            );
+            assert_eq!(
+                mask_cue(
+                    "Catherine, c'est pour toi. C'est Guy.",
+                    "C'est Guy.",
+                    "________ Guy."
+                ),
+                "Catherine, c'est pour toi. ________ Guy."
+            );
+            assert_eq!(
+                mask_cue(
+                    "Je n'irai pas. Je n'irai pas.",
+                    "Je n'irai pas.",
+                    "____ ____."
+                ),
+                "____ ____. ____ ____."
+            );
+            assert_eq!(
+                mask_cue("Different subtitle wording.", "C'est Guy.", "________ Guy."),
+                "________ Guy."
+            );
+        }
+
+        #[test]
+        fn masking_preserves_provided_text_and_each_literals_whitespace() {
+            let parts = [
+                Part::Provided {
+                    part: literal("Salut,", " "),
+                },
+                Part::AskedToTranscribe {
+                    parts: vec![literal("mon", " "), literal("ami", "")],
+                },
+                Part::Provided {
+                    part: literal("!", "\u{202f}"),
+                },
+                Part::AskedToTranscribe {
+                    parts: vec![literal("你好", "")],
+                },
+            ];
+            assert_eq!(masked_sentence(&parts), "Salut, ____ ____!\u{202f}____");
+            assert_eq!(masked_sentence(&[]), "");
+        }
+    }
+
+    /// Keep neighbouring sentences in a cue; unmatched wording must not reveal the answer.
+    pub fn mask_cue(cue_text: &str, sentence: &str, masked: &str) -> String {
+        if cue_text.contains(sentence) {
+            cue_text.replace(sentence, masked)
+        } else {
+            masked.to_owned()
+        }
+    }
+
+    /// Caption with the transcription blanks hidden, preserving literal whitespace.
+    pub fn masked_sentence(parts: &[Part]) -> String {
+        let mut caption = String::new();
+        for part in parts {
+            match part {
+                Part::Provided { part } => {
+                    caption.push_str(&part.word.text);
+                    caption.push_str(part.whitespace.as_str());
+                }
+                Part::AskedToTranscribe { parts } => {
+                    for part in parts {
+                        caption.push_str("____");
+                        caption.push_str(part.whitespace.as_str());
+                    }
+                }
+            }
+        }
+        caption
+    }
+
     #[bridgerton::bridge(transparent)]
     #[derive(
         Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash,
@@ -3223,6 +3316,14 @@ impl PhonemeLabelSource {
 }
 
 impl Language {
+    /// Whether ordinary writing separates words with spaces.
+    pub fn uses_word_spaces(self) -> bool {
+        !matches!(
+            self,
+            Self::ChineseSimplified | Self::ChineseTraditional | Self::Japanese | Self::Thai
+        )
+    }
+
     /// True if `text` contains Han characters that belong exclusively to the
     /// *other* Chinese script (e.g. Traditional-only characters when `self` is
     /// `ChineseSimplified`). Always false for non-Chinese languages. Used to
@@ -5602,6 +5703,26 @@ mod capitalization_tests {
 #[cfg(test)]
 mod predict_whitespace_tests {
     use super::*;
+
+    #[test]
+    fn word_spaces_follow_the_writing_system() {
+        for language in [
+            Language::Thai,
+            Language::Japanese,
+            Language::ChineseSimplified,
+            Language::ChineseTraditional,
+        ] {
+            assert!(!language.uses_word_spaces());
+        }
+        for language in [
+            Language::French,
+            Language::English,
+            Language::Korean,
+            Language::Hindi,
+        ] {
+            assert!(language.uses_word_spaces());
+        }
+    }
 
     fn word(text: &str, pos: PartOfSpeech) -> Word<String> {
         Word {

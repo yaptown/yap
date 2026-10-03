@@ -86,8 +86,10 @@ pub enum AnkiNote {
         target_gloss: String,
         glosses: Vec<AnkiGloss>,
         source: Option<AnkiSource>,
-        clip_url: String,
+        clip: AnkiClip,
         tts: String,
+        subtitles: String,
+        masked_subtitles: Option<String>,
         include_reading: bool,
         include_listening: bool,
         tags: Vec<String>,
@@ -100,9 +102,17 @@ pub enum AnkiNote {
         definition: String,
         audio: String,
         source: Option<AnkiSource>,
-        clip_url: Option<String>,
+        clip: Option<AnkiClip>,
+        subtitles: Option<String>,
         tags: Vec<String>,
     },
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct AnkiClip {
+    pub mp4: String,
+    pub webm: String,
 }
 
 #[bridgerton::bridge(transparent)]
@@ -135,9 +145,20 @@ pub struct AnkiBundledMedia {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type")]
 pub enum AnkiMediaSource {
-    Poster { imdb_id: String },
-    HumanAudio { text: String },
-    Tts { url: String },
+    Poster {
+        imdb_id: String,
+    },
+    HumanAudio {
+        text: String,
+    },
+    Tts {
+        url: String,
+    },
+    Subtitles {
+        clip_id: String,
+        sentence: String,
+        masked_sentence: Option<String>,
+    },
 }
 
 #[bridgerton::bridge(transparent)]
@@ -223,9 +244,9 @@ pub fn anki_options_copy(reading: bool, listening: bool, word_cards: bool) -> An
         }
         .into(),
         listening_description: if listening && !reading {
-            "Cards have no subtitles, and you try to understand what you hear."
+            "Cards blank out the words you know in the subtitle, and you try to understand what you hear."
         } else {
-            "Some cards have no subtitles, and you try to understand what you hear."
+            "Some cards blank out the words you know in the subtitle, and you try to understand what you hear."
         }
         .into(),
         word_cards_description:
@@ -369,7 +390,8 @@ fn word_note(
         definition,
         audio,
         source: None,
-        clip_url: None,
+        clip: None,
+        subtitles: None,
         tags,
     }
 }
@@ -475,8 +497,18 @@ fn clip_presentation(
     posters: &mut BTreeSet<String>,
     bundled: &mut Vec<AnkiBundledMedia>,
     tags: &mut Vec<String>,
-) -> (Option<AnkiSource>, String) {
+) -> (Option<AnkiSource>, AnkiClip, String) {
     let clip = clips::clip_for_sentence(language, text).unwrap();
+    // Anki only imports and retains template-only media when its name starts with '_'.
+    let subtitles = format!("_yap-subs-{}.vtt", clip.clip_id);
+    bundled.push(AnkiBundledMedia {
+        filename: subtitles.clone(),
+        source: AnkiMediaSource::Subtitles {
+            clip_id: clip.clip_id.clone(),
+            sentence: text.to_owned(),
+            masked_sentence: None,
+        },
+    });
     let imdb = clips::clip_film(&clip.clip_id).to_owned();
     let movie = pack.movies.get(&imdb);
     let poster = movie
@@ -506,11 +538,19 @@ fn clip_presentation(
             imdb_id: imdb,
             poster_filename: poster,
         }),
-        format!(
-            "{}?d={}",
-            clip_url(language, &format!("{}/lo.mp4", component(&clip.clip_id))),
-            component(token)
-        ),
+        AnkiClip {
+            mp4: format!(
+                "{}?d={}",
+                clip_url(language, &format!("{}/lo.mp4", component(&clip.clip_id))),
+                component(token)
+            ),
+            webm: format!(
+                "{}?d={}",
+                clip_url(language, &format!("{}/lo.webm", component(&clip.clip_id))),
+                component(token)
+            ),
+        },
+        subtitles,
     )
 }
 
@@ -590,14 +630,27 @@ impl Deck {
         }
     }
 
-    /// Bytes for a bundled file that lives in the language pack. TTS is not
+    /// Bytes from the language pack or optional subtitle sidecars. TTS is not
     /// in the pack; the host fetches it from the manifest's URL instead.
-    pub fn anki_bundled_media(&self, source: AnkiMediaSource) -> Option<Vec<u8>> {
+    pub async fn anki_bundled_media(&self, source: AnkiMediaSource) -> Option<Vec<u8>> {
         let language = self.context.course.target_language;
         match source {
             AnkiMediaSource::Poster { imdb_id } => self.get_movie_poster(imdb_id),
             AnkiMediaSource::HumanAudio { text } => {
                 human_audio::lookup(language, &text).map(|audio| audio.bytes)
+            }
+            AnkiMediaSource::Subtitles {
+                clip_id,
+                sentence,
+                masked_sentence,
+            } => {
+                let cues = clips::download_subtitles(language, &clip_id, None)
+                    .await
+                    .ok()?;
+                Some(
+                    clips::subtitles_webvtt(&cues, &sentence, masked_sentence.as_deref())
+                        .into_bytes(),
+                )
             }
             AnkiMediaSource::Tts { .. } => None,
         }
@@ -1052,14 +1105,15 @@ impl PlannerState {
                 if let Some(bare) = bare {
                     let AnkiNote::Word {
                         source,
-                        clip_url,
+                        clip,
+                        subtitles,
                         tags,
                         ..
                     } = &mut note
                     else {
                         unreachable!()
                     };
-                    let (credit, url) = clip_presentation(
+                    let (credit, url, captions) = clip_presentation(
                         pack,
                         language,
                         pack.string_rodeo.resolve(&bare),
@@ -1069,7 +1123,8 @@ impl PlannerState {
                         tags,
                     );
                     *source = credit;
-                    *clip_url = Some(url);
+                    *clip = Some(url);
+                    *subtitles = Some(captions);
                     word_clip_sentences.insert(bare);
                 }
                 notes.push(note);
@@ -1083,7 +1138,7 @@ impl PlannerState {
         }
         let text = challenge.target_language;
         let mut tags = note_tags(course, "sentence");
-        let (source, clip_url) =
+        let (source, clip, subtitles) =
             clip_presentation(pack, language, &text, token, posters, bundled, &mut tags);
         let url = tts_url(
             language,
@@ -1101,6 +1156,24 @@ impl PlannerState {
         });
         let tts = filename;
         let include_listening = !matches!(options.card_types, AnkiCardTypes::Reading);
+        let masked_subtitles = include_listening.then(|| {
+            let challenge = deck
+                .transcription_challenge_for_sentence(gram.gram, sentence)
+                .unwrap();
+            let clip = clips::clip_for_sentence(language, &text).unwrap();
+            let filename = format!("_yap-subs-{}-masked.vtt", clip.clip_id);
+            bundled.push(AnkiBundledMedia {
+                filename: filename.clone(),
+                source: AnkiMediaSource::Subtitles {
+                    clip_id: clip.clip_id,
+                    sentence: text.clone(),
+                    masked_sentence: Some(
+                        language_utils::transcription_challenge::masked_sentence(&challenge.parts),
+                    ),
+                },
+            });
+            filename
+        });
         let glosses = sentence_glosses(
             &challenge.target_language_literals,
             &challenge.literal_gram_indices,
@@ -1117,8 +1190,10 @@ impl PlannerState {
             target_gloss,
             glosses,
             source,
-            clip_url,
+            clip,
             tts,
+            subtitles,
+            masked_subtitles,
             include_reading: !matches!(options.card_types, AnkiCardTypes::Listening),
             include_listening,
             tags,
@@ -1450,6 +1525,80 @@ mod tests {
     }
 
     #[test]
+    fn anki_subtitle_tracks_follow_card_types() {
+        let deck = fixture();
+        publish(&deck.context.language_pack, deck.context.course);
+        for card_types in [
+            AnkiCardTypes::Reading,
+            AnkiCardTypes::Listening,
+            AnkiCardTypes::Both,
+        ] {
+            let plan = deck
+                .plan_anki_deck(
+                    AnkiDeckOptions {
+                        card_types,
+                        word_cards: true,
+                    },
+                    3,
+                    "token".into(),
+                    1_700_000_000_000.0,
+                )
+                .unwrap();
+            let mut filenames = BTreeSet::new();
+            assert!(
+                plan.bundled
+                    .iter()
+                    .all(|media| filenames.insert(&media.filename))
+            );
+            for note in &plan.notes {
+                let (subtitles, masked) = match note {
+                    AnkiNote::Sentence {
+                        subtitles,
+                        masked_subtitles,
+                        include_listening,
+                        ..
+                    } => {
+                        assert_eq!(masked_subtitles.is_some(), *include_listening);
+                        (subtitles, masked_subtitles.as_ref())
+                    }
+                    AnkiNote::Word {
+                        subtitles, clip, ..
+                    } => {
+                        assert_eq!(subtitles.is_some(), clip.is_some());
+                        let Some(subtitles) = subtitles else { continue };
+                        (subtitles, None)
+                    }
+                };
+                let plain = plan
+                    .bundled
+                    .iter()
+                    .find(|media| &media.filename == subtitles)
+                    .unwrap();
+                let AnkiMediaSource::Subtitles {
+                    clip_id,
+                    masked_sentence: None,
+                    ..
+                } = &plain.source
+                else {
+                    panic!("verbatim subtitle track")
+                };
+                assert_eq!(*subtitles, format!("_yap-subs-{clip_id}.vtt"));
+                if let Some(masked) = masked {
+                    let media = plan
+                        .bundled
+                        .iter()
+                        .find(|media| &media.filename == masked)
+                        .unwrap();
+                    assert_eq!(*masked, format!("_yap-subs-{clip_id}-masked.vtt"));
+                    assert!(
+                        matches!(&media.source, AnkiMediaSource::Subtitles { clip_id: id, masked_sentence: Some(text), .. } if id == clip_id && text.contains("____"))
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
     fn anki_plan_is_deterministic_and_does_not_change_seed() {
         let deck = fixture();
         publish(&deck.context.language_pack, deck.context.course);
@@ -1491,14 +1640,17 @@ mod tests {
                 AnkiNote::Word {
                     word,
                     audio,
-                    clip_url,
+                    clip,
                     note_id,
                     card_id,
                     guid,
                     ..
                 } => {
                     assert!(words.insert(word.clone()));
-                    assert!(clips.insert(clip_url.as_ref().unwrap().clone()));
+                    assert!(clips.insert(clip.as_ref().unwrap().mp4.clone()));
+                    let clip = clip.as_ref().unwrap();
+                    assert!(clip.mp4.ends_with("/lo.mp4?d=a%2Bb%26%E9%9B%AA"));
+                    assert_eq!(clip.webm, clip.mp4.replace("/lo.mp4?", "/lo.webm?"));
                     let entry = a.bundled.iter().find(|m| &m.filename == audio).unwrap();
                     assert_eq!(
                         audio,
@@ -1515,7 +1667,7 @@ mod tests {
                 AnkiNote::Sentence {
                     sentence,
                     target_word,
-                    clip_url,
+                    clip,
                     tts,
                     note_id,
                     card_id,
@@ -1531,9 +1683,10 @@ mod tests {
                         sentence, target_word,
                         "bare clip already represented on word note"
                     );
-                    assert!(clips.insert(clip_url.clone()));
-                    assert!(clip_url.starts_with("https://clips.yap.town/eng/"));
-                    assert!(clip_url.ends_with("?d=a%2Bb%26%E9%9B%AA"));
+                    assert!(clips.insert(clip.mp4.clone()));
+                    assert!(clip.mp4.starts_with("https://clips.yap.town/eng/"));
+                    assert!(clip.mp4.ends_with("/lo.mp4?d=a%2Bb%26%E9%9B%AA"));
+                    assert_eq!(clip.webm, clip.mp4.replace("/lo.mp4?", "/lo.webm?"));
                     assert_eq!(glosses[0].gloss.as_deref(), Some("meaning"));
                     assert!(
                         glosses[0]
@@ -1762,13 +1915,10 @@ mod tests {
         assert_eq!(plan.sentences.contains(&clip_text.into()), expected);
         for note in &plan.notes {
             if let AnkiNote::Word {
-                word,
-                audio,
-                clip_url,
-                ..
+                word, audio, clip, ..
             } = note
             {
-                assert_eq!(clip_url.is_some(), expected && word == &prerequisite_word);
+                assert_eq!(clip.is_some(), expected && word == &prerequisite_word);
                 assert_eq!(
                     audio,
                     &format!("yap-word-{}.mp3", guid(deck.context.course, "word", word))
@@ -1924,8 +2074,8 @@ mod tests {
         assert_eq!(deck.num_cards_added(), 0);
     }
 
-    #[test]
-    fn anki_errors_and_view() {
+    #[tokio::test]
+    async fn anki_errors_and_view() {
         let deck = fixture();
         // A different language has no manifest in this test's thread-local mirror.
         assert!(!deck.anki_export_view(None).clips_loaded);
@@ -1947,6 +2097,7 @@ mod tests {
             deck.anki_bundled_media(AnkiMediaSource::HumanAudio {
                 text: "not-media".into()
             })
+            .await
             .is_none()
         );
     }
@@ -1971,16 +2122,13 @@ mod tests {
         let mut count = 0;
         for note in &plan.notes {
             if let AnkiNote::Sentence {
-                source,
-                tags,
-                clip_url,
-                ..
+                source, tags, clip, ..
             } = note
             {
                 count += 1;
                 assert!(source.is_none());
                 assert!(!tags.iter().any(|tag| tag.starts_with("yap::film::")));
-                assert!(!clip_url.is_empty());
+                assert!(!clip.mp4.is_empty());
             }
         }
         assert!(count > 0);
@@ -1992,8 +2140,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn anki_bundled_human_audio_and_poster() {
+    #[tokio::test]
+    async fn anki_bundled_human_audio_and_poster() {
         let mut deck = fixture();
         let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
         pack.human_audio.insert(
@@ -2041,13 +2189,15 @@ mod tests {
         assert_eq!(
             deck.anki_bundled_media(AnkiMediaSource::HumanAudio {
                 text: "word00".into()
-            }),
+            })
+            .await,
             Some(b"OggSfixture".to_vec())
         );
         assert_eq!(
             deck.anki_bundled_media(AnkiMediaSource::Poster {
                 imdb_id: "tt0000001".into()
-            }),
+            })
+            .await,
             Some(vec![1, 2, 3])
         );
         assert!(plan.notes.iter().any(|note| matches!(note, AnkiNote::Sentence { source, .. } if source.as_ref().is_some_and(|source| source.title == "Fixture movie" && source.year == Some(2026)))));

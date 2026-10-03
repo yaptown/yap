@@ -1,7 +1,8 @@
 //! Signed per-deck tokens for exported Anki decks.
 //!
 //! Every generated deck embeds media URLs of the form
-//! `https://clips.yap.town/<lang>/<clip>/lo.mp4?d=<token>`. The token names
+//! `https://clips.yap.town/<lang>/<clip>/lo.mp4?d=<token>` and
+//! `https://clips.yap.town/<lang>/<clip>/lo.webm?d=<token>`. The token names
 //! the deck (a fresh id) and carries an HMAC over that id under a secret
 //! only the backend holds, so a token can't be forged and a leaked deck can
 //! be traced to one mint and revoked individually. The `/anki/tts` endpoint

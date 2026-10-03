@@ -232,149 +232,8 @@ impl ReviewInfo {
             })
         })?;
 
-        let sentence_grams = sentence.target_language_sentence_grams.to_literals(
-            &language_pack.string_rodeo,
-            &language_pack.gram_rodeo,
-            deck.context.course.target_language,
-        );
-
-        type Breakdown = Vec<(String, Option<String>, Option<String>)>;
-        let mut parts = Vec::<transcription_challenge::Part>::new();
-        let mut part_gram_indices = Vec::<Vec<usize>>::new();
-        let mut gram_definitions_for_lookup = Vec::<Option<GramDefinition>>::new();
-        let mut gram_breakdowns_for_lookup = Vec::<Option<Breakdown>>::new();
-        let register_gram = |gram_spur: &TaggedGram<SpurGram>,
-                             defs: &mut Vec<Option<GramDefinition>>,
-                             breakdowns: &mut Vec<Option<Breakdown>>|
-         -> usize {
-            let idx = defs.len();
-            defs.push(language_pack.gram_definitions.get(gram_spur).cloned());
-            breakdowns.push(language_pack.compute_breakdown(gram_spur.gram));
-            idx
-        };
-        for sentence_gram in sentence_grams {
-            match sentence_gram {
-                SentenceGram::Learnable((sentence_gram, literals))
-                    if sentence_gram.gram == gram
-                        || deck.is_listened_gram_comprehensible(&sentence_gram, false) =>
-                {
-                    let gram_idx = register_gram(
-                        &sentence_gram,
-                        &mut gram_definitions_for_lookup,
-                        &mut gram_breakdowns_for_lookup,
-                    );
-                    let new_indices = vec![gram_idx; literals.len()];
-                    if let Some(transcription_challenge::Part::AskedToTranscribe {
-                        parts: existing_parts,
-                    }) = parts.last_mut()
-                    {
-                        existing_parts.extend(literals);
-                        part_gram_indices.last_mut().unwrap().extend(new_indices);
-                    } else {
-                        parts.push(transcription_challenge::Part::AskedToTranscribe {
-                            parts: literals,
-                        });
-                        part_gram_indices.push(new_indices);
-                    }
-                }
-                SentenceGram::Obvious((sentence_gram, literals))
-                | SentenceGram::Learnable((sentence_gram, literals)) => {
-                    let gram_idx = register_gram(
-                        &sentence_gram,
-                        &mut gram_definitions_for_lookup,
-                        &mut gram_breakdowns_for_lookup,
-                    );
-                    for literal in literals {
-                        parts.push(transcription_challenge::Part::Provided { part: literal });
-                        part_gram_indices.push(vec![gram_idx]);
-                    }
-                }
-            }
-        }
-
-        let movie_titles = language_pack
-            .sentence_sources
-            .get(&sentence.target_language)
-            .map(|source| {
-                source
-                    .movie_ids
-                    .iter()
-                    .filter_map(|movie_id| {
-                        language_pack
-                            .movies
-                            .get(movie_id)
-                            .map(|metadata| (movie_id.clone(), metadata.title.clone()))
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-
-        let proper_noun_definitions: Vec<(String, language_utils::ProperNounDefinition)> = parts
-            .iter()
-            .flat_map(|part| match part {
-                transcription_challenge::Part::AskedToTranscribe { parts } => parts.iter(),
-                transcription_challenge::Part::Provided { part } => {
-                    std::slice::from_ref(part).iter()
-                }
-            })
-            .filter_map(|literal| {
-                if let language_utils::WordType::Other(other) = &literal.word.word_type
-                    && other.other_tag == language_utils::OtherWordType::Propn
-                {
-                    let text_spur = language_pack.string_rodeo.get(&literal.word.text)?;
-                    language_pack
-                        .proper_noun_definitions
-                        .get(&text_spur)
-                        .map(|def| (literal.word.text.clone(), def.clone()))
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        let second_chance = deck.stats.wrong_sentences.iter().any(|(s, t)| {
-            *s == sentence.target_language && *t == SentenceChallengeType::Transcription
-        });
-
-        Some(Challenge::TranscribeComprehensibleSentence(
-            TranscribeComprehensibleSentence {
-                target_language: language_pack
-                    .string_rodeo
-                    .resolve(&sentence.target_language)
-                    .to_string(),
-                native_language: language_pack
-                    .string_rodeo
-                    .resolve(sentence.native_languages.first()?)
-                    .to_string(),
-                parts,
-                part_gram_indices,
-                gram_definitions_for_lookup,
-                gram_breakdowns_for_lookup,
-                audio: AudioRequest {
-                    request: TtsRequest {
-                        text: language_pack
-                            .string_rodeo
-                            .resolve(&sentence.target_language)
-                            .to_string(),
-                        language: deck.context.course.target_language,
-                        is_ssml: false,
-                        // Left at the provider default so a human recording of
-                        // this sentence still wins over TTS — see
-                        // `human_audio_applies`.
-                        instructions: None,
-                        speed: 1.0,
-                        verification_hints: verification_hints(&proper_noun_definitions),
-                    },
-                    // Gemini reads whole sentences with far more natural
-                    // prosody than Chirp3, which is what a transcription
-                    // exercise is actually testing.
-                    provider: TtsProvider::Gemini,
-                },
-                movie_titles,
-                proper_noun_definitions,
-                second_chance,
-            },
-        ))
+        deck.transcription_challenge_for_sentence(gram, sentence.target_language)
+            .map(Challenge::TranscribeComprehensibleSentence)
     }
 
     pub fn listening_gram_challenge(
@@ -504,6 +363,157 @@ impl ReviewInfo {
 }
 
 impl Deck {
+    /// Build the app's transcription blanks for a particular corpus sentence.
+    pub fn transcription_challenge_for_sentence(
+        &self,
+        gram: SpurGram,
+        sentence: Spur,
+    ) -> Option<TranscribeComprehensibleSentence> {
+        let language_pack = &self.context.language_pack;
+        let sentence = crate::comprehensible_sentence_from_spur(language_pack, sentence)?;
+        let sentence_grams = sentence.target_language_sentence_grams.to_literals(
+            &language_pack.string_rodeo,
+            &language_pack.gram_rodeo,
+            self.context.course.target_language,
+        );
+
+        type Breakdown = Vec<(String, Option<String>, Option<String>)>;
+        let mut parts = Vec::<transcription_challenge::Part>::new();
+        let mut part_gram_indices = Vec::<Vec<usize>>::new();
+        let mut gram_definitions_for_lookup = Vec::<Option<GramDefinition>>::new();
+        let mut gram_breakdowns_for_lookup = Vec::<Option<Breakdown>>::new();
+        let register_gram = |gram_spur: &TaggedGram<SpurGram>,
+                             defs: &mut Vec<Option<GramDefinition>>,
+                             breakdowns: &mut Vec<Option<Breakdown>>|
+         -> usize {
+            let idx = defs.len();
+            defs.push(language_pack.gram_definitions.get(gram_spur).cloned());
+            breakdowns.push(language_pack.compute_breakdown(gram_spur.gram));
+            idx
+        };
+        for sentence_gram in sentence_grams {
+            match sentence_gram {
+                SentenceGram::Learnable((sentence_gram, literals))
+                    if sentence_gram.gram == gram
+                        || self.is_listened_gram_comprehensible(&sentence_gram, false) =>
+                {
+                    let gram_idx = register_gram(
+                        &sentence_gram,
+                        &mut gram_definitions_for_lookup,
+                        &mut gram_breakdowns_for_lookup,
+                    );
+                    let new_indices = vec![gram_idx; literals.len()];
+                    if let Some(transcription_challenge::Part::AskedToTranscribe {
+                        parts: existing_parts,
+                    }) = parts.last_mut()
+                    {
+                        existing_parts.extend(literals);
+                        part_gram_indices.last_mut().unwrap().extend(new_indices);
+                    } else {
+                        parts.push(transcription_challenge::Part::AskedToTranscribe {
+                            parts: literals,
+                        });
+                        part_gram_indices.push(new_indices);
+                    }
+                }
+                SentenceGram::Obvious((sentence_gram, literals))
+                | SentenceGram::Learnable((sentence_gram, literals)) => {
+                    let gram_idx = register_gram(
+                        &sentence_gram,
+                        &mut gram_definitions_for_lookup,
+                        &mut gram_breakdowns_for_lookup,
+                    );
+                    for literal in literals {
+                        parts.push(transcription_challenge::Part::Provided { part: literal });
+                        part_gram_indices.push(vec![gram_idx]);
+                    }
+                }
+            }
+        }
+
+        let movie_titles = language_pack
+            .sentence_sources
+            .get(&sentence.target_language)
+            .map(|source| {
+                source
+                    .movie_ids
+                    .iter()
+                    .filter_map(|movie_id| {
+                        language_pack
+                            .movies
+                            .get(movie_id)
+                            .map(|metadata| (movie_id.clone(), metadata.title.clone()))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        let proper_noun_definitions: Vec<(String, language_utils::ProperNounDefinition)> = parts
+            .iter()
+            .flat_map(|part| match part {
+                transcription_challenge::Part::AskedToTranscribe { parts } => parts.iter(),
+                transcription_challenge::Part::Provided { part } => {
+                    std::slice::from_ref(part).iter()
+                }
+            })
+            .filter_map(|literal| {
+                if let language_utils::WordType::Other(other) = &literal.word.word_type
+                    && other.other_tag == language_utils::OtherWordType::Propn
+                {
+                    let text_spur = language_pack.string_rodeo.get(&literal.word.text)?;
+                    language_pack
+                        .proper_noun_definitions
+                        .get(&text_spur)
+                        .map(|def| (literal.word.text.clone(), def.clone()))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let second_chance = self.stats.wrong_sentences.iter().any(|(s, t)| {
+            *s == sentence.target_language && *t == SentenceChallengeType::Transcription
+        });
+
+        Some(TranscribeComprehensibleSentence {
+            target_language: language_pack
+                .string_rodeo
+                .resolve(&sentence.target_language)
+                .to_string(),
+            native_language: language_pack
+                .string_rodeo
+                .resolve(sentence.native_languages.first()?)
+                .to_string(),
+            parts,
+            part_gram_indices,
+            gram_definitions_for_lookup,
+            gram_breakdowns_for_lookup,
+            audio: AudioRequest {
+                request: TtsRequest {
+                    text: language_pack
+                        .string_rodeo
+                        .resolve(&sentence.target_language)
+                        .to_string(),
+                    language: self.context.course.target_language,
+                    is_ssml: false,
+                    // Left at the provider default so a human recording of
+                    // this sentence still wins over TTS — see
+                    // `human_audio_applies`.
+                    instructions: None,
+                    speed: 1.0,
+                    verification_hints: verification_hints(&proper_noun_definitions),
+                },
+                // Gemini reads whole sentences with far more natural
+                // prosody than Chirp3, which is what a transcription
+                // exercise is actually testing.
+                provider: TtsProvider::Gemini,
+            },
+            movie_titles,
+            proper_noun_definitions,
+            second_chance,
+        })
+    }
+
     /// Build the translation-challenge payload for a specific corpus
     /// sentence containing `gram`. Callers pick the sentence (e.g. via
     /// `pick_translation_sentence`); everything else derives from the

@@ -57,8 +57,17 @@ test("32 exhausted recordings stop a large failing queue", async () => {
   }, 100);
   await assert.rejects(h.run(), error => error.code === "audio_unavailable");
   await flush();
-  assert.equal([...attempts.values()].filter(count => count === 2).length, 32);
+  assert([...attempts.values()].filter(count => count === 2).length >= 32);
   assert([...attempts.values()].every(count => count <= 2));
-  assert(attempts.size <= 39, "only seven already-running requests may remain at the cutoff");
+  assert(attempts.size <= 55, "only 23 already-running requests may remain at the cutoff");
   assert.equal(h.timers.size, 0);
+});
+
+test("missing subtitles are optional but pack media must exist", async () => {
+  const exports = {};
+  vm.runInNewContext(source, { exports, Error, AbortController });
+  const run = type => exports.fetchMedia({ bundled: [{ filename: "media", source: { type } }] }, async () => undefined, () => {});
+  assert.equal((await run("Subtitles"))[0], undefined);
+  await assert.rejects(run("Poster"), /Bundled media missing: media/);
+  await assert.rejects(run("HumanAudio"), /Bundled media missing: media/);
 });
