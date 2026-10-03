@@ -100,7 +100,7 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
   const [state, setState] = useState<TranscriptionState>(
     () =>
       initialState ??
-      storage?.load() ??
+      storage?.loadOrDiscardStale() ??
       transcription_start(challenge.parts, challenge.proper_noun_definitions),
   );
   const stateRef = useRef(state);

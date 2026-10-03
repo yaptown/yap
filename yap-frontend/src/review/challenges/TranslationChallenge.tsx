@@ -384,7 +384,7 @@ export const TranslationChallenge = memo(function TranslationChallenge({
     (payload) => translation_resume(payload as TranslationState).state,
   ));
   const [state, setState] = useState<TranslationState>(() =>
-    initialState ?? storage?.load() ?? translation_start(sentence, { targetLanguage, nativeLanguage }),
+    initialState ?? storage?.loadOrDiscardStale() ?? translation_start(sentence, { targetLanguage, nativeLanguage }),
   );
   const stateRef = useRef(state);
   const view = useMemo(() => translation_view(state), [state]);
