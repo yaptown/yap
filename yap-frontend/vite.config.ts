@@ -106,7 +106,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,wav,mp3}'],
         globIgnores: ['**/d/**', '**/blog/**', '**/sql-wasm*.wasm'],
         importScripts: [],
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MiB to cover the current WASM bundle
+        // The WASM bundle must be precached for offline use, and it grows: it
+        // crossed the old 4 MiB cap in #208, which failed the deploy build.
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         // Match the bare path as well as the trailing-slash form: /blog and /d
         // are real server-rendered pages, and without the $ alternative the
         // service worker served the SPA shell for them, which 404s.
