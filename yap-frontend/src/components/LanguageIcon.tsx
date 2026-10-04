@@ -1,12 +1,18 @@
 import { cn } from "@/lib/pure";
 
-const assets = import.meta.glob<string>("../assets/language-icons/*.svg", {
-  eager: true,
-  query: "?url",
-  import: "default",
-});
+// Both directories come from the yap-icons repo, in one house style: course
+// icons, and illustrations for the app's own screens (ids "ui.*").
+const assets = Object.fromEntries(
+  Object.entries(
+    import.meta.glob<string>(["../assets/language-icons/*.svg", "../assets/illustrations/*.svg"], {
+      eager: true,
+      query: "?url",
+      import: "default",
+    }),
+  ).map(([path, url]) => [path.slice(path.lastIndexOf("/") + 1), url]),
+);
 
-/** Decorative course artwork; the adjacent language name provides its label. */
+/** Decorative artwork; adjacent text provides its label. */
 export function LanguageIcon({
   icon,
   variant = "tile",
@@ -16,7 +22,7 @@ export function LanguageIcon({
   variant?: "tile" | "bare";
   className?: string;
 }) {
-  const src = (suffix: string) => assets[`../assets/language-icons/${icon}${suffix}.svg`];
+  const src = (suffix: string) => assets[`${icon}${suffix}.svg`];
   if (variant === "tile") {
     return <img src={src("")} alt="" aria-hidden className={cn("shrink-0", className)} />;
   }

@@ -97,7 +97,8 @@ pub struct OnboardingOption {
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct OnboardingAchievement {
-    pub emoji: String,
+    /// Illustration id from the yap-icons repo.
+    pub icon: String,
     pub text: String,
 }
 
@@ -160,6 +161,7 @@ pub enum OnboardingContent {
         words: Vec<String>,
     },
     Notifications {
+        icon: String,
         body: String,
         enable_label: String,
         enabling_label: String,
@@ -446,18 +448,18 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
             "Here's what you can achieve".into(),
             Achievements {
                 items: [
-                    ("📚", "Build a large vocabulary".to_string()),
-                    ("🎬", format!("Enjoy {} media", metadata.common_name)),
+                    ("ui.vocabulary", "Build a large vocabulary".to_string()),
+                    ("ui.media", format!("Enjoy {} media", metadata.common_name)),
                     (
-                        "👂",
+                        "ui.speakers",
                         format!(
                             "Understand how {} speakers actually talk",
                             metadata.common_name
                         ),
                     ),
                 ]
-                .map(|(emoji, text)| OnboardingAchievement {
-                    emoji: emoji.into(),
+                .map(|(icon, text)| OnboardingAchievement {
+                    icon: icon.into(),
                     text,
                 })
                 .into(),
@@ -543,6 +545,7 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
         OnboardingStep::Notifications => {
             primary = None;
             ("We'll remind you to practice so it becomes a habit!".into(), Notifications {
+                icon: "ui.reminder".into(),
                 body: "A small daily reminder makes it easy to stay consistent and reach your goals.".into(),
                 enable_label: "Enable reminders".into(), enabling_label: "Enabling...".into(),
                 skip_label: "Not now".into(),

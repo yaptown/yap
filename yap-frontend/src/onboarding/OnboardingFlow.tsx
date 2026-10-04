@@ -31,8 +31,6 @@ import {
   SignalMedium,
   SignalHigh,
   Signal,
-  Bell,
-  Brain,
   type LucideIcon,
 } from "lucide-react";
 import type {
@@ -506,7 +504,7 @@ function SrsIntroScreen({
               key="learned"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center gap-3 py-10 text-center"
+              className="flex flex-col items-center gap-2 py-2 text-center"
             >
               <motion.div
                 initial={{ scale: 0, rotate: -30 }}
@@ -517,9 +515,8 @@ function SrsIntroScreen({
                   damping: 14,
                   delay: 0.1,
                 }}
-                className="rounded-full bg-primary/15 p-4"
               >
-                <Check className="h-10 w-10 text-primary" strokeWidth={3} />
+                <LanguageIcon icon="ui.learned" className="size-28" />
               </motion.div>
               <p className="text-3xl font-bold">{content.learned_title}</p>
               <p className="text-muted-foreground text-lg">
@@ -578,7 +575,9 @@ function SrsIntroScreen({
   );
 }
 
-// Screen: words drifting into memory, and staying there
+// Screen: words drifting into memory, and staying there. The word chips are
+// printed like the yap-icons artwork: ink outline, fill slightly off register.
+const wordInks = ["#FFC160", "#62B8EE", "#F79AA0", "#8FD19E", "#C3A8F0"];
 function WordsIntoMemory({
   words,
   language,
@@ -600,9 +599,7 @@ function WordsIntoMemory({
             ease: "easeInOut",
           }}
         />
-        <div className="relative rounded-full bg-primary/10 p-6 ring-1 ring-primary/20">
-          <Brain className="size-16 text-primary" strokeWidth={1.5} />
-        </div>
+        <LanguageIcon icon="ui.brain" className="relative size-36" />
       </div>
       {words.map((word, i) => {
         const angle = (i / words.length) * 2 * Math.PI + 0.4;
@@ -611,7 +608,11 @@ function WordsIntoMemory({
         return (
           <motion.span
             key={word}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-border bg-card/80 px-3 py-1 text-base font-medium shadow-sm backdrop-blur"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border-2 border-[#1E2240] px-3 py-0.5 text-base font-semibold text-[#1E2240]"
+            style={{
+              backgroundColor: wordInks[i % wordInks.length],
+              boxShadow: `2.5px 2px 0 ${wordInks[i % wordInks.length]}`,
+            }}
             initial={{ x, y, opacity: 0, scale: 1 }}
             animate={{
               x: [x, x * 0.8, 0],
@@ -724,11 +725,21 @@ function NotificationScreen({
   };
   return (
     <ScreenWrapper screenKey="notifications">
-      <div className="flex flex-col items-center gap-2">
-        <div className="rounded-full bg-primary/10 p-4">
-          <Bell className="h-10 w-10 text-primary" />
-        </div>
-      </div>
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1, rotate: [0, -10, 10, -8, 8, -4, 4, 0] }}
+        transition={{
+          scale: { type: "spring", stiffness: 260, damping: 14 },
+          rotate: {
+            delay: 0.4,
+            duration: 0.8,
+            repeat: Infinity,
+            repeatDelay: 2,
+          },
+        }}
+      >
+        <LanguageIcon icon={content.icon} className="size-32" />
+      </motion.div>
       <h2
         className="text-3xl md:text-4xl font-bold text-center leading-snug"
         style={{ textWrap: "balance" }}
@@ -790,8 +801,8 @@ function ScreenContent({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.15 + i * 0.15, duration: 0.35 }}
               >
-                <Card className="p-5 flex-row items-center gap-4">
-                  <span className="text-4xl">{item.emoji}</span>
+                <Card className="p-4 flex-row items-center gap-4">
+                  <LanguageIcon icon={item.icon} className="size-14" />
                   <span className="text-lg font-medium">{item.text}</span>
                 </Card>
               </motion.div>

@@ -74,7 +74,7 @@ struct OnboardingFlowView: View {
                 VStack(spacing: 16) {
                     ForEach(Array(items.enumerated()), id: \.element.text) { index, item in
                         HStack(spacing: 16) {
-                            Text(item.emoji).font(.system(size: 36))
+                            Image(item.icon).resizable().scaledToFit().frame(width: 64, height: 64)
                             Text(item.text).font(.title3.weight(.medium)).multilineTextAlignment(.leading)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }.padding(20).cardSurface()
@@ -376,19 +376,22 @@ private struct LearnedBadge: View {
     @State private var shown = false
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: "checkmark").font(.system(size: 36, weight: .bold)).foregroundStyle(Color.yapAccent)
-                .frame(width: 76, height: 76).background(Color.yapAccent.opacity(0.15), in: Circle())
+            Image("ui.learned").resizable().scaledToFit().frame(width: 112, height: 112)
                 .scaleEffect(shown ? 1 : 0.01).rotationEffect(.degrees(shown ? 0 : -30))
             Text(title).font(.largeTitle.bold())
             Text(message).font(.title3).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 32)
+        .frame(maxWidth: .infinity).padding(.vertical, 8)
         .onAppear { withAnimation(.spring(response: 0.45, dampingFraction: 0.55).delay(0.1)) { shown = true } }
     }
 }
 
-/// Words drift into memory and stay there.
+/// Words drift into memory and stay there. The word chips are printed like the
+/// yap-icons artwork: ink outline, fill slightly off register.
 private struct WordsIntoMemory: View {
+    private static let ink = Color(red: 0x1E / 255, green: 0x22 / 255, blue: 0x40 / 255)
+    private static let inks = [(0xFF, 0xC1, 0x60), (0x62, 0xB8, 0xEE), (0xF7, 0x9A, 0xA0), (0x8F, 0xD1, 0x9E), (0xC3, 0xA8, 0xF0)]
+        .map { Color(red: Double($0.0) / 255, green: Double($0.1) / 255, blue: Double($0.2) / 255) }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let words: [String]
     private let cycle = 4.0
@@ -399,19 +402,19 @@ private struct WordsIntoMemory: View {
             ZStack {
                 Circle().fill(Color.yapAccent.opacity(0.2)).frame(width: 144, height: 144).blur(radius: 24)
                     .scaleEffect(1 + 0.12 * sin(elapsed * 2 * .pi * Double(words.count) / cycle))
-                Image(systemName: "brain").font(.system(size: 56, weight: .light)).foregroundStyle(Color.yapAccent)
-                    .frame(width: 112, height: 112).background(Color.yapAccent.opacity(0.1), in: Circle())
-                    .overlay { Circle().strokeBorder(Color.yapAccent.opacity(0.2)) }
+                Image("ui.brain").resizable().scaledToFit().frame(width: 144, height: 144)
                 ForEach(Array(words.enumerated()), id: \.offset) { index, word in
                     let phase = (elapsed / cycle + Double(index) / Double(words.count)).truncatingRemainder(dividingBy: 1)
                     let angle = Double(index) / Double(words.count) * 2 * .pi + 0.4
                     // Ease in: words drift, then get pulled in.
                     let pull = phase < 0.35 ? phase / 0.35 * 0.2 : 0.2 + pow((phase - 0.35) / 0.65, 2) * 0.8
                     let opacity = phase < 0.15 ? phase / 0.15 : phase > 0.85 ? (1 - phase) / 0.15 : 1
-                    Text(word).font(.body.weight(.medium)).foregroundStyle(Color.yapText)
-                        .padding(.horizontal, 12).padding(.vertical, 5)
-                        .background(.ultraThinMaterial, in: Capsule())
-                        .overlay { Capsule().strokeBorder(Color.yapBorder) }
+                    let fill = Self.inks[index % Self.inks.count]
+                    Text(word).font(.body.weight(.semibold)).foregroundStyle(Self.ink)
+                        .padding(.horizontal, 12).padding(.vertical, 3)
+                        .background { Capsule().fill(fill).offset(x: 2.5, y: 2) }
+                        .background(fill, in: Capsule())
+                        .overlay { Capsule().strokeBorder(Self.ink, lineWidth: 2) }
                         .fixedSize()
                         .scaleEffect(1 - 0.7 * max(0, (phase - 0.35) / 0.65))
                         .opacity(reduceMotion ? 1 : opacity)
