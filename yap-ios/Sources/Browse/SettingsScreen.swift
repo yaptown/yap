@@ -26,8 +26,7 @@ struct SettingsScreen: View {
                         account(sync)
                     } else {
                         CardSection {
-                            Button(account_copy().sign_in_action) { authSheet.present(tab: .signIn) }
-                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            Button { authSheet.present(tab: .signIn) } label: { RowLabel(account_copy().sign_in_action) }
                         }
                     }
                     CardSection("Appearance") {
@@ -99,13 +98,13 @@ struct SettingsScreen: View {
                 if let error = sync.error { Text(error).font(.footnote).foregroundStyle(Color.yapNegativeForeground).padding(.bottom, 8) }
             }
             Divider()
-            Button("Sign out", role: .destructive) { Task { await auth.signOut() } }
-                .disabled(auth.busy || deleting).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            Button(role: .destructive) { Task { await auth.signOut() } } label: { RowLabel("Sign out") }
+                .disabled(auth.busy || deleting)
             if let error = auth.error { Text(error).font(.footnote).foregroundStyle(Color.yapNegativeForeground).padding(.bottom, 8) }
             Divider()
             let copy = account_copy()
-            Button(deleting ? copy.deleting_account : copy.delete_account_action, role: .destructive) { confirmingDelete = true }
-                .disabled(auth.busy || deleting).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            Button(role: .destructive) { confirmingDelete = true } label: { RowLabel(deleting ? copy.deleting_account : copy.delete_account_action) }
+                .disabled(auth.busy || deleting)
                 .alert(copy.delete_account_title, isPresented: $confirmingDelete) {
                     Button(copy.delete_account_confirm, role: .destructive) { Task { await deleteAccount() } }
                     Button("Cancel", role: .cancel) {}
@@ -123,8 +122,7 @@ struct SettingsScreen: View {
                     SettingsRow(sync.server_events_label) { Text("\(sync.server_events)").monospacedDigit() }
                     if let userId = auth.userId { IdentifierRow(label: sync.user_id_label, value: userId) }
                     IdentifierRow(label: sync.device_id_label, value: deviceId)
-                    Button(sync.sync_button_label) { self.sync() }.disabled(!sync.sync_button_enabled)
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    Button { self.sync() } label: { RowLabel(sync.sync_button_label) }.disabled(!sync.sync_button_enabled)
                 }
             } label: {
                 Text("Diagnostics").foregroundStyle(Color.yapText).frame(minHeight: 44)
@@ -204,6 +202,15 @@ private struct SettingsRow<Trailing: View>: View {
             Spacer(minLength: 0)
             trailing.foregroundStyle(Color.yapMuted)
         }.frame(minHeight: 44)
+    }
+}
+
+/// A button's label spanning its row, so the whole row takes the tap.
+private struct RowLabel: View {
+    let title: String
+    init(_ title: String) { self.title = title }
+    var body: some View {
+        Text(title).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
     }
 }
 

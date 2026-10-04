@@ -90,6 +90,7 @@ pub struct OnboardingTransition {
 pub struct OnboardingOption {
     pub choice: OnboardingChoice,
     pub label: String,
+    pub detail: Option<String>,
     pub selected: bool,
 }
 
@@ -110,6 +111,16 @@ pub struct OnboardingStudy {
     pub url: String,
 }
 
+/// One stretch of the forgetting-curve illustration: memory starts full at
+/// `start` and decays to `retained` by `end`. Times and memory run from 0 to 1.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct OnboardingCurve {
+    pub start: f64,
+    pub end: f64,
+    pub retained: f64,
+}
+
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct OnboardingChart {
@@ -124,7 +135,6 @@ pub struct OnboardingChart {
 pub enum OnboardingContent {
     Choices {
         options: Vec<OnboardingOption>,
-        hint: Option<String>,
     },
     Achievements {
         items: Vec<OnboardingAchievement>,
@@ -133,18 +143,21 @@ pub enum OnboardingContent {
         studies: Vec<OnboardingStudy>,
         conclusion: String,
     },
+    /// Every curve after the first starts at a review.
     Review {
         eyebrow: String,
         title_emphasis: String,
-        demo_reviews: u8,
+        curves: Vec<OnboardingCurve>,
+        caption: String,
         review_label: Option<String>,
         learned: bool,
         learned_title: String,
         learned_body: String,
         chart: OnboardingChart,
     },
-    Growth {
-        chart: OnboardingChart,
+    /// Words drifting into memory and staying there.
+    Remember {
+        words: Vec<String>,
     },
     Notifications {
         body: String,
@@ -236,6 +249,21 @@ impl OnboardingState {
     fn advance(&mut self) {
         self.move_to(self.step_index + 1);
     }
+    fn proceed(&mut self, effects: &mut Vec<OnboardingEffect>) {
+        match self.step() {
+            OnboardingStep::HeardAbout => {
+                effects.push(OnboardingEffect::SaveHeardAbout {
+                    value: self.heard_about.clone().unwrap(),
+                });
+                self.advance();
+            }
+            OnboardingStep::SrsIntro if self.review_count < LEARNED_AFTER => self.review_count += 1,
+            _ if self.step_index as usize == self.steps.len() - 1 => effects.push(
+                self.complete(self.selections.experience_level == Some(ExperienceLevel::New)),
+            ),
+            _ => self.advance(),
+        }
+    }
     fn complete(&self, starting_fresh: bool) -> OnboardingEffect {
         OnboardingEffect::Complete {
             selections: OnboardingSelections {
@@ -254,21 +282,25 @@ pub fn onboarding_reduce(
     use OnboardingEvent::*;
     let mut effects = vec![];
     match event {
-        Choose { choice } => match (state.step(), choice) {
-            (OnboardingStep::HeardAbout, OnboardingChoice::HeardAbout { value }) => {
-                state.heard_about = Some(value)
+        Choose { choice } => {
+            match (state.step(), choice) {
+                (OnboardingStep::HeardAbout, OnboardingChoice::HeardAbout { value }) => {
+                    state.heard_about = Some(value)
+                }
+                (OnboardingStep::Motivation, OnboardingChoice::Motivation { value }) => {
+                    state.selections.motivation = Some(value)
+                }
+                (OnboardingStep::Experience, OnboardingChoice::Experience { value }) => {
+                    state.selections.experience_level = Some(value)
+                }
+                (OnboardingStep::StudyGoal, OnboardingChoice::StudyGoal { value }) => {
+                    state.selections.study_goal = Some(value)
+                }
+                _ => return OnboardingTransition { state, effects },
             }
-            (OnboardingStep::Motivation, OnboardingChoice::Motivation { value }) => {
-                state.selections.motivation = Some(value)
-            }
-            (OnboardingStep::Experience, OnboardingChoice::Experience { value }) => {
-                state.selections.experience_level = Some(value)
-            }
-            (OnboardingStep::StudyGoal, OnboardingChoice::StudyGoal { value }) => {
-                state.selections.study_goal = Some(value)
-            }
-            _ => {}
-        },
+            // Picking an answer is the whole step; there is no Continue to press.
+            state.proceed(&mut effects);
+        }
         Back => {
             if state.step_index == 0 {
                 state.move_to(0);
@@ -282,21 +314,7 @@ pub fn onboarding_reduce(
                 .primary
                 .is_some_and(|p| p.enabled)
             {
-                match state.step() {
-                    OnboardingStep::HeardAbout => {
-                        effects.push(OnboardingEffect::SaveHeardAbout {
-                            value: state.heard_about.clone().unwrap(),
-                        });
-                        state.advance();
-                    }
-                    OnboardingStep::SrsIntro if state.review_count < 4 => state.review_count += 1,
-                    _ if state.step_index as usize == state.steps.len() - 1 => {
-                        effects.push(state.complete(
-                            state.selections.experience_level == Some(ExperienceLevel::New),
-                        ))
-                    }
-                    _ => state.advance(),
-                }
+                state.proceed(&mut effects);
             }
         }
         StartFromScratch if *state.step() == OnboardingStep::Ready => {
@@ -339,22 +357,22 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
         show_arrow: true,
     });
     let mut choices = |title: String,
-                       values: Vec<(OnboardingChoice, String)>,
-                       selected: Option<OnboardingChoice>,
-                       hint| {
-        primary.as_mut().unwrap().enabled = selected.is_some();
+                       values: Vec<(OnboardingChoice, String, Option<String>)>,
+                       selected: Option<OnboardingChoice>| {
+        // Choosing advances by itself.
+        primary = None;
         (
             title,
             Choices {
                 options: values
                     .into_iter()
-                    .map(|(choice, label)| OnboardingOption {
+                    .map(|(choice, label, detail)| OnboardingOption {
                         selected: Some(&choice) == selected.as_ref(),
                         choice,
                         label,
+                        detail,
                     })
                     .collect(),
-                hint,
             },
         )
     };
@@ -370,12 +388,11 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
                 (HeardAbout::Other, "Other"),
             ]
             .into_iter()
-            .map(|(value, label)| (OnboardingChoice::HeardAbout { value }, label.into()))
+            .map(|(value, label)| (OnboardingChoice::HeardAbout { value }, label.into(), None))
             .collect(),
             state
                 .heard_about
                 .map(|value| OnboardingChoice::HeardAbout { value }),
-            None,
         ),
         OnboardingStep::Motivation => choices(
             format!("Why are you learning {language}?"),
@@ -389,13 +406,12 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
                 (Motivation::Other, "Other"),
             ]
             .into_iter()
-            .map(|(value, label)| (OnboardingChoice::Motivation { value }, label.into()))
+            .map(|(value, label)| (OnboardingChoice::Motivation { value }, label.into(), None))
             .collect(),
             state
                 .selections
                 .motivation
                 .map(|value| OnboardingChoice::Motivation { value }),
-            None,
         ),
         OnboardingStep::Experience => choices(
             format!("How much {language} do you know?"),
@@ -419,25 +435,30 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
                 ),
             ]
             .into_iter()
-            .map(|(value, label)| (OnboardingChoice::Experience { value }, label))
+            .map(|(value, label)| (OnboardingChoice::Experience { value }, label, None))
             .collect(),
             state
                 .selections
                 .experience_level
                 .map(|value| OnboardingChoice::Experience { value }),
-            None,
         ),
         OnboardingStep::Achievements => (
             "Here's what you can achieve".into(),
             Achievements {
                 items: [
-                    ("💬", "Converse with confidence"),
-                    ("📚", "Build a large vocabulary"),
-                    ("🔄", "Develop a lasting learning habit"),
+                    ("📚", "Build a large vocabulary".to_string()),
+                    ("🎬", format!("Enjoy {} media", metadata.common_name)),
+                    (
+                        "👂",
+                        format!(
+                            "Understand how {} speakers actually talk",
+                            metadata.common_name
+                        ),
+                    ),
                 ]
                 .map(|(emoji, text)| OnboardingAchievement {
                     emoji: emoji.into(),
-                    text: text.into(),
+                    text,
                 })
                 .into(),
             },
@@ -450,18 +471,26 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
             },
         ),
         OnboardingStep::SrsIntro => {
-            let learned = state.review_count > 3;
+            let learned = state.review_count >= LEARNED_AFTER;
             primary = Some(OnboardingPrimary {
                 label: if learned { "Continue" } else { "Review" }.into(),
                 enabled: true,
                 show_arrow: learned,
             });
+            let shown = usize::from(state.review_count.min(LEARNED_AFTER - 1)) + 1;
             (
                 "Every time you review a word, you'll remember it for ".into(),
                 Review {
                     eyebrow: "How Yap works".into(),
                     title_emphasis: "longer.".into(),
-                    demo_reviews: state.review_count,
+                    curves: forgetting_curves().into_iter().take(shown).collect(),
+                    caption: [
+                        "You learn a new word, and right away you start forgetting it.",
+                        "Reviewing it just before it slips away brings it all back…",
+                        "…and each time, you forget it more slowly.",
+                        "So the reviews can get further and further apart.",
+                    ][shown - 1]
+                        .into(),
                     review_label: match state.review_count {
                         1 => Some("review".into()),
                         2 | 3 => Some("reviews".into()),
@@ -471,8 +500,8 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
                     learned_title: "Word learned".into(),
                     learned_body: "That word is now in long-term memory!".into(),
                     chart: OnboardingChart {
-                        x_label: "TIME →".into(),
-                        y_label: String::new(),
+                        x_label: "Time".into(),
+                        y_label: "Memory".into(),
                         accessibility_label:
                             "Forgetting curve chart showing how spaced repetition helps memory"
                                 .into(),
@@ -483,43 +512,34 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
         OnboardingStep::SrsConclusion => {
             primary.as_mut().unwrap().label = "Set a goal".into();
             (
-                "That's why if you study a little bit every day, you'll learn a lot.".into(),
-                Growth {
-                    chart: OnboardingChart {
-                        x_label: "Days".into(),
-                        y_label: "Words learned".into(),
-                        accessibility_label: "Days → Words learned".into(),
-                    },
+                "That's how Yap makes sure you remember everything, with as little reviewing as possible.".into(),
+                Remember {
+                    words: sample_words(state.target_language)
+                        .map(String::from)
+                        .into(),
                 },
             )
         }
-        OnboardingStep::StudyGoal => {
-            let goals = get_daily_goal_options();
-            let hint = goals
-                .iter()
-                .find(|g| Some(&g.value) == state.selections.study_goal.as_ref())
+        OnboardingStep::StudyGoal => choices(
+            "Set a daily study goal".into(),
+            get_daily_goal_options()
+                .into_iter()
                 .map(|g| {
-                    format!(
-                        "That's ~{} words in your first week!",
-                        g.estimated_first_week_words
+                    (
+                        OnboardingChoice::StudyGoal { value: g.value },
+                        format!("{} min/day", g.minutes),
+                        Some(format!(
+                            "~{} words in your first week",
+                            g.estimated_first_week_words
+                        )),
                     )
-                });
-            choices(
-                "Set a daily study goal".into(),
-                goals
-                    .into_iter()
-                    .map(|g| {
-                        let label = format!("{} min/day — {:?}", g.minutes, g.value);
-                        (OnboardingChoice::StudyGoal { value: g.value }, label)
-                    })
-                    .collect(),
-                state
-                    .selections
-                    .study_goal
-                    .map(|value| OnboardingChoice::StudyGoal { value }),
-                hint,
-            )
-        }
+                })
+                .collect(),
+            state
+                .selections
+                .study_goal
+                .map(|value| OnboardingChoice::StudyGoal { value }),
+        ),
         OnboardingStep::Notifications => {
             primary = None;
             ("We'll remind you to practice so it becomes a habit!".into(), Notifications {
@@ -568,6 +588,98 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
         title,
         content,
         primary,
+    }
+}
+
+/// Reviews in the forgetting-curve demo before the word counts as learned.
+const LEARNED_AFTER: u8 = 4;
+
+/// Each review restarts the curve, and each restart decays more slowly.
+fn forgetting_curves() -> [OnboardingCurve; LEARNED_AFTER as usize] {
+    let mut start = 0.0;
+    [(0.12, 0.25), (0.2, 0.4), (0.3, 0.55), (0.38, 0.7)].map(|(width, retained)| {
+        let curve = OnboardingCurve {
+            start,
+            end: start + width,
+            retained,
+        };
+        start += width;
+        curve
+    })
+}
+
+/// Everyday words for the "remember everything" illustration.
+fn sample_words(language: Language) -> [&'static str; 8] {
+    use Language::*;
+    match language {
+        English => [
+            "hello",
+            "thanks",
+            "friend",
+            "tomorrow",
+            "music",
+            "beautiful",
+            "coffee",
+            "love",
+        ],
+        French => [
+            "bonjour", "merci", "ami", "demain", "musique", "beau", "café", "amour",
+        ],
+        SpanishLatinAmerican | SpanishPeninsular => [
+            "hola", "gracias", "amigo", "mañana", "música", "bonito", "café", "amor",
+        ],
+        German => [
+            "hallo", "danke", "Freund", "morgen", "Musik", "schön", "Kaffee", "Liebe",
+        ],
+        Italian => [
+            "ciao", "grazie", "amico", "domani", "musica", "bello", "caffè", "amore",
+        ],
+        PortugueseBrazilian | PortugueseEuropean => [
+            "olá", "obrigado", "amigo", "amanhã", "música", "bonito", "café", "amor",
+        ],
+        Russian => [
+            "привет",
+            "спасибо",
+            "друг",
+            "завтра",
+            "музыка",
+            "красивый",
+            "кофе",
+            "любовь",
+        ],
+        Korean => [
+            "안녕",
+            "고마워",
+            "친구",
+            "내일",
+            "음악",
+            "예쁘다",
+            "커피",
+            "사랑",
+        ],
+        Japanese => [
+            "こんにちは",
+            "ありがとう",
+            "友達",
+            "明日",
+            "音楽",
+            "きれい",
+            "コーヒー",
+            "愛",
+        ],
+        ChineseSimplified => ["你好", "谢谢", "朋友", "明天", "音乐", "漂亮", "咖啡", "爱"],
+        ChineseTraditional => ["你好", "謝謝", "朋友", "明天", "音樂", "漂亮", "咖啡", "愛"],
+        Hindi => [
+            "नमस्ते",
+            "धन्यवाद",
+            "दोस्त",
+            "कल",
+            "संगीत",
+            "सुंदर",
+            "कॉफ़ी",
+            "प्यार",
+        ],
+        Thai => ["สวัสดี", "ขอบคุณ", "เพื่อน", "พรุ่งนี้", "เพลง", "สวย", "กาแฟ", "รัก"],
     }
 }
 
@@ -625,14 +737,19 @@ mod tests {
     fn next(state: &mut OnboardingState) -> Vec<OnboardingEffect> {
         send(state, OnboardingEvent::Next)
     }
-    fn choose(state: &mut OnboardingState, choice: OnboardingChoice) {
-        let before = view(state).primary.unwrap();
-        assert_eq!(before.label, "Continue");
-        send(state, OnboardingEvent::Choose { choice });
-        let after = view(state).primary.unwrap();
-        assert_eq!(after.label, "Continue");
-        assert!(after.enabled);
-        assert!(after.show_arrow);
+    /// Choice steps have no primary button: picking an answer moves on.
+    fn choose(state: &mut OnboardingState, choice: OnboardingChoice) -> Vec<OnboardingEffect> {
+        assert!(view(state).primary.is_none());
+        assert!(next(state).is_empty());
+        let before = state.step_index;
+        let effects = send(state, OnboardingEvent::Choose { choice });
+        assert!(
+            effects
+                .iter()
+                .any(|e| matches!(e, OnboardingEffect::Complete { .. }))
+                || state.step_index == before + 1
+        );
+        effects
     }
     fn view(state: &OnboardingState) -> OnboardingView {
         onboarding_view(state.clone())
@@ -643,30 +760,21 @@ mod tests {
         for level in [ExperienceLevel::New, ExperienceLevel::CommonWords] {
             let mut s =
                 onboarding_start(Language::French, false, true, OnboardingPurpose::AnkiDeck);
-            assert_eq!(s.purpose, OnboardingPurpose::AnkiDeck);
             assert_eq!(s.steps, [OnboardingStep::Experience]);
             assert_eq!(view(&s).progress_label, "Step 1 of 1");
             assert_eq!(view(&s).progress_percent, 100.0);
-            assert_eq!(view(&s).primary.unwrap().label, "Set up my deck");
-            assert!(!view(&s).primary.unwrap().enabled);
-            assert!(next(&mut s).is_empty());
-            send(
-                &mut s,
-                OnboardingEvent::Choose {
-                    choice: OnboardingChoice::Experience {
-                        value: level.clone(),
-                    },
-                },
-            );
             for offer in [false, true] {
                 assert!(
                     send(&mut s, OnboardingEvent::RefreshNotificationOffer { offer }).is_empty()
                 );
                 assert_eq!(s.steps, [OnboardingStep::Experience]);
-                assert_eq!(s.selections.experience_level, Some(level.clone()));
             }
-            assert!(view(&s).primary.unwrap().enabled);
-            let effects = next(&mut s);
+            let effects = choose(
+                &mut s,
+                OnboardingChoice::Experience {
+                    value: level.clone(),
+                },
+            );
             let [OnboardingEffect::Complete { selections }] = &effects[..] else {
                 panic!()
             };
@@ -703,44 +811,45 @@ mod tests {
             ]
         );
         assert_eq!(view(&s).progress_label, "Step 1 of 10");
-        assert!(!view(&s).primary.unwrap().enabled);
-        assert!(next(&mut s).is_empty());
-        assert_eq!(s.step_index, 0);
-        choose(
-            &mut s,
-            OnboardingChoice::HeardAbout {
-                value: crate::deck_selection::HeardAbout::Reddit,
-            },
-        );
         assert!(matches!(
-            &next(&mut s)[..],
+            &choose(
+                &mut s,
+                OnboardingChoice::HeardAbout {
+                    value: crate::deck_selection::HeardAbout::Reddit,
+                },
+            )[..],
             [OnboardingEffect::SaveHeardAbout {
                 value: crate::deck_selection::HeardAbout::Reddit
             }]
         ));
         assert!(s.heard_about.is_none());
         assert_eq!(view(&s).title, "Why are you learning Français?");
-        assert!(!view(&s).primary.unwrap().enabled);
         choose(
             &mut s,
             OnboardingChoice::Motivation {
                 value: crate::deck_selection::Motivation::JustForFun,
             },
         );
-        next(&mut s);
         assert_eq!(view(&s).title, "How much Français do you know?");
-        assert!(!view(&s).primary.unwrap().enabled);
         choose(
             &mut s,
             OnboardingChoice::Experience {
                 value: ExperienceLevel::New,
             },
         );
-        next(&mut s);
+        let OnboardingContent::Achievements { items } = view(&s).content else {
+            panic!()
+        };
+        assert_eq!(
+            items.iter().map(|i| i.text.as_str()).collect::<Vec<_>>(),
+            [
+                "Build a large vocabulary",
+                "Enjoy French media",
+                "Understand how French speakers actually talk"
+            ]
+        );
         assert_eq!(view(&s).primary.unwrap().label, "Continue");
         next(&mut s);
-        assert_eq!(view(&s).primary.as_ref().unwrap().label, "Continue");
-        assert!(view(&s).primary.unwrap().enabled);
         let OnboardingContent::Studies { studies, .. } = view(&s).content else {
             panic!()
         };
@@ -755,12 +864,17 @@ mod tests {
             let OnboardingContent::Review {
                 learned,
                 review_label,
+                curves,
                 ..
             } = view(&s).content
             else {
                 panic!()
             };
             assert_eq!(learned, count == 4);
+            // The demo opens on the first forgetting curve, never an empty chart.
+            assert_eq!(curves.len(), usize::from(count.min(3)) + 1);
+            assert_eq!(curves[0].start, 0.0);
+            assert!(curves.windows(2).all(|w| w[0].end == w[1].start));
             assert_eq!(
                 review_label.as_deref(),
                 match count {
@@ -774,33 +888,34 @@ mod tests {
             assert_eq!(primary.show_arrow, count == 4);
             next(&mut s);
         }
+        assert!((forgetting_curves().last().unwrap().end - 1.0).abs() < 1e-9);
         assert_eq!(*s.step(), SrsConclusion);
         assert_eq!(s.review_count, 0);
-        assert!(view(&s).primary.as_ref().unwrap().enabled);
         assert_eq!(view(&s).primary.unwrap().label, "Set a goal");
+        let OnboardingContent::Remember { words } = view(&s).content else {
+            panic!()
+        };
+        assert_eq!(words[0], "bonjour");
         next(&mut s);
-        assert!(!view(&s).primary.unwrap().enabled);
+        let OnboardingContent::Choices { options } = view(&s).content else {
+            panic!()
+        };
+        assert_eq!(options[1].label, "10 min/day");
+        assert_eq!(
+            options[1].detail.as_deref(),
+            Some("~50 words in your first week")
+        );
         choose(
             &mut s,
             OnboardingChoice::StudyGoal {
                 value: DailyReviewTarget::Regular,
             },
         );
-        let OnboardingContent::Choices { hint, options } = view(&s).content else {
-            panic!()
-        };
-        assert_eq!(
-            hint.as_deref(),
-            Some("That's ~50 words in your first week!")
-        );
-        assert_eq!(options[1].label, "10 min/day — Regular");
-        assert!(options[1].selected);
-        next(&mut s);
+        assert_eq!(*s.step(), Notifications);
         assert!(view(&s).primary.is_none());
         next(&mut s);
         assert_eq!(*s.step(), Notifications);
         send(&mut s, OnboardingEvent::NotificationsDone);
-        assert!(view(&s).primary.as_ref().unwrap().enabled);
         assert_eq!(view(&s).primary.unwrap().label, "Allons-y !");
         let OnboardingContent::Ready {
             body,
@@ -834,18 +949,17 @@ mod tests {
             &send(&mut s, OnboardingEvent::Back)[..],
             [OnboardingEffect::Exit]
         ));
+        send(
+            &mut s,
+            OnboardingEvent::RefreshNotificationOffer { offer: true },
+        );
         choose(
             &mut s,
             OnboardingChoice::HeardAbout {
                 value: HeardAbout::Other,
             },
         );
-        send(
-            &mut s,
-            OnboardingEvent::RefreshNotificationOffer { offer: true },
-        );
-        assert_eq!(s.heard_about, Some(HeardAbout::Other));
-        next(&mut s);
+        // Only the first step may change the itinerary.
         send(
             &mut s,
             OnboardingEvent::RefreshNotificationOffer { offer: false },
@@ -858,17 +972,19 @@ mod tests {
             },
         );
         send(&mut s, OnboardingEvent::Back);
+        // Going back shows the earlier answer.
+        let OnboardingContent::Choices { options } = view(&s).content else {
+            panic!()
+        };
+        assert!(options.iter().any(|o| o.selected));
+        send(&mut s, OnboardingEvent::Back);
+        assert_eq!(*s.step(), OnboardingStep::HeardAbout);
         assert!(s.heard_about.is_none());
         assert_eq!(s.selections.motivation, Some(Motivation::Other));
-        // Back out of the referral step clears its transient selection too.
-        choose(
-            &mut s,
-            OnboardingChoice::HeardAbout {
-                value: HeardAbout::Other,
-            },
-        );
-        send(&mut s, OnboardingEvent::Back);
-        assert!(s.heard_about.is_none());
+        let OnboardingContent::Choices { options } = view(&s).content else {
+            panic!()
+        };
+        assert!(!options.iter().any(|o| o.selected));
         s.step_index = s
             .steps
             .iter()

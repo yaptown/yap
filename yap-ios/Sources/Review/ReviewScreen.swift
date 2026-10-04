@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ReviewScreen: View {
+    @Environment(AuthStore.self) private var auth
     @Environment(AuthSheet.self) private var authSheet
     @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewHost!) private var host
@@ -59,6 +60,13 @@ struct ReviewScreen: View {
         .background(.clear)
         .navigationTitle("Review")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if auth.userId == nil {
+                    Button(account_copy().sign_in_action) { authSheet.present(tab: .signIn) }
+                }
+            }
+        }
         .onDisappear { audio.stop() }
         #if DEBUG
         .onAppear { DebugHarness.shared.activeScreen = .review }

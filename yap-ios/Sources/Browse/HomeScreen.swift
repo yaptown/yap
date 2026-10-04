@@ -104,7 +104,9 @@ struct HomeScreen: View {
                 #if DEBUG
                 .onChange(of: DebugHarness.shared.commandID) { _, _ in
                     let command = DebugHarness.shared.command
-                    guard isVisible, DebugHarness.shared.activeScreen == .home, command.hasPrefix("dump-fixture ") else { return }
+                    guard isVisible, DebugHarness.shared.activeScreen == .home else { return }
+                    if command == "sign-in" { authSheet.present(tab: .signIn) }
+                    guard command.hasPrefix("dump-fixture ") else { return }
                     DebugHarness.dumpFixture(.Home(view), name: String(command.dropFirst(13)))
                 }
                 #endif
@@ -126,8 +128,10 @@ struct HomeScreen: View {
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
+                // Icon-only bar buttons draw the inherited tint in its light-scheme
+                // color, invisible on a dark bar; an explicit style follows the scheme.
                 Button("Settings", systemImage: "gearshape") { navigate(.settings) }
-                    .labelStyle(.iconOnly)
+                    .labelStyle(.iconOnly).foregroundStyle(Color.yapAccent)
             }
         }
         #if DEBUG
