@@ -25,10 +25,7 @@ struct ReviewScreen: View {
                     if let weapon = host.weapon {
                         let sync = weapon.sync_status(online: host.online, now_ms: context.date.timeIntervalSince1970 * 1000,
                             manual_sync_in_flight: false, host_sync_error: host.syncError)
-                        VStack(alignment: .leading, spacing: 12) {
-                            if let banner = sync.offline_banner { Label(banner, systemImage: "wifi.slash").font(.caption).foregroundStyle(Color.yapMuted) }
-                            if let error = sync.error { Text(error).font(.caption).foregroundStyle(Color.yapNegativeForeground) }
-                        }
+                        if let banner = sync.offline_banner { Label(banner, systemImage: "wifi.slash").font(.caption).foregroundStyle(Color.yapMuted) }
                     }
                 }
                 if let banner = host.packBanner {

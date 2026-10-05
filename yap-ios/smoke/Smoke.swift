@@ -199,7 +199,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         check(persisted.get_target_language() == .French)
         check(persisted.get_all_cards_summary().isEmpty && persisted.locked_count() == 0)
         check(persisted.get_lockup_offer(banned_challenge_types: [], timestamp_ms: future) == nil)
-        check(persisted.get_release_offer(timestamp_ms: future) == nil)
+        check(persisted.get_release_offer(banned: [], timestamp_ms: future) == nil)
         check(persisted.get_current_tier().tier > 0)
         check(persisted.get_current_week_progress().count == 7)
         for query: String? in [nil, "être", "etre", "love"] {
@@ -275,7 +275,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         reopened.add_deck_event(event: plan!.lock_event)
         let locked = try await deck(reopened, course)
         check(locked.locked_count() > 0)
-        let release = locked.get_release_offer(timestamp_ms: dueAt)
+        let release = locked.get_release_offer(banned: [], timestamp_ms: dueAt)
         check(release != nil && release!.release_count == UInt64(release!.release_preview.count))
         reopened.add_deck_event(event: release!.unlock_event)
         let released = try await deck(reopened, course)

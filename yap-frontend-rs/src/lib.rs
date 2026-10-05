@@ -1329,6 +1329,8 @@ pub struct DeckState {
     locked_cards: FxHashSet<CardIndicator<SpurGram, Spur>>,
     /// The user's local day of the most recent LockCardsExcept event
     last_lock_day: Option<chrono::NaiveDate>,
+    /// The user's local day of the most recent accepted lockup or release plan
+    last_plan_day: Option<chrono::NaiveDate>,
     /// The timestamp of the most recent accepted study plan.
     last_lock_timestamp: Option<DateTime<Utc>>,
 }
@@ -1355,6 +1357,8 @@ pub struct Deck {
     locked_cards: FxHashSet<CardIndicator<SpurGram, Spur>>,
     /// The user's local day of the most recent LockCardsExcept event
     last_lock_day: Option<chrono::NaiveDate>,
+    /// The user's local day of the most recent accepted lockup or release plan
+    last_plan_day: Option<chrono::NaiveDate>,
     /// The timestamp of the most recent accepted study plan.
     last_lock_timestamp: Option<DateTime<Utc>>,
 }
@@ -1422,6 +1426,7 @@ impl From<Deck> for DeckState {
             daily_review_target: deck.daily_review_target,
             locked_cards: deck.locked_cards,
             last_lock_day: deck.last_lock_day,
+            last_plan_day: deck.last_plan_day,
             last_lock_timestamp: deck.last_lock_timestamp,
         }
     }
@@ -2111,9 +2116,11 @@ impl weapon::AppState for Deck {
                     }
                 }
                 deck.last_lock_day = Some(timestamp.with_timezone(timezone).date_naive());
+                deck.last_plan_day = deck.last_lock_day;
                 deck.last_lock_timestamp = Some(*timestamp);
             }
             LanguageEventContent::UnlockCards { cards } => {
+                deck.last_plan_day = Some(timestamp.with_timezone(timezone).date_naive());
                 for card in cards {
                     if let Some(card) = card.get_interned(&context.language_pack) {
                         deck.locked_cards.remove(&card);
@@ -2223,6 +2230,7 @@ impl weapon::AppState for Deck {
             daily_review_target: state.daily_review_target,
             locked_cards: state.locked_cards,
             last_lock_day: state.last_lock_day,
+            last_plan_day: state.last_plan_day,
             last_lock_timestamp: state.last_lock_timestamp,
         }
     }
@@ -2264,6 +2272,7 @@ impl DeckState {
             daily_review_target: None,
             locked_cards: FxHashSet::default(),
             last_lock_day: None,
+            last_plan_day: None,
             last_lock_timestamp: None,
         }
     }
@@ -2857,11 +2866,15 @@ impl Deck {
         })
     }
 
-    /// The "Review N more cards" offer: releases the most-due locked cards.
+    /// The "Review N more cards" offer: prefers allowed locked cards, then due order.
     /// None when no locked card is actually due — locked cards scheduled for
     /// the future are morally just future cards, so they don't keep the user
     /// in "release mode" (or block adding new cards).
-    pub fn get_release_offer(&self, timestamp_ms: f64) -> Option<ReleaseOffer> {
+    pub fn get_release_offer(
+        &self,
+        banned: Vec<ChallengeRequirements>,
+        timestamp_ms: f64,
+    ) -> Option<ReleaseOffer> {
         let now =
             DateTime::<Utc>::from_timestamp_millis(timestamp_ms as i64).unwrap_or_else(Utc::now);
         let mut locked: Vec<_> = self
@@ -2883,7 +2896,11 @@ impl Deck {
         locked.sort_by_key(|card_indicator| {
             let card_data = self.cards.get(card_indicator).unwrap();
             let due_timestamp = ordered_float::NotNan::new(card_data.due_timestamp_ms()).unwrap();
-            (due_timestamp, *card_indicator)
+            (
+                banned.contains(&card_indicator.card_type().challenge_type()),
+                due_timestamp,
+                *card_indicator,
+            )
         });
         locked.truncate(REVIEW_LOCKUP_KEEP);
 
@@ -5796,12 +5813,157 @@ mod tests {
         assert_eq!(simulated.due_but_locked_count(), 0);
 
         // Release restores the most-due locked cards
-        let release = deck.get_release_offer(t1_ms).expect("release expected");
+        let release = deck
+            .get_release_offer(vec![], t1_ms)
+            .expect("release expected");
         assert_eq!(release.release_count(), 10);
         let deck = apply_deck_event(deck, release.unlock_event(), t1);
         assert_eq!(deck.locked_count(), 0);
         assert_eq!(deck.get_review_info(vec![], t1_ms).due_count(), 25);
-        assert!(deck.get_release_offer(t1_ms).is_none());
+        assert!(deck.get_release_offer(vec![], t1_ms).is_none());
+    }
+
+    #[test]
+    fn plan_acceptance_tracks_lock_and_release_in_the_event_local_day() {
+        use chrono::TimeZone;
+        let t0 = Utc.with_ymd_and_hms(2024, 1, 1, 23, 0, 0).unwrap();
+        let mut deck = deck_with_n_due_cards(60, t0 - chrono::Duration::hours(1));
+        deck.context.timezone = chrono::FixedOffset::east_opt(9 * 60 * 60).unwrap();
+        let ms = |t: DateTime<Utc>| t.timestamp_millis() as f64;
+        assert_eq!(
+            deck.review_plan_view(vec![], ms(t0)).unwrap().title,
+            "Today's review plan:"
+        );
+        let lock = deck.get_lockup_offer(vec![], ms(t0)).unwrap();
+        let deck = apply_deck_event(deck, lock.lock_event(), t0);
+        let title = |deck: &Deck, time| {
+            let screens::IdleScreenView::ReviewPlanOffer(plan) =
+                deck.idle_screen_view(vec![], None, true, true, ms(time))
+            else {
+                panic!("expected a release plan")
+            };
+            plan.title
+        };
+        assert_eq!(title(&deck, t0), "Next review plan:");
+        // UTC midnight alone does not start a new local day.
+        assert_eq!(
+            title(&deck, t0 + chrono::Duration::hours(2)),
+            "Next review plan:"
+        );
+        // The next local day gets a fresh title.
+        let tomorrow = t0 + chrono::Duration::hours(17);
+        assert_eq!(title(&deck, tomorrow), "Today's review plan:");
+        // Releasing a plan on a later day counts too, even with no lockup that day.
+        let later = t0 + chrono::Duration::hours(48);
+        let release = deck.get_release_offer(vec![], ms(later)).unwrap();
+        let deck = apply_deck_event(deck, release.unlock_event(), later);
+        assert_eq!(title(&deck, later), "Next review plan:");
+    }
+
+    #[test]
+    fn release_prefers_allowed_cards_then_due_and_indicator_with_banned_fallback() {
+        use chrono::TimeZone;
+        let now = Utc.with_ymd_and_hms(2024, 1, 2, 12, 0, 0).unwrap();
+        let mut deck = deck_with_n_due_cards(20, now - chrono::Duration::hours(1));
+        let mut written: Vec<_> = deck.cards.keys().copied().collect();
+        written.sort();
+        // Descending due-time pairs ensure due order beats indicator order,
+        // while each equal-due pair must still use ascending indicator order.
+        for (index, card) in written.iter().enumerate() {
+            deck.cards.insert(
+                &deck.context,
+                *card,
+                CardData::Added {
+                    fsrs_card: rs_fsrs::Card::new(
+                        now - chrono::Duration::minutes(10 + (index / 2) as i64),
+                    ),
+                },
+            );
+        }
+        let mut listening = vec![];
+        for card in &written {
+            let CardIndicator::WrittenGram { gram } = card else {
+                unreachable!()
+            };
+            let card = CardIndicator::ListeningGram { gram: gram.gram };
+            deck.cards.insert(
+                &deck.context,
+                card,
+                CardData::Added {
+                    fsrs_card: rs_fsrs::Card::new(now - chrono::Duration::hours(2)),
+                },
+            );
+            listening.push(card);
+        }
+        listening.sort();
+        listening.dedup();
+        assert!(listening.len() >= REVIEW_LOCKUP_KEEP);
+        deck.locked_cards
+            .extend(written.iter().chain(&listening).copied());
+        let ms = now.timestamp_millis() as f64;
+        let indicators = |offer: ReleaseOffer| {
+            offer
+                .release_preview()
+                .into_iter()
+                .map(|card| card.card_indicator)
+                .collect::<Vec<_>>()
+        };
+        let resolve = |cards: Vec<_>| {
+            cards
+                .into_iter()
+                .map(|card: CardIndicator<SpurGram, Spur>| {
+                    card.resolve(
+                        &deck.context.language_pack.string_rodeo,
+                        &deck.context.language_pack.gram_rodeo,
+                    )
+                })
+                .collect::<Vec<_>>()
+        };
+        let written_due_order: Vec<_> = written.chunks(2).rev().flatten().copied().collect();
+        assert_eq!(
+            indicators(
+                deck.get_release_offer(vec![ChallengeRequirements::Listening], ms)
+                    .unwrap()
+            ),
+            resolve(
+                written_due_order
+                    .into_iter()
+                    .take(REVIEW_LOCKUP_KEEP)
+                    .collect()
+            )
+        );
+        for banned in [
+            vec![],
+            vec![ChallengeRequirements::Text],
+            vec![
+                ChallengeRequirements::Text,
+                ChallengeRequirements::Listening,
+            ],
+        ] {
+            assert_eq!(
+                indicators(deck.get_release_offer(banned, ms).unwrap()),
+                resolve(listening.iter().take(REVIEW_LOCKUP_KEEP).copied().collect())
+            );
+        }
+        // Fewer than a batch of allowed cards: fill the rest with banned cards, not an undersized plan.
+        for card in written.iter().skip(3) {
+            deck.locked_cards.remove(card);
+        }
+        let preview = deck
+            .get_release_offer(vec![ChallengeRequirements::Listening], ms)
+            .unwrap()
+            .release_preview();
+        assert_eq!(preview.len(), REVIEW_LOCKUP_KEEP);
+        assert!(
+            preview[..3]
+                .iter()
+                .all(|card| matches!(card.card_indicator, CardIndicator::WrittenGram { .. }))
+        );
+        assert!(
+            preview[3..]
+                .iter()
+                .all(|card| matches!(card.card_indicator, CardIndicator::ListeningGram { .. }))
+        );
     }
 
     #[test]
@@ -5833,7 +5995,9 @@ mod tests {
             .expect("offer expected");
         let deck40 = apply_deck_event(deck40, offer.lock_event(), t1);
         assert_eq!(deck40.locked_count(), 25);
-        let release = deck40.get_release_offer(t1_ms).expect("release expected");
+        let release = deck40
+            .get_release_offer(vec![], t1_ms)
+            .expect("release expected");
         assert_eq!(release.release_count(), 15);
         let deck40 = apply_deck_event(deck40, release.unlock_event(), t1);
         assert_eq!(deck40.get_review_info(vec![], t1_ms).due_count(), 30);
@@ -6151,7 +6315,8 @@ mod tests {
 
     #[test]
     fn idle_screen_release_plan_and_completion() {
-        let now = Utc::now();
+        use chrono::TimeZone;
+        let now = Utc.with_ymd_and_hms(2024, 1, 2, 12, 0, 0).unwrap();
         let timestamp = now.timestamp_millis() as f64;
         let deck = deck_with_n_due_cards(25, now - chrono::Duration::days(1));
         let offer = deck.get_lockup_offer(vec![], timestamp).unwrap();
@@ -6172,6 +6337,7 @@ mod tests {
             panic!("expected completed plan")
         };
         assert!(title.starts_with("You completed the study plan in "));
+        assert_eq!(plan.title, "Next review plan:");
         assert_eq!(
             plan.groups
                 .iter()
@@ -6216,7 +6382,9 @@ mod tests {
         }
 
         // Only the 10 currently-due locked cards are releasable today
-        let release = deck.get_release_offer(t1_ms).expect("release expected");
+        let release = deck
+            .get_release_offer(vec![], t1_ms)
+            .expect("release expected");
         assert_eq!(release.release_count(), 10);
 
         // Weeks later the future cards have come due — locked, not active
@@ -6267,11 +6435,13 @@ mod tests {
 
         // Locked cards exist but none are due: no release offer (the user is
         // NOT in "release mode" — adding new cards stays available)
-        assert!(deck.get_release_offer(t1_ms).is_none());
+        assert!(deck.get_release_offer(vec![], t1_ms).is_none());
 
         // Once they come due, the release offer appears
         let t2_ms = (t1 + chrono::Duration::days(30)).timestamp_millis() as f64;
-        let release = deck.get_release_offer(t2_ms).expect("release expected");
+        let release = deck
+            .get_release_offer(vec![], t2_ms)
+            .expect("release expected");
         assert_eq!(release.release_count(), 5);
     }
 

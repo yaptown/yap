@@ -101,6 +101,7 @@ impl ReviewPlanView {
         cards: Vec<CardSummary>,
         event: DeckEvent,
         week: Vec<DayProgress>,
+        next_plan: bool,
     ) -> Self {
         let label = |card: &CardSummary| match card.card_indicator {
             CardIndicator::WrittenGram { .. } => "reading",
@@ -127,7 +128,12 @@ impl ReviewPlanView {
             .collect();
         ReviewPlanView {
             target_language,
-            title: "Today's review plan:".into(),
+            title: if next_plan {
+                "Next review plan:"
+            } else {
+                "Today's review plan:"
+            }
+            .into(),
             groups,
             accept_label: "Let's go!".into(),
             event,
@@ -417,6 +423,7 @@ impl Deck {
             offer.keep_preview(),
             offer.lock_event(),
             self.get_current_week_progress_on(day),
+            self.last_plan_day == Some(day),
         ))
     }
 
@@ -468,12 +475,13 @@ impl Deck {
             .into_iter()
             .filter(|card| card.due_timestamp_ms > timestamp_ms)
             .min_by(|a, b| a.due_timestamp_ms.total_cmp(&b.due_timestamp_ms));
-        if let Some(offer) = self.get_release_offer(timestamp_ms) {
+        if let Some(offer) = self.get_release_offer(banned.clone(), timestamp_ms) {
             let plan = ReviewPlanView::new(
                 self.get_target_language(),
                 offer.release_preview(),
                 offer.unlock_event(),
                 week,
+                self.last_plan_day == Some(day),
             );
             if self.get_today_time_spent_on(day) == 0
                 || !self.study_plan_was_recently_accepted(timestamp_ms)
@@ -1530,6 +1538,7 @@ mod tests {
                 content: LanguageEventContent::LockCardsExcept { keep: vec![] },
             }),
             vec![],
+            false,
         );
         assert_eq!(plan.title, "Today's review plan:");
         assert_eq!(plan.accept_label, "Let's go!");

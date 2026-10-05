@@ -1258,7 +1258,7 @@ impl YapMcp {
 
         let (content, unlocked) = {
             let deck = state.deck();
-            match deck.get_release_offer(Utc::now().timestamp_millis() as f64) {
+            match deck.get_release_offer(vec![], Utc::now().timestamp_millis() as f64) {
                 None => {
                     let locked = deck.locked_count();
                     let note = if locked == 0 {

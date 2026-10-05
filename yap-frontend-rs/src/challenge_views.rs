@@ -81,10 +81,12 @@ pub fn flashcard_view(
     let disclosure = get_flashcard_disclosure(total_card_count, times_type_seen);
     let multiple =
         matches!(&flashcard.content, CardContent::Gram { meanings, .. } if meanings.len() > 1);
-    let (again_label, remembered_label) = if multiple {
+    let all_new = matches!(&flashcard.content, CardContent::Gram { meanings, .. }
+        if meanings.iter().all(|meaning| meaning.is_new));
+    let (again_label, remembered_label) = if multiple && !all_new {
         ("Forgot all".into(), "Remembered all".into())
     } else {
-        grade_labels(is_new)
+        grade_labels(if multiple { all_new } else { is_new })
     };
     let (subtitle, tutorial, reveal_label, listening_header, cant_listen_label) = match flashcard
         .content
@@ -132,9 +134,23 @@ pub fn flashcard_view(
         again_label,
         remembered_label,
         cant_listen_label,
-        new_label: multiple.then(|| "New".into()),
-        again_rest_label: multiple.then(|| "Forgot the rest".into()),
-        remembered_rest_label: multiple.then(|| "Remembered the rest".into()),
+        new_label: (multiple && !all_new).then(|| "New".into()),
+        again_rest_label: multiple.then(|| {
+            if all_new {
+                "Didn't know"
+            } else {
+                "Forgot the rest"
+            }
+            .into()
+        }),
+        remembered_rest_label: multiple.then(|| {
+            if all_new {
+                "Already knew"
+            } else {
+                "Remembered the rest"
+            }
+            .into()
+        }),
         continue_label: multiple.then(|| "Continue".into()),
     }
 }
@@ -384,12 +400,31 @@ mod tests {
     }
 
     #[test]
+    fn all_new_meanings_use_compact_new_card_labels_without_badges() {
+        let mut content = gram(false);
+        let CardContent::Gram { meanings, .. } = &mut content else {
+            unreachable!()
+        };
+        meanings.push(meanings[0].clone());
+        for is_new in [false, true] {
+            let view = flash(content.clone(), is_new, 1, 0);
+            assert_eq!(view.again_label, "Didn't know");
+            assert_eq!(view.remembered_label, "Already knew");
+            assert_eq!(view.again_rest_label.as_deref(), Some("Didn't know"));
+            assert_eq!(view.remembered_rest_label.as_deref(), Some("Already knew"));
+            assert_eq!(view.new_label, None);
+            assert_eq!(view.continue_label.as_deref(), Some("Continue"));
+        }
+    }
+
+    #[test]
     fn multiple_meanings_have_bulk_labels() {
         let mut content = gram(false);
         let CardContent::Gram { meanings, .. } = &mut content else {
             unreachable!()
         };
         meanings.push(meanings[0].clone());
+        meanings[0].is_new = false;
         for is_new in [false, true] {
             let view = flash(content.clone(), is_new, 1, 0);
             assert_eq!(view.again_label, "Forgot all");
