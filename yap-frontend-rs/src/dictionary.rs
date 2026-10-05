@@ -542,8 +542,8 @@ mod translation_sense_tests {
     use language_utils::{Atom, Gram, WordType};
     use language_utils::{
         ConsolidatedLanguageData, Course, DictionaryEntry, GramFrequencyEntry, GramFrequencyList,
-        GramVocabEntry, Heteronym, MultiwordTermMatch, PartOfSpeech, SentenceGram, SentenceGrams,
-        TaggedGram, TargetToNativeWord, Word,
+        GramVocabEntry, Heteronym, MultiwordTermMatch, OtherWord, OtherWordType, PartOfSpeech,
+        SentenceGram, SentenceGrams, TaggedGram, TargetToNativeWord, Word,
         autograde::{LiteralGrades, Remembered},
         language_pack::LanguagePack,
     };
@@ -556,11 +556,17 @@ mod translation_sense_tests {
                     .map(|word| {
                         Atom::Tok(Word {
                             text: word.into(),
-                            word_type: WordType::Heteronym(Heteronym {
-                                word: word.into(),
-                                lemma: word.into(),
-                                pos: PartOfSpeech::Noun,
-                            }),
+                            word_type: if word == "-" {
+                                WordType::Other(OtherWord {
+                                    other_tag: OtherWordType::Punct,
+                                })
+                            } else {
+                                WordType::Heteronym(Heteronym {
+                                    word: word.into(),
+                                    lemma: word.into(),
+                                    pos: PartOfSpeech::Noun,
+                                })
+                            },
                         })
                     })
                     .collect(),
@@ -577,6 +583,7 @@ mod translation_sense_tests {
             gram("bank", 2),
             gram("river", 0),
             gram("river bank", 0),
+            gram("river - bank", 0),
         ];
         deck_with_entries(&entries)
     }
@@ -606,6 +613,13 @@ mod translation_sense_tests {
             (
                 "River bank".into(),
                 encoded(vec![SentenceGram::Learnable(gram("river bank", 0))], vec![]),
+            ),
+            (
+                "River-bank".into(),
+                encoded(
+                    vec![SentenceGram::Learnable(gram("river - bank", 0))],
+                    vec![],
+                ),
             ),
             (
                 "Bank river bank".into(),
@@ -811,6 +825,16 @@ mod translation_sense_tests {
                 assert!(!deck.cards.contains_key(&indicator(&deck, "bank", 2)));
             }
         }
+    }
+
+    #[test]
+    fn punctuation_inside_a_unit_does_not_block_its_review() {
+        // "est-ce" is one unit whose "-" never gets a grade. Offline grading is
+        // never Perfect, so requiring a grade on the "-" left such cards due forever.
+        let deck = hold(deck(), "river - bank", 0);
+        let before = card(&deck, "river - bank", 0).reps;
+        let deck = grade(deck, "River-bank", vec![]);
+        assert_eq!(card(&deck, "river - bank", 0).reps, before + 1);
     }
 
     #[test]

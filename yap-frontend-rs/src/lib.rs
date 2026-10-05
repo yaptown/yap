@@ -1683,15 +1683,24 @@ impl weapon::AppState for Deck {
                         // pack), leaving `matched` empty or partial. Only credit the
                         // gram as remembered when every word of the gram matched a
                         // remembered literal — an empty match must not count as a
-                        // vacuously-true success.
+                        // vacuously-true success. Punctuation inside a unit (the "-"
+                        // in "est-ce") is never graded, so only words count.
+                        let is_word = |word: &language_utils::Word<Spur>| {
+                            matches!(word.word_type, language_utils::WordType::Heteronym(_))
+                        };
                         let expected_matches = resolved_gram
                             .iter()
-                            .filter(|atom| matches!(atom, Atom::Tok(_)))
+                            .filter(|atom| matches!(atom, Atom::Tok(word) if is_word(word)))
                             .count();
+                        let matched_words: Vec<_> = matched
+                            .iter()
+                            .filter(|(literal, _)| is_word(&literal.word))
+                            .collect();
                         let any_hinted = matched.iter().any(|(_, (h, _))| *h);
                         let any_forgotten = matched.iter().any(|(_, (_, r))| *r == Some(false));
-                        let all_remembered = matched.len() == expected_matches
-                            && matched.iter().all(|(_, (_, r))| *r == Some(true));
+                        let all_remembered = expected_matches > 0
+                            && matched_words.len() == expected_matches
+                            && matched_words.iter().all(|(_, (_, r))| *r == Some(true));
 
                         if any_forgotten || any_hinted {
                             forgotten_grams.insert(gram);
