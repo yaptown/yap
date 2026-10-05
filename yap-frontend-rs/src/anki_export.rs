@@ -213,6 +213,10 @@ pub struct AnkiExportView {
 /// Sentence notes per deck. Not a choice yet: one good default beats a
 /// number nobody knows how to pick.
 const DECK_SIZE: usize = 300;
+/// Fewer sentences than this and the deck isn't worth downloading. Every
+/// real course fills all 300 at every level (`skill_levels`); only manifests
+/// cut below ~500 clip sentences come up short, and then by a lot (0-158).
+const MIN_SENTENCES: usize = 50;
 
 /// The option descriptions and intro, which follow what's selected: with
 /// both card types on, each describes "some" cards; with one, it describes
@@ -561,7 +565,8 @@ const FILM_COUNT: usize = 24;
 const PLACEMENT_INTRO: &str = "First, tell us which words you know. No account needed.";
 const TOO_ADVANCED: &str = "You already know nearly every word Yap teaches. The deck will still catch gaps, but Yap's app will serve you better.";
 const CLIPS_LOADING: &str = "Movie clips are still loading. Please try again.";
-const NO_SENTENCES: &str = "No movie-clip sentences use only words you know yet.";
+const TOO_FEW_SENTENCES: &str =
+    "Too few movie clips fit what you know right now to make a good deck.";
 const PLACEMENT_COMPLETE_LABEL: &str = "Generate Anki deck";
 // Shown while the deck is being built; the page has a minute or two to fill.
 const BACKSTORY: &str = "I wanted language learning to be easier, so I made Yap. I think Yap is the best way to learn, but the same technology makes a really good Anki deck too. Yours is being built right now.";
@@ -1204,8 +1209,8 @@ impl PlannerState {
     fn plan(&self) -> Result<AnkiDeckPlan, Error> {
         let course = self.seed.context.course;
         let language = course.target_language;
-        if self.used_sentences.is_empty() {
-            return Err(Error::new(NO_SENTENCES));
+        if self.used_sentences.len() < MIN_SENTENCES.min(self.size) {
+            return Err(Error::new(TOO_FEW_SENTENCES));
         }
         let sentence_count = self.used_sentences.len() as u32;
         let word_count = self.used_words.len() as u32;
@@ -2072,6 +2077,27 @@ mod tests {
         assert!(done.notes.is_empty());
         assert_eq!(done.sentences_chosen, 55);
         assert_eq!(deck.num_cards_added(), 0);
+    }
+
+    #[test]
+    fn anki_deck_with_too_few_clips_is_an_error() {
+        let deck = fixture();
+        let pack = &deck.context.language_pack;
+        clips::publish_manifest(
+            Language::English,
+            pack.encoded_sentences
+                .keys()
+                .take(20)
+                .map(|s| {
+                    let text = pack.string_rodeo.resolve(s).to_owned();
+                    row(text, format!("tt0000001-{}-0", s.into_inner()))
+                })
+                .collect(),
+        );
+        let error = deck
+            .plan_anki_deck(options(), 55, "token".into(), 1_700_000_000_000.0)
+            .unwrap_err();
+        assert_eq!(error.to_string(), TOO_FEW_SENTENCES);
     }
 
     #[tokio::test]

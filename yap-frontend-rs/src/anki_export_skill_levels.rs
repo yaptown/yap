@@ -55,31 +55,29 @@ fn placed_deck(seed: &Deck, words: &[String], count: usize) -> Deck {
     )
 }
 
+/// Defaults to the courses and levels above; override with e.g.
+/// `YAP104_COURSES=fra,jpn YAP104_LEVELS=0,500`, and thin the manifest to
+/// every Nth row with `YAP104_KEEP_EVERY=N`.
 #[test]
-#[ignore = "requires the French out/ pack and /tmp/yap-104/manifest_fra.json"]
-fn anki_skill_levels_french() {
-    check_skill_levels(Language::French);
+#[ignore = "requires out/ packs and /tmp/yap-104 manifests"]
+fn anki_skill_levels() {
+    let var = |name, default: &str| std::env::var(name).unwrap_or(default.into());
+    let levels: Vec<usize> = var("YAP104_LEVELS", "0,100,500,2000,5000")
+        .split(',')
+        .map(|l| l.parse().unwrap())
+        .collect();
+    let failed: Vec<_> = var("YAP104_COURSES", "fra,spa,deu,jpn")
+        .split(',')
+        .filter(|code| {
+            let language = Language::from_code(code).unwrap();
+            std::panic::catch_unwind(|| check_skill_levels_at(language, &levels)).is_err()
+        })
+        .map(str::to_owned)
+        .collect();
+    assert!(failed.is_empty(), "failed courses {failed:?}");
 }
 
-#[test]
-#[ignore = "requires the Spanish out/ pack and /tmp/yap-104/manifest_spa.json"]
-fn anki_skill_levels_spanish() {
-    check_skill_levels(Language::SpanishLatinAmerican);
-}
-
-#[test]
-#[ignore = "requires the German out/ pack and /tmp/yap-104/manifest_deu.json"]
-fn anki_skill_levels_german() {
-    check_skill_levels(Language::German);
-}
-
-#[test]
-#[ignore = "requires the Japanese out/ pack and /tmp/yap-104/manifest_jpn.json"]
-fn anki_skill_levels_japanese() {
-    check_skill_levels(Language::Japanese);
-}
-
-fn check_skill_levels(language: Language) {
+fn check_skill_levels_at(language: Language, levels: &[usize]) {
     let mut failures = Vec::new();
     let code = language.code();
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
@@ -91,6 +89,9 @@ fn check_skill_levels(language: Language) {
         &std::fs::read(format!("/tmp/yap-104/manifest_{code}.json")).unwrap(),
     )
     .unwrap();
+    // Every Nth row only, to find how few clips it takes to break a deck.
+    let keep_every: usize = std::env::var("YAP104_KEEP_EVERY").map_or(1, |n| n.parse().unwrap());
+    let rows: Vec<_> = rows.into_iter().step_by(keep_every).collect();
     let manifest_rows = rows.len();
     clips::publish_manifest(language, rows);
     let context = Context {
@@ -116,12 +117,9 @@ fn check_skill_levels(language: Language) {
         .collect();
     words.sort_by(|a, b| b.1.total_cmp(&a.1).then(a.0.cmp(&b.0)));
     let words: Vec<_> = words.into_iter().map(|(text, _)| text).collect();
-    assert!(
-        words.len() >= 5000,
-        "{code}: only {} placement words",
-        words.len()
-    );
-    for level in [0, 100, 500, 2000, 5000] {
+    eprintln!("{code}: {} placement words", words.len());
+    for &level in levels {
+        let level = level.min(words.len());
         let deck = placed_deck(&seed, &words, level);
         let initially_known = deck.get_comprehensible_written_grams(false).iter().count();
         eprintln!("{code}/{level}: starting with {initially_known} known grams");
@@ -139,12 +137,21 @@ fn check_skill_levels(language: Language) {
         .unwrap();
         let mut days = 0;
         let mut first_introduced = Vec::new();
+        let mut introduced_total = 0;
         loop {
             let had_day = planner.state.borrow().day.is_some();
             let step = planner.step();
             let state = planner.state.borrow();
             if had_day && state.day.is_none() {
                 days += 1;
+                introduced_total += state
+                    .simulation
+                    .as_ref()
+                    .unwrap()
+                    .last_introduced()
+                    .iter()
+                    .filter(|c| c.written_gram().is_some())
+                    .count();
                 if days % 25 == 0 {
                     eprintln!(
                         "{code}/{level}: day {days}, {} sentences, {:.1}s",
@@ -209,6 +216,7 @@ fn check_skill_levels(language: Language) {
                 "manifest_rows": manifest_rows, "indexed_sentences": lengths.len(),
                 "clip_lengths_le": ([1,2,3,5,10].map(|n| (n, lengths.iter().filter(|&&l| l <= n).count()))),
                 "first_introduced": first_introduced.len(), "first_introduced_with_clip": with_clip,
+                "introduced_total": introduced_total, "unmatched_at_end": state.pending.len() + state.still_pending.len(),
                 "sentences": sentences.len(), "word_notes": state.used_words.len(),
                 "days": days, "empty_day_cutoff": cutoff, "wall_seconds": wall_seconds,
                 "average_words": average_words, "first_15": sentences.iter().take(15).collect::<Vec<_>>(),
