@@ -219,21 +219,34 @@ pub(crate) fn clip_manifest_version() -> u32 {
 /// lists it. NFC-normalizes the lookup so callers can pass text from any
 /// source.
 pub(crate) fn clip_for_sentence(language: Language, text: &str) -> Option<ClipRow> {
+    clip_for_sentence_where(language, text, |_| true)
+}
+
+pub(crate) fn clip_for_sentence_where(
+    language: Language,
+    text: &str,
+    allowed: impl Fn(&ClipRow) -> bool,
+) -> Option<ClipRow> {
     let text: String = text.nfc().collect();
     let pack = CLIP_PACKS.with(|packs| packs.borrow().get(&language).and_then(Weak::upgrade));
     CLIP_MANIFESTS.with(|m| {
         let manifests = m.borrow();
         let rows = manifests.get(&language)?.get(&text)?;
-        preferred_clip(language, rows, pack.as_ref().map(|pack| &pack.movies)).cloned()
+        preferred_clip(
+            language,
+            rows.iter().filter(|row| allowed(row)),
+            pack.as_ref().map(|pack| &pack.movies),
+        )
+        .cloned()
     })
 }
 
 fn preferred_clip<'a>(
     language: Language,
-    rows: &'a [ClipRow],
+    rows: impl IntoIterator<Item = &'a ClipRow>,
     movies: Option<&rustc_hash::FxHashMap<String, language_utils::MovieMetadata>>,
 ) -> Option<&'a ClipRow> {
-    rows.iter().min_by_key(|row| {
+    rows.into_iter().min_by_key(|row| {
         let variety = movies
             .and_then(|movies| movies.get(clip_film(&row.clip_id)))
             .and_then(|movie| movie.variety);
@@ -266,10 +279,23 @@ pub(crate) fn map_clip_sentences<T>(
     language: Language,
     f: impl FnMut(&str) -> Option<T>,
 ) -> Vec<T> {
+    map_clip_sentences_where(language, |_| true, f)
+}
+
+pub(crate) fn map_clip_sentences_where<T>(
+    language: Language,
+    allowed: impl Fn(&ClipRow) -> bool,
+    mut f: impl FnMut(&str) -> Option<T>,
+) -> Vec<T> {
     CLIP_MANIFESTS.with(|m| {
         m.borrow()
             .get(&language)
-            .map(|rows| rows.keys().map(String::as_str).filter_map(f).collect())
+            .map(|rows| {
+                rows.iter()
+                    .filter(|(_, rows)| rows.iter().any(&allowed))
+                    .filter_map(|(text, _)| f(text))
+                    .collect()
+            })
             .unwrap_or_default()
     })
 }

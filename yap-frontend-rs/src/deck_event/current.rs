@@ -24,6 +24,13 @@ pub struct AnkiDeckOptions {
     pub card_types: AnkiCardTypes,
     /// Introduce each new word on a card of its own before its sentence.
     pub word_cards: bool,
+    /// Old immutable export events allowed every published clip.
+    #[serde(default = "allow_explicit_clips")]
+    pub explicit_clips: bool,
+}
+
+fn allow_explicit_clips() -> bool {
+    true
 }
 
 #[bridgerton::bridge(transparent)]

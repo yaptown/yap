@@ -126,6 +126,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
   const [reading, setReading] = useState(true);
   const [listening, setListening] = useState(true);
   const [wordCards, setWordCards] = useState(true);
+  const [explicitClips, setExplicitClips] = useState(true);
   const cardTypes: AnkiCardTypes | undefined = reading && listening ? "Both" : reading ? "Reading" : listening ? "Listening" : undefined;
   const copy = useMemo(() => anki_options_copy(reading, listening, wordCards), [reading, listening, wordCards]);
   const [manifest, setManifest] = useState<"loading" | "ready" | "error">("loading");
@@ -180,7 +181,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
     // On a phone the status sits below the fold; bring it (and the backstory) up.
     requestAnimationFrame(() => status.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     try {
-      const options = { card_types: cardTypes, word_cards: wordCards };
+      const options = { card_types: cardTypes, word_cards: wordCards, explicit_clips: explicitClips };
       const minted = await mint_anki_deck(options, accessToken);
       update((current) => ({ ...current, phase: "Choosing sentences…", choosing: true }));
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -267,6 +268,10 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
                 <CardTypeOption label={view.word_cards_label} description={copy.word_cards_description} checked={wordCards} onChange={setWordCards} />
               </div>
               {!cardTypes && <p className="text-sm text-muted-foreground">Pick at least one card type.</p>}
+              <label className="flex cursor-pointer items-center gap-3 self-start pl-[17px] text-sm text-muted-foreground has-[:disabled]:cursor-default">
+                <input type="checkbox" className="size-4 shrink-0 accent-primary" checked={explicitClips} onChange={(event) => setExplicitClips(event.target.checked)} />
+                {view.explicit_clips_label}
+              </label>
             </fieldset>
             <p className="text-sm text-muted-foreground">Re-downloading updates matching notes. If you remove a card type, use Tools → Empty Cards in Anki to remove the old cards.</p>
             {view.manifest === "error" ? (

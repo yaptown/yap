@@ -21,6 +21,7 @@ CREATE INDEX ix_revlog_cid ON revlog (cid);
 CREATE INDEX ix_notes_csum ON notes (csum);
 `;
 
+// Keep TargetWord/TargetGloss fields populated to preserve imported note-type schema on re-import.
 const sentenceFields = [
   "Sentence", "Translation", "TargetWord", "TargetGloss", "Glosses", "Source",
   "ClipUrl", "TtsBundled", "IncludeReading", "IncludeListening", "Subtitles", "MaskedSubtitles", "ClipWebmUrl",
@@ -52,7 +53,6 @@ const videoSources = `<source src="{{ClipUrl}}" type='video/mp4; codecs="avc1.64
 function templates(lang: string): { name: string; ord: number; qfmt: string; afmt: string }[] {
   const sentence = `<div class="sentence"><span lang="${lang}">{{Sentence}}</span></div>`;
   const answer = `<div class="translation">{{Translation}}</div>
-<div><strong lang="${lang}">{{TargetWord}}</strong> — {{TargetGloss}}</div>
 <ul class="glosses">{{Glosses}}</ul>`;
   // The clip never autoplays: clips don't reliably start on or cut exactly to
   // the sentence, so the TTS is the prompt and the clip is context. The film

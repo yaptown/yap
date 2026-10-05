@@ -187,6 +187,7 @@ pub struct AnkiExportView {
     pub reading_label: String,
     pub listening_label: String,
     pub word_cards_label: String,
+    pub explicit_clips_label: String,
     pub download_label: String,
     /// Replaces the placement test's "Begin Learning": finishing it here
     /// leads to a deck, not to the app.
@@ -492,24 +493,32 @@ fn poster_filename(imdb: &str) -> String {
     format!("yap-poster-{imdb}.jpg")
 }
 
+impl AnkiDeckOptions {
+    fn allows_clip(&self, row: &clips::ClipRow) -> bool {
+        self.explicit_clips
+            || row
+                .content_ratings
+                .is_some_and(|ratings| !ratings.is_explicit())
+    }
+}
+
 /// Shared clip presentation for sentence notes and bare-word clips.
 fn clip_presentation(
     pack: &LanguagePack,
     language: Language,
-    text: &str,
+    clip: &clips::ClipRow,
     token: &str,
     posters: &mut BTreeSet<String>,
     bundled: &mut Vec<AnkiBundledMedia>,
     tags: &mut Vec<String>,
 ) -> (Option<AnkiSource>, AnkiClip, String) {
-    let clip = clips::clip_for_sentence(language, text).unwrap();
     // Anki only imports and retains template-only media when its name starts with '_'.
     let subtitles = format!("_yap-subs-{}.vtt", clip.clip_id);
     bundled.push(AnkiBundledMedia {
         filename: subtitles.clone(),
         source: AnkiMediaSource::Subtitles {
             clip_id: clip.clip_id.clone(),
-            sentence: text.to_owned(),
+            sentence: clip.sentence.clone(),
             masked_sentence: None,
         },
     });
@@ -611,6 +620,7 @@ impl Deck {
             percent_known: known.percent_known,
             too_advanced,
             too_advanced_message: too_advanced.then(|| TOO_ADVANCED.into()),
+            explicit_clips_label: "Allow explicit clips".into(),
             clips_loaded: clips::manifest_loaded(language),
             clip_sentence_count,
             course_icon: get_language_metadata(language).icon.clone(),
@@ -769,7 +779,11 @@ impl AnkiDeckPlanner {
         let now = chrono::DateTime::from_timestamp_millis(timestamp_ms as i64)
             .ok_or_else(|| Error::new("Invalid export time."))?;
         let pack = &deck.context.language_pack;
-        let unindexed = clips::map_clip_sentences(language, |text| pack.string_rodeo.get(text));
+        let unindexed = clips::map_clip_sentences_where(
+            language,
+            |row| options.allows_clip(row),
+            |text| pack.string_rodeo.get(text),
+        );
         Ok(Self {
             state: RefCell::new(PlannerState {
                 seed: deck.clone(),
@@ -1118,15 +1132,14 @@ impl PlannerState {
                     else {
                         unreachable!()
                     };
-                    let (credit, url, captions) = clip_presentation(
-                        pack,
+                    let row = clips::clip_for_sentence_where(
                         language,
                         pack.string_rodeo.resolve(&bare),
-                        token,
-                        posters,
-                        bundled,
-                        tags,
-                    );
+                        |row| options.allows_clip(row),
+                    )
+                    .unwrap();
+                    let (credit, url, captions) =
+                        clip_presentation(pack, language, &row, token, posters, bundled, tags);
                     *source = credit;
                     *clip = Some(url);
                     *subtitles = Some(captions);
@@ -1143,8 +1156,10 @@ impl PlannerState {
         }
         let text = challenge.target_language;
         let mut tags = note_tags(course, "sentence");
+        let row = clips::clip_for_sentence_where(language, &text, |row| options.allows_clip(row))
+            .unwrap();
         let (source, clip, subtitles) =
-            clip_presentation(pack, language, &text, token, posters, bundled, &mut tags);
+            clip_presentation(pack, language, &row, token, posters, bundled, &mut tags);
         let url = tts_url(
             language,
             &text,
@@ -1165,12 +1180,11 @@ impl PlannerState {
             let challenge = deck
                 .transcription_challenge_for_sentence(gram.gram, sentence)
                 .unwrap();
-            let clip = clips::clip_for_sentence(language, &text).unwrap();
-            let filename = format!("_yap-subs-{}-masked.vtt", clip.clip_id);
+            let filename = format!("_yap-subs-{}-masked.vtt", row.clip_id);
             bundled.push(AnkiBundledMedia {
                 filename: filename.clone(),
                 source: AnkiMediaSource::Subtitles {
-                    clip_id: clip.clip_id,
+                    clip_id: row.clip_id,
                     sentence: text.clone(),
                     masked_sentence: Some(
                         language_utils::transcription_challenge::masked_sentence(&challenge.parts),
@@ -1298,6 +1312,7 @@ mod tests {
         AnkiDeckOptions {
             card_types: AnkiCardTypes::Both,
             word_cards: true,
+            explicit_clips: true,
         }
     }
     fn row(sentence: String, clip_id: String) -> clips::ClipRow {
@@ -1318,6 +1333,117 @@ mod tests {
             lo_bytes: 0,
         }
     }
+    #[test]
+    fn anki_explicit_clip_filter_covers_index_notes_and_subtitles() {
+        use language_utils::clip_content_ratings::{ContentRatingLevel, ContentRatings};
+        let deck = fixture();
+        let pack = &deck.context.language_pack;
+        let language = deck.context.course.target_language;
+        let ratings = |level| ContentRatings {
+            profanity: level,
+            horror: ContentRatingLevel::None,
+            alcohol_drugs: ContentRatingLevel::None,
+            sexual_nudity: ContentRatingLevel::None,
+            violence_weapons: ContentRatingLevel::None,
+        };
+        let rows: Vec<_> = pack
+            .encoded_sentences
+            .keys()
+            .flat_map(|sentence| {
+                let text = pack.string_rodeo.resolve(sentence).to_owned();
+                let make = |prefix, content_ratings| {
+                    let mut row = row(text.clone(), format!("{prefix}-{text}"));
+                    row.content_ratings = content_ratings;
+                    row
+                };
+                [
+                    make("a-explicit", Some(ratings(ContentRatingLevel::Intense))),
+                    make("b-unrated", None),
+                    make("c-mild", Some(ratings(ContentRatingLevel::Mild))),
+                ]
+            })
+            .collect();
+        // With only intense/unrated clips, no sentence enters the index.
+        clips::publish_manifest(
+            language,
+            rows.iter()
+                .filter(|row| !row.clip_id.starts_with("c-"))
+                .cloned()
+                .collect(),
+        );
+        let restricted = AnkiDeckOptions {
+            explicit_clips: false,
+            ..options()
+        };
+        let planner = AnkiDeckPlanner::new(
+            &deck,
+            restricted.clone(),
+            3,
+            "token".into(),
+            1_700_000_000_000.0,
+        )
+        .unwrap();
+        assert!(planner.state.borrow().unindexed.is_empty());
+        let planner =
+            AnkiDeckPlanner::new(&deck, options(), 3, "token".into(), 1_700_000_000_000.0).unwrap();
+        assert_eq!(
+            planner.state.borrow().unindexed.len(),
+            pack.encoded_sentences.len()
+        );
+        // A safe alternate must win before preference selection, for every media path.
+        clips::publish_manifest(language, rows);
+        for explicit_clips in [false, true] {
+            let expected = if explicit_clips {
+                "a-explicit"
+            } else {
+                "c-mild"
+            };
+            let plan = deck
+                .plan_anki_deck(
+                    AnkiDeckOptions {
+                        explicit_clips,
+                        ..options()
+                    },
+                    3,
+                    "token".into(),
+                    1_700_000_000_000.0,
+                )
+                .unwrap();
+            let mut word_clips = 0;
+            let mut sentence_clips = 0;
+            let mut masked = 0;
+            for note in &plan.notes {
+                let clip = match note {
+                    AnkiNote::Word {
+                        clip: Some(clip), ..
+                    } => {
+                        word_clips += 1;
+                        clip
+                    }
+                    AnkiNote::Sentence { clip, .. } => {
+                        sentence_clips += 1;
+                        clip
+                    }
+                    _ => continue,
+                };
+                assert!(clip.mp4.contains(expected), "{}", clip.mp4);
+                assert!(clip.webm.contains(expected), "{}", clip.webm);
+            }
+            for media in &plan.bundled {
+                if let AnkiMediaSource::Subtitles {
+                    clip_id,
+                    masked_sentence,
+                    ..
+                } = &media.source
+                {
+                    assert!(clip_id.starts_with(expected));
+                    masked += usize::from(masked_sentence.is_some());
+                }
+            }
+            assert!(word_clips > 0 && sentence_clips > 0 && masked > 0);
+        }
+    }
+
     fn fixture() -> Deck {
         fixture_with_prerequisites(false)
     }
@@ -1543,6 +1669,7 @@ mod tests {
                     AnkiDeckOptions {
                         card_types,
                         word_cards: true,
+                        explicit_clips: true,
                     },
                     3,
                     "token".into(),
@@ -1719,6 +1846,7 @@ mod tests {
                 AnkiDeckOptions {
                     card_types: AnkiCardTypes::Reading,
                     word_cards: true,
+                    explicit_clips: true,
                 },
                 55,
                 "new token".into(),

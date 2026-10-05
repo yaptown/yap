@@ -89,7 +89,7 @@ async function writeFixtures(buildApkg, output) {
   const sentence = (index, tts) => ({
     type: "Sentence", ...identity(index),
     sentence: `Phrase ${index} ${hostileText}`,
-    translation: hostileText, target_word: hostileText, target_gloss: hostileText,
+    translation: hostileText, target_word: `hidden-target ${hostileText}`, target_gloss: `hidden-gloss ${hostileText}`,
     glosses: [
       { text: hostileText, gloss: hostileText, url: 'https://mock.invalid/d?q="<>&' },
       { text: "plain", gloss: null, url: null },

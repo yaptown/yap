@@ -80,6 +80,7 @@ def check_sql(package, plan, directory):
         assert json.loads(col["conf"])["nextPos"] > len(plan["notes"])
         model = json.loads(col["models"])[str(plan["sentence_model_id"])]
         assert len(model["flds"]) == 13
+        assert [field["name"] for field in model["flds"]][2:4] == ["TargetWord", "TargetGloss"]
         word_model = json.loads(col["models"])[str(plan["word_model_id"])]
         assert len(word_model["flds"]) == 7
         for model_type in (model, word_model):
@@ -119,6 +120,10 @@ def check_sql(package, plan, directory):
                 assert '<hr id="answer">' in markup
             assert "Tap to reveal the answer" in template["qfmt"]
             assert "Tap to reveal the answer" not in template["afmt"]
+            assert "{{TargetWord}}" not in template["afmt"]
+            assert "{{TargetGloss}}" not in template["afmt"]
+            assert "{{Translation}}" in template["afmt"]
+            assert "{{Glosses}}" in template["afmt"]
         for index, note in enumerate(plan["notes"]):
             row = db.execute("select * from notes where guid=?", (note["guid"],)).fetchone()
             raw = note["word"] if note["type"] == "Word" else note["sentence"]
