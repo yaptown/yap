@@ -106,6 +106,7 @@ export function TranslationCard({ challenge }: { challenge: TranslationChallenge
           />
 
           <ChallengeSentence
+            chunks={sentence.chunks}
             words={sentence.literals.map((literal, index) => ({
               text: literal.word.text,
               whitespace: literal.whitespace,

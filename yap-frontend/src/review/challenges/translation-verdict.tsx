@@ -7,6 +7,7 @@
 import type {
   Language,
   TranslationWordView,
+  SentenceChunk,
   VerdictHeadline as VerdictHeadlineData,
   VerdictTone,
 } from "../../../../yap-frontend-rs/pkg";
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TargetLanguageText } from "@/components/TargetLanguageText";
 import { FeedbackDisplay } from "@/components/FeedbackDisplay";
+import { SentenceChunks } from "@/components/SentenceChunks";
 import { Flag } from "lucide-react";
 
 /** The normalized data a graded verdict renders from — same shape both sides. */
@@ -31,6 +33,7 @@ export interface TranslationVerdictData {
 
 interface ChallengeSentenceProps {
   words: TranslationWordView[];
+  chunks: SentenceChunk[];
   targetLanguage: Language;
   onWordTap?: (index: number) => void;
 }
@@ -45,38 +48,42 @@ const tintClasses = {
 
 export function ChallengeSentence({
   words,
+  chunks,
   targetLanguage,
   onWordTap,
 }: ChallengeSentenceProps) {
   return (
     <h2 className="text-3xl font-bold leading-tight">
-      {words.map((word, i) => {
-        const colorClass = tintClasses[word.tint];
-        const interactive = word.tappable && !!onWordTap;
+      <SentenceChunks chunks={chunks}>
+        {(i, last) => {
+          const word = words[i];
+          const colorClass = tintClasses[word.tint];
+          const interactive = word.tappable && !!onWordTap;
 
-        return (
-          <span key={i}>
-            <span
-              className={cn(
-                colorClass,
-                interactive
-                  ? "cursor-pointer underline-offset-3 underline decoration-dotted hover:decoration-solid hover:decoration-3 transition-transform hover:scale-105 inline-block"
-                  : "",
-              )}
-              onClick={() => {
-                if (interactive) {
-                  onWordTap(i);
-                }
-              }}
-            >
-              <TargetLanguageText language={targetLanguage}>
-                {word.text}
-              </TargetLanguageText>
+          return (
+            <span key={i}>
+              <span
+                className={cn(
+                  colorClass,
+                  interactive
+                    ? "cursor-pointer underline-offset-3 underline decoration-dotted hover:decoration-solid hover:decoration-3 transition-transform hover:scale-105 inline-block"
+                    : "",
+                )}
+                onClick={() => {
+                  if (interactive) {
+                    onWordTap(i);
+                  }
+                }}
+              >
+                <TargetLanguageText language={targetLanguage}>
+                  {word.text}
+                </TargetLanguageText>
+              </span>
+              {!last && word.whitespace}
             </span>
-            {word.whitespace}
-          </span>
-        );
-      })}
+          );
+        }}
+      </SentenceChunks>
     </h2>
   );
 }

@@ -1,11 +1,13 @@
 import type {
   CueSegment,
+  SentenceChunk,
   PronunciationCue,
   PronunciationView,
   HighlightedRun,
   Language,
   Rating,
 } from "../../../../yap-frontend-rs/pkg";
+import { SentenceChunks } from "@/components/SentenceChunks";
 import Markdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -114,6 +116,8 @@ export function PronunciationChallenge({
                       cue={example.cue}
                       culturalContext={example.cultural_context}
                       highlightedSegments={example.highlighted_segments}
+                      chunks={example.chunks}
+                      segmentWhitespace={example.segment_whitespace}
                       targetLanguage={targetLanguage}
                       nativeLanguage={nativeLanguage}
                       accessToken={accessToken}
@@ -187,6 +191,8 @@ function PronunciationRow({
   cue,
   culturalContext,
   highlightedSegments,
+  chunks,
+  segmentWhitespace,
   targetLanguage,
   nativeLanguage,
   accessToken,
@@ -196,6 +202,8 @@ function PronunciationRow({
   cue: PronunciationCue;
   culturalContext: string | undefined;
   highlightedSegments: HighlightedRun[][];
+  chunks: SentenceChunk[];
+  segmentWhitespace: string[];
   targetLanguage: Language;
   nativeLanguage: Language;
   accessToken: string | undefined;
@@ -252,7 +260,7 @@ function PronunciationRow({
         >
           {highlightedSegments[index].map((run, runIndex) =>
             run.highlighted ? (
-              <span key={runIndex} className="bg-caution/30 rounded px-0.5">
+              <span key={runIndex} className="bg-caution/30 rounded">
                 {run.text}
               </span>
             ) : (
@@ -295,26 +303,23 @@ function PronunciationRow({
     <div className="bg-muted/30 rounded p-3 flex items-center justify-between gap-3">
       <div className="flex-1 flex flex-col gap-1">
         <div className="text-base">
-          {cue.segments.map((segment, index) => {
-            // The connector run renders once, at its first word.
-            if (segment.role === "Connector" && index !== firstConnector) {
-              return null;
-            }
-            const separated =
-              index > 0 &&
-              !(
-                segment.role === "Pattern" &&
-                cue.segments[index - 1].role === "Pattern"
+          <SentenceChunks chunks={chunks}>
+            {(index, last) => {
+              const segment = cue.segments[index];
+              // The connector run renders once, at its first word.
+              if (segment.role === "Connector" && index !== firstConnector) {
+                return null;
+              }
+              return (
+                <Fragment key={index}>
+                  {index === firstConnector
+                    ? connector
+                    : spokenWord(segment, index)}
+                  {!last && segment.role !== "Connector" && segmentWhitespace[index]}
+                </Fragment>
               );
-            return (
-              <Fragment key={index}>
-                {separated && " "}
-                {index === firstConnector
-                  ? connector
-                  : spokenWord(segment, index)}
-              </Fragment>
-            );
-          })}
+            }}
+          </SentenceChunks>
         </div>
         {culturalContext && (
           <div className="text-xs text-muted-foreground">

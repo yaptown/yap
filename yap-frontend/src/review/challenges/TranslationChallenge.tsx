@@ -572,6 +572,7 @@ export const TranslationChallenge = memo(function TranslationChallenge({
               <div className="flex-1 pt-2">
                 <ChallengeSentence
                   words={view.words}
+                  chunks={view.chunks}
                   onWordTap={handleWordTap}
                   targetLanguage={targetLanguage}
                 />

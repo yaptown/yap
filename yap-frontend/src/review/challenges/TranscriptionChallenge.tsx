@@ -1,3 +1,4 @@
+import { SentenceChunks } from "@/components/SentenceChunks";
 import { memo, useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { PendingReview } from "@/review/challenges/pending-review";
 import { reportAutogradeFailure } from "@/core/instrument";
@@ -12,6 +13,7 @@ import {
   transcription_resume,
   transcription_transition,
   transcription_view,
+  transcription_sentence_chunks,
   type TranscriptionState,
   type TranscriptionEvent,
   type TranscriptionStep,
@@ -376,53 +378,59 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
             part.part.word.word_type?.type !== "Heteronym"),
       );
 
-    return challenge.parts.map((item, index) => {
-      if (item.type === "AskedToTranscribe") {
-        if (item.parts.length === 0) {
-          throw new Error("AskedToTranscribe part has no parts");
-        }
-        const end_whitespace = item.parts[item.parts.length - 1].whitespace;
-        const blank = view.blanks.find((blank) => blank.index === index)!;
+    const chunks = transcription_sentence_chunks(challenge.parts, targetLanguage);
+    return (
+      <SentenceChunks chunks={chunks}>
+        {(index, last) => {
+          const item = challenge.parts[index];
+          if (item.type === "AskedToTranscribe") {
+            if (item.parts.length === 0) {
+              throw new Error("AskedToTranscribe part has no parts");
+            }
+            const end_whitespace = item.parts[item.parts.length - 1].whitespace;
+            const blank = view.blanks.find((blank) => blank.index === index)!;
 
-        return (
-          <span key={index}>
-            <InlineTextarea
-              ref={(el) => {
-                inputRefs.current[index] = el;
-              }}
-              value={blank.text}
-              onChange={(e) => handleInputChange(index, e.target.value)}
-              onFocus={() => setFocusedInputIndex(index)}
-              onBlur={() => {
-                // Keep track of last focused input but allow blur
-                // The accent keyboard will refocus when clicked
-              }}
-              disabled={!blank.editable}
-              lang={languageToLangAttr(targetLanguage)}
-              autoCorrect="off"
-              autoCapitalize={index === 0 ? "sentences" : "off"}
-              spellCheck={false}
-              className={`inline-block ${
-                isSinglePartTranscription ? "min-w-64" : "min-w-32"
-              } mx-1 text-center resize-none text-l font-semibold ${getInputClassName(
-                index,
-              )} border-0 border-b-3 border-dotted`}
-              placeholder={view.placeholder}
-            />
-            <span>{end_whitespace}</span>
-          </span>
-        );
-      } else {
-        return (
-          <span key={index}>
-            <TargetLanguageText language={targetLanguage}>
-              {item.part.word.text}
-            </TargetLanguageText>
-            {item.part.whitespace}
-          </span>
-        );
-      }
-    });
+            return (
+              <span key={index} className="min-w-0">
+                <InlineTextarea
+                  ref={(el) => {
+                    inputRefs.current[index] = el;
+                  }}
+                  value={blank.text}
+                  onChange={(e) => handleInputChange(index, e.target.value)}
+                  onFocus={() => setFocusedInputIndex(index)}
+                  onBlur={() => {
+                    // Keep track of last focused input but allow blur
+                    // The accent keyboard will refocus when clicked
+                  }}
+                  disabled={!blank.editable}
+                  lang={languageToLangAttr(targetLanguage)}
+                  autoCorrect="off"
+                  autoCapitalize={index === 0 ? "sentences" : "off"}
+                  spellCheck={false}
+                  className={`inline-block max-w-full ${
+                    isSinglePartTranscription ? "min-w-64" : "min-w-32"
+                  } mx-1 text-center resize-none text-l font-semibold ${getInputClassName(
+                    index,
+                  )} border-0 border-b-3 border-dotted`}
+                  placeholder={view.placeholder}
+                />
+                <span>{!last && end_whitespace}</span>
+              </span>
+            );
+          } else {
+            return (
+              <span key={index}>
+                <TargetLanguageText language={targetLanguage}>
+                  {item.part.word.text}
+                </TargetLanguageText>
+                {!last && item.part.whitespace}
+              </span>
+            );
+          }
+        }}
+      </SentenceChunks>
+    );
   };
 
   const getInputClassName = (index: number) =>

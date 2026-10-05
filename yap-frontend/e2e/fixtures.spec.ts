@@ -50,9 +50,37 @@ test("capture screen and challenge fixtures", async ({ page, request }) => {
         page.getByRole("heading", { name: /Goal Reached!/ }),
       ).toBeVisible();
     }
+    if (name === "pronunciation") {
+      const highlight = page.locator('span[class~="bg-caution/30"]').first();
+      await expect(highlight).toBeVisible();
+      await expect(highlight).toHaveCSS("padding-left", "0px");
+      await expect(highlight).toHaveCSS("padding-right", "0px");
+    }
+    if (name === "translation-elision") {
+      const chunk = page.locator("h2 .whitespace-nowrap").filter({ hasText: "qu'il" });
+      await expect(chunk).toHaveCount(1);
+      await expect(chunk).toHaveCSS("white-space", "nowrap");
+      const apostrophe = await chunk.getByText("qu'", { exact: true }).boundingBox();
+      const pronoun = await chunk.getByText("il", { exact: true }).boundingBox();
+      expect(apostrophe).not.toBeNull();
+      expect(pronoun).not.toBeNull();
+      expect(apostrophe!.y).toBeCloseTo(pronoun!.y, 0);
+    }
     await page.waitForTimeout(2500);
     await page.screenshot({
       path: path.resolve("screenshots-out/fixtures", `${name}-web.png`),
     });
+    if (name === "dictation-empty") {
+      // A long answer must wrap inside the field rather than push its
+      // unbreakable run (field + attached ".") past the sentence's edge.
+      const field = page.locator("textarea").first();
+      await field.fill("Pas pour ta vie, ".repeat(8));
+      const chunk = field.locator(
+        "xpath=ancestor::span[contains(@class,'whitespace-nowrap')][1]",
+      );
+      const run = await chunk.boundingBox();
+      const line = await chunk.locator("xpath=..").boundingBox();
+      expect(run!.x + run!.width).toBeLessThanOrEqual(line!.x + line!.width + 0.5);
+    }
   }
 });

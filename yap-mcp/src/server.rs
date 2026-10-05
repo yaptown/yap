@@ -1535,6 +1535,7 @@ impl YapMcp {
                 "sentence": {
                     "text": challenge.target_language,
                     "literals": literals,
+                    "chunks": language_utils::sentence_chunks(&challenge.target_language_literals.iter().map(|literal| (literal.word.text.as_str(), literal.whitespace)).collect::<Vec<_>>(), target_language),
                     "sources": state.sentence_sources(&spur),
                 },
                 "audio": serde_json::to_value(&challenge.audio).expect("audio serializes"),

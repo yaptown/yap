@@ -1,0 +1,442 @@
+{
+  "screen": "Review",
+  "view": {
+    "show_account_prompt": false,
+    "native_language": "English",
+    "target_language": "French",
+    "step": {
+      "type": "Challenge",
+      "view": {
+        "challenge": {
+          "type": "TranslateComprehensibleSentence",
+          "audio": {
+            "request": {
+              "text": "Vous devez me dire ce qu'il se passe.",
+              "language": "French",
+              "is_ssml": false,
+              "speed": 1.0
+            },
+            "provider": "ElevenLabs"
+          },
+          "target_language": "Vous devez me dire ce qu'il se passe.",
+          "target_language_literals": [
+            {
+              "word": {
+                "text": "Vous",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "vous",
+                  "lemma": "vous",
+                  "pos": "PRON"
+                }
+              },
+              "whitespace": " "
+            },
+            {
+              "word": {
+                "text": "devez",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "devez",
+                  "lemma": "devoir",
+                  "pos": "VERB"
+                }
+              },
+              "whitespace": " "
+            },
+            {
+              "word": {
+                "text": "me",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "me",
+                  "lemma": "me",
+                  "pos": "PRON"
+                }
+              },
+              "whitespace": " "
+            },
+            {
+              "word": {
+                "text": "dire",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "dire",
+                  "lemma": "dire",
+                  "pos": "VERB"
+                }
+              },
+              "whitespace": " "
+            },
+            {
+              "word": {
+                "text": "ce",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "ce",
+                  "lemma": "ce",
+                  "pos": "PRON"
+                }
+              },
+              "whitespace": " "
+            },
+            {
+              "word": {
+                "text": "qu'",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "qu'",
+                  "lemma": "que",
+                  "pos": "SCONJ"
+                }
+              },
+              "whitespace": ""
+            },
+            {
+              "word": {
+                "text": "il",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "il",
+                  "lemma": "il",
+                  "pos": "PRON"
+                }
+              },
+              "whitespace": " "
+            },
+            {
+              "word": {
+                "text": "se",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "se",
+                  "lemma": "se",
+                  "pos": "PRON"
+                }
+              },
+              "whitespace": " "
+            },
+            {
+              "word": {
+                "text": "passe",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "passe",
+                  "lemma": "passer",
+                  "pos": "VERB"
+                }
+              },
+              "whitespace": ""
+            },
+            {
+              "word": {
+                "text": ".",
+                "word_type": {
+                  "type": "Other",
+                  "other_tag": "PUNCT"
+                }
+              },
+              "whitespace": ""
+            }
+          ],
+          "literal_gram_indices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "gram_definitions_for_lookup": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "gram_breakdowns_for_lookup": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "unique_target_language_phrases": [],
+          "phrase_definitions": [],
+          "phrase_breakdowns": [],
+          "native_translations": [
+            "You must tell me what is happening."
+          ],
+          "movie_titles": [],
+          "proper_noun_definitions": [],
+          "primary_expression": {
+            "gram": [
+              {
+                "Tok": {
+                  "text": "qu'",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "qu'",
+                    "lemma": "que",
+                    "pos": "SCONJ"
+                  }
+                }
+              },
+              {
+                "Tok": {
+                  "text": "il",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "il",
+                    "lemma": "il",
+                    "pos": "PRON"
+                  }
+                }
+              }
+            ],
+            "sense": null
+          },
+          "primary_literal_indices": [],
+          "second_chance": false
+        },
+        "transcription": null,
+        "translation": {
+          "sentence": {
+            "audio": {
+              "request": {
+                "text": "Vous devez me dire ce qu'il se passe.",
+                "language": "French",
+                "is_ssml": false,
+                "speed": 1.0
+              },
+              "provider": "ElevenLabs"
+            },
+            "target_language": "Vous devez me dire ce qu'il se passe.",
+            "target_language_literals": [
+              {
+                "word": {
+                  "text": "Vous",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "vous",
+                    "lemma": "vous",
+                    "pos": "PRON"
+                  }
+                },
+                "whitespace": " "
+              },
+              {
+                "word": {
+                  "text": "devez",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "devez",
+                    "lemma": "devoir",
+                    "pos": "VERB"
+                  }
+                },
+                "whitespace": " "
+              },
+              {
+                "word": {
+                  "text": "me",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "me",
+                    "lemma": "me",
+                    "pos": "PRON"
+                  }
+                },
+                "whitespace": " "
+              },
+              {
+                "word": {
+                  "text": "dire",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "dire",
+                    "lemma": "dire",
+                    "pos": "VERB"
+                  }
+                },
+                "whitespace": " "
+              },
+              {
+                "word": {
+                  "text": "ce",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "ce",
+                    "lemma": "ce",
+                    "pos": "PRON"
+                  }
+                },
+                "whitespace": " "
+              },
+              {
+                "word": {
+                  "text": "qu'",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "qu'",
+                    "lemma": "que",
+                    "pos": "SCONJ"
+                  }
+                },
+                "whitespace": ""
+              },
+              {
+                "word": {
+                  "text": "il",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "il",
+                    "lemma": "il",
+                    "pos": "PRON"
+                  }
+                },
+                "whitespace": " "
+              },
+              {
+                "word": {
+                  "text": "se",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "se",
+                    "lemma": "se",
+                    "pos": "PRON"
+                  }
+                },
+                "whitespace": " "
+              },
+              {
+                "word": {
+                  "text": "passe",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "passe",
+                    "lemma": "passer",
+                    "pos": "VERB"
+                  }
+                },
+                "whitespace": ""
+              },
+              {
+                "word": {
+                  "text": ".",
+                  "word_type": {
+                    "type": "Other",
+                    "other_tag": "PUNCT"
+                  }
+                },
+                "whitespace": ""
+              }
+            ],
+            "literal_gram_indices": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "gram_definitions_for_lookup": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "gram_breakdowns_for_lookup": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "unique_target_language_phrases": [],
+            "phrase_definitions": [],
+            "phrase_breakdowns": [],
+            "native_translations": [
+              "You must tell me what is happening."
+            ],
+            "movie_titles": [],
+            "proper_noun_definitions": [],
+            "primary_expression": {
+              "gram": [
+                {
+                  "Tok": {
+                    "text": "qu'",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "qu'",
+                      "lemma": "que",
+                      "pos": "SCONJ"
+                    }
+                  }
+                },
+                {
+                  "Tok": {
+                    "text": "il",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "il",
+                      "lemma": "il",
+                      "pos": "PRON"
+                    }
+                  }
+                }
+              ],
+              "sense": null
+            },
+            "primary_literal_indices": [],
+            "second_chance": false
+          },
+          "course": {
+            "nativeLanguage": "English",
+            "targetLanguage": "French"
+          },
+          "text": "",
+          "tapped": [],
+          "phase": {
+            "type": "Editing"
+          }
+        }
+      }
+    },
+    "progress": 0.0,
+    "total_reviews": 0,
+    "total_count": 0,
+    "keyboard_tip": "Enable the French keyboard on your device to easily type accented characters",
+    "offer_engagement": false,
+    "online": true
+  }
+}

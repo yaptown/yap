@@ -33,13 +33,18 @@ struct TranslationChallengeView: View {
                 if let badge = view.badge { ReviewBadge(text: badge) }
                 HStack(alignment: .top, spacing: 12) {
                     SentenceFlow(spacing: 0) {
-                        ForEach(Array(view.words.enumerated()), id: \.offset) { index, word in
-                            let text = Text(word.text + word.whitespace)
-                                .underline(word.tappable, pattern: .dot)
-                                .font(.title.bold()).foregroundStyle(tint(word.tint))
-                            if word.tappable {
-                                Button { send(.WordTapped(index: UInt64(index))) } label: { text.frame(minHeight: 44) }.buttonStyle(.plain)
-                            } else { text }
+                        ForEach(Array(view.chunks.enumerated()), id: \.offset) { _, chunk in
+                            HStack(spacing: 0) {
+                                ForEach(chunk.indices, id: \.self) { index in
+                                    let word = view.words[Int(index)]
+                                    let text = Text(word.text + word.whitespace)
+                                        .underline(word.tappable, pattern: .dot)
+                                        .font(.title.bold()).foregroundStyle(tint(word.tint))
+                                    if word.tappable {
+                                        Button { send(.WordTapped(index: index)) } label: { text.frame(minHeight: 44) }.buttonStyle(.plain)
+                                    } else { text }
+                                }
+                            }
                         }
                     }.frame(maxWidth: .infinity).padding(.top, 10)
                     AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: !editing && hasClip == false, kind: .prominent)

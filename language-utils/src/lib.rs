@@ -5483,6 +5483,54 @@ pub fn predict_whitespace(
     Whitespace::Space
 }
 
+/// Whether a token boundary is a legal line break. This is deliberately a small
+/// typography rule, not a full Unicode line-breaking implementation.
+pub fn may_break_after(
+    left: &str,
+    whitespace: Whitespace,
+    right: &str,
+    language: Language,
+) -> bool {
+    match whitespace {
+        Whitespace::Space => true,
+        Whitespace::Nbsp | Whitespace::NarrowNbsp => false,
+        Whitespace::None => {
+            !language.writing_system().separates_words_with_spaces()
+                && !right.starts_with(|c| {
+                    NO_SPACE_BEFORE.contains(&c) || "。、，．！？」』）】〕:»".contains(c)
+                })
+                && !left.ends_with(|c| NO_SPACE_AFTER.contains(&c) || "「『（【〔".contains(c))
+        }
+    }
+}
+
+/// Original token indices in one unbreakable run. The final token's whitespace
+/// belongs outside the web's nowrap span; indices remain suitable for events.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct SentenceChunk {
+    pub indices: Vec<usize>,
+    pub trailing_whitespace: String,
+}
+
+pub fn sentence_chunks(tokens: &[(&str, Whitespace)], language: Language) -> Vec<SentenceChunk> {
+    let mut chunks = Vec::new();
+    let mut indices = Vec::new();
+    for (index, &(text, whitespace)) in tokens.iter().enumerate() {
+        indices.push(index);
+        if tokens
+            .get(index + 1)
+            .is_none_or(|&(right, _)| may_break_after(text, whitespace, right, language))
+        {
+            chunks.push(SentenceChunk {
+                indices: std::mem::take(&mut indices),
+                trailing_whitespace: whitespace.to_string(),
+            });
+        }
+    }
+    chunks
+}
+
 /// Convert a sequence of Literals into a sequence of Atoms.
 ///
 /// This is the forward conversion that removes explicit whitespace and
@@ -6596,5 +6644,135 @@ mod encoded_sense_tests {
             serde_json::from_value::<EncodedSentence>(json).unwrap(),
             sentence
         );
+    }
+}
+
+#[cfg(test)]
+mod sentence_chunk_tests {
+    use super::*;
+
+    #[test]
+    fn space_separated_languages_keep_attached_tokens_together() {
+        for (language, tokens, expected) in [
+            (
+                Language::French,
+                vec![
+                    ("ce", Whitespace::Space),
+                    ("qu'", Whitespace::None),
+                    ("il", Whitespace::Space),
+                    ("dit", Whitespace::NarrowNbsp),
+                    ("?", Whitespace::None),
+                ],
+                vec![vec![0], vec![1, 2], vec![3, 4]],
+            ),
+            (
+                Language::English,
+                vec![
+                    ("do", Whitespace::None),
+                    ("n't", Whitespace::Space),
+                    ("re", Whitespace::None),
+                    ("-", Whitespace::None),
+                    ("enter", Whitespace::None),
+                ],
+                vec![vec![0, 1], vec![2, 3, 4]],
+            ),
+            (
+                Language::Korean,
+                vec![
+                    ("학교", Whitespace::None),
+                    ("에서", Whitespace::Space),
+                    ("공부해요", Whitespace::None),
+                ],
+                vec![vec![0, 1], vec![2]],
+            ),
+        ] {
+            let chunks = sentence_chunks(&tokens, language);
+            assert_eq!(
+                chunks
+                    .iter()
+                    .map(|chunk| chunk.indices.clone())
+                    .collect::<Vec<_>>(),
+                expected
+            );
+            let reconstructed: String = chunks
+                .iter()
+                .map(|chunk| {
+                    let mut text = String::new();
+                    for (offset, &index) in chunk.indices.iter().enumerate() {
+                        text.push_str(tokens[index].0);
+                        if offset + 1 < chunk.indices.len() {
+                            text.push_str(tokens[index].1.as_str());
+                        }
+                    }
+                    text.push_str(&chunk.trailing_whitespace);
+                    text
+                })
+                .collect();
+            assert_eq!(
+                reconstructed,
+                tokens
+                    .iter()
+                    .map(|(text, gap)| format!("{text}{gap}"))
+                    .collect::<String>()
+            );
+        }
+        assert!(!may_break_after(
+            "mot",
+            Whitespace::Nbsp,
+            "mot",
+            Language::French
+        ));
+        assert!(
+            may_break_after("qu'", Whitespace::Space, "il", Language::French),
+            "an explicit space is authoritative"
+        );
+        assert!(sentence_chunks(&[], Language::French).is_empty());
+    }
+
+    #[test]
+    fn unspaced_languages_break_between_words_but_respect_basic_kinsoku() {
+        let tokens = [
+            ("「", Whitespace::None),
+            ("私", Whitespace::None),
+            ("は", Whitespace::None),
+            ("猫", Whitespace::None),
+            ("。", Whitespace::None),
+            ("」", Whitespace::None),
+        ];
+        assert_eq!(
+            sentence_chunks(&tokens, Language::Japanese)
+                .iter()
+                .map(|chunk| chunk.indices.clone())
+                .collect::<Vec<_>>(),
+            vec![vec![0, 1], vec![2], vec![3, 4, 5]]
+        );
+        for punctuation in "。、，．！？」』）】〕,.!?;:)]}".chars() {
+            assert!(!may_break_after(
+                "猫",
+                Whitespace::None,
+                &punctuation.to_string(),
+                Language::Japanese
+            ));
+        }
+        for punctuation in "「『（【〔([{".chars() {
+            assert!(!may_break_after(
+                &punctuation.to_string(),
+                Whitespace::None,
+                "猫",
+                Language::Japanese
+            ));
+        }
+        assert!(!may_break_after(
+            "私",
+            Whitespace::NarrowNbsp,
+            "猫",
+            Language::Japanese
+        ));
+        assert!(may_break_after(
+            "私",
+            Whitespace::Space,
+            "。",
+            Language::Japanese
+        ));
     }
 }

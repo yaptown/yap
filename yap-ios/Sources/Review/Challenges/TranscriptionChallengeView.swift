@@ -41,12 +41,16 @@ struct TranscriptionChallengeView: View {
                     Text(view.instructions).font(.footnote).foregroundStyle(Color.yapMuted)
                 }.frame(maxWidth: .infinity)
                 SentenceFlow(spacing: 0, alignment: .center) {
-                    ForEach(Array(sentence.parts.enumerated()), id: \.offset) { index, part in
-                        switch part {
-                        case let .Provided(literal): Text(literal.word.text + literal.whitespace).font(sentenceFont)
-                        case let .AskedToTranscribe(parts):
-                            blank(index)
-                            if let whitespace = parts.last?.whitespace, !whitespace.isEmpty { Text(whitespace).font(sentenceFont) }
+                    ForEach(Array(transcription_sentence_chunks(parts: sentence.parts, language: screen.target_language).enumerated()), id: \.offset) { _, chunk in
+                        HStack(spacing: 0) {
+                            ForEach(chunk.indices, id: \.self) { index in
+                                switch sentence.parts[Int(index)] {
+                                case let .Provided(literal): Text(literal.word.text + literal.whitespace).font(sentenceFont)
+                                case let .AskedToTranscribe(parts):
+                                    blank(Int(index))
+                                    if let whitespace = parts.last?.whitespace, !whitespace.isEmpty { Text(whitespace).font(sentenceFont) }
+                                }
+                            }
                         }
                     }
                 }.frame(maxWidth: .infinity).padding(.top, 4)

@@ -623,6 +623,7 @@ pub struct TranslationView {
     pub correct_label: String,
     pub placeholder: String,
     pub words: Vec<TranslationWordView>,
+    pub chunks: Vec<language_utils::SentenceChunk>,
     pub proper_nouns: Vec<ProperNounGroup>,
     pub verdict: Option<TranslationVerdictView>,
     pub correct_translation: Option<String>,
@@ -910,6 +911,15 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
         correct_label: "Correct translation".into(),
         placeholder: "Translation...".into(),
         words,
+        chunks: language_utils::sentence_chunks(
+            &state
+                .sentence
+                .target_language_literals
+                .iter()
+                .map(|literal| (literal.word.text.as_str(), literal.whitespace))
+                .collect::<Vec<_>>(),
+            state.course.target_language,
+        ),
         proper_nouns: if editing {
             proper_noun_groups(&state.sentence.proper_noun_definitions)
         } else {
@@ -994,6 +1004,27 @@ mod reducer_tests {
             },
         )
     }
+    #[test]
+    fn chunks_preserve_original_word_indices_and_tap_tints() {
+        let mut state = start();
+        let mut prefix = state.sentence.target_language_literals[0].clone();
+        prefix.word.text = "qu'".into();
+        prefix.whitespace = language_utils::Whitespace::None;
+        state.sentence.target_language_literals[0].word.text = "il".into();
+        state.sentence.target_language_literals[0].whitespace =
+            language_utils::Whitespace::NarrowNbsp;
+        state.sentence.target_language_literals.insert(0, prefix);
+        state.sentence.literal_gram_indices = vec![0, 1, 2];
+        let state = translation_transition(state, TranslationEvent::WordTapped { index: 1 }).state;
+        let view = translation_view(state);
+        assert_eq!(view.chunks.len(), 1);
+        assert_eq!(view.chunks[0].indices, vec![0, 1, 2]);
+        assert!(matches!(view.words[0].tint, TranslationWordTint::Neutral));
+        assert!(matches!(view.words[1].tint, TranslationWordTint::Tapped));
+        assert!(view.words[0].tappable && view.words[1].tappable);
+        assert!(!view.words[2].tappable);
+    }
+
     fn editing() -> TranslationState {
         translation_transition(
             start(),

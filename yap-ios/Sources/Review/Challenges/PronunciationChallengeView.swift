@@ -51,13 +51,14 @@ private struct PronunciationRow: View {
     @Environment(\.reviewScreen!) private var screen
     let cue: PronunciationCue
     let highlightedSegments: [[HighlightedRun]]
+    let chunks: [SentenceChunk]
+    let segmentWhitespace: [String]
     let context: String?
     @State private var connectorHeard = false
     private var playing: Bool { audio.currentRequest == cue.audio && audio.isPlaying }
     private var firstConnector: Int? { cue.segments.firstIndex { $0.role == .Connector } }
     private func trailingSpace(_ index: Int) -> String {
-        guard index + 1 < cue.segments.count else { return "" }
-        return cue.segments[index].role == .Pattern && cue.segments[index + 1].role == .Pattern ? "" : " "
+        segmentWhitespace[index]
     }
     private func spokenWord(_ index: Int) -> AttributedString {
         let segment = cue.segments[index]
@@ -87,10 +88,15 @@ private struct PronunciationRow: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 SentenceFlow(spacing: 0) {
-                    ForEach(cue.segments.indices, id: \.self) { index in
-                        if cue.segments[index].role == .Connector {
-                            if index == firstConnector { connector }
-                        } else { Text(spokenWord(index)) }
+                    ForEach(Array(chunks.enumerated()), id: \.offset) { _, chunk in
+                        HStack(spacing: 0) {
+                            ForEach(chunk.indices, id: \.self) { token in
+                                let index = Int(token)
+                                if cue.segments[index].role == .Connector {
+                                    if index == firstConnector { connector }
+                                } else { Text(spokenWord(index)) }
+                            }
+                        }
                     }
                 }.font(.body)
                 if let context { Text(context).font(.caption).foregroundStyle(Color.yapMuted) }
@@ -116,6 +122,7 @@ private struct PronunciationCard: View, Equatable {
             }
             ForEach(Array(view.examples.enumerated()), id: \.offset) { _, example in
                 PronunciationRow(cue: example.cue, highlightedSegments: example.highlighted_segments,
+                                 chunks: example.chunks, segmentWhitespace: example.segment_whitespace,
                                  context: example.cultural_context)
             }
             if let description = view.description { Text(markdown(description)).font(.subheadline) }

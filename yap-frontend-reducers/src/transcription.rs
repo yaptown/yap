@@ -21,6 +21,36 @@ pub struct TranscriptionSubmission {
     pub all_blanks_filled: bool,
 }
 
+/// Chunk the displayed parts, retaining part indices for input events. A blank
+/// occupies one token; its outer boundaries come from its first/last literals.
+#[bridgerton::bridge]
+pub fn transcription_sentence_chunks(
+    parts: Vec<Part>,
+    language: Language,
+) -> Vec<language_utils::SentenceChunk> {
+    let text: Vec<_> = parts
+        .iter()
+        .map(|part| match part {
+            Part::Provided { part } => (part.word.text.clone(), part.whitespace),
+            Part::AskedToTranscribe { parts } => (
+                language_utils::literals_to_text(parts)
+                    .trim_end()
+                    .to_owned(),
+                parts
+                    .last()
+                    .map_or(language_utils::Whitespace::None, |part| part.whitespace),
+            ),
+        })
+        .collect();
+    language_utils::sentence_chunks(
+        &text
+            .iter()
+            .map(|(text, whitespace)| (text.as_str(), *whitespace))
+            .collect::<Vec<_>>(),
+        language,
+    )
+}
+
 #[bridgerton::bridge]
 pub fn transcription_mask_cue(cue_text: String, sentence: String, masked: String) -> String {
     transcription_challenge::mask_cue(&cue_text, &sentence, &masked)
@@ -692,6 +722,28 @@ mod reducer_tests {
             vec![],
         )
     }
+    #[test]
+    fn chunks_keep_blank_indices_and_attach_elisions_and_punctuation() {
+        let mut prefix = literal();
+        prefix.word.text = "qu'".into();
+        let mut answer = literal();
+        answer.word.text = "il".into();
+        answer.whitespace = language_utils::Whitespace::NarrowNbsp;
+        let mut punctuation = literal();
+        punctuation.word.text = "?".into();
+        let parts = vec![
+            Part::Provided { part: prefix },
+            Part::AskedToTranscribe {
+                parts: vec![answer],
+            },
+            Part::Provided { part: punctuation },
+        ];
+        let chunks = transcription_sentence_chunks(parts, Language::French);
+        assert_eq!(chunks.len(), 1);
+        assert_eq!(chunks[0].indices, vec![0, 1, 2]);
+        assert_eq!(chunks[0].trailing_whitespace, "");
+    }
+
     #[test]
     fn captions_are_masked_only_while_editing() {
         assert_eq!(

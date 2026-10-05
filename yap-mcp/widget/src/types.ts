@@ -9,6 +9,7 @@ import type {
   Literal,
   PronunciationView,
   Rating,
+  SentenceChunk,
 } from "../../../yap-frontend-rs/pkg";
 
 interface ChallengeBase {
@@ -45,6 +46,7 @@ export interface TranslationChallenge extends ChallengeBase {
     // Full literals (word + word_type + whitespace) so the widget renders the
     // app's shared ChallengeSentence verbatim. Type-only import; erases.
     literals: Literal<string>[];
+    chunks: SentenceChunk[];
     sources: string[];
   };
 }

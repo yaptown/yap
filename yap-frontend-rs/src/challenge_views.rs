@@ -162,6 +162,8 @@ pub struct PronunciationExample {
     /// Original-text runs aligned with cue.segments; hosts only render these.
     pub highlighted_segments: Vec<Vec<language_utils::pronunciation_pattern::HighlightedRun>>,
     pub cultural_context: Option<String>,
+    pub chunks: Vec<language_utils::SentenceChunk>,
+    pub segment_whitespace: Vec<String>,
 }
 
 #[bridgerton::bridge(transparent)]
@@ -222,16 +224,21 @@ pub fn pronunciation_view(
             .into_iter()
             .zip(cues)
             .take(3)
-            .map(|(example, cue)| PronunciationExample {
-                highlighted_segments: pronunciation_highlights(
-                    &cue,
-                    &pattern,
-                    guide.position,
-                    target_language,
-                ),
-                cue,
-                cultural_context: (!example.cultural_context.is_empty())
-                    .then_some(example.cultural_context),
+            .map(|(example, cue)| {
+                let (chunks, segment_whitespace) = pronunciation_chunks(&cue, target_language);
+                PronunciationExample {
+                    chunks,
+                    segment_whitespace,
+                    highlighted_segments: pronunciation_highlights(
+                        &cue,
+                        &pattern,
+                        guide.position,
+                        target_language,
+                    ),
+                    cue,
+                    cultural_context: (!example.cultural_context.is_empty())
+                        .then_some(example.cultural_context),
+                }
             })
             .collect(),
         description: (!guide.description.is_empty()).then_some(guide.description),
@@ -239,6 +246,51 @@ pub fn pronunciation_view(
         remembered_label,
         cant_speak_label: "Can't speak now".into(),
     }
+}
+
+fn pronunciation_chunks(
+    cue: &PronunciationCue,
+    language: Language,
+) -> (Vec<language_utils::SentenceChunk>, Vec<String>) {
+    use language_utils::{CueSegmentRole, Whitespace};
+    let whitespace: Vec<_> = cue
+        .segments
+        .iter()
+        .enumerate()
+        .map(|(index, segment)| match cue.segments.get(index + 1) {
+            None => Whitespace::None,
+            Some(next)
+                if segment.role == CueSegmentRole::Pattern
+                    && next.role == CueSegmentRole::Pattern =>
+            {
+                Whitespace::None
+            }
+            _ => Whitespace::Space,
+        })
+        .collect();
+    // The connector is one swapping target/native view, not separate words.
+    let tokens: Vec<_> = cue
+        .segments
+        .iter()
+        .enumerate()
+        .map(|(index, segment)| {
+            let gap = if segment.role == CueSegmentRole::Connector
+                && cue
+                    .segments
+                    .get(index + 1)
+                    .is_some_and(|next| next.role == CueSegmentRole::Connector)
+            {
+                Whitespace::Nbsp
+            } else {
+                whitespace[index]
+            };
+            (segment.text.as_str(), gap)
+        })
+        .collect();
+    (
+        language_utils::sentence_chunks(&tokens, language),
+        whitespace.into_iter().map(|gap| gap.to_string()).collect(),
+    )
 }
 
 fn pronunciation_highlights(
@@ -510,6 +562,35 @@ mod tests {
             "audio": { "request": { "text": "r comme rue", "language": "French" }, "provider": "ElevenLabs" },
             "segments": [], "native_connector": "as in"
         })).unwrap()
+    }
+
+    #[test]
+    fn pronunciation_chunks_keep_pattern_letters_and_connector_together() {
+        use language_utils::CueSegmentRole::{Connector, Example, Pattern};
+        let mut cue = cue();
+        cue.segments = [
+            ("c", Pattern),
+            ("h", Pattern),
+            ("as", Connector),
+            ("in", Connector),
+            ("chat", Example),
+        ]
+        .into_iter()
+        .map(|(text, role)| crate::CueSegment {
+            text: text.into(),
+            role,
+            start_ms: None,
+        })
+        .collect();
+        let (chunks, whitespace) = pronunciation_chunks(&cue, Language::French);
+        assert_eq!(
+            chunks
+                .iter()
+                .map(|chunk| chunk.indices.clone())
+                .collect::<Vec<_>>(),
+            vec![vec![0, 1], vec![2, 3], vec![4]]
+        );
+        assert_eq!(whitespace, vec!["", " ", " ", " ", ""]);
     }
 
     #[test]
