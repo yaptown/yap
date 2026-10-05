@@ -116,7 +116,7 @@ export function useOneSignalNotifications() {
 
       setIsInitialized(true);
     } catch (err) {
-      console.error("Error initializing OneSignal:", err);
+      console.warn("Error initializing OneSignal:", err);
       setError(err instanceof Error ? err.message : "Failed to initialize");
       setIsInitialized(true);
     }
@@ -158,7 +158,8 @@ export function useOneSignalNotifications() {
         user_id: user.id,
       });
     } catch (err) {
-      console.error("Error subscribing:", err);
+      // Expected for users who dismiss/deny the prompt or whose browser has no push service.
+      console.warn("Error subscribing:", err);
       setError(err instanceof Error ? err.message : "Failed to subscribe");
     } finally {
       setIsLoading(false);
