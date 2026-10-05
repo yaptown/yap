@@ -23,9 +23,9 @@ reducer state for dictation and translation. Screen captures contain the entire
 Rust view, including preview cards, progress, copy, and button events. They are
 intentional test inputs: commit them, not generated bindings or screenshots.
 
-Review-screen coverage: French caught-up and review-plan views, Italian
-first-run, and German needs-more-cards. Audio-pending and accomplishment
-variants are supported but do not yet have live captures.
+Review-screen coverage: French caught-up, review-plan, and goal-reached
+(`accomplishment`) views, Italian first-run, and German needs-more-cards.
+Audio-pending variants are supported but do not yet have a live capture.
 
 Home-screen coverage (`home/`): `home-cards-ready` (Up Next previewing a due
 challenge, French), plus the three idle states mirroring the Review idle trio —

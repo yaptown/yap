@@ -17,22 +17,6 @@ import { cn } from "@/lib/utils";
 import { DailyGoalEditor } from "./DailyGoalEditor";
 import { TargetLanguageText } from "../../components/TargetLanguageText";
 
-function formatMinutes(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  return `${mins} min`;
-}
-
-function streakMessage(streak: number): string {
-  if (streak <= 1) return "you're just getting started";
-  if (streak <= 3) return "keep it up!";
-  if (streak <= 7) return "you're on a roll!";
-  if (streak <= 14) return "impressive dedication!";
-  if (streak <= 30) return "unstoppable!";
-  if (streak <= 60) return "what a habit!";
-  if (streak <= 100) return "legendary consistency!";
-  return "absolutely incredible!";
-}
-
 interface AccomplishmentScreenProps {
   view: AccomplishmentView;
   addEvent: (event: DeckEvent) => void;
@@ -51,7 +35,6 @@ export function AccomplishmentScreen({
   const confettiRef = useRef<confetti.CreateTypes | null>(null);
 
   const summary = view.today;
-  const streak = view.streak;
   const wordsKnown = view.words_known;
 
   // Create confetti instance bound to our canvas
@@ -119,16 +102,13 @@ export function AccomplishmentScreen({
         <h2 className="text-2xl font-bold">
           {view.heading}
         </h2>
-        <p className="text-muted-foreground">
-          You studied {formatMinutes(summary.time_spent_seconds)}! (
-          {summary.reviews} challenges)
-        </p>
-        {streak > 0 && (
+        <p className="text-muted-foreground">{view.studied}</p>
+        {view.streak_label && (
           <Badge
             variant="outline"
             className="border-negative/50 text-muted-foreground font-normal text-sm"
           >
-            🔥 {streak} day streak — {streakMessage(streak)}
+            🔥 {view.streak_label}
           </Badge>
         )}
         {/* Change goal collapsible */}

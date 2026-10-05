@@ -247,7 +247,11 @@ pub struct AccomplishmentView {
     pub heading: String,
     pub accomplishment: Accomplishment,
     pub today: TodaySummary,
+    /// "You studied 10 min! (21 challenges)"
+    pub studied: String,
     pub streak: u32,
+    /// "2 day streak — keep it up!", absent before the first full day.
+    pub streak_label: Option<String>,
     pub percent_known: f64,
     pub words_known: u32,
     pub target: DailyReviewTarget,
@@ -620,12 +624,20 @@ impl Deck {
         let today = self.get_today_summary_on(day);
         let accomplishment = self.get_accomplishment()?;
         let percent_known = self.get_percent_of_words_known();
+        let streak = self.get_daily_streak_on(day);
         Some(AccomplishmentView {
             target_language: self.get_target_language(),
             heading: accomplishment_heading(&today.day_of_week),
             accomplishment,
+            studied: format!(
+                "You studied {} min! ({} challenges)",
+                today.time_spent_seconds / 60,
+                today.reviews
+            ),
             today,
-            streak: self.get_daily_streak_on(day),
+            streak,
+            streak_label: (streak > 0)
+                .then(|| format!("{streak} day streak — {}", streak_message(streak))),
             percent_known,
             words_known: (percent_known * self.num_cards_added() as f64).round() as u32,
             target: self.get_daily_review_target_setting(),
@@ -1488,6 +1500,19 @@ fn accomplishment_heading(day: &str) -> String {
         _ => "Nice!",
     };
     format!("Goal Reached! {message}")
+}
+
+fn streak_message(streak: u32) -> &'static str {
+    match streak {
+        ..=1 => "you're just getting started",
+        2..=3 => "keep it up!",
+        4..=7 => "you're on a roll!",
+        8..=14 => "impressive dedication!",
+        15..=30 => "unstoppable!",
+        31..=60 => "what a habit!",
+        61..=100 => "legendary consistency!",
+        _ => "absolutely incredible!",
+    }
 }
 
 #[cfg(test)]

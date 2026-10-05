@@ -53,18 +53,3 @@ struct DailyGoalEditor: View {
         #endif
     }
 }
-
-/// The review screens use captured goal options, including their actions.
-struct SnapshotGoalEditor: View {
-    let target: DailyReviewTarget
-    let goals: [GoalOptionView]
-    let addEvent: (DeckEvent) -> Void
-    var body: some View {
-        DisclosureGroup("Change daily goal") {
-            ForEach(Array(goals.enumerated()), id: \.offset) { _, goal in
-                Button("\(goal.label) · \(goal.duration_label)") { addEvent(goal.event) }
-                    .disabled(goal.target == target)
-            }
-        }
-    }
-}
