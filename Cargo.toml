@@ -106,6 +106,10 @@ opt-level = "s"
 # minutes in their final rustc invocation. Release WASM builds opt back into
 # LTO explicitly at their build entry points.
 lto = false
+# Cargo's default release strip ("debuginfo") makes Xcode 27's toolchain emit
+# dylibs that macOS 27's dyld rejects ("mis-aligned LINKEDIT string pool"), which
+# breaks `cargo bridgerton swift` loading the yap-ios-host library.
+strip = "none"
 
 # Native data-pipeline crates with hot numeric loops (embedding mining,
 # unigram training, clustering) want speed, not size. None of these are in
