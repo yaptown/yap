@@ -240,11 +240,7 @@ private struct HomeCurriculum: View {
         #endif
     }
     private func progress(label: String) -> some View {
-        HStack(spacing: 10) {
-            ProgressView(value: view.percent, total: 100)
-            Text(view.percent_label).font(.subheadline.weight(.semibold).monospacedDigit()).foregroundStyle(Color.yapText)
-        }
-        .accessibilityElement(children: .ignore).accessibilityLabel(label).accessibilityValue(view.percent_label)
+        LabeledProgressBar(percent: view.percent, label: view.percent_label).accessibilityLabel(label)
     }
     private func choose(_ category: SentenceListCategory) {
         guard !inert, category != view.category else { return }

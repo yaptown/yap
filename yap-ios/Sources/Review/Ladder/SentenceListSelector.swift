@@ -40,8 +40,9 @@ struct SentenceListSelector: View {
                             LearnButton(label: label, heading: view.manual_add_heading, options: view.manual_add_options,
                                         learn: { add(event) }, add: add)
                         }
-                        LevelProgressBar(progress: view.progress,
-                                         projected: view.progress.all_available_learned ? nil : view.info.percent_known_after).equatable()
+                        LabeledProgressBar(percent: view.progress.percent_known, label: view.progress.bar_label,
+                                           projected: view.progress.all_available_learned ? nil : view.info.percent_known_after)
+                            .accessibilityLabel(view.progress.caption)
                         if let note = view.level_note {
                             Text(note).font(.caption).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
                         }
@@ -117,30 +118,6 @@ private struct LearnButton: View {
         .background(Tokens.palette.primary.color.opacity(0.85))
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
-}
-
-/// Home's curriculum progress row: a slim bar with the percentage beside it, plus
-/// a lighter segment for where the offered cards would take it.
-private struct LevelProgressBar: View, Equatable {
-    let progress: SentenceListProgress
-    let projected: Double?
-    var body: some View {
-        let known = min(max(progress.percent_known / 100, 0), 1)
-        let after = min(max((projected ?? 0) / 100, known), 1)
-        HStack(spacing: 10) {
-            GeometryReader { geometry in
-                let width = geometry.size.width
-                ZStack(alignment: .leading) {
-                    Color.yapAccent.opacity(0.12)
-                    Color.yapAccent.opacity(0.35).frame(width: width * after)
-                    Color.yapAccent.frame(width: width * known)
-                }
-            }
-            .frame(height: 8).clipShape(Capsule())
-            Text(progress.bar_label).font(.subheadline.weight(.semibold).monospacedDigit()).foregroundStyle(Color.yapText)
-        }
-        .accessibilityElement().accessibilityLabel(progress.caption)
     }
 }
 

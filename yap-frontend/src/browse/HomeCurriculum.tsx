@@ -125,11 +125,11 @@ export function HomeCurriculum({
 
 function ProgressRow({ view, label }: { view: HomeCurriculumView; label: string }) {
   return (
-    <div className="flex items-center gap-3">
-      <Progress value={view.percent} aria-label={label} />
-      <span className="shrink-0 text-sm font-semibold tabular-nums">
-        {view.percent_label}
-      </span>
-    </div>
+    <Progress
+      value={view.percent}
+      label={view.percent_label}
+      aria-label={label}
+      className="h-6"
+    />
   );
 }

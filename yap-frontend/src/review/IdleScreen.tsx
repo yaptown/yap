@@ -311,20 +311,17 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
                       </p>
                     )}
 
-                    <div className="flex w-full items-center gap-3">
-                      <Progress
-                        value={sentenceListPercentKnown}
-                        projectedValue={
-                          sentenceListDone
-                            ? undefined
-                            : info.percent_known_after
-                        }
-                        aria-label={view.progress.caption}
-                      />
-                      <span className="shrink-0 text-sm font-semibold tabular-nums">
-                        {view.progress.bar_label}
-                      </span>
-                    </div>
+                    <Progress
+                      value={sentenceListPercentKnown}
+                      projectedValue={
+                        sentenceListDone
+                          ? undefined
+                          : info.percent_known_after
+                      }
+                      label={view.progress.bar_label}
+                      aria-label={view.progress.caption}
+                      className="h-6"
+                    />
 
                     {view.level_note && (
                       <p className="text-xs text-muted-foreground text-center sm:text-left">

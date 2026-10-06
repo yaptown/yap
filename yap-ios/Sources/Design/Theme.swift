@@ -122,6 +122,32 @@ struct StudyCard<Content: View>: View {
     }
 }
 
+/// The web's labelled progress bar: thick, with the label printed inside and
+/// inverted over the fill, plus an optional lighter segment for a projection.
+struct LabeledProgressBar: View, Equatable {
+    let percent: Double
+    let label: String
+    var projected: Double? = nil
+    var body: some View {
+        let known = min(max(percent / 100, 0), 1)
+        let after = min(max((projected ?? 0) / 100, known), 1)
+        let text = Text(label).font(.subheadline.monospaced().weight(.semibold))
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            ZStack(alignment: .leading) {
+                Color.yapAccent.opacity(0.1)
+                Color.yapAccent.opacity(0.3).frame(width: width * after)
+                Color.yapAccent.frame(width: width * known)
+                text.foregroundStyle(Color.yapAccent).frame(maxWidth: .infinity)
+                text.foregroundStyle(Color.yapOnAccent).frame(maxWidth: .infinity)
+                    .mask(alignment: .leading) { Rectangle().frame(width: width * known) }
+            }
+        }
+        .frame(height: 24).clipShape(Capsule())
+        .accessibilityElement().accessibilityValue(label)
+    }
+}
+
 /// A titled group of rows on the shared card surface.
 struct CardSection<Content: View>: View {
     var title: String?
