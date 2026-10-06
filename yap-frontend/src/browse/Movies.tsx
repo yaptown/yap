@@ -9,7 +9,7 @@ interface MovieWithMetadata extends MovieMetadataBasic {
 
 interface MoviesProps {
   moviesWithMetadata: MovieWithMetadata[];
-  targetLanguageIso?: string;
+  targetLanguageIso: string;
   deck: Deck;
   selectedMovieId?: string;
   onSelectMovie: (id: string) => void;
@@ -25,14 +25,11 @@ export function Movies({
   const moviesWithMetadata = useDeferredValue(moviesWithMetadataProp);
   const [showAllMovies, setShowAllMovies] = useState(false);
 
-  const sortedMovies = targetLanguageIso
-    ? [...moviesWithMetadata].sort((a, b) => {
-        const aIsNative = a.original_language === targetLanguageIso ? 0 : 1;
-        const bIsNative = b.original_language === targetLanguageIso ? 0 : 1;
-        return aIsNative - bIsNative;
-      })
-    : moviesWithMetadata;
-  const visibleMovies = showAllMovies ? sortedMovies : sortedMovies.slice(0, 8);
+  // The current movie first, then films made in the language.
+  const rank = (movie: MovieWithMetadata) =>
+    movie.id === selectedMovieId ? 0 : movie.original_language === targetLanguageIso ? 1 : 2;
+  const sortedMovies = [...moviesWithMetadata].sort((a, b) => rank(a) - rank(b));
+  const visibleMovies = showAllMovies ? sortedMovies : sortedMovies.slice(0, 12);
 
   if (moviesWithMetadata.length === 0) {
     return null;
@@ -40,12 +37,11 @@ export function Movies({
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-2xl font-semibold">Movies</h2>
       <p className="text-sm text-muted-foreground">
         You can usually watch a movie comfortably once you know 95% of the
         words.
       </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
         {visibleMovies.map((movie) => (
           <MoviePosterCard
             key={movie.id}
@@ -70,14 +66,14 @@ export function Movies({
               aria-pressed={selectedMovieId === movie.id}
               onClick={() => onSelectMovie(movie.id)}
             />
-            <div className="p-2 text-center relative overflow-hidden">
+            <div className="p-1.5 text-center relative overflow-hidden">
               <div
                 className="absolute inset-0 bg-foreground/10"
                 style={{
                   clipPath: `inset(0 ${100 - movie.percent_known}% 0 0)`,
                 }}
               />
-              <span className="relative text-sm font-mono font-semibold text-foreground">
+              <span className="relative text-xs font-mono font-semibold text-foreground">
                 {Math.floor(movie.percent_known)}% known
               </span>
             </div>

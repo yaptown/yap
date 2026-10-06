@@ -8,7 +8,6 @@ import { ReviewScreen } from "@/review/ReviewScreen";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import { HomeScreen } from "../browse/HomeScreen";
 import { StatsScreen } from "../browse/StatsScreen";
-import { GoalsScreen } from "../browse/GoalsScreen";
 import { DueWordsScreen } from "../browse/DueWordsScreen";
 import type {
   ChallengeView,
@@ -105,9 +104,6 @@ export function FixturePage() {
         )}
         {snapshot.screen === "Stats" && (
           <StatsScreen {...props} view={snapshot.view} />
-        )}
-        {snapshot.screen === "Goals" && (
-          <GoalsScreen {...props} view={snapshot.view} />
         )}
         {snapshot.screen === "Due" && (
           <DueWordsScreen {...props} view={snapshot.view} />

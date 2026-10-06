@@ -42,14 +42,5 @@ struct DailyGoalEditor: View {
             .opacity(pendingTarget == target ? 0.5 : 1)
             .disabled(pendingTarget == target)
         }.frame(maxWidth: .infinity)
-        #if DEBUG
-        .onChange(of: DebugHarness.shared.commandID) { _, _ in
-            guard DebugHarness.shared.activeScreen == .goals else { return }
-            let command = DebugHarness.shared.command
-            if command.hasPrefix("goal "), let index = Int(command.dropFirst(5)), options.indices.contains(index) {
-                addEvent(options[index].event)
-            }
-        }
-        #endif
     }
 }

@@ -1,8 +1,6 @@
 #[cfg(feature = "fixtures")]
 use crate::{Challenge, Deck, Gram};
-use crate::{
-    DueWordsScreenView, GoalsScreenView, HomeScreenView, ReviewScreenView, StatsScreenView,
-};
+use crate::{DueWordsScreenView, HomeScreenView, ReviewScreenView, StatsScreenView};
 #[cfg(feature = "fixtures")]
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -17,7 +15,6 @@ pub enum Fixture {
     Review(ReviewScreenView),
     Home(HomeScreenView),
     Stats(StatsScreenView),
-    Goals(GoalsScreenView),
     Due(DueWordsScreenView),
 }
 

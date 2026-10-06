@@ -1321,6 +1321,10 @@ pub struct DeckState {
     leeches: BTreeMap<CardIndicator<SpurGram, Spur>, u64>,
     /// The most recently selected sentence list from an AddCards event
     sentence_list: Option<SentenceListSelection>,
+    /// The last movie and Pimsleur lesson chosen, so switching back to a
+    /// category returns to them.
+    last_movie: Option<SentenceListSelection>,
+    last_pimsleur_lesson: Option<SentenceListSelection>,
     /// The current accomplishment to display (cleared on each review, set when earned)
     accomplishment: Option<Accomplishment>,
     /// The user's explicitly chosen daily study intensity, if any.
@@ -1349,6 +1353,10 @@ pub struct Deck {
     leeches: BTreeMap<CardIndicator<SpurGram, Spur>, u64>,
     /// The most recently selected sentence list from an AddCards event
     sentence_list: Option<SentenceListSelection>,
+    /// The last movie and Pimsleur lesson chosen, so switching back to a
+    /// category returns to them.
+    last_movie: Option<SentenceListSelection>,
+    last_pimsleur_lesson: Option<SentenceListSelection>,
     /// The current accomplishment to display (cleared on each review, set when earned)
     accomplishment: Option<Accomplishment>,
     /// The user's explicitly chosen daily study intensity, if any.
@@ -1422,6 +1430,8 @@ impl From<Deck> for DeckState {
             stats: deck.stats,
             leeches: deck.leeches,
             sentence_list: deck.sentence_list,
+            last_movie: deck.last_movie,
+            last_pimsleur_lesson: deck.last_pimsleur_lesson,
             accomplishment: deck.accomplishment,
             daily_review_target: deck.daily_review_target,
             locked_cards: deck.locked_cards,
@@ -1538,7 +1548,7 @@ impl weapon::AppState for Deck {
                 cards,
                 sentence_list,
             } => {
-                deck.sentence_list = sentence_list.clone();
+                deck.set_sentence_list(sentence_list.clone());
                 for (index, card) in cards.iter().enumerate() {
                     if let Some(card) = card.get_interned(&context.language_pack) {
                         // Make sure the card is valid and can be added
@@ -2090,7 +2100,7 @@ impl weapon::AppState for Deck {
                 }
             }
             LanguageEventContent::SetSentenceList { sentence_list } => {
-                deck.sentence_list = sentence_list.clone();
+                deck.set_sentence_list(sentence_list.clone());
             }
             LanguageEventContent::SetDailyReviewTarget {
                 daily_review_target,
@@ -2226,6 +2236,8 @@ impl weapon::AppState for Deck {
             comprehensible,
             leeches: state.leeches,
             sentence_list: state.sentence_list,
+            last_movie: state.last_movie,
+            last_pimsleur_lesson: state.last_pimsleur_lesson,
             accomplishment: state.accomplishment,
             daily_review_target: state.daily_review_target,
             locked_cards: state.locked_cards,
@@ -2233,6 +2245,19 @@ impl weapon::AppState for Deck {
             last_plan_day: state.last_plan_day,
             last_lock_timestamp: state.last_lock_timestamp,
         }
+    }
+}
+
+impl DeckState {
+    fn set_sentence_list(&mut self, sentence_list: Option<SentenceListSelection>) {
+        match &sentence_list {
+            Some(SentenceListSelection::Movie { .. }) => self.last_movie = sentence_list.clone(),
+            Some(SentenceListSelection::PimsleurLesson { .. }) => {
+                self.last_pimsleur_lesson = sentence_list.clone()
+            }
+            None => {}
+        }
+        self.sentence_list = sentence_list;
     }
 }
 
@@ -2268,6 +2293,8 @@ impl DeckState {
             },
             leeches: BTreeMap::new(),
             sentence_list: None,
+            last_movie: None,
+            last_pimsleur_lesson: None,
             accomplishment: None,
             daily_review_target: None,
             locked_cards: FxHashSet::default(),

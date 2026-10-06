@@ -150,15 +150,6 @@ pub struct SentenceListOptionView {
     pub selection: Option<SentenceListSelection>,
 }
 
-/// The floating commit for a curriculum the learner has browsed to but not
-/// chosen yet: present iff the draft differs from the persisted selection.
-#[bridgerton::bridge(transparent)]
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct SwitchCurriculumView {
-    pub label: String,
-    pub event: DeckEvent,
-}
-
 /// A sentence with one emphasized run, so hosts can style the run (a
 /// target-language word, an uppercased curriculum name) without owning the
 /// words around it. `emphasis` may be empty.
@@ -196,7 +187,7 @@ pub struct IdleView {
     pub all_learned_note: Option<String>,
     /// Essential-course footnote about everyday-language coverage.
     pub level_note: Option<String>,
-    /// The link under the progress bar that opens the Goals page.
+    /// The link under the progress bar that opens the curriculum browser.
     pub change_sentence_list_label: String,
     pub banned_notice: Option<String>,
     pub week: Vec<DayProgress>,
@@ -206,8 +197,7 @@ pub struct IdleView {
     pub sentence_list_label: String,
     pub next_sentence_list: Option<SentenceListSelection>,
     /// Commits the browsed curriculum. Hosts append it just before any add
-    /// from this view, so adding cards is what switches — there is no
-    /// separate switch button here (Goals keeps one).
+    /// from this view, so adding cards is what switches.
     pub commit_curriculum: Option<DeckEvent>,
 }
 
@@ -234,7 +224,10 @@ pub enum IdleScreenView {
 pub struct GoalOptionView {
     pub target: DailyReviewTarget,
     pub label: String,
+    /// "5m", under the label in the segmented editor.
     pub duration_label: String,
+    /// "5 min", in Home's goal menu.
+    pub minutes_label: String,
     pub minutes: u32,
     pub event: DeckEvent,
 }
@@ -512,8 +505,7 @@ impl Deck {
             progress,
             sentence_list_label,
             next_sentence_list,
-            switch_curriculum,
-            ..
+            commit_curriculum,
         } = curriculum;
         let manual_add_options =
             self.get_manual_add_options(navigation.selection.clone(), is_signed_in);
@@ -605,7 +597,7 @@ impl Deck {
             progress,
             sentence_list_label,
             next_sentence_list,
-            commit_curriculum: switch_curriculum.map(|switch| switch.event),
+            commit_curriculum,
         }))
     }
 
@@ -647,22 +639,17 @@ impl Deck {
     }
 }
 
-/// Curriculum content shared by Idle and Goals. Browsing (tabs, lessons,
-/// movies, "next lesson") only moves the host's draft selection — the
-/// `sentence_list` input — and `switch_curriculum` carries the one event that
-/// commits it, so a `SetSentenceList` is appended exactly once per real switch.
-#[bridgerton::bridge(transparent)]
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CurriculumView {
-    pub title: String,
-    pub navigation: SentenceListNavigation,
-    pub sentence_list_options: Vec<SentenceListOptionView>,
-    pub progress: SentenceListProgress,
-    pub sentence_list_label: String,
-    pub next_sentence_list: Option<SentenceListSelection>,
-    pub switch_curriculum: Option<SwitchCurriculumView>,
-    pub has_movies: bool,
-    pub has_pimsleur: bool,
+/// The idle card's curriculum. Its chevrons and "next lesson" only move the
+/// host's draft selection — the `sentence_list` input — and
+/// `commit_curriculum` is the one event that commits it, so a
+/// `SetSentenceList` is appended exactly once per real switch.
+struct CurriculumView {
+    navigation: SentenceListNavigation,
+    sentence_list_options: Vec<SentenceListOptionView>,
+    progress: SentenceListProgress,
+    sentence_list_label: String,
+    next_sentence_list: Option<SentenceListSelection>,
+    commit_curriculum: Option<DeckEvent>,
 }
 
 fn sentence_list_category_label(category: SentenceListCategory) -> &'static str {
@@ -724,10 +711,6 @@ impl Deck {
         sentence_list: Option<SentenceListSelection>,
     ) -> (CurriculumView, NoCardsReadyInfo) {
         let navigation = self.curriculum_navigation(sentence_list);
-        let has_movies = navigation.categories.contains(&SentenceListCategory::Movie);
-        let has_pimsleur = navigation
-            .categories
-            .contains(&SentenceListCategory::Pimsleur);
         let info = self.get_no_cards_ready_info(banned, navigation.selection.clone());
         let progress = self
             .get_sentence_list_progress(navigation.selection.clone(), info.tier_info.percent_known);
@@ -738,11 +721,7 @@ impl Deck {
                 get_language_metadata(self.get_target_language()).common_name,
                 info.tier_info.level
             ),
-            Some(SentenceListSelection::Movie { id }) => self
-                .get_movie_metadata(vec![id.clone()])
-                .first()
-                .map(|m| m.title.clone())
-                .unwrap_or_else(|| "Movie".into()),
+            Some(SentenceListSelection::Movie { id }) => self.movie_title(id),
             Some(SentenceListSelection::PimsleurLesson { level, lesson }) => {
                 format!("Pimsleur Level {level}, Lesson {lesson}")
             }
@@ -774,25 +753,92 @@ impl Deck {
                 }
             })
             .collect();
-        let switch_curriculum =
-            (navigation.selection != self.get_sentence_list()).then(|| SwitchCurriculumView {
-                label: format!("Switch curriculum to {sentence_list_label}"),
-                event: self.change_sentence_list(navigation.selection.clone()),
-            });
+        let commit_curriculum = (navigation.selection != self.get_sentence_list())
+            .then(|| self.change_sentence_list(navigation.selection.clone()));
         (
             CurriculumView {
-                title: "Curriculum".into(),
                 navigation,
                 sentence_list_options,
                 progress,
                 sentence_list_label,
                 next_sentence_list,
-                switch_curriculum,
-                has_movies,
-                has_pimsleur,
+                commit_curriculum,
             },
             info,
         )
+    }
+
+    fn movie_title(&self, id: &str) -> String {
+        self.get_movie_metadata(vec![id.to_string()])
+            .first()
+            .map(|m| m.title.clone())
+            .unwrap_or_else(|| "Movie".into())
+    }
+
+    /// Home's curriculum row, for the persisted selection (or the idle card's
+    /// draft, which Home hides this row for anyway).
+    fn home_curriculum_view(
+        &self,
+        tier: &TierInfo,
+        navigation: SentenceListNavigation,
+    ) -> HomeCurriculumView {
+        let language = get_language_metadata(self.get_target_language()).common_name;
+        let essential_name = format!("{} {language}", tier.name);
+        let category = navigation.categories[navigation.selected_index];
+        let options = navigation
+            .categories
+            .iter()
+            .map(|category| CurriculumCategoryView {
+                category: *category,
+                label: match category {
+                    SentenceListCategory::Essential => essential_name.clone(),
+                    _ => sentence_list_category_label(*category).into(),
+                },
+            })
+            .collect();
+        let progress =
+            self.get_sentence_list_progress(navigation.selection.clone(), tier.percent_known);
+        let (menu_label, item, level_label, subtitle) = match &navigation.selection {
+            None => (
+                essential_name,
+                None,
+                Some(format!("Level {} of {}", tier.level, tier.total_levels)),
+                Some(format!(
+                    "Unlocks {:.1}% of everyday {language}",
+                    tier.percent_of_usage
+                )),
+            ),
+            Some(SentenceListSelection::Movie { id }) => (
+                "Movies".into(),
+                Some(CurriculumItemView {
+                    title: self.movie_title(id),
+                    movie_id: Some(id.clone()),
+                    browse_label: "Change".into(),
+                }),
+                None,
+                None,
+            ),
+            Some(SentenceListSelection::PimsleurLesson { level, lesson }) => (
+                "Pimsleur".into(),
+                Some(CurriculumItemView {
+                    title: format!("Level {level}, Lesson {lesson}"),
+                    movie_id: None,
+                    browse_label: "Change".into(),
+                }),
+                None,
+                None,
+            ),
+        };
+        HomeCurriculumView {
+            category,
+            menu_label,
+            options,
+            item,
+            level_label,
+            percent: progress.percent_known,
+            percent_label: progress.bar_label,
+            subtitle,
+        }
     }
 
     fn goal_options_view(&self) -> Vec<GoalOptionView> {
@@ -801,6 +847,7 @@ impl Deck {
             .map(|option| GoalOptionView {
                 label: format!("{:?}", option.value),
                 duration_label: format!("{}m", option.minutes),
+                minutes_label: format!("{} min", option.minutes),
                 target: option.value.clone(),
                 minutes: option.minutes,
                 event: self.set_daily_review_target(option.value),
@@ -835,20 +882,41 @@ pub enum UpNextKind {
     Other,
 }
 
+/// Home's curriculum row. Its category menu and the curriculum browser commit
+/// on the spot: choosing is the whole interaction, so there is no draft to confirm.
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct GoalCardView {
-    pub title: String,
-    /// "Advanced French": the title without its level, which `level_label` badges.
-    pub name: String,
-    pub level_label: String,
-    pub tier_name: String,
-    pub level: u32,
-    pub total_levels: u32,
-    /// Progress within this level, on a 0–100 scale (not overall vocabulary coverage).
+pub struct HomeCurriculumView {
+    pub category: SentenceListCategory,
+    /// The menu button: "Advanced French", "Movies" or "Pimsleur".
+    pub menu_label: String,
+    /// Choosing one appends `choose_curriculum_category`'s event.
+    pub options: Vec<CurriculumCategoryView>,
+    /// The chosen movie or lesson; the essential course has nothing to browse.
+    pub item: Option<CurriculumItemView>,
+    /// "Level 11 of 30", essential course only.
+    pub level_label: Option<String>,
+    /// Progress through this level or list, on a 0–100 scale.
     pub percent: f64,
     pub percent_label: String,
-    pub subtitle: String,
+    /// "Unlocks 67.1% of everyday French", essential course only.
+    pub subtitle: Option<String>,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CurriculumCategoryView {
+    pub category: SentenceListCategory,
+    pub label: String,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CurriculumItemView {
+    pub title: String,
+    pub movie_id: Option<String>,
+    /// "Change": opens the browser on this category.
+    pub browse_label: String,
 }
 
 #[bridgerton::bridge(transparent)]
@@ -873,7 +941,10 @@ pub struct HomeStatView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct WeekCardView {
     pub title: String,
-    pub today_label: String,
+    /// "0 / [5 min] today": the emphasis is the daily-goal menu.
+    pub today: EmphasizedText,
+    pub daily_goal: DailyReviewTarget,
+    pub goal_options: Vec<GoalOptionView>,
     pub days: Vec<DayProgress>,
 }
 
@@ -897,9 +968,8 @@ pub struct HomeScreenView {
     pub native_language: Language,
     pub target_language: Language,
     pub up_next: UpNextView,
-    /// Absent while Up Next shows the curriculum card, whose own bar already
-    /// tracks the level.
-    pub goal: Option<GoalCardView>,
+    /// Absent while Up Next shows the idle curriculum card, which has its own.
+    pub curriculum: Option<HomeCurriculumView>,
     pub week: WeekCardView,
     pub xp: HomeStatView,
     pub cards: HomeStatView,
@@ -974,20 +1044,6 @@ pub struct StatsScreenView {
 
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct GoalsScreenView {
-    pub title: String,
-    pub target_language: Language,
-    pub tier_info: TierInfo,
-    pub goal: GoalCardView,
-    pub daily_goal_title: String,
-    pub daily_goal: DailyReviewTarget,
-    pub daily_goal_label: String,
-    pub daily_goal_options: Vec<GoalOptionView>,
-    pub curriculum: CurriculumView,
-}
-
-#[bridgerton::bridge(transparent)]
-#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DueWordsScreenView {
     pub target_language: Language,
     pub title: String,
@@ -998,24 +1054,6 @@ pub struct DueWordsScreenView {
 }
 
 impl Deck {
-    fn goal_card_view(&self, tier: &TierInfo) -> GoalCardView {
-        let language = get_language_metadata(self.get_target_language()).common_name;
-        GoalCardView {
-            title: format!("{} {language} Level {}", tier.name, tier.level),
-            name: format!("{} {language}", tier.name),
-            level_label: format!("Level {} of {}", tier.level, tier.total_levels),
-            tier_name: tier.name.clone(),
-            level: tier.level,
-            total_levels: tier.total_levels,
-            percent: tier.percent_known,
-            percent_label: format!("{:.0}%", tier.percent_known),
-            subtitle: format!(
-                "Unlocks {:.1}% of everyday {language}",
-                tier.percent_of_usage,
-            ),
-        }
-    }
-
     fn streak_card_view(&self, timestamp_ms: f64) -> StreakCardView {
         let day = DateTime::<Utc>::from_timestamp_millis(timestamp_ms as i64)
             .unwrap_or_else(Utc::now)
@@ -1103,16 +1141,22 @@ impl Deck {
         let is_challenge = matches!(step, ReviewStep::Challenge(_));
         let shows_curriculum = matches!(&step, ReviewStep::Idle(idle)
             if matches!(idle.as_ref(), IdleScreenView::Idle(view) if view.show_sentence_list));
-        // The idle view already computed the tier; otherwise pay for it only when the goal shows.
-        let goal_tier_info = (!shows_curriculum).then(|| match &step {
-            ReviewStep::Idle(idle) if let IdleScreenView::Idle(view) = idle.as_ref() => {
-                view.info.tier_info.clone()
-            }
-            _ => {
-                let navigation = self.curriculum_navigation(inputs.sentence_list.clone());
-                self.get_no_cards_ready_info(inputs.banned.clone(), navigation.selection)
+        let curriculum = (!shows_curriculum).then(|| {
+            let navigation = self.curriculum_navigation(inputs.sentence_list.clone());
+            // The idle view already computed the tier; otherwise pay for it only when the row shows.
+            let tier_info = match &step {
+                ReviewStep::Idle(idle) if let IdleScreenView::Idle(view) = idle.as_ref() => {
+                    view.info.tier_info.clone()
+                }
+                _ => {
+                    self.get_no_cards_ready_info(
+                        inputs.banned.clone(),
+                        navigation.selection.clone(),
+                    )
                     .tier_info
-            }
+                }
+            };
+            self.home_curriculum_view(&tier_info, navigation)
         });
         let mut kind = UpNextKind::Other;
         let (headline, kind_label, idle) = match step {
@@ -1163,7 +1207,6 @@ impl Deck {
             }
         };
         let language = get_language_metadata(self.get_target_language());
-        let streak = self.streak_card_view(inputs.timestamp_ms);
         let cards_studied = self.num_cards_studied();
         let day = DateTime::<Utc>::from_timestamp_millis(inputs.timestamp_ms as i64)
             .unwrap_or_else(Utc::now)
@@ -1194,10 +1237,16 @@ impl Deck {
                 due_count,
                 idle,
             },
-            goal: goal_tier_info.map(|tier_info| self.goal_card_view(&tier_info)),
+            curriculum,
             week: WeekCardView {
                 title: "This week".into(),
-                today_label: streak.today_label,
+                today: EmphasizedText {
+                    before: format!("{} / ", self.get_today_time_spent_on(day) / 60),
+                    emphasis: format!("{} min", self.get_daily_review_target() / 60),
+                    after: " today".into(),
+                },
+                daily_goal: self.get_daily_review_target_setting(),
+                goal_options: self.goal_options_view(),
                 days: self.get_current_week_progress_on(day),
             },
             xp: HomeStatView {
@@ -1280,26 +1329,6 @@ impl Deck {
             ),
             frequency_knowledge_chart_data: self.get_frequency_knowledge_chart_data(),
             frequency_knowledge_chart_title: "Word knowledge by frequency".into(),
-        }
-    }
-
-    #[bridgerton::stable]
-    pub fn goals_screen_view(
-        &self,
-        banned: Vec<ChallengeRequirements>,
-        sentence_list: Option<SentenceListSelection>,
-    ) -> GoalsScreenView {
-        let (curriculum, info) = self.curriculum_view(banned, sentence_list);
-        GoalsScreenView {
-            title: "Goals".into(),
-            target_language: self.get_target_language(),
-            goal: self.goal_card_view(&info.tier_info),
-            tier_info: info.tier_info,
-            daily_goal_title: "Daily goal".into(),
-            daily_goal: self.get_daily_review_target_setting(),
-            daily_goal_label: format!("{} min per day", self.get_daily_review_target() / 60),
-            daily_goal_options: self.goal_options_view(),
-            curriculum,
         }
     }
 
@@ -1885,7 +1914,25 @@ mod tests {
     }
 
     #[test]
-    fn home_idle_and_goals_share_curriculum_and_smart_add() {
+    fn categories_reopen_on_the_last_list_chosen_in_them() {
+        let movie = SentenceListSelection::Movie {
+            id: "tt0097904".into(),
+        };
+        let deck = Deck::default();
+        let event = deck.change_sentence_list(Some(movie.clone()));
+        let deck = apply(deck, event);
+        let event = deck.choose_curriculum_category(SentenceListCategory::Essential);
+        let deck = apply(deck, event);
+        assert_eq!(deck.get_sentence_list(), None);
+        let home = deck.home_screen_view(inputs());
+        assert!(home.curriculum.is_none() || home.curriculum.unwrap().item.is_none());
+        let event = deck.choose_curriculum_category(SentenceListCategory::Movie);
+        let deck = apply(deck, event);
+        assert_eq!(deck.get_sentence_list(), Some(movie));
+    }
+
+    #[test]
+    fn idle_curriculum_commits_only_a_real_switch() {
         let deck = Deck::default();
         for selection in [
             None,
@@ -1902,74 +1949,18 @@ mod tests {
                 inputs.sentence_list = selection.clone();
                 inputs.is_signed_in = signed_in;
                 let home = deck.home_screen_view(inputs.clone());
-                let goals = deck.goals_screen_view(vec![], selection.clone());
                 let IdleScreenView::Idle(idle) = home.up_next.idle.unwrap() else {
                     panic!("new deck should be idle");
                 };
                 assert_eq!(home.up_next.headline, idle.title);
-                assert_eq!(home.goal.is_none(), idle.show_sentence_list);
-                assert_eq!(json(home.goal), json(goals.goal));
-                assert_eq!(json(&goals.curriculum.navigation), json(idle.navigation));
+                assert_eq!(home.curriculum.is_none(), idle.show_sentence_list);
                 assert_eq!(
-                    json(goals.curriculum.sentence_list_options),
-                    json(idle.sentence_list_options)
-                );
-                assert_eq!(json(goals.curriculum.progress), json(idle.progress));
-                assert_eq!(
-                    goals.curriculum.sentence_list_label,
-                    idle.sentence_list_label
+                    idle.commit_curriculum.is_some(),
+                    idle.navigation.selection != deck.get_sentence_list()
                 );
                 assert_eq!(
-                    json(
-                        goals
-                            .curriculum
-                            .switch_curriculum
-                            .as_ref()
-                            .map(|switch| &switch.event)
-                    ),
-                    json(&idle.commit_curriculum)
-                );
-                // The floating commit exists exactly when the browsed draft
-                // differs from the deck's persisted curriculum.
-                assert_eq!(
-                    goals.curriculum.switch_curriculum.is_some(),
-                    goals.curriculum.navigation.selection != deck.get_sentence_list()
-                );
-                if let Some(switch) = &goals.curriculum.switch_curriculum {
-                    assert_eq!(
-                        switch.label,
-                        format!(
-                            "Switch curriculum to {}",
-                            goals.curriculum.sentence_list_label
-                        )
-                    );
-                }
-                assert_eq!(
-                    json(deck.get_manual_add_options(
-                        goals.curriculum.navigation.selection.clone(),
-                        signed_in,
-                    )),
+                    json(deck.get_manual_add_options(idle.navigation.selection.clone(), signed_in)),
                     json(idle.manual_add_options)
-                );
-                assert_eq!(
-                    goals.curriculum.has_movies,
-                    goals
-                        .curriculum
-                        .navigation
-                        .categories
-                        .contains(&SentenceListCategory::Movie)
-                );
-                assert_eq!(
-                    goals.curriculum.has_pimsleur,
-                    goals
-                        .curriculum
-                        .navigation
-                        .categories
-                        .contains(&SentenceListCategory::Pimsleur)
-                );
-                assert_eq!(
-                    json(goals.daily_goal_options),
-                    json(deck.goal_options_view())
                 );
             }
         }
@@ -2039,10 +2030,13 @@ mod tests {
         ] {
             assert_eq!(sentence_list_category_label(category), expected);
         }
-        let goals = deck.goals_screen_view(vec![], None);
-        for option in goals.curriculum.sentence_list_options {
-            assert_eq!(option.label, sentence_list_category_label(option.category));
-        }
+        let curriculum = home
+            .curriculum
+            .expect("cards are ready, so Home shows the row");
+        assert_eq!(curriculum.category, SentenceListCategory::Essential);
+        assert_eq!(curriculum.options[0].label, curriculum.menu_label);
+        assert_eq!(home.week.today.emphasis, "10 min");
+        assert_eq!(home.week.goal_options[0].minutes_label, "5 min");
     }
 
     #[test]
@@ -2157,7 +2151,11 @@ mod tests {
             ..inputs()
         });
         let stats = deck.stats_screen_view(vec![], after_midnight);
-        assert_eq!(home.week.today_label, tomorrow.today_label);
+        let week = &home.week.today;
+        assert_eq!(
+            format!("{}{}{}", week.before, week.emphasis, week.after),
+            tomorrow.today_label
+        );
         assert_eq!(stats.tiles[2].eyebrow, tomorrow.title);
         assert_eq!(stats.tiles[2].value, tomorrow.days_label);
         assert_eq!(stats.tiles[2].caption, Some(tomorrow.today_label));
@@ -2210,19 +2208,26 @@ mod tests {
     #[test]
     fn goal_and_overall_coverage_use_their_distinct_percentage_scales() {
         let deck = Deck::default();
-        let goal = deck.goal_card_view(&TierInfo {
-            tier: 1,
-            name: "Elementary".into(),
-            level: 5,
-            total_levels: 7,
-            percent_known: 70.0,
-            percent_of_usage: 24.8,
-        });
-        assert_eq!(goal.title, "Elementary French Level 5");
+        let goal = deck.home_curriculum_view(
+            &TierInfo {
+                tier: 1,
+                name: "Elementary".into(),
+                level: 5,
+                total_levels: 7,
+                percent_known: 70.0,
+                percent_of_usage: 24.8,
+            },
+            deck.curriculum_navigation(None),
+        );
+        assert_eq!(goal.menu_label, "Elementary French");
+        assert_eq!(goal.percent, 70.0);
         assert_eq!(goal.percent_label, "70%");
-        assert_eq!(goal.name, "Elementary French");
-        assert_eq!(goal.level_label, "Level 5 of 7");
-        assert_eq!(goal.subtitle, "Unlocks 24.8% of everyday French");
+        assert_eq!(goal.level_label.as_deref(), Some("Level 5 of 7"));
+        assert_eq!(
+            goal.subtitle.as_deref(),
+            Some("Unlocks 24.8% of everyday French")
+        );
+        assert!(goal.item.is_none());
         let home = deck.home_screen_view(inputs());
         assert_eq!(home.course_icon, "fra.eiffel");
         assert_eq!(
@@ -2247,9 +2252,10 @@ mod tests {
         );
         assert_eq!(home.xp.value, "0");
         assert_eq!(home.week.days.len(), 7);
+        assert_eq!(home.week.today.before, "0 / ");
         assert_eq!(
-            home.week.today_label,
-            format!("0 / {} min today", deck.get_daily_review_target() / 60)
+            home.week.today.emphasis,
+            format!("{} min", deck.get_daily_review_target() / 60)
         );
     }
 }

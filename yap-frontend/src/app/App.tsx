@@ -1,5 +1,4 @@
 import { HomePage } from "@/browse/HomeScreen";
-import { GoalsPage } from "@/browse/GoalsScreen";
 import { StatsPage } from "@/browse/StatsScreen";
 import { DueWordsPage } from "@/browse/DueWordsScreen";
 import { CourseRoutes } from "@/review/course-study";
@@ -71,7 +70,6 @@ const router = createBrowserRouter([
               { path: "stats", element: <StatsPage /> },
               { path: "due", element: <DueWordsPage /> },
               { path: "dictionary", element: <DictionaryPage /> },
-              { path: "goals", element: <GoalsPage /> },
               {
                 path: "anki",
                 lazy: async () => {

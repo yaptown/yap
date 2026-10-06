@@ -6,11 +6,10 @@ Every `fixtures/*/*.json` is a Rust `Fixture`, an adjacent-tagged envelope:
 { "screen": "Review", "view": { "...": "the screen's Rust snapshot" } }
 ```
 
-`screen` is `Review`, `Home`, `Stats`, `Goals`, or `Due`; `view` is respectively
-`ReviewScreenView`, `HomeScreenView`, `StatsScreenView`, `GoalsScreenView`, or
-`DueWordsScreenView`. Directory names organize captures, not dispatch. Discovery
+`screen` is `Review`, `Home`, `Stats`, or `Due`; `view` is respectively
+`ReviewScreenView`, `HomeScreenView`, `StatsScreenView`, or `DueWordsScreenView`. Directory names organize captures, not dispatch. Discovery
 visits every immediate fixture subdirectory; names must be unique across them.
-All captures are real (no synthetic data): `home/`, `stats/`, `goals/`, and
+All captures are real (no synthetic data): `home/`, `stats/`, and
 `due/` now hold live snapshots alongside `challenges/` and `screens/`.
 
 The current `challenges/*.json` and `screens/*.json` are real Review screens
@@ -43,8 +42,8 @@ CONTAINER=$(xcrun simctl get_app_container <UDID> town.yap.ios data)
 printf 'dump-fixture my-name' > "$CONTAINER/tmp/yap-command"
 ```
 
-`dump-fixture` captures the active Home, Stats, Goals, Due, or Review screen.
-Use `tab home`, `tab stats`, `tab goals`, `tab due`, or `tab review` first.
+`dump-fixture` captures the active Home, Stats, Due, or Review screen.
+Use `tab home`, `tab stats`, `tab due`, or `tab review` first.
 Review captures include the visible challenge, idle screen, review plan (including
 an expanded "Study more" plan), or accomplishment. Wait for `fixture written` in
 `$CONTAINER/tmp/yap-test.log`, then copy `$CONTAINER/tmp/fixtures/my-name.json`
@@ -54,8 +53,10 @@ a new build; its path can change.
 Use `status` to inspect the current screen, due counts, and today's goal progress.
 Use `reveal` / `grade` (or `grade-again`), `type-reference` / `submit` / `continue`,
 `dismiss-step`, `add`, `add-listening`, and `add-pronunciation` to reach screens.
-`goal 0` selects the smallest daily goal; it does not retroactively award a goal
-already passed. `switch-course`, `status`, then `choose N` selects another course.
+On Home, `goal 0` selects the smallest daily goal (it does not retroactively
+award a goal already passed), `curriculum N` picks the Nth category in the
+curriculum menu, and `browse` opens the curriculum browser, where `browse-tab N`
+and `browse-pick N` choose a tab and an item. `switch-course`, `status`, then `choose N` selects another course.
 The test deck rarely schedules translation; `force-translation` poses one,
 then `type`, `type-reference`, `submit`, and `continue` drive it.
 Send commands separately, at least 1.5 seconds apart, and wait for grading or
@@ -79,11 +80,9 @@ driver reviews append real, immutable events to that test account.
   types (including `Fixture`) are always available. Fixture rendering still uses
   each screen's live app shell; Home stays at the navigation root.
 
-Injected Home/Stats/Goals/Due screens are inert and cannot append deck events.
-Goals captures cover the goal, daily-goal editor, and curriculum card; the extra
-movie/Pimsleur browsing lists are still derived from the live deck, not included
-in `GoalsScreenView`, and are deliberately omitted during fixture rendering on
-both hosts. Those extras are **not** captured coverage. Existing app-level auth
+Injected Home/Stats/Due screens are inert and cannot append deck events. The
+curriculum browser's movie and Pimsleur lists come from the live deck, not from
+`HomeScreenView`, so they are **not** captured coverage. Existing app-level auth
 and synchronization still run; fixture mode is not an offline sandbox.
 
 ## Side-by-side screenshots

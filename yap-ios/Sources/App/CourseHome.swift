@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum CourseRoute: Hashable {
-    case review, goals, stats, dictionary(searching: Bool = false), due, settings
+    case review, stats, dictionary(searching: Bool = false), due, settings
 }
 
 struct CourseHome: View {
@@ -34,7 +34,6 @@ struct CourseHome: View {
                     Group {
                         switch route {
                         case .review: reviewScreen.id(ObjectIdentifier(review.deck))
-                        case .goals: GoalsScreen(review: review)
                         case .stats: StatsScreen(review: review) { navigate(.due) }
                         case let .dictionary(searching):
                             DictionaryScreen(session: session, searching: searching)
@@ -85,7 +84,6 @@ struct CourseHome: View {
                 switch command.dropFirst(4).lowercased() {
                 case "home": path = []
                 case "learn", "review": navigate(.review)
-                case "lists", "goals": navigate(.goals)
                 case "stats": navigate(.stats)
                 case "dictionary": navigate(.dictionary())
                 case "due": navigate(.due)
@@ -106,11 +104,7 @@ struct CourseHome: View {
         .environment(\.reviewHost, review.host)
         .environment(\.reviewActions, actions)
     }
-    private var actions: ReviewActions {
-        var actions = review.actions
-        actions.openGoals = { navigate(.goals) }
-        return actions
-    }
+    private var actions: ReviewActions { review.actions }
     @ViewBuilder private var homeScreen: some View {
         #if DEBUG
         if case let .Home(view) = DebugHarness.shared.fixture {
@@ -140,7 +134,6 @@ struct CourseHome: View {
             case let .Review(view): ReviewScreen(view: view)
             case let .Home(view): HomeScreen(review: review, navigate: { _ in }, searchTransition: dictionarySearch, view: view)
             case let .Stats(view): StatsScreen(review: review, showDue: {}, view: view)
-            case let .Goals(view): GoalsScreen(review: review, view: view)
             case let .Due(view): DueWordsScreen(review: review, view: view)
             }
         }

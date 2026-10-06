@@ -9,6 +9,7 @@ import type {
   Deck,
   Language,
   MovieMetadataBasic,
+  SentenceListCategory,
 } from "../../../yap-frontend-rs/pkg";
 import {
   DropdownMenu,
@@ -37,7 +38,8 @@ import { TargetLanguageText } from "../components/TargetLanguageText";
 import { ReviewPlanCard } from "./ladder/ReviewPlanScreen";
 import { WeekProgressStrip } from "./WeekProgressStrip";
 import { sentenceListSelectionToSentenceList, type SentenceList } from "@/browse/useSentenceList";
-import { useNavigate } from "react-router-dom";
+import { CurriculumBrowser } from "@/browse/CurriculumBrowser";
+import { acknowledgePimsleur, pimsleurAcknowledged as readPimsleurAcknowledged } from "@/browse/pimsleur";
 
 export interface MovieWithMetadata extends MovieMetadataBasic {
   percent_known: number;
@@ -103,8 +105,7 @@ export function IdleScreen(props: IdleScreenProps) {
 }
 
 function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, undoRestrictions, deck, setSentenceList, commitSentenceList }: Omit<IdleScreenProps, "view"> & { view: IdleView }) {
-  const navigate = useNavigate();
-  const [pimsleurAcknowledged, setPimsleurAcknowledged] = useState(() => localStorage.getItem("yap-pimsleur-acknowledged") === "true");
+  const [pimsleurAcknowledged, setPimsleurAcknowledged] = useState(readPimsleurAcknowledged);
   const targetLanguage = view.target_language;
   const info = view.info;
   const manualAddOptions = view.manual_add_options;
@@ -129,6 +130,8 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
   const categories = navigation.categories;
   const effectiveIndex = navigation.selected_index;
   const effectiveSentenceList = sentenceListSelectionToSentenceList(navigation.selection);
+
+  const [browsing, setBrowsing] = useState<SentenceListCategory | null>(null);
 
   const canGoLeft = effectiveIndex > 0;
   const canGoRight = effectiveIndex < categories.length - 1;
@@ -212,7 +215,7 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
                   <Button
                     variant="default"
                     onClick={() => {
-                      localStorage.setItem("yap-pimsleur-acknowledged", "true");
+                      acknowledgePimsleur();
                       setPimsleurAcknowledged(true);
                     }}
                   >
@@ -222,7 +225,7 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
               ) : (
                 <>
                   <div
-                    onClick={() => navigate("/goals")}
+                    onClick={() => setBrowsing(categories[effectiveIndex])}
                     className="hidden sm:block sm:order-first w-24 h-36 flex-shrink-0 rounded-lg border border-border/50 overflow-hidden cursor-pointer hover:scale-105 transition-all"
                   >
                     {sentenceListImage?.type === "url" ? (
@@ -326,7 +329,7 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
                     )}
 
                     <button
-                      onClick={() => navigate("/goals")}
+                      onClick={() => setBrowsing(categories[effectiveIndex])}
                       className="text-xs text-foreground/60 hover:text-foreground underline underline-offset-2 transition-colors text-left"
                     >
                       {view.change_sentence_list_label}
@@ -368,6 +371,13 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
           </div>
         </Card>
       )}
+
+      <CurriculumBrowser
+        deck={deck}
+        category={browsing}
+        onClose={() => setBrowsing(null)}
+        onChoose={commitSentenceList}
+      />
 
       {showEngagementPrompts && <EngagementPrompts language={targetLanguage} />}
 

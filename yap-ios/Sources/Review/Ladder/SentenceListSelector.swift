@@ -9,6 +9,7 @@ struct SentenceListSelector: View {
     let view: IdleView
     let add: (DeckEvent) -> Void
     @AppStorage("yap-pimsleur-acknowledged") private var pimsleurAcknowledged = false
+    @State private var browsing: SentenceListCategory?
     private var navigation: SentenceListNavigation { view.navigation }
     var body: some View {
         StudyCard(alignment: .center, spacing: 12, animated: true) {
@@ -39,7 +40,7 @@ struct SentenceListSelector: View {
                 if let note = view.level_note {
                     Text(note).font(.caption).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
                 }
-                Button(view.change_sentence_list_label, action: actions.openGoals)
+                Button(view.change_sentence_list_label) { browsing = view.sentence_list_options[Int(navigation.selected_index)].category }
                     .font(.caption).underline().foregroundStyle(Color.yapText.opacity(0.6)).buttonStyle(.plain)
             }
             // Below everything, as on the web's phone layout.
@@ -47,6 +48,7 @@ struct SentenceListSelector: View {
                 HStack { chevron(-1); Spacer(); chevron(1) }
             }
         }
+        .sheet(item: $browsing) { category in CurriculumBrowser(tab: category) }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
             guard DebugHarness.shared.activeScreen == .review else { return }

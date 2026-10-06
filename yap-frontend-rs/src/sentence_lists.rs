@@ -1,4 +1,4 @@
-use crate::{Deck, SentenceListSelection};
+use crate::{Deck, DeckEvent, SentenceListSelection};
 
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -76,6 +76,7 @@ impl SentenceListProgress {
 
 #[bridgerton::bridge]
 impl Deck {
+    /// The list a category opens on: the last one chosen in it, else the best.
     /// Called only when switching categories, so choosing the best movie stays lazy.
     #[bridgerton::stable]
     pub fn get_sentence_list_for_category(
@@ -84,15 +85,25 @@ impl Deck {
     ) -> Option<SentenceListSelection> {
         match category {
             SentenceListCategory::Essential => None,
-            SentenceListCategory::Movie => self.get_best_movie_sentence_list().or_else(|| {
-                self.movie_stats(false)
-                    .first()
-                    .map(|movie| SentenceListSelection::Movie {
-                        id: movie.id.clone(),
-                    })
+            SentenceListCategory::Movie => self.last_movie.clone().or_else(|| {
+                self.get_best_movie_sentence_list().or_else(|| {
+                    self.movie_stats(false)
+                        .first()
+                        .map(|movie| SentenceListSelection::Movie {
+                            id: movie.id.clone(),
+                        })
+                })
             }),
-            SentenceListCategory::Pimsleur => self.get_best_pimsleur_sentence_list(),
+            SentenceListCategory::Pimsleur => self
+                .last_pimsleur_lesson
+                .clone()
+                .or_else(|| self.get_best_pimsleur_sentence_list()),
         }
+    }
+
+    /// Home's curriculum menu: switch to the list a category opens on.
+    pub fn choose_curriculum_category(&self, category: SentenceListCategory) -> DeckEvent {
+        self.change_sentence_list(self.get_sentence_list_for_category(category))
     }
     /// Essential progress refers to the tier chosen by smart-add, which may
     /// differ from the first incomplete tier when the proposed cards finish it.

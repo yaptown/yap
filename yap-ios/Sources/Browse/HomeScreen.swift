@@ -56,18 +56,15 @@ struct HomeScreen: View {
                         // Everything below Up Next is one quiet panel of progress, so
                         // the next thing to study stays the only card that stands out.
                         VStack(alignment: .leading, spacing: 0) {
-                            if let goal = view.goal {
-                                Button { navigate(.goals) } label: {
-                                    VStack(alignment: .leading, spacing: 12) { GoalProgress(goal: goal) }
-                                        .padding(16).contentShape(Rectangle())
-                                }.buttonStyle(.plain)
+                            if let curriculum = view.curriculum {
+                                HomeCurriculum(view: curriculum, inert: self.view != nil)
                                 Divider()
                             }
                             VStack(spacing: 16) {
                                 HStack(alignment: .firstTextBaseline) {
                                     Text(view.week.title).font(.headline).foregroundStyle(Color.yapText)
                                     Spacer()
-                                    Text(view.week.today_label).font(.subheadline.monospacedDigit()).foregroundStyle(Color.yapMuted)
+                                    GoalMenu(week: view.week) { if self.view == nil { actions.addEvent($0) } }
                                 }
                                 WeekProgressStrip(week: view.week.days).equatable()
                             }.padding(16)
@@ -166,20 +163,122 @@ private struct SyncDot: View {
     }
 }
 
-struct GoalProgress: View {
-    let goal: GoalCardView
+/// What Home is studying from. The name is a menu of categories; a movie or
+/// lesson opens the browser for the rest of its category. Both commit on the spot.
+private struct HomeCurriculum: View {
+    @Environment(\.reviewHost!) private var host
+    @Environment(\.reviewActions!) private var actions
+    @AppStorage("yap-pimsleur-acknowledged") private var pimsleurAcknowledged = false
+    let view: HomeCurriculumView
+    let inert: Bool
+    @State private var browsing: SentenceListCategory?
     var body: some View {
-        HStack(spacing: 10) {
-            Text(goal.name).font(.headline).foregroundStyle(Color.yapText)
-            Text(goal.level_label).font(.caption).foregroundStyle(Color.yapMuted).lineLimit(1)
-                .padding(.horizontal, 8).padding(.vertical, 3)
-                .overlay { Capsule().strokeBorder(Color(uiColor: .separator)) }
-            Spacer(minLength: 0)
-            Text(goal.percent_label).font(.headline.monospacedDigit()).foregroundStyle(Color.yapText)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                Menu {
+                    ForEach(view.options, id: \.category) { option in
+                        Button { choose(option.category) } label: {
+                            if option.category == view.category { Label(option.label, systemImage: "checkmark") } else { Text(option.label) }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(view.menu_label).font(.headline)
+                        Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(Color.yapMuted)
+                    }.foregroundStyle(Color.yapText).contentShape(Rectangle())
+                }
+                if let level = view.level_label {
+                    Text(level).font(.caption).foregroundStyle(Color.yapMuted).lineLimit(1)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .overlay { Capsule().strokeBorder(Color(uiColor: .separator)) }
+                }
+                Spacer(minLength: 0)
+            }
+            if let item = view.item {
+                HStack(spacing: 14) {
+                    Group {
+                        if let id = item.movie_id { PosterImage(id: id) }
+                        else { Color.yapMutedSurface.overlay { Image(systemName: "headphones").foregroundStyle(Color.yapMuted) } }
+                    }
+                    .frame(width: 44, height: 66).clipShape(RoundedRectangle(cornerRadius: 6))
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            Text(item.title).font(.body.weight(.medium)).foregroundStyle(Color.yapText).lineLimit(1)
+                            Spacer(minLength: 0)
+                            Button(item.browse_label) { if !inert { browsing = view.category } }
+                                .buttonStyle(.bordered).controlSize(.small).fixedSize()
+                        }
+                        progress(label: item.title)
+                    }
+                }
+            } else {
+                progress(label: view.menu_label)
+            }
+            if let subtitle = view.subtitle { Text(subtitle).font(.subheadline).foregroundStyle(Color.yapMuted) }
         }
-        ProgressView(value: goal.percent, total: 100)
-            .accessibilityLabel(goal.title).accessibilityValue(goal.percent_label)
-        Text(goal.subtitle).font(.subheadline).foregroundStyle(Color.yapMuted)
+        .padding(16)
+        .sheet(item: $browsing) { category in CurriculumBrowser(tab: category) }
+        #if DEBUG
+        .onChange(of: DebugHarness.shared.commandID) { _, _ in
+            guard DebugHarness.shared.activeScreen == .home else { return }
+            let command = DebugHarness.shared.command
+            if command.hasPrefix("curriculum "), let index = Int(command.dropFirst(11)), view.options.indices.contains(index) {
+                choose(view.options[index].category)
+            }
+            if command == "browse" { browsing = view.category }
+        }
+        #endif
+    }
+    private func progress(label: String) -> some View {
+        HStack(spacing: 10) {
+            ProgressView(value: view.percent, total: 100)
+            Text(view.percent_label).font(.subheadline.weight(.semibold).monospacedDigit()).foregroundStyle(Color.yapText)
+        }
+        .accessibilityElement(children: .ignore).accessibilityLabel(label).accessibilityValue(view.percent_label)
+    }
+    private func choose(_ category: SentenceListCategory) {
+        guard !inert, category != view.category else { return }
+        // The disclaimer lives in the browser, so an unacknowledged Pimsleur goes there first.
+        if category == .Pimsleur && !pimsleurAcknowledged { browsing = category }
+        else { actions.commitSentenceList(host.deck.choose_curriculum_category(category: category)) }
+    }
+}
+
+extension SentenceListCategory: Identifiable {
+    public var id: Self { self }
+}
+
+/// "0 / [5 min ⌄] today": the goal is a menu of the daily goals.
+private struct GoalMenu: View {
+    let week: WeekCardView
+    let choose: (DeckEvent) -> Void
+    var body: some View {
+        HStack(spacing: 0) {
+            Text(week.today.before)
+            Menu {
+                ForEach(Array(week.goal_options.enumerated()), id: \.offset) { _, option in
+                    Button { if option.target != week.daily_goal { choose(option.event) } } label: {
+                        if option.target == week.daily_goal { Label(option.minutes_label, systemImage: "checkmark") } else { Text(option.minutes_label) }
+                        Text(option.label)
+                    }
+                }
+            } label: {
+                HStack(spacing: 2) {
+                    Text(week.today.emphasis).fontWeight(.semibold).foregroundStyle(Color.yapText)
+                    Image(systemName: "chevron.down").font(.caption2.weight(.semibold))
+                }.contentShape(Rectangle())
+            }
+            Text(week.today.after)
+        }
+        .font(.subheadline.monospacedDigit()).foregroundStyle(Color.yapMuted)
+        #if DEBUG
+        .onChange(of: DebugHarness.shared.commandID) { _, _ in
+            let command = DebugHarness.shared.command
+            guard DebugHarness.shared.activeScreen == .home, command.hasPrefix("goal "),
+                  let index = Int(command.dropFirst(5)), week.goal_options.indices.contains(index) else { return }
+            choose(week.goal_options[index].event)
+        }
+        #endif
     }
 }
 

@@ -271,20 +271,103 @@
         "commit_curriculum": null
       }
     },
-    "goal": {
-      "title": "Basic Italian Level 3",
-      "name": "Basic Italian",
+    "curriculum": {
+      "category": "essential",
+      "menu_label": "Basic Italian",
+      "options": [
+        {
+          "category": "essential",
+          "label": "Basic Italian"
+        },
+        {
+          "category": "movie",
+          "label": "Movies"
+        },
+        {
+          "category": "pimsleur",
+          "label": "Pimsleur"
+        }
+      ],
+      "item": null,
       "level_label": "Level 3 of 13",
-      "tier_name": "Basic",
-      "level": 3,
-      "total_levels": 13,
       "percent": 0.0,
       "percent_label": "0%",
       "subtitle": "Unlocks 37.4% of everyday Italian"
     },
     "week": {
       "title": "This week",
-      "today_label": "0 / 10 min today",
+      "today": {
+        "before": "0 / ",
+        "emphasis": "10 min",
+        "after": " today"
+      },
+      "daily_goal": "Regular",
+      "goal_options": [
+        {
+          "target": "Casual",
+          "label": "Casual",
+          "duration_label": "5m",
+          "minutes_label": "5 min",
+          "minutes": 5,
+          "event": {
+            "type": "Language",
+            "target_language": "Italian",
+            "native_language": "English",
+            "content": {
+              "type": "SetDailyReviewTarget",
+              "daily_review_target": "Casual"
+            }
+          }
+        },
+        {
+          "target": "Regular",
+          "label": "Regular",
+          "duration_label": "10m",
+          "minutes_label": "10 min",
+          "minutes": 10,
+          "event": {
+            "type": "Language",
+            "target_language": "Italian",
+            "native_language": "English",
+            "content": {
+              "type": "SetDailyReviewTarget",
+              "daily_review_target": "Regular"
+            }
+          }
+        },
+        {
+          "target": "Serious",
+          "label": "Serious",
+          "duration_label": "15m",
+          "minutes_label": "15 min",
+          "minutes": 15,
+          "event": {
+            "type": "Language",
+            "target_language": "Italian",
+            "native_language": "English",
+            "content": {
+              "type": "SetDailyReviewTarget",
+              "daily_review_target": "Serious"
+            }
+          }
+        },
+        {
+          "target": "Intense",
+          "label": "Intense",
+          "duration_label": "20m",
+          "minutes_label": "20 min",
+          "minutes": 20,
+          "event": {
+            "type": "Language",
+            "target_language": "Italian",
+            "native_language": "English",
+            "content": {
+              "type": "SetDailyReviewTarget",
+              "daily_review_target": "Intense"
+            }
+          }
+        }
+      ],
       "days": [
         {
           "weekday": 0,

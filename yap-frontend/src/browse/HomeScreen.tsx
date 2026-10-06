@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   BookOpen,
+  Check,
   ChevronDown,
   Headphones,
   Keyboard,
@@ -26,7 +27,13 @@ import type { UserInfo } from "@/app/context";
 import { DeckPage } from "@/app/DeckPage";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import { Card } from "@/components/ui/card";
-import { GoalProgress } from "@/browse/GoalProgress";
+import { HomeCurriculum } from "@/browse/HomeCurriculum";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { WeekProgressStrip } from "@/review/WeekProgressStrip";
 import { TargetLanguageText } from "@/components/TargetLanguageText";
 import { About } from "@/components/about";
@@ -75,7 +82,7 @@ function LiveHomeScreen({ deck, userInfo }: HomeProps) {
     // Adding cards from Home means "I want to study these now".
     navigate("/learn");
   };
-  // Switching curriculum is not adding cards: it stays on Home.
+  // Switching curriculum or goal is not adding cards: it stays on Home.
   const commitSentenceList = (event: DeckEvent) => {
     study.actions.addEvent(event);
     clearSentenceList();
@@ -89,6 +96,7 @@ function LiveHomeScreen({ deck, userInfo }: HomeProps) {
       undoRestrictions={study.actions.undoRestrictions}
       setSentenceList={setSentenceList}
       commitSentenceList={commitSentenceList}
+      setGoal={study.actions.addEvent}
     />
   );
 }
@@ -102,6 +110,7 @@ function HomeContent({
   undoRestrictions = () => {},
   setSentenceList = () => {},
   commitSentenceList = () => {},
+  setGoal = () => {},
 }: HomeProps & {
   view: HomeScreenView;
   inert?: boolean;
@@ -109,6 +118,7 @@ function HomeContent({
   undoRestrictions?: () => void;
   setSentenceList?: (selection: SentenceList) => void;
   commitSentenceList?: (event: DeckEvent) => void;
+  setGoal?: (event: DeckEvent) => void;
 }) {
   const navigate = useNavigate();
   const upNext = view.up_next;
@@ -183,19 +193,48 @@ function HomeContent({
           {/* Everything below Up Next is one quiet panel of progress, so the
               next thing to study stays the only card that stands out. */}
           <Card variant="light" className="p-0 gap-0 divide-y divide-border/60 overflow-hidden">
-            {view.goal && (
-              <Link
-                to="/goals"
-                className="flex flex-col gap-3 p-5 hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:bg-muted/40"
-              >
-                <GoalProgress goal={view.goal} />
-              </Link>
+            {view.curriculum && (
+              <HomeCurriculum
+                view={view.curriculum}
+                deck={deck}
+                inert={inert}
+                onChoose={commitSentenceList}
+              />
             )}
             <section className="flex flex-col gap-4 p-5">
               <div className="flex items-baseline justify-between gap-4">
                 <h2 className="text-lg font-semibold">{view.week.title}</h2>
                 <span className="text-sm tabular-nums text-muted-foreground">
-                  {view.week.today_label}
+                  {view.week.today.before}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="-mx-1 inline-flex items-baseline gap-0.5 rounded-md px-1 font-medium text-foreground hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-muted/60">
+                      {view.week.today.emphasis}
+                      <ChevronDown className="h-3.5 w-3.5 self-center text-muted-foreground" aria-hidden />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="min-w-44"
+                      onCloseAutoFocus={(event) => event.preventDefault()}
+                    >
+                      {view.week.goal_options.map((option) => (
+                        <DropdownMenuItem
+                          key={option.target}
+                          onSelect={() => {
+                            if (!inert && option.target !== view.week.daily_goal)
+                              setGoal(option.event);
+                          }}
+                          className="py-2"
+                        >
+                          <span className="text-base tabular-nums">{option.minutes_label}</span>
+                          <span className="text-muted-foreground">{option.label}</span>
+                          {option.target === view.week.daily_goal && (
+                            <Check className="ml-auto h-4 w-4 text-foreground" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  {view.week.today.after}
                 </span>
               </div>
               <WeekProgressStrip week={view.week.days} />
