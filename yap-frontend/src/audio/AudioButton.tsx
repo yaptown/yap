@@ -421,7 +421,12 @@ export function AudioButton({
         if (!signal.aborted) onSuccessRef.current?.();
       } catch (error) {
         if (isAbort(error) || signal.aborted) return;
-        console.error("Failed to play audio:", error);
+        // Autoplay blocked by the browser (no user gesture, iOS Safari) isn't a bug.
+        const log =
+          error instanceof Error && error.name === "NotAllowedError"
+            ? console.warn
+            : console.error;
+        log("Failed to play audio:", error);
         onErrorRef.current?.();
       } finally {
         stopTimeUpdates();

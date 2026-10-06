@@ -158,7 +158,15 @@ export function useOneSignalNotifications() {
         user_id: user.id,
       });
     } catch (err) {
-      console.error("Error subscribing:", err);
+      // The user dismissing/blocking the prompt, a browser without a push
+      // service, or being logged out are expected outcomes, not bugs.
+      const expected =
+        err instanceof Error &&
+        (err.message === "Permission dismissed" ||
+          err.message === "Must be logged in to subscribe" ||
+          (err.name === "AbortError" &&
+            err.message.includes("push service not available")));
+      (expected ? console.warn : console.error)("Error subscribing:", err);
       setError(err instanceof Error ? err.message : "Failed to subscribe");
     } finally {
       setIsLoading(false);
