@@ -10,6 +10,7 @@ struct HomeScreen: View {
     var view: HomeScreenView? = nil
     var isVisible = true
     @State private var snapshot = Snapshot()
+    @State private var sync: SyncStatusView?
     // While a route covers Home, reuse the last view instead of asking Rust again; keeping
     // the subtree mounted preserves scroll position for the way back.
     private final class Snapshot { var view: HomeScreenView? }
@@ -116,7 +117,9 @@ struct HomeScreen: View {
                 HStack(spacing: 8) {
                     Text("Yap").font(.title2.bold()).foregroundStyle(Color.yapText).fixedSize()
                         .accessibilityAddTraits(.isHeader)
-                    SyncDot { navigate(.settings) }
+                    if let sync, let indicator = sync.indicator {
+                        SyncDot(indicator: indicator, label: sync.label) { navigate(.settings) }
+                    }
                 }
             }.hidingSharedBackground()
             ToolbarItem(placement: .topBarTrailing) {
@@ -131,6 +134,18 @@ struct HomeScreen: View {
                     .labelStyle(.iconOnly).foregroundStyle(Color.yapAccent)
             }
         }
+        // The status turns on the clock (an event counts as unsynced after a few seconds), so
+        // poll it, but only touch state when it changes: rebuilding the bar every second, as a
+        // TimelineView here did, blocked the main thread for most of each second.
+        .task(id: isVisible) {
+            while isVisible {
+                let session = review.session
+                let next = session.weapon?.sync_status(online: session.online, now_ms: Date.now.timeIntervalSince1970 * 1000,
+                                                       manual_sync_in_flight: false, host_sync_error: session.syncError)
+                if next != sync { sync = next }
+                do { try await Task.sleep(for: .seconds(1)) } catch { return }
+            }
+        }
         #if DEBUG
         .onAppear { if isVisible { DebugHarness.shared.activeScreen = .home } }
         .onChange(of: isVisible) { _, visible in if visible { DebugHarness.shared.activeScreen = .home } }
@@ -141,18 +156,13 @@ struct HomeScreen: View {
 /// Web's header dot: shown while something isn't synced, colored by how much it
 /// matters. Settings holds the sync details, so that's where a tap goes.
 private struct SyncDot: View {
-    @Environment(\.reviewHost!) private var host
+    let indicator: SyncSeverity
+    let label: String
     let open: () -> Void
     var body: some View {
-        TimelineView(.every(1)) { context in
-            if let sync = host.weapon?.sync_status(online: host.online, now_ms: context.date.timeIntervalSince1970 * 1000,
-                                                   manual_sync_in_flight: false, host_sync_error: host.syncError),
-               let indicator = sync.indicator {
-                Button(action: open) {
-                    Circle().fill(color(indicator)).frame(width: 8, height: 8).frame(width: 24, height: 24).contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityLabel(sync.label)
-            }
-        }
+        Button(action: open) {
+            Circle().fill(color(indicator)).frame(width: 8, height: 8).frame(width: 24, height: 24).contentShape(Rectangle())
+        }.buttonStyle(.plain).accessibilityLabel(label)
     }
     private func color(_ severity: SyncSeverity) -> Color {
         switch severity {
