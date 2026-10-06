@@ -197,7 +197,7 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
           <div className="flex items-center justify-between gap-0">
             <button
               onClick={() => navigateSentenceList("left")}
-              className={`hidden sm:flex p-2 self-stretch items-center transition-colors ${canGoLeft ? "text-foreground/60 hover:text-foreground hover:bg-muted/50" : "text-transparent cursor-default"}`}
+              className={`flex p-1 sm:p-2 self-stretch items-center transition-colors ${canGoLeft ? "text-foreground/60 hover:text-foreground hover:bg-muted/50" : "text-transparent cursor-default"}`}
               disabled={!canGoLeft}
               aria-label="Previous sentence list"
             >
@@ -311,16 +311,20 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
                       </p>
                     )}
 
-                    <Progress
-                      value={sentenceListPercentKnown}
-                      projectedValue={
-                        sentenceListDone
-                          ? undefined
-                          : info.percent_known_after
-                      }
-                      label={view.progress.bar_label}
-                      className="h-6"
-                    />
+                    <div className="flex w-full items-center gap-3">
+                      <Progress
+                        value={sentenceListPercentKnown}
+                        projectedValue={
+                          sentenceListDone
+                            ? undefined
+                            : info.percent_known_after
+                        }
+                        aria-label={view.progress.caption}
+                      />
+                      <span className="shrink-0 text-sm font-semibold tabular-nums">
+                        {view.progress.bar_label}
+                      </span>
+                    </div>
 
                     {view.level_note && (
                       <p className="text-xs text-muted-foreground text-center sm:text-left">
@@ -328,33 +332,14 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
                       </p>
                     )}
 
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2.5"
                       onClick={() => setBrowsing(categories[effectiveIndex])}
-                      className="text-xs text-foreground/60 hover:text-foreground underline underline-offset-2 transition-colors text-left"
                     >
-                      {view.change_sentence_list_label}
-                    </button>
-
-                    {categories.length > 1 && (
-                      <div className="flex sm:hidden items-center justify-between w-full">
-                        <button
-                          onClick={() => navigateSentenceList("left")}
-                          className={`p-2 transition-colors ${canGoLeft ? "text-foreground/60 hover:text-foreground" : "text-transparent cursor-default"}`}
-                          disabled={!canGoLeft}
-                          aria-label="Previous sentence list"
-                        >
-                          <ChevronLeft className="h-6 w-6" />
-                        </button>
-                        <button
-                          onClick={() => navigateSentenceList("right")}
-                          className={`p-2 transition-colors ${canGoRight ? "text-foreground/60 hover:text-foreground" : "text-transparent cursor-default"}`}
-                          disabled={!canGoRight}
-                          aria-label="Next sentence list"
-                        >
-                          <ChevronRight className="h-6 w-6" />
-                        </button>
-                      </div>
-                    )}
+                      {view.change_curriculum_label}
+                    </Button>
                   </div>
                 </>
               )}
@@ -362,7 +347,7 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
 
             <button
               onClick={() => navigateSentenceList("right")}
-              className={`hidden sm:flex p-2 self-stretch items-center transition-colors ${canGoRight ? "text-foreground/60 hover:text-foreground hover:bg-muted/50" : "text-transparent cursor-default"}`}
+              className={`flex p-1 sm:p-2 self-stretch items-center transition-colors ${canGoRight ? "text-foreground/60 hover:text-foreground hover:bg-muted/50" : "text-transparent cursor-default"}`}
               disabled={!canGoRight}
               aria-label="Next sentence list"
             >

@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// The all-caught-up curriculum card: chevrons step through the curricula (both
-/// slots always reserved so the headline's width never changes), and the learn
-/// button adds from whichever one is showing.
+/// The all-caught-up curriculum card: chevrons on either side step through the
+/// curricula (both slots always reserved so the content's width never changes),
+/// and the learn button adds from whichever one is showing.
 struct SentenceListSelector: View {
     @Environment(\.reviewHost!) private var host
     @Environment(\.reviewActions!) private var actions
@@ -16,37 +16,43 @@ struct SentenceListSelector: View {
             (Text(view.curriculum_headline.before + "\n") + Text(view.curriculum_headline.emphasis.uppercased()).bold() + Text(view.curriculum_headline.after))
                 .font(.headline).multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity)
-            if case let .Movie(id) = navigation.selection, let bytes = host.deck.get_movie_poster(movie_id: id) {
-                SentenceListPoster(bytes: bytes, title: view.sentence_list_label).equatable()
-            }
-            if case .PimsleurLesson = navigation.selection, !pimsleurAcknowledged {
-                Image(systemName: "headphones").font(.title).foregroundStyle(Color.yapMuted)
-                Text("Yap has word lists for Pimsleur, but is not affiliated with Pimsleur in any way.")
-                    .font(.subheadline).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
-                Button("I understand") { pimsleurAcknowledged = true }
-                    .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent)
-            } else {
-                if let label = view.next_sentence_list_label, let next = view.next_sentence_list {
-                    Button { actions.setSentenceList(next) } label: { Label(label, systemImage: "chevron.right") }
-                        .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-                } else if let note = view.all_learned_note {
-                    Text(note).font(.subheadline)
-                } else if let label = view.curriculum_learn_label, let event = view.info.smart_add_event {
-                    LearnButton(label: label, heading: view.manual_add_heading, options: view.manual_add_options,
-                                learn: { add(event) }, add: add)
+            // The chevrons flank everything below the headline, centered on it, as on
+            // the web's wide layout; they reach into the card's padding to keep the width.
+            HStack(spacing: 0) {
+                chevron(-1)
+                VStack(spacing: 12) {
+                    if case let .Movie(id) = navigation.selection, let bytes = host.deck.get_movie_poster(movie_id: id) {
+                        SentenceListPoster(bytes: bytes, title: view.sentence_list_label).equatable()
+                    }
+                    if case .PimsleurLesson = navigation.selection, !pimsleurAcknowledged {
+                        Image(systemName: "headphones").font(.title).foregroundStyle(Color.yapMuted)
+                        Text("Yap has word lists for Pimsleur, but is not affiliated with Pimsleur in any way.")
+                            .font(.subheadline).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
+                        Button("I understand") { pimsleurAcknowledged = true }
+                            .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent)
+                    } else {
+                        if let label = view.next_sentence_list_label, let next = view.next_sentence_list {
+                            Button { actions.setSentenceList(next) } label: { Label(label, systemImage: "chevron.right") }
+                                .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
+                        } else if let note = view.all_learned_note {
+                            Text(note).font(.subheadline)
+                        } else if let label = view.curriculum_learn_label, let event = view.info.smart_add_event {
+                            LearnButton(label: label, heading: view.manual_add_heading, options: view.manual_add_options,
+                                        learn: { add(event) }, add: add)
+                        }
+                        LevelProgressBar(progress: view.progress,
+                                         projected: view.progress.all_available_learned ? nil : view.info.percent_known_after).equatable()
+                        if let note = view.level_note {
+                            Text(note).font(.caption).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
+                        }
+                        Button(view.change_curriculum_label) { browsing = view.sentence_list_options[Int(navigation.selected_index)].category }
+                            .buttonStyle(.bordered).controlSize(.small)
+                    }
                 }
-                LevelProgressBar(progress: view.progress,
-                                 projected: view.progress.all_available_learned ? nil : view.info.percent_known_after).equatable()
-                if let note = view.level_note {
-                    Text(note).font(.caption).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
-                }
-                Button(view.change_sentence_list_label) { browsing = view.sentence_list_options[Int(navigation.selected_index)].category }
-                    .font(.caption).underline().foregroundStyle(Color.yapText.opacity(0.6)).buttonStyle(.plain)
+                .frame(maxWidth: .infinity)
+                chevron(1)
             }
-            // Below everything, as on the web's phone layout.
-            if view.sentence_list_options.count > 1 {
-                HStack { chevron(-1); Spacer(); chevron(1) }
-            }
+            .fixedSize(horizontal: false, vertical: true).padding(.horizontal, -12)
         }
         .sheet(item: $browsing) { category in CurriculumBrowser(tab: category) }
         #if DEBUG
@@ -62,18 +68,21 @@ struct SentenceListSelector: View {
         }
         #endif
     }
-    private func chevron(_ step: Int) -> some View {
+    @ViewBuilder private func chevron(_ step: Int) -> some View {
         let index = Int(navigation.selected_index) + step
         let enabled = view.sentence_list_options.indices.contains(index)
-        return Button {
-            actions.setSentenceList(view.sentence_list_options[index].selection)
-        } label: {
-            Image(systemName: step < 0 ? "chevron.left" : "chevron.right")
-                .font(.title3.weight(.semibold)).frame(width: 36, height: 44).contentShape(Rectangle())
+        if view.sentence_list_options.count > 1 {
+            Button {
+                actions.setSentenceList(view.sentence_list_options[index].selection)
+            } label: {
+                // Full height, so the whole side of the card is the tap target.
+                Image(systemName: step < 0 ? "chevron.left" : "chevron.right")
+                    .font(.title3.weight(.semibold)).frame(width: 32).frame(maxHeight: .infinity).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain).foregroundStyle(Color.yapText.opacity(0.6))
+            .opacity(enabled ? 1 : 0).disabled(!enabled)
+            .accessibilityLabel(step < 0 ? "Previous sentence list" : "Next sentence list")
         }
-        .buttonStyle(.plain).foregroundStyle(Color.yapText.opacity(0.6))
-        .opacity(enabled ? 1 : 0).disabled(!enabled)
-        .accessibilityLabel(step < 0 ? "Previous sentence list" : "Next sentence list")
     }
     private func select(_ category: SentenceListCategory) {
         guard let option = view.sentence_list_options.first(where: { $0.category == category }),
@@ -93,7 +102,7 @@ private struct LearnButton: View {
     var body: some View {
         HStack(spacing: 0) {
             Button(action: learn) {
-                Label(label, systemImage: "sparkles").padding(.horizontal, 18).frame(minHeight: 50)
+                Label(label, systemImage: "sparkles").lineLimit(1).minimumScaleFactor(0.8).padding(.horizontal, 18).frame(minHeight: 50)
             }
             Rectangle().fill(Tokens.palette.primary_foreground.color.opacity(0.2)).frame(width: 1, height: 50)
             Menu {
@@ -111,27 +120,26 @@ private struct LearnButton: View {
     }
 }
 
-/// The web's level bar: thick, with a lighter segment for where the offered
-/// cards would take it and the percentage printed inside, inverted over the fill.
+/// Home's curriculum progress row: a slim bar with the percentage beside it, plus
+/// a lighter segment for where the offered cards would take it.
 private struct LevelProgressBar: View, Equatable {
     let progress: SentenceListProgress
     let projected: Double?
     var body: some View {
         let known = min(max(progress.percent_known / 100, 0), 1)
         let after = min(max((projected ?? 0) / 100, known), 1)
-        let label = Text(progress.bar_label).font(.subheadline.monospaced().weight(.semibold))
-        GeometryReader { geometry in
-            let width = geometry.size.width
-            ZStack(alignment: .leading) {
-                Color.yapAccent.opacity(0.1)
-                Color.yapAccent.opacity(0.3).frame(width: width * after)
-                Color.yapAccent.frame(width: width * known)
-                label.foregroundStyle(Color.yapAccent).frame(maxWidth: .infinity)
-                label.foregroundStyle(Color.yapOnAccent).frame(maxWidth: .infinity)
-                    .mask(alignment: .leading) { Rectangle().frame(width: width * known) }
+        HStack(spacing: 10) {
+            GeometryReader { geometry in
+                let width = geometry.size.width
+                ZStack(alignment: .leading) {
+                    Color.yapAccent.opacity(0.12)
+                    Color.yapAccent.opacity(0.35).frame(width: width * after)
+                    Color.yapAccent.frame(width: width * known)
+                }
             }
+            .frame(height: 8).clipShape(Capsule())
+            Text(progress.bar_label).font(.subheadline.weight(.semibold).monospacedDigit()).foregroundStyle(Color.yapText)
         }
-        .frame(height: 24).clipShape(Capsule())
         .accessibilityElement().accessibilityLabel(progress.caption)
     }
 }

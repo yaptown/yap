@@ -52,7 +52,7 @@ test("capture sentence-list screens", async ({ page }) => {
   await expect(page.getByText(/pick a sentence list to focus/i)).toBeVisible();
 
   // /learn -> drive a full session until NoCardsReady (the non-empty "you're
-  // doing great / change sentence list" carousel) renders. Start from the
+  // doing great / Change curriculum" carousel) renders. Start from the
   // "Ready to start learning" empty state, add cards, answer them all forward
   // (which schedules them out of the due window) until due_count hits 0.
   await page.goto("/learn");
@@ -60,13 +60,13 @@ test("capture sentence-list screens", async ({ page }) => {
     await page.waitForTimeout(3000);
     await page.goto("/learn");
   }
-  await settled(/ready to start learning|change sentence list|reviewing \d|show english/i);
+  await settled(/ready to start learning|change curriculum|reviewing \d|show english/i);
 
   // The FULL NoCardsReady page (carousel + week day cells) only renders when
   // nextDueCard !== null — i.e. a card is scheduled for a FUTURE review but
   // nothing is due now. These headlines belong to that `else` branch only.
   const CAROUSEL =
-    /all caught up|you're doing great|keep up the momentum|soon you'll hit|you're all done with|change sentence list/i;
+    /all caught up|you're doing great|keep up the momentum|soon you'll hit|you're all done with|change curriculum/i;
   const isDone = async () => CAROUSEL.test(await page.locator("body").innerText());
 
   const visibleClick = async (locator: ReturnType<Page["getByRole"]>) => {
