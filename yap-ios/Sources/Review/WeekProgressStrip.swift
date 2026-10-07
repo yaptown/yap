@@ -5,7 +5,7 @@ import SwiftUI
 /// `WeekProgressStrip`; Rust supplies every number.
 struct WeekProgressStrip: View, Equatable {
     let week: [DayProgress]
-    private static let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
+    private static let dayLabels = [L("weekday-monday-initial"), L("weekday-tuesday-initial"), L("weekday-wednesday-initial"), L("weekday-thursday-initial"), L("weekday-friday-initial"), L("weekday-saturday-initial"), L("weekday-sunday-initial")]
     var body: some View {
         HStack(spacing: 0) {
             ForEach(Array(week.enumerated()), id: \.offset) { index, day in

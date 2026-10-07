@@ -9,16 +9,16 @@ struct PlacementTestView: View {
             let info = get_placement_session_info(session: placement)
             ProgressView(value: info.progress_percent, total: 100)
             if info.finished {
-                Text(info.too_advanced ? "You might be too advanced" : "Ready to start!").font(.title2.bold())
+                Text(info.too_advanced ? L("home-you-might-be-too-advanced") : L("placement-test-view-ready-to-start")).font(.title2.bold())
                 Text(info.too_advanced
-                     ? "Yap.Town is designed for intermediate learners. We'll still try our best to find words you don't know!"
-                     : "We've analyzed your knowledge level and will tailor your learning experience.")
-                Button(action: next) { Text(info.too_advanced ? "Continue anyway" : "Begin learning").frame(maxWidth: .infinity) }
+                     ? L("placement-test-view-yap-town-is-designed-for-intermediate-learners-we-ll")
+                     : L("placement-test-view-we-ve-analyzed-your-knowledge-level-and-will-tailor"))
+                Button(action: next) { Text(info.too_advanced ? L("placement-test-view-continue-anyway") : L("placement-test-view-begin-learning")).frame(maxWidth: .infinity) }
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             } else {
-                Text("Placement test").font(.title2.bold())
-                Text("Round \(placement.round) of \(info.total_rounds)").foregroundStyle(Color.yapMuted)
-                Text("Tap the words you know, then press Next.")
+                Text(L("home-placement-test-2")).font(.title2.bold())
+                Text(L("placement-round", ["round": placement.round, "total": info.total_rounds])).foregroundStyle(Color.yapMuted)
+                Text(L("placement-test-view-tap-the-words-you-know-then-press-next"))
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                     ForEach(placement.words, id: \.word) { word in
                         let selected = placement.selected_words.contains(word.word)
@@ -26,11 +26,11 @@ struct PlacementTestView: View {
                             Text(selected ? word.definition : word.word)
                                 .frame(maxWidth: .infinity, minHeight: 52).padding(8)
                                 .insetSurface(fill: selected ? Color.yapAccent.opacity(0.15) : Color(uiColor: .systemBackground).opacity(0.35))
-                        }.buttonStyle(.plain).accessibilityLabel(word.word).accessibilityValue(selected ? "Known: \(word.definition)" : "Unknown")
+                        }.buttonStyle(.plain).accessibilityLabel(word.word).accessibilityValue(selected ? L("placement-known", ["definition": word.definition]) : L("placement-test-view-unknown"))
                     }
                 }
-                Button(action: next) { Text("Next").frame(maxWidth: .infinity) }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-                if info.can_restart { Button("Start over") { actions.setPlacement(host.deck.start_placement_session()) }.frame(maxWidth: .infinity) }
+                Button(action: next) { Text(L("common-next")).frame(maxWidth: .infinity) }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
+                if info.can_restart { Button(L("placement-test-view-start-over")) { actions.setPlacement(host.deck.start_placement_session()) }.frame(maxWidth: .infinity) }
             }
         }
         #if DEBUG

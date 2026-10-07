@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -23,7 +24,12 @@ import { CoursePill } from "@/components/CoursePill";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { useDeckSelection } from "@/core/useDeck";
 import { useWeapon } from "@/core/weapon";
@@ -51,52 +57,96 @@ const idleExport: AnkiExport = { choosing: false, build: emptyBuild, run: 0 };
 
 // Stores the built package so it can be fetched by link (AnkiMobile's
 // "Download link"). The backend keeps it for 8 days.
-async function uploadPackage(minted: MintedAnkiDeck, languageCode: string, blob: Blob, accessToken?: string): Promise<string> {
+async function uploadPackage(
+  minted: MintedAnkiDeck,
+  languageCode: string,
+  blob: Blob,
+  accessToken?: string,
+): Promise<string> {
   const query = new URLSearchParams({ d: minted.token, code: languageCode });
-  const response = await fetch(`${get_ai_server_url()}/anki/deck/${encodeURIComponent(minted.deck_id)}/package?${query}`, {
-    method: "PUT",
-    headers: { Authorization: `Bearer ${accessToken ?? "anonymous"}`, "Content-Type": "application/octet-stream" },
-    body: blob,
-  });
-  if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
+  const response = await fetch(
+    `${get_ai_server_url()}/anki/deck/${encodeURIComponent(minted.deck_id)}/package?${query}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${accessToken ?? "anonymous"}`,
+        "Content-Type": "application/octet-stream",
+      },
+      body: blob,
+    },
+  );
+  if (!response.ok)
+    throw new Error(`${response.status} ${await response.text()}`);
   const { url } = (await response.json()) as { url: string };
   return url;
 }
 
 export function AnkiPage() {
-  return <DeckPage prefetchAudio={false}>{(props) => <AnkiScreen key={props.targetLanguage} {...props} />}</DeckPage>;
+  return (
+    <DeckPage prefetchAudio={false}>
+      {(props) => <AnkiScreen key={props.targetLanguage} {...props} />}
+    </DeckPage>
+  );
 }
 
-function AnkiPlacement({ deck, targetLanguage, completeLabel }: { deck: Deck; targetLanguage: Language; completeLabel: string }) {
+function AnkiPlacement({
+  deck,
+  targetLanguage,
+  completeLabel,
+}: {
+  deck: Deck;
+  targetLanguage: Language;
+  completeLabel: string;
+}) {
   const weapon = useWeapon();
-  const [session, setSession] = useState<PlacementSession>(() => deck.start_placement_session());
-  return <PlacementTest
-    deck={deck}
-    targetLanguage={targetLanguage}
-    session={session}
-    setSession={setSession}
-    completeLabel={completeLabel}
-    onComplete={({ known_words, unknown_words }) => {
-      weapon.add_deck_event(deck.complete_placement_test(known_words, unknown_words));
-    }}
-  />;
+  const [session, setSession] = useState<PlacementSession>(() =>
+    deck.start_placement_session(),
+  );
+  return (
+    <PlacementTest
+      deck={deck}
+      targetLanguage={targetLanguage}
+      session={session}
+      setSession={setSession}
+      completeLabel={completeLabel}
+      onComplete={({ known_words, unknown_words }) => {
+        weapon.add_deck_event(
+          deck.complete_placement_test(known_words, unknown_words),
+        );
+      }}
+    />
+  );
 }
 
 // Drifts sideways forever: the list is drawn twice and the track slides by
 // exactly one copy, so the seam never shows. While the clip manifest loads,
 // blank tiles hold its place so the page doesn't jump when posters arrive.
-function PosterStrip({ films, deck, loading }: { films: MovieMetadataBasic[]; deck: Deck; loading: boolean }) {
+function PosterStrip({
+  films,
+  deck,
+  loading,
+}: {
+  films: MovieMetadataBasic[];
+  deck: Deck;
+  loading: boolean;
+}) {
   if (films.length === 0 && !loading) return null;
   return (
     <div className="poster-strip -mx-5 overflow-hidden py-1 [mask-image:linear-gradient(to_right,transparent,black_3rem,black_calc(100%-3rem),transparent)]">
       <div className={`flex w-max ${films.length ? "poster-strip-track" : ""}`}>
-        {films.length === 0 && Array.from({ length: 8 }, (_, index) => (
-          <div key={index} className="shrink-0 pr-3" aria-hidden>
-            <div className="h-36 w-24 animate-pulse rounded-md border border-border/50 bg-muted/40" />
-          </div>
-        ))}
+        {films.length === 0 &&
+          Array.from({ length: 8 }, (_, index) => (
+            <div key={index} className="shrink-0 pr-3" aria-hidden>
+              <div className="h-36 w-24 animate-pulse rounded-md border border-border/50 bg-muted/40" />
+            </div>
+          ))}
         {[...films, ...films].map((film, index) => (
-          <div key={index} className="shrink-0 pr-3" aria-hidden={index >= films.length} title={film.year ? `${film.title} (${film.year})` : film.title}>
+          <div
+            key={index}
+            className="shrink-0 pr-3"
+            aria-hidden={index >= films.length}
+            title={film.year ? `${film.title} (${film.year})` : film.title}
+          >
             <div className="h-36 w-24 overflow-hidden rounded-md border border-border/50 bg-muted shadow-sm">
               <Poster movieId={film.id} deck={deck} alt={film.title} />
             </div>
@@ -107,10 +157,25 @@ function PosterStrip({ films, deck, loading }: { films: MovieMetadataBasic[]; de
   );
 }
 
-function CardTypeOption({ label, description, checked, onChange }: { label: string; description: string; checked: boolean; onChange: (checked: boolean) => void }) {
+function CardTypeOption({
+  label,
+  description,
+  checked,
+  onChange,
+}: {
+  label: string;
+  description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
   return (
     <label className="flex cursor-pointer gap-3 rounded-lg border p-4 transition-colors has-[:checked]:border-primary/50 has-[:checked]:bg-primary/5 has-[:disabled]:cursor-default">
-      <input type="checkbox" className="mt-1 size-4 shrink-0 accent-primary" checked={checked} onChange={(event) => onChange(event.target.checked)} />
+      <input
+        type="checkbox"
+        className="mt-1 size-4 shrink-0 accent-primary"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+      />
       <span className="flex flex-col gap-1">
         <span className="font-medium">{label}</span>
         <span className="text-sm text-muted-foreground">{description}</span>
@@ -119,7 +184,12 @@ function CardTypeOption({ label, description, checked, onChange }: { label: stri
   );
 }
 
-function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextType & { deck: Deck; targetLanguage: Language }) {
+function AnkiScreen({
+  deck,
+  targetLanguage,
+  userInfo,
+  accessToken,
+}: AppContextType & { deck: Deck; targetLanguage: Language }) {
   const weapon = useWeapon();
   const navigate = useNavigate();
   const { openSignUp } = useAuthDialog();
@@ -127,15 +197,43 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
   const [listening, setListening] = useState(true);
   const [wordCards, setWordCards] = useState(true);
   const [explicitClips, setExplicitClips] = useState(true);
-  const cardTypes: AnkiCardTypes | undefined = reading && listening ? "Both" : reading ? "Reading" : listening ? "Listening" : undefined;
-  const copy = useMemo(() => anki_options_copy(reading, listening, wordCards), [reading, listening, wordCards]);
-  const [manifest, setManifest] = useState<"loading" | "ready" | "error">("loading");
+  const cardTypes: AnkiCardTypes | undefined =
+    reading && listening
+      ? "Both"
+      : reading
+        ? "Reading"
+        : listening
+          ? "Listening"
+          : undefined;
+  const copy = useMemo(
+    () => anki_options_copy(reading, listening, wordCards),
+    [reading, listening, wordCards],
+  );
+  const [manifest, setManifest] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
   const [retry, setRetry] = useState(0);
   const deckSelection = useDeckSelection();
-  const startingFresh = deckSelection?.type === "languageSelected" ? deckSelection.startingFresh : undefined;
-  const view = useMemo(() => ({ ...deck.anki_export_view(startingFresh), manifest }), [deck, manifest, startingFresh]);
+  const startingFresh =
+    deckSelection?.type === "languageSelected"
+      ? deckSelection.startingFresh
+      : undefined;
+  const view = useMemo(
+    () => ({ ...deck.anki_export_view(startingFresh), manifest }),
+    [deck, manifest, startingFresh],
+  );
   const [exportState, setExport] = useState(idleExport);
-  const { phase, progress, build, run, choosing, finishMessage, summary, downloadLink, file } = exportState;
+  const {
+    phase,
+    progress,
+    build,
+    run,
+    choosing,
+    finishMessage,
+    summary,
+    downloadLink,
+    file,
+  } = exportState;
   const generation = useRef(0);
   const previousUser = useRef(userInfo?.id);
   const [welcome, setWelcome] = useState(false);
@@ -152,21 +250,30 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
     }
     previousUser.current = user;
   }, [userInfo?.id, summary]);
-  useEffect(() => () => { ++generation.current; }, []);
+  useEffect(
+    () => () => {
+      ++generation.current;
+    },
+    [],
+  );
   const busy = phase !== undefined;
   const status = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
-    refresh_clip_manifest(targetLanguage, accessToken).then(() => {
-      if (active) setManifest("ready");
-    }).catch((error: unknown) => {
-      if (active) {
-        setManifest("error");
-        toast.error(String(error));
-      }
-    });
-    return () => { active = false; };
+    refresh_clip_manifest(targetLanguage, accessToken)
+      .then(() => {
+        if (active) setManifest("ready");
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setManifest("error");
+          toast.error(String(error));
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, [targetLanguage, accessToken, retry]);
 
   // The async run owns its immutable deck snapshot. Account replacement does
@@ -175,18 +282,34 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
     const run = ++generation.current;
     const active = () => generation.current === run;
     const update = (change: (current: AnkiExport) => AnkiExport) => {
-      setExport((current) => active() && current.run === run ? change(current) : current);
+      setExport((current) =>
+        active() && current.run === run ? change(current) : current,
+      );
     };
-    setExport({ ...idleExport, run, phase: "Preparing deck…" });
+    setExport({ ...idleExport, run, phase: t("anki-page-preparing-deck") });
     // On a phone the status sits below the fold; bring it (and the backstory) up.
-    requestAnimationFrame(() => status.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    requestAnimationFrame(() =>
+      status.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
     try {
-      const options = { card_types: cardTypes, word_cards: wordCards, explicit_clips: explicitClips };
+      const options = {
+        card_types: cardTypes,
+        word_cards: wordCards,
+        explicit_clips: explicitClips,
+      };
       const minted = await mint_anki_deck(options, accessToken);
-      update((current) => ({ ...current, phase: "Choosing sentences…", choosing: true }));
+      update((current) => ({
+        ...current,
+        phase: t("anki-page-choosing-sentences"),
+        choosing: true,
+      }));
       await new Promise((resolve) => setTimeout(resolve, 0));
       if (!active()) return;
-      const planner = deck.start_anki_deck_plan(options, minted.token, Date.now());
+      const planner = deck.start_anki_deck_plan(
+        options,
+        minted.token,
+        Date.now(),
+      );
       let plan: AnkiDeckPlan;
       try {
         let done = false;
@@ -199,8 +322,15 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
             step = planner.step();
             added.push(...step.notes);
           } while (!step.done && performance.now() < deadline);
-          const progress = { done: step.sentences_chosen, total: step.target_size };
-          update((current) => ({ ...current, progress, build: addNotes(current.build, added) }));
+          const progress = {
+            done: step.sentences_chosen,
+            total: step.target_size,
+          };
+          update((current) => ({
+            ...current,
+            progress,
+            build: addNotes(current.build, added),
+          }));
           done = step.done;
           // A macrotask, not a resolved Promise: input and paint get a turn.
           await new Promise((resolve) => setTimeout(resolve, 0));
@@ -211,78 +341,230 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
         update((current) => ({ ...current, choosing: false }));
       }
       const { buildApkg } = await import("./apkg-client");
-      update((current) => ({ ...current, finishMessage: plan.finish_message, progress: undefined, phase: "Fetching media…" }));
-      const blob = await buildApkg(plan, (source) => deck.anki_bundled_media(source), (progress) => {
-        update((current) => ({ ...current, progress, phase: progress.done === progress.total ? "Writing Anki package…" : current.phase }));
-      });
+      update((current) => ({
+        ...current,
+        finishMessage: plan.finish_message,
+        progress: undefined,
+        phase: t("anki-page-fetching-media"),
+      }));
+      const blob = await buildApkg(
+        plan,
+        (source) => deck.anki_bundled_media(source),
+        (progress) => {
+          update((current) => ({
+            ...current,
+            progress,
+            phase:
+              progress.done === progress.total
+                ? t("anki-page-writing-anki-package")
+                : current.phase,
+          }));
+        },
+      );
       if (!active()) return;
-      update((current) => ({ ...current, phase: "Uploading deck…" }));
+      update((current) => ({
+        ...current,
+        phase: t("anki-page-uploading-deck"),
+      }));
       let downloadLink: string | undefined;
       try {
-        downloadLink = await uploadPackage(minted, plan.course_code, blob, accessToken);
+        downloadLink = await uploadPackage(
+          minted,
+          plan.course_code,
+          blob,
+          accessToken,
+        );
       } catch (error) {
-        if (active()) toast.error(`Could not create a download link. Your deck will still download. ${String(error)}`);
+        if (active())
+          toast.error(t("anki-link-failed", { error: String(error) }));
       }
       if (!active()) return;
       const file = { blob, name: `yap-${plan.course_code}.apkg` };
       saveFile(file);
       weapon.add_deck_event(deck.anki_deck_exported(plan, minted.deck_id));
-      const notes = `${plan.stats.sentence_count.toLocaleString()} sentence notes${plan.stats.word_count ? ` + ${plan.stats.word_count.toLocaleString()} word notes` : ""}`;
-      const summary = `${notes} · ${(blob.size / 1024 / 1024).toFixed(1)} MB`;
+      const notes = plan.stats.word_count
+        ? t("anki-note-count-with-words", {
+            sentences: plan.stats.sentence_count.toLocaleString(),
+            words: plan.stats.word_count.toLocaleString(),
+          })
+        : t("anki-note-count", {
+            sentences: plan.stats.sentence_count.toLocaleString(),
+          });
+      const summary = t("anki-download-size", {
+        notes,
+        size: (blob.size / 1024 / 1024).toFixed(1),
+      });
       update((current) => ({ ...current, downloadLink, file, summary }));
     } catch (error) {
-      const message = error instanceof AudioUnavailableError ? view.audio_unavailable_message : error instanceof Error ? error.message : String(error);
+      const message =
+        error instanceof AudioUnavailableError
+          ? view.audio_unavailable_message
+          : error instanceof Error
+            ? error.message
+            : String(error);
       update((current) => ({ ...current, error: message }));
     } finally {
-      update((current) => ({ ...current, phase: undefined, progress: undefined }));
+      update((current) => ({
+        ...current,
+        phase: undefined,
+        progress: undefined,
+      }));
     }
   }
 
   return (
-    <TopPageLayout userInfo={userInfo} headerProps={{ title: "Anki Decks", backButton: { label: "Yap.Town", onBack: () => navigate("/") } }}>
+    <TopPageLayout
+      userInfo={userInfo}
+      headerProps={{
+        title: t("anki-page-anki-decks"),
+        backButton: { label: "Yap.Town", onBack: () => navigate("/") },
+      }}
+    >
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-5 py-8">
         <div className="flex flex-col gap-4">
-          <CoursePill icon={view.course_icon} label={view.course_label} onClick={() => navigate(`/select-language?next=${encodeURIComponent("/anki")}`)} />
-          <h1 className="text-2xl font-semibold" style={{ textWrap: "balance" }}>{view.title}</h1>
+          <CoursePill
+            icon={view.course_icon}
+            label={view.course_label}
+            onClick={() =>
+              navigate(`/select-language?next=${encodeURIComponent("/anki")}`)
+            }
+          />
+          <h1
+            className="text-2xl font-semibold"
+            style={{ textWrap: "balance" }}
+          >
+            {view.title}
+          </h1>
         </div>
-        <PosterStrip films={view.films} deck={deck} loading={view.manifest === "loading"} />
+        <PosterStrip
+          films={view.films}
+          deck={deck}
+          loading={view.manifest === "loading"}
+        />
         {view.needs_placement ? (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-muted-foreground">{view.placement_intro}</p>
-            <AnkiPlacement deck={deck} targetLanguage={targetLanguage} completeLabel={view.placement_complete_label} />
+            <p className="text-sm text-muted-foreground">
+              {view.placement_intro}
+            </p>
+            <AnkiPlacement
+              deck={deck}
+              targetLanguage={targetLanguage}
+              completeLabel={view.placement_complete_label}
+            />
           </div>
         ) : (
-          <form className="flex flex-col gap-6" onSubmit={(event) => { event.preventDefault(); if (cardTypes) void download(cardTypes); }}>
+          <form
+            className="flex flex-col gap-6"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (cardTypes) void download(cardTypes);
+            }}
+          >
             <p className="text-muted-foreground">{copy.intro}</p>
             {/* Same bar as the Essential tab on the goals screen. */}
             <div className="flex flex-col gap-3 border-y py-4">
               <h2 className="font-semibold">{view.progress_label}</h2>
-              <Progress className="h-6" value={view.percent_known} showPercentage aria-label={view.progress_label} />
-              {view.too_advanced_message && <p className="text-sm text-muted-foreground">{view.too_advanced_message}</p>}
+              <Progress
+                className="h-6"
+                value={view.percent_known}
+                showPercentage
+                aria-label={view.progress_label}
+              />
+              {view.too_advanced_message && (
+                <p className="text-sm text-muted-foreground">
+                  {view.too_advanced_message}
+                </p>
+              )}
             </div>
             <fieldset className="flex flex-col gap-3" disabled={busy}>
-              <legend className="mb-3 font-semibold">{view.card_types_label}</legend>
+              <legend className="mb-3 font-semibold">
+                {view.card_types_label}
+              </legend>
               <div className="grid gap-3">
-                <CardTypeOption label={view.reading_label} description={copy.reading_description} checked={reading} onChange={setReading} />
-                <CardTypeOption label={view.listening_label} description={copy.listening_description} checked={listening} onChange={setListening} />
-                <CardTypeOption label={view.word_cards_label} description={copy.word_cards_description} checked={wordCards} onChange={setWordCards} />
+                <CardTypeOption
+                  label={view.reading_label}
+                  description={copy.reading_description}
+                  checked={reading}
+                  onChange={setReading}
+                />
+                <CardTypeOption
+                  label={view.listening_label}
+                  description={copy.listening_description}
+                  checked={listening}
+                  onChange={setListening}
+                />
+                <CardTypeOption
+                  label={view.word_cards_label}
+                  description={copy.word_cards_description}
+                  checked={wordCards}
+                  onChange={setWordCards}
+                />
               </div>
-              {!cardTypes && <p className="text-sm text-muted-foreground">Pick at least one card type.</p>}
+              {!cardTypes && (
+                <p className="text-sm text-muted-foreground">
+                  {t("anki-page-pick-at-least-one-card-type")}
+                </p>
+              )}
               <label className="flex cursor-pointer items-center gap-3 self-start pl-[17px] text-sm text-muted-foreground has-[:disabled]:cursor-default">
-                <input type="checkbox" className="size-4 shrink-0 accent-primary" checked={explicitClips} onChange={(event) => setExplicitClips(event.target.checked)} />
+                <input
+                  type="checkbox"
+                  className="size-4 shrink-0 accent-primary"
+                  checked={explicitClips}
+                  onChange={(event) => setExplicitClips(event.target.checked)}
+                />
                 {view.explicit_clips_label}
               </label>
             </fieldset>
-            <p className="text-sm text-muted-foreground">Re-downloading updates matching notes. If you remove a card type, use Tools → Empty Cards in Anki to remove the old cards.</p>
+            <p className="text-sm text-muted-foreground">
+              {t(
+                "anki-page-re-downloading-updates-matching-notes-if-you-remove-a",
+              )}
+            </p>
             {view.manifest === "error" ? (
-              <Button type="button" variant="outline" onClick={() => { setManifest("loading"); setRetry((value) => value + 1); }}>Retry loading movie clips</Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setManifest("loading");
+                  setRetry((value) => value + 1);
+                }}
+              >
+                {t("anki-page-retry-loading-movie-clips")}
+              </Button>
             ) : (
-              <Button type="submit" size="lg" className="h-12 text-base font-medium" disabled={busy || !cardTypes || view.manifest !== "ready" || view.clip_sentence_count === 0}>{view.download_label}</Button>
+              <Button
+                type="submit"
+                size="lg"
+                className="h-12 text-base font-medium"
+                disabled={
+                  busy ||
+                  !cardTypes ||
+                  view.manifest !== "ready" ||
+                  view.clip_sentence_count === 0
+                }
+              >
+                {view.download_label}
+              </Button>
             )}
-            {exportState.error && <p role="alert" className="text-sm text-destructive">{exportState.error}</p>}
-            <div ref={status} className="flex scroll-mt-4 flex-col gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
-              {view.manifest === "loading" && <p>Loading movie clips…</p>}
-              {view.manifest === "ready" && view.clip_sentence_count === 0 && <p>No movie clips are available for this course.</p>}
+            {exportState.error && (
+              <p role="alert" className="text-sm text-destructive">
+                {exportState.error}
+              </p>
+            )}
+            <div
+              ref={status}
+              className="flex scroll-mt-4 flex-col gap-2 text-sm text-muted-foreground"
+              role="status"
+              aria-live="polite"
+            >
+              {view.manifest === "loading" && (
+                <p>{t("anki-page-loading-movie-clips")}</p>
+              )}
+              {view.manifest === "ready" && view.clip_sentence_count === 0 && (
+                <p>
+                  {t("anki-page-no-movie-clips-are-available-for-this-course")}
+                </p>
+              )}
               {(busy || summary) && (
                 <div className="flex flex-col gap-4 pt-2 text-base text-foreground">
                   <DeckBuilding
@@ -292,24 +574,66 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
                     language={targetLanguage}
                     choosing={choosing}
                     animate={busy}
-                    status={phase && (!choosing && progress && progress.done < progress.total ? `${phase} ${progress.done.toLocaleString()} of ${progress.total.toLocaleString()}` : phase)}
-                    progress={busy && progress ? (progress.total ? 100 * progress.done / progress.total : 100) : undefined}
+                    status={
+                      phase &&
+                      (!choosing && progress && progress.done < progress.total
+                        ? t("anki-progress", {
+                            phase,
+                            done: progress.done.toLocaleString(),
+                            total: progress.total.toLocaleString(),
+                          })
+                        : phase)
+                    }
+                    progress={
+                      busy && progress
+                        ? progress.total
+                          ? (100 * progress.done) / progress.total
+                          : 100
+                        : undefined
+                    }
                     target={choosing ? progress?.total : undefined}
                     finishMessage={finishMessage}
                   />
-                  {busy && <Backstory text={view.backstory} signature={view.backstory_signature} />}
+                  {busy && (
+                    <Backstory
+                      text={view.backstory}
+                      signature={view.backstory_signature}
+                    />
+                  )}
                 </div>
               )}
-              {summary && <p>Downloaded {summary}</p>}
+              {summary && (
+                <p>
+                  {t("anki-downloaded", {
+                    summary: String(summary),
+                  })}
+                </p>
+              )}
             </div>
             {summary && (
               <Card className="p-5">
-                <ExportResult view={view} signedIn={!!userInfo} file={file} downloadLink={downloadLink} onSignUp={openSignUp} onGoToYap={() => navigate("/learn")} />
+                <ExportResult
+                  view={view}
+                  signedIn={!!userInfo}
+                  file={file}
+                  downloadLink={downloadLink}
+                  onSignUp={openSignUp}
+                  onGoToYap={() => navigate("/learn")}
+                />
               </Card>
             )}
             <Dialog open={welcome} onOpenChange={setWelcome}>
               <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
-                <ExportResult view={view} signedIn file={file} downloadLink={downloadLink} onSignUp={openSignUp} onGoToYap={() => navigate("/learn")} Title={DialogTitle} Body={DialogDescription} />
+                <ExportResult
+                  view={view}
+                  signedIn
+                  file={file}
+                  downloadLink={downloadLink}
+                  onSignUp={openSignUp}
+                  onGoToYap={() => navigate("/learn")}
+                  Title={DialogTitle}
+                  Body={DialogDescription}
+                />
               </DialogContent>
             </Dialog>
           </form>

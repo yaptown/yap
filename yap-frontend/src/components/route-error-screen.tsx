@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useEffect } from "react";
 import * as Sentry from "@sentry/react";
 import { useRouteError } from "react-router-dom";
@@ -16,15 +17,19 @@ export function RouteErrorScreen() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 gap-4 text-center">
-      <h1 className="text-3xl font-bold">Something went wrong</h1>
+      <h1 className="text-3xl font-bold">
+        {t("route-error-screen-something-went-wrong")}
+      </h1>
       <p className="text-muted-foreground max-w-md break-words">{message}</p>
-      <Button onClick={() => window.location.reload()}>Reload</Button>
+      <Button onClick={() => window.location.reload()}>
+        {t("route-error-screen-reload")}
+      </Button>
       {/* Plain anchor: full-page navigation recovers even if router state is broken */}
       <a
         href="/"
         className="text-primary underline underline-offset-4 hover:text-primary/80"
       >
-        Go home
+        {t("route-error-screen-go-home")}
       </a>
     </div>
   );

@@ -86,13 +86,13 @@ struct HomeScreen: View {
                             .matchedTransitionSource(id: DictionarySearchBar.id, in: searchTransition)
                         Spacer(minLength: 0)
                         VStack(spacing: 8) {
-                            Text("yap.town is created by [André Popovitch](https://twitter.com/chadnauseam).")
+                            Text(.init(L("about-author-credit", ["author": "[André Popovitch](https://twitter.com/chadnauseam)"])))
                             HStack(spacing: 12) {
                                 Link("GitHub", destination: URL(string: "https://github.com/yaptown/yap")!)
                                 Link("Discord", destination: URL(string: "https://discord.gg/mpgqfsH")!)
-                                Link("About", destination: URL(string: "https://yap.town/about")!)
-                                Link("Privacy", destination: URL(string: "https://yap.town/privacy")!)
-                                Link("Terms", destination: URL(string: "https://yap.town/terms")!)
+                                Link(L("common-about"), destination: URL(string: "https://yap.town/about")!)
+                                Link(L("common-privacy"), destination: URL(string: "https://yap.town/privacy")!)
+                                Link(L("common-terms"), destination: URL(string: "https://yap.town/terms")!)
                             }
                         }.font(.caption).foregroundStyle(Color.yapMuted).frame(maxWidth: .infinity)
                     }.padding(20).frame(maxWidth: 600)
@@ -130,7 +130,7 @@ struct HomeScreen: View {
             ToolbarItem(placement: .topBarTrailing) {
                 // Icon-only bar buttons draw the inherited tint in its light-scheme
                 // color, invisible on a dark bar; an explicit style follows the scheme.
-                Button("Settings", systemImage: "gearshape") { navigate(.settings) }
+                Button(L("common-settings"), systemImage: "gearshape") { navigate(.settings) }
                     .labelStyle(.iconOnly).foregroundStyle(Color.yapAccent)
             }
         }

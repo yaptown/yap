@@ -55,7 +55,7 @@ struct SignInView: View {
                 .padding(.horizontal, 20).padding(.vertical, 12)
             }
             .navigationTitle(copy.dialog_title).navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close", systemImage: "xmark") { dismiss() }.labelStyle(.iconOnly).foregroundStyle(Color.yapAccent) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("common-close"), systemImage: "xmark") { dismiss() }.labelStyle(.iconOnly).foregroundStyle(Color.yapAccent) } }
         }
         .onAppear { auth.error = nil; focus = .email }
         .onDisappear { email = ""; password = ""; auth.error = nil }

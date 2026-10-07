@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useId, type ComponentType, type ReactNode } from "react";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
@@ -12,7 +13,16 @@ import { saveFile } from "./save-file";
  * the app; signed-out visitors get one call to action, saving their deck.
  * Either way the deck can be saved again or fetched by link.
  */
-export function ExportResult({ view, signedIn, file, downloadLink, onSignUp, onGoToYap, Title = "h2", Body = "p" }: {
+export function ExportResult({
+  view,
+  signedIn,
+  file,
+  downloadLink,
+  onSignUp,
+  onGoToYap,
+  Title = "h2",
+  Body = "p",
+}: {
   view: AnkiExportView;
   signedIn: boolean;
   file?: { blob: Blob; name: string };
@@ -26,16 +36,30 @@ export function ExportResult({ view, signedIn, file, downloadLink, onSignUp, onG
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2 text-left">
-        <Title className="text-xl font-semibold leading-snug">{signedIn ? view.try_yap_heading : view.save_deck_heading}</Title>
-        <Body className="text-muted-foreground">{signedIn ? view.try_yap_body : view.save_deck_body}</Body>
+        <Title className="text-xl font-semibold leading-snug">
+          {signedIn ? view.try_yap_heading : view.save_deck_heading}
+        </Title>
+        <Body className="text-muted-foreground">
+          {signedIn ? view.try_yap_body : view.save_deck_body}
+        </Body>
       </div>
-      <Button type="button" size="lg" className="h-11 self-start text-base" onClick={signedIn ? onGoToYap : onSignUp}>
+      <Button
+        type="button"
+        size="lg"
+        className="h-11 self-start text-base"
+        onClick={signedIn ? onGoToYap : onSignUp}
+      >
         {signedIn ? view.try_yap_label : view.sign_up_label}
       </Button>
       <div className="flex flex-col gap-3 border-t pt-5">
         {signedIn && <p>{view.enjoy_deck}</p>}
         {file && (
-          <Button type="button" variant="outline" className="self-start" onClick={() => saveFile(file)}>
+          <Button
+            type="button"
+            variant="outline"
+            className="self-start"
+            onClick={() => saveFile(file)}
+          >
             <Download aria-hidden />
             {view.download_again_label}
           </Button>
@@ -50,19 +74,33 @@ function DownloadLink({ link }: { link: string }) {
   const id = useId();
   return (
     <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-      <Label htmlFor={id} className="text-foreground">Download link</Label>
+      <Label htmlFor={id} className="text-foreground">
+        {t("export-result-download-link")}
+      </Label>
       <div className="flex gap-2">
         <Input id={id} readOnly value={link} className="min-w-0 font-mono" />
-        <Button type="button" variant="outline" onClick={async () => {
-          try {
-            await navigator.clipboard.writeText(link);
-            toast.success("Link copied");
-          } catch {
-            toast.error("Could not copy the link. Select and copy it manually.");
-          }
-        }}>Copy</Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(link);
+              toast.success(t("export-result-link-copied"));
+            } catch {
+              toast.error(
+                t("export-result-could-not-copy-the-link-select-and-copy-it"),
+              );
+            }
+          }}
+        >
+          {t("export-result-copy")}
+        </Button>
       </div>
-      <p>In AnkiMobile: Decks → Add → Download link. On AnkiDroid or desktop, open the downloaded file instead. The link works for 8 days.</p>
+      <p>
+        {t(
+          "export-result-in-ankimobile-decks-add-download-link-on-ankidroid-or",
+        )}
+      </p>
     </div>
   );
 }

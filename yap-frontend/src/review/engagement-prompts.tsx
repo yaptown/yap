@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Bell, Sparkles } from "lucide-react";
@@ -73,7 +74,9 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
     return null;
   }
 
-  const headingText = `Stay on track with your ${LANGUAGES[language].commonName} learning`;
+  const headingText = t("review-engagement-heading", {
+    language: String(LANGUAGES[language].commonName),
+  });
 
   return (
     <Card variant="light" animate className="gap-0 px-3 py-4 sm:p-6">
@@ -83,8 +86,9 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
       </div>
 
       <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
-        Research shows that consistent daily practice is key to language
-        learning success. These features help you maintain your streak:
+        {t(
+          "engagement-prompts-research-shows-that-consistent-daily-practice-is-key-to",
+        )}
       </p>
 
       <div className="flex flex-col gap-3 sm:grid sm:grid-cols-[auto_1fr]">
@@ -97,8 +101,12 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
             />
             <p className="text-xs text-muted-foreground self-center">
               {window.navigator.userAgent.match(/mobile/i)
-                ? "Quick access from your home screen makes it easier to practice daily"
-                : "Install as a desktop app for quick access and offline use"}
+                ? t(
+                    "engagement-prompts-quick-access-from-your-home-screen-makes-it-easier",
+                  )
+                : t(
+                    "engagement-prompts-install-as-a-desktop-app-for-quick-access-and",
+                  )}
             </p>
           </>
         )}
@@ -113,10 +121,14 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
               className="justify-start"
             >
               <Bell className="mr-2 h-4 w-4" />
-              {isNotificationLoading ? "Enabling..." : "Enable Reminders"}
+              {isNotificationLoading
+                ? t("onboarding-enabling")
+                : t("engagement-prompts-enable-reminders")}
             </Button>
             <p className="text-xs text-muted-foreground self-center">
-              Get gentle reminders when you have cards ready to review
+              {t(
+                "engagement-prompts-get-gentle-reminders-when-you-have-cards-ready-to",
+              )}
             </p>
           </>
         )}
@@ -129,7 +141,7 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
           size="sm"
           className="text-xs"
         >
-          Maybe later
+          {t("common-maybe-later")}
         </Button>
       </div>
     </Card>

@@ -34,7 +34,7 @@ struct TranscriptionChallengeView: View {
     var body: some View {
         ReviewStepScrollView {
             StudyCard(spacing: 20, animated: true) {
-                if sentence.second_chance { ReviewBadge(text: "Second chance") }
+                if sentence.second_chance { ReviewBadge(text: L("transcription-challenge-view-second-chance")) }
                 // Like the web: a big speaker on top, then the sentence with its blanks inline.
                 VStack(spacing: 4) {
                     AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: true, kind: .visualizer)
@@ -87,9 +87,9 @@ struct TranscriptionChallengeView: View {
             }
             if editing, let tip = screen.keyboard_tip, !keyboardTipDismissed {
                 HStack(spacing: 8) {
-                    (Text("Tip:").fontWeight(.medium) + Text(" " + tip)).font(.subheadline).foregroundStyle(Color.yapMuted)
+                    (Text(L("mobile-keyboard-tip-tip")).fontWeight(.medium) + Text(" " + tip)).font(.subheadline).foregroundStyle(Color.yapMuted)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Button("Dismiss tip", systemImage: "xmark") { keyboardTipDismissed = true }
+                    Button(L("transcription-challenge-view-dismiss-tip"), systemImage: "xmark") { keyboardTipDismissed = true }
                         .labelStyle(.iconOnly).font(.footnote).buttonStyle(.plain).frame(width: 32, height: 32)
                 }.padding(12)
                     .background(Color.yapMutedSurface.opacity(0.3), in: RoundedRectangle(cornerRadius: 10))
@@ -104,7 +104,7 @@ struct TranscriptionChallengeView: View {
                 HStack {
                     Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)
                         .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-                    if view.is_grading { Button("Cancel") { send(.CancelGrading) } }
+                    if view.is_grading { Button(L("common-cancel")) { send(.CancelGrading) } }
                 }
             } else {
                 Button { complete() } label: { Text(view.verdict?.continue_label ?? "").frame(maxWidth: .infinity) }.disabled(!view.can_continue || actions.submitting)
@@ -187,7 +187,7 @@ struct TranscriptionChallengeView: View {
             HStack(spacing: 4) {
                 Text(word.heard).fontWeight(.medium)
                 Spacer()
-                Picker("Grade \(word.heard)", selection: Binding(get: { Int(word.selected) }, set: { index in
+                Picker(L("transcription-grade-word", ["word": word.heard]), selection: Binding(get: { Int(word.selected) }, set: { index in
                     send(.WordGradeChanged(part_index: word.part_index, word_index: word.word_index, grade: view.grade_options[index].grade))
                 })) {
                     ForEach(view.grade_options.indices, id: \.self) { index in Text(view.grade_options[index].label).tag(index) }

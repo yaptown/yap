@@ -55,7 +55,7 @@ struct ReviewScreen: View {
         }
         .environment(\.reviewScreen, view)
         .background(.clear)
-        .navigationTitle("Review")
+        .navigationTitle(L("common-review"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

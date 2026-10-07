@@ -362,7 +362,9 @@ pub fn autograde_perfect_match(
         literal_grades,
         phrases_remembered: phrases.to_vec(),
         phrases_forgot: vec![],
-        encouragement: Some("Perfect! You translated it correctly!".to_string()),
+        encouragement: Some(yap_i18n::tr!(
+            "translation-perfect-you-translated-it-correctly"
+        )),
         explanation: None,
         autograding_error: None,
     })
@@ -906,10 +908,10 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
         badge: state
             .sentence
             .second_chance
-            .then(|| "Second Chance!".into()),
-        answer_label: "Your translation".into(),
-        correct_label: "Correct translation".into(),
-        placeholder: "Translation...".into(),
+            .then(|| yap_i18n::tr!("translation-second-chance")),
+        answer_label: yap_i18n::tr!("translation-your-translation"),
+        correct_label: yap_i18n::tr!("translation-correct-translation"),
+        placeholder: yap_i18n::tr!("translation-translation"),
         words,
         chunks: language_utils::sentence_chunks(
             &state
@@ -930,14 +932,13 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
         is_grading,
         can_submit: editing && !state.text.trim().is_empty(),
         submit_label: if is_grading {
-            "AI is grading..."
+            yap_i18n::tr!("common-grading")
         } else {
-            "Check Answer"
-        }
-        .into(),
+            yap_i18n::tr!("common-check-answer")
+        },
         grade_section: grade.map(|_| TranslationGradeSection {
-            title: "Grade Words".into(),
-            subtitle: "Mark as remembered (✓) or forgot (✗)".into(),
+            title: yap_i18n::tr!("translation-grade-words"),
+            subtitle: yap_i18n::tr!("translation-mark-as-remembered-or-forgot"),
             open_by_default: autograde_error.is_some(),
             items: feedback
                 .grade_items
@@ -972,7 +973,7 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
                     ..
                 }
             ),
-        continue_label: "Continue".into(),
+        continue_label: yap_i18n::tr!("common-continue"),
         autograde_error,
         definitions: feedback.definitions,
     }

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState } from "react";
 import { Check, ChevronDown, Headphones } from "lucide-react";
 import type {
@@ -46,10 +47,15 @@ export function CurriculumBrowser({
   onChoose: (event: DeckEvent) => void;
 }) {
   return (
-    <Dialog open={category !== null} onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open={category !== null}
+      onOpenChange={(open) => !open && onClose()}
+    >
       <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Choose what to study</DialogTitle>
+          <DialogTitle>
+            {t("curriculum-browser-choose-what-to-study")}
+          </DialogTitle>
         </DialogHeader>
         {category && (
           <BrowserTabs
@@ -81,7 +87,9 @@ function BrowserTabs({
   const [lists] = useState(() => {
     const movies = deck.get_movie_stats();
     const metadata = new Map(
-      deck.get_movie_metadata(movies.map((movie) => movie.id)).map((movie) => [movie.id, movie]),
+      deck
+        .get_movie_metadata(movies.map((movie) => movie.id))
+        .map((movie) => [movie.id, movie]),
     );
     const lessons = deck.get_pimsleur_stats();
     return {
@@ -104,11 +112,15 @@ function BrowserTabs({
     (a, b) => a - b,
   );
   const labels: Record<SentenceListCategory, string> = {
-    essential: "Essential",
-    movie: "Movies",
+    essential: t("curriculum-essential"),
+    movie: t("common-movies"),
     pimsleur: "Pimsleur",
   };
-  const essentialTitle = `${lists.tier.name} ${get_language_metadata(language).commonName} Level ${lists.tier.level}`;
+  const essentialTitle = t("curriculum-tier-level", {
+    tier: String(lists.tier.name),
+    language: String(get_language_metadata(language).commonName),
+    level: lists.tier.level,
+  });
 
   return (
     <Tabs
@@ -149,8 +161,9 @@ function BrowserTabs({
         {!acknowledged ? (
           <div className="flex flex-col items-center gap-3 py-4 text-center">
             <p className="text-sm text-muted-foreground">
-              Yap has word lists for Pimsleur, but is not affiliated with
-              Pimsleur in any way.
+              {t(
+                "curriculum-browser-yap-has-word-lists-for-pimsleur-but-is-not",
+              )}
             </p>
             <Button
               onClick={() => {
@@ -158,22 +171,29 @@ function BrowserTabs({
                 setAcknowledged(true);
               }}
             >
-              I understand
+              {t("curriculum-browser-i-understand")}
             </Button>
           </div>
         ) : (
           <>
             <p className="text-sm text-muted-foreground">
-              Focus on vocabulary from a specific Pimsleur lesson.
+              {t(
+                "curriculum-browser-focus-on-vocabulary-from-a-specific-pimsleur-lesson",
+              )}
             </p>
             {levels.map((level) => (
               <Collapsible
                 key={level}
-                defaultOpen={selected?.type === "PimsleurLesson" && selected.level === level}
+                defaultOpen={
+                  selected?.type === "PimsleurLesson" &&
+                  selected.level === level
+                }
                 className="flex flex-col gap-2"
               >
                 <CollapsibleTrigger className="flex items-center gap-2 w-full group">
-                  <h4 className="text-sm font-semibold">Level {level}</h4>
+                  <h4 className="text-sm font-semibold">
+                    {t("curriculum-level", { level: level })}
+                  </h4>
                   <ChevronDown className="h-3 w-3 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-2">
@@ -194,7 +214,9 @@ function BrowserTabs({
                             lesson: lesson.lesson,
                           })
                         }
-                        title={`Lesson ${lesson.lesson}`}
+                        title={t("curriculum-lesson", {
+                          lesson: lesson.lesson,
+                        })}
                         percentKnown={lesson.percent_known}
                         done={lesson.all_available_learned}
                         icon
@@ -235,7 +257,9 @@ function ListCard({
       <Card
         className={`p-3 flex-row items-center gap-3 ${selected ? "ring-2 ring-primary" : "hover:bg-muted/50"}`}
       >
-        {icon && <Headphones className="h-5 w-5 shrink-0 text-muted-foreground" />}
+        {icon && (
+          <Headphones className="h-5 w-5 shrink-0 text-muted-foreground" />
+        )}
         <div className="flex flex-1 min-w-0 flex-col gap-2">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-sm">{title}</span>
@@ -244,7 +268,7 @@ function ListCard({
           <div className="flex items-center gap-2">
             <Progress value={percentKnown} aria-label={title} />
             <span className="text-xs tabular-nums text-muted-foreground">
-              {done ? "Done!" : `${Math.floor(percentKnown)}%`}
+              {done ? t("curriculum-done") : `${Math.floor(percentKnown)}%`}
             </span>
           </div>
         </div>

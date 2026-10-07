@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
@@ -99,9 +100,7 @@ export function AccomplishmentScreen({
         <div className="rounded-xl bg-caution-surface p-4">
           <Trophy className="h-10 w-10 text-caution" />
         </div>
-        <h2 className="text-2xl font-bold">
-          {view.heading}
-        </h2>
+        <h2 className="text-2xl font-bold">{view.heading}</h2>
         <p className="text-muted-foreground">{view.studied}</p>
         {view.streak_label && (
           <Badge
@@ -118,7 +117,7 @@ export function AccomplishmentScreen({
           className="flex flex-col items-center"
         >
           <CollapsibleTrigger className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Change daily goal
+            {t("accomplishment-screen-change-daily-goal")}
             <ChevronDown
               className={cn(
                 "h-4 w-4 transition-transform",
@@ -142,7 +141,7 @@ export function AccomplishmentScreen({
       {summary.new_cards.length > 0 && (
         <div className="w-full">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            New today
+            {t("accomplishment-screen-new-today")}
           </p>
           <div className="grid grid-cols-2 gap-2">
             {summary.new_cards.map((card, i) => (
@@ -170,7 +169,7 @@ export function AccomplishmentScreen({
       {summary.learned_cards.length > 0 && (
         <div className="w-full">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Learned
+            {t("common-learned")}
           </p>
           <div className="grid grid-cols-2 gap-2">
             {summary.learned_cards.map((card, i) => (
@@ -198,7 +197,7 @@ export function AccomplishmentScreen({
       {summary.locked_in_cards.length > 0 && (
         <div className="w-full">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Back on track
+            {t("accomplishment-screen-back-on-track")}
           </p>
           <div className="grid grid-cols-2 gap-2">
             {summary.locked_in_cards.map((card, i) => (
@@ -226,7 +225,9 @@ export function AccomplishmentScreen({
       {summary.reviewed_words.length > 0 && (
         <div className="w-full">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Reviewed ({summary.reviewed_words.length})
+            {t("accomplishment-reviewed", {
+              count: summary.reviewed_words.length,
+            })}
           </p>
           <Card variant="light" className="p-3 gap-0" animate>
             <div className="flex flex-wrap gap-2">
@@ -247,12 +248,16 @@ export function AccomplishmentScreen({
         {summary.recall_percent != null && (
           <Card variant="light" className="p-3 gap-0 text-center">
             <p className="text-2xl font-bold">{summary.recall_percent}%</p>
-            <p className="text-xs text-muted-foreground">recall</p>
+            <p className="text-xs text-muted-foreground">
+              {t("accomplishment-screen-recall")}
+            </p>
           </Card>
         )}
         <Card variant="light" className="p-3 gap-0 text-center">
           <p className="text-2xl font-bold">{wordsKnown}</p>
-          <p className="text-xs text-muted-foreground">words known</p>
+          <p className="text-xs text-muted-foreground">
+            {t("accomplishment-screen-words-known", { count: wordsKnown })}
+          </p>
         </Card>
       </div>
 
@@ -267,7 +272,7 @@ export function AccomplishmentScreen({
           <PartyPopper className="h-5 w-5" />
         </Button>
         <Button onClick={onDismiss} size="lg" className="flex-1">
-          Continue
+          {t("common-continue")}
         </Button>
       </div>
     </div>

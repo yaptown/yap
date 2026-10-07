@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Deck, Language } from "../../../yap-frontend-rs/pkg";
@@ -14,7 +15,17 @@ const SHELF = 9;
  * and each new film's poster joins the shelf. Once every sentence is chosen
  * (`choosing` false) the feed slowly replays the deck while media downloads.
  */
-export function DeckBuilding({ build, deck, language, choosing, animate, status, progress, target, finishMessage }: {
+export function DeckBuilding({
+  build,
+  deck,
+  language,
+  choosing,
+  animate,
+  status,
+  progress,
+  target,
+  finishMessage,
+}: {
   build: DeckBuild;
   deck: Deck;
   language: Language;
@@ -34,22 +45,31 @@ export function DeckBuilding({ build, deck, language, choosing, animate, status,
   // sentence is chosen it keeps going round the deck until the download ends.
   const [cursor, setCursor] = useState(0);
   const looping = !choosing && sentences.length > FEED;
-  const ticking = animate && !reduceMotion && (cursor < sentences.length || looping);
+  const ticking =
+    animate && !reduceMotion && (cursor < sentences.length || looping);
   useEffect(() => {
     if (!ticking) return;
     const timer = setInterval(() => setCursor((value) => value + 1), 450);
     return () => clearInterval(timer);
   }, [ticking]);
   const newest = animate && !reduceMotion ? cursor : sentences.length;
-  const feed = newest <= sentences.length
-    ? sentences.slice(Math.max(0, newest - FEED), newest).reverse()
-    : Array.from({ length: FEED }, (_, k) => sentences[(newest - 1 - k) % sentences.length]);
+  const feed =
+    newest <= sentences.length
+      ? sentences.slice(Math.max(0, newest - FEED), newest).reverse()
+      : Array.from(
+          { length: FEED },
+          (_, k) => sentences[(newest - 1 - k) % sentences.length],
+        );
   const shelf = films.slice(-SHELF);
 
   return (
     <div className="flex flex-col gap-5 rounded-xl border bg-card/60 p-5 backdrop-blur-sm">
       <div className="flex items-stretch gap-4">
-        <div role="list" className="relative flex h-52 min-w-0 flex-1 flex-col gap-2 overflow-hidden [mask-image:linear-gradient(to_bottom,black_60%,transparent)]" aria-label="Sentences in your deck">
+        <div
+          role="list"
+          className="relative flex h-52 min-w-0 flex-1 flex-col gap-2 overflow-hidden [mask-image:linear-gradient(to_bottom,black_60%,transparent)]"
+          aria-label={t("deck-building-sentences-in-your-deck")}
+        >
           <AnimatePresence initial={false} mode="popLayout">
             {feed.map((note, index) => (
               <motion.div
@@ -62,14 +82,22 @@ export function DeckBuilding({ build, deck, language, choosing, animate, status,
                 transition={{ type: "spring", stiffness: 380, damping: 32 }}
                 className="flex items-center gap-3 rounded-lg border border-border/60 bg-background/70 p-2 shadow-sm"
               >
-                {note.source && <div className="flex h-11 w-8 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-muted">
-                  <Poster movieId={note.source.imdb_id} deck={deck} alt="" />
-                </div>}
+                {note.source && (
+                  <div className="flex h-11 w-8 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-muted">
+                    <Poster movieId={note.source.imdb_id} deck={deck} alt="" />
+                  </div>
+                )}
                 <div className="flex min-w-0 flex-col">
                   <span className="truncate text-sm font-medium">
-                    <TargetLanguageText language={language}>{note.sentence}</TargetLanguageText>
+                    <TargetLanguageText language={language}>
+                      {note.sentence}
+                    </TargetLanguageText>
                   </span>
-                  {note.source && <span className="truncate text-xs text-muted-foreground">{note.source.title}</span>}
+                  {note.source && (
+                    <span className="truncate text-xs text-muted-foreground">
+                      {note.source.title}
+                    </span>
+                  )}
                 </div>
               </motion.div>
             ))}
@@ -96,7 +124,24 @@ export function DeckBuilding({ build, deck, language, choosing, animate, status,
           </AnimatePresence>
         </div>
         <p className="font-mono text-xs text-muted-foreground tabular-nums">
-          {sentences.length.toLocaleString()}{target ? `/${target.toLocaleString()}` : ""} sentences{build.words ? ` · ${build.words.toLocaleString()} words` : ""} · {films.length.toLocaleString()} films
+          {build.words
+            ? t("anki-building-counts-with-words", {
+                sentences: target
+                  ? sentences.length.toLocaleString() +
+                    "/" +
+                    target.toLocaleString()
+                  : sentences.length.toLocaleString(),
+                words: build.words.toLocaleString(),
+                films: films.length.toLocaleString(),
+              })
+            : t("anki-building-counts", {
+                sentences: target
+                  ? sentences.length.toLocaleString() +
+                    "/" +
+                    target.toLocaleString()
+                  : sentences.length.toLocaleString(),
+                films: films.length.toLocaleString(),
+              })}
         </p>
       </div>
 
@@ -106,7 +151,11 @@ export function DeckBuilding({ build, deck, language, choosing, animate, status,
           {progress !== undefined && <Progress value={progress} />}
         </div>
       )}
-      {finishMessage && <p className="animate-fade-in text-lg font-semibold text-pretty">{finishMessage}</p>}
+      {finishMessage && (
+        <p className="animate-fade-in text-lg font-semibold text-pretty">
+          {finishMessage}
+        </p>
+      )}
     </div>
   );
 }
@@ -114,14 +163,25 @@ export function DeckBuilding({ build, deck, language, choosing, animate, status,
 // Home's card stack, holding the sentences chosen so far.
 function DeckStack({ count }: { count: number }) {
   return (
-    <div className="relative w-24 shrink-0 self-center sm:w-28" style={{ height: "8.5rem" }} aria-hidden>
+    <div
+      className="relative w-24 shrink-0 self-center sm:w-28"
+      style={{ height: "8.5rem" }}
+      aria-hidden
+    >
       <div className="absolute inset-0 translate-x-3 rotate-[10deg] rounded-2xl border border-border/60 bg-card/30 backdrop-blur-sm" />
       <div className="absolute inset-0 translate-x-1 rotate-[3deg] rounded-2xl border border-border/60 bg-card/45 backdrop-blur-sm" />
       <div className="absolute inset-0 -rotate-6 flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/70 shadow-sm backdrop-blur-md">
-        <motion.span key={count} initial={{ scale: 1.25 }} animate={{ scale: 1 }} className="text-3xl font-bold tabular-nums">
+        <motion.span
+          key={count}
+          initial={{ scale: 1.25 }}
+          animate={{ scale: 1 }}
+          className="text-3xl font-bold tabular-nums"
+        >
           {count}
         </motion.span>
-        <span className="text-xs text-muted-foreground">sentences</span>
+        <span className="text-xs text-muted-foreground">
+          {t("deck-building-sentences-2", { count })}
+        </span>
       </div>
     </div>
   );

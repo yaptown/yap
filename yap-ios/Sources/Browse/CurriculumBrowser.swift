@@ -30,8 +30,8 @@ struct CurriculumBrowser: View {
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading).padding(20)
             }
-            .navigationTitle("Choose what to study").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .navigationTitle(L("curriculum-browser-choose-what-to-study")).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("common-done")) { dismiss() } } }
         }
         // Built once per opening; the lists are the costly part.
         .task { lists = SentenceListModel(deck: deck) }
@@ -77,8 +77,8 @@ struct CurriculumBrowser: View {
 
     private func label(_ category: SentenceListCategory) -> String {
         switch category {
-        case .Essential: "Essential"
-        case .Movie: "Movies"
+        case .Essential: L("curriculum-essential")
+        case .Movie: L("common-movies")
         case .Pimsleur: "Pimsleur"
         }
     }
@@ -100,7 +100,7 @@ struct CurriculumBrowser: View {
     private func movies(_ lists: SentenceListModel) -> some View {
         let movies = sortedMovies(lists)
         return VStack(alignment: .leading, spacing: 12) {
-            Text("You can usually watch a movie comfortably once you know 95% of the words.")
+            Text(L("movies-you-can-usually-watch-a-movie-comfortably-once-you"))
                 .font(.subheadline).foregroundStyle(Color.yapMuted)
             LazyVGrid(columns: Self.columns, spacing: 10) {
                 ForEach(showAllMovies ? movies : Array(movies.prefix(12)), id: \.id) { movie in
@@ -108,7 +108,7 @@ struct CurriculumBrowser: View {
                     Button { choose(.Movie(id: movie.id)) } label: {
                         VStack(spacing: 0) {
                             PosterImage(id: movie.id).aspectRatio(2 / 3, contentMode: .fit)
-                            Text("\(Int(movie.percent_known))% known").font(.caption.monospaced().weight(.semibold))
+                            Text(L("curriculum-percent-known", ["percent": Int(movie.percent_known)])).font(.caption.monospaced().weight(.semibold))
                                 .foregroundStyle(Color.yapText).padding(.vertical, 6).frame(maxWidth: .infinity)
                                 .background(alignment: .leading) {
                                     GeometryReader { geometry in
@@ -129,7 +129,7 @@ struct CurriculumBrowser: View {
                 }
             }
             if !showAllMovies && movies.count > 12 {
-                Button("Show all \(movies.count) movies") { showAllMovies = true }
+                Button(L("curriculum-show-all-movies", ["count": movies.count])) { showAllMovies = true }
                     .frame(maxWidth: .infinity).buttonStyle(.bordered)
             }
         }
@@ -138,18 +138,18 @@ struct CurriculumBrowser: View {
     @ViewBuilder private func pimsleur(_ lists: SentenceListModel) -> some View {
         if !acknowledged {
             VStack(spacing: 12) {
-                Text("Yap has word lists for Pimsleur, but is not affiliated with Pimsleur in any way.")
+                Text(L("curriculum-browser-yap-has-word-lists-for-pimsleur-but-is-not"))
                     .font(.subheadline).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
-                Button("I understand") { acknowledged = true }
+                Button(L("curriculum-browser-i-understand")) { acknowledged = true }
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent)
             }.frame(maxWidth: .infinity).padding(.vertical, 16)
         } else {
-            Text("Focus on vocabulary from a specific Pimsleur lesson.").font(.subheadline).foregroundStyle(Color.yapMuted)
+            Text(L("curriculum-browser-focus-on-vocabulary-from-a-specific-pimsleur-lesson")).font(.subheadline).foregroundStyle(Color.yapMuted)
             ForEach(Array(Set(lists.lessons.map(\.level))).sorted(), id: \.self) { level in
                 PimsleurLevel(level: level, open: { if case let .PimsleurLesson(selectedLevel, _) = selected { selectedLevel == level } else { false } }()) {
                     ForEach(lists.lessons.filter { $0.level == level }, id: \.lesson) { lesson in
                         let selection = SentenceListSelection.PimsleurLesson(level: level, lesson: lesson.lesson)
-                        row(title: "Lesson \(lesson.lesson)", selection: selection,
+                        row(title: L("curriculum-lesson", ["lesson": lesson.lesson]), selection: selection,
                             progress: deck.get_sentence_list_progress(selection: selection, essential_percent_known: lists.tier.percent_known),
                             icon: "headphones")
                     }
@@ -191,7 +191,7 @@ private struct PimsleurLevel<Content: View>: View {
         VStack(alignment: .leading, spacing: 8) {
             Button { withAnimation(.snappy) { open.toggle() } } label: {
                 HStack(spacing: 6) {
-                    Text("Level \(level)").font(.subheadline.weight(.semibold))
+                    Text(L("curriculum-level", ["level": level])).font(.subheadline.weight(.semibold))
                     Image(systemName: "chevron.down").font(.caption2.weight(.semibold)).foregroundStyle(Color.yapMuted)
                         .rotationEffect(.degrees(open ? 180 : 0))
                 }.foregroundStyle(Color.yapText).contentShape(Rectangle())

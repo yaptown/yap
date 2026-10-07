@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -117,7 +118,11 @@ export function useOneSignalNotifications() {
       setIsInitialized(true);
     } catch (err) {
       console.error("Error initializing OneSignal:", err);
-      setError(err instanceof Error ? err.message : "Failed to initialize");
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("use-onesignal-notifications-failed-to-initialize"),
+      );
       setIsInitialized(true);
     }
   };
@@ -131,7 +136,9 @@ export function useOneSignalNotifications() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error("Must be logged in to subscribe");
+        throw new Error(
+          t("use-onesignal-notifications-must-be-logged-in-to-subscribe"),
+        );
       }
 
       const accepted = await window.OneSignal.Notifications.requestPermission();
@@ -159,7 +166,11 @@ export function useOneSignalNotifications() {
       });
     } catch (err) {
       console.error("Error subscribing:", err);
-      setError(err instanceof Error ? err.message : "Failed to subscribe");
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("use-onesignal-notifications-failed-to-subscribe"),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -172,10 +183,18 @@ export function useOneSignalNotifications() {
 
       // OneSignal doesn't have a direct unsubscribe method
       // Users need to manage this through browser settings
-      setError("To unsubscribe, please use your browser notification settings");
+      setError(
+        t(
+          "use-onesignal-notifications-to-unsubscribe-please-use-your-browser-notification-settings",
+        ),
+      );
     } catch (err) {
       console.error("Error unsubscribing:", err);
-      setError(err instanceof Error ? err.message : "Failed to unsubscribe");
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("use-onesignal-notifications-failed-to-unsubscribe"),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -189,7 +208,8 @@ export function useOneSignalNotifications() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      if (!user)
+        throw new Error(t("use-onesignal-notifications-not-authenticated"));
 
       // Send test notification via edge function
       const response = await supabase.functions.invoke(
@@ -197,8 +217,10 @@ export function useOneSignalNotifications() {
         {
           body: {
             userId: user.id,
-            title: "Test Notification",
-            body: "This is a test notification from Yap.Town!",
+            title: t("use-onesignal-notifications-test-notification"),
+            body: t(
+              "use-onesignal-notifications-this-is-a-test-notification-from-yap-town",
+            ),
             test: true,
           },
         },
@@ -210,7 +232,9 @@ export function useOneSignalNotifications() {
     } catch (err) {
       console.error("Error sending test notification:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to send test notification",
+        err instanceof Error
+          ? err.message
+          : t("use-onesignal-notifications-failed-to-send-test-notification"),
       );
     } finally {
       setIsLoading(false);

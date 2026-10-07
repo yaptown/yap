@@ -19,8 +19,8 @@ struct DictionaryScreen: View {
     var body: some View {
         results
         .scrollContentBackground(.hidden)
-        .navigationTitle("Dictionary")
-        .searchable(text: $query, prompt: "Search words or meanings")
+        .navigationTitle(L("common-dictionary"))
+        .searchable(text: $query, prompt: L("dictionary-screen-search-words-or-meanings"))
         .searchFocused($searchFocused)
         .onAppear { if searching { searchFocused = true } }
         .navigationDestination(isPresented: Binding(get: { !path.isEmpty }, set: { if !$0 { path = [] } })) {
@@ -60,17 +60,17 @@ struct DictionaryScreen: View {
                                 Text((entry.prefix.map { $0.prefix + $0.separator } ?? "") + entry.display_text).foregroundStyle(Color.yapText)
                                 let gloss = entry.gloss
                                 if !gloss.isEmpty { Text(gloss).font(.subheadline).foregroundStyle(Color.yapMuted) }
-                                if entry.is_phrase { Text("(phrase)").font(.caption).foregroundStyle(Color.yapMuted) }
+                                if entry.is_phrase { Text(L("dictionary-screen-phrase")).font(.caption).foregroundStyle(Color.yapMuted) }
                             }
                             Spacer()
-                            if entry.senses.contains(where: { $0.is_in_deck }) { Image(systemName: "checkmark.circle").accessibilityLabel("In deck") }
+                            if entry.senses.contains(where: { $0.is_in_deck }) { Image(systemName: "checkmark.circle").accessibilityLabel(L("dictionary-screen-in-deck")) }
                             Image(systemName: "chevron.right").font(.caption).foregroundStyle(Color.yapMuted)
                         }.frame(minHeight: 44)
                     }
                 }
-                if hasMore { Button("Load 200 more") { loadMore() } }
+                if hasMore { Button(L("dictionary-screen-load-200-more")) { loadMore() } }
                 if entries.isEmpty { ContentUnavailableView.search(text: query) }
-            } header: { Text("\(entries.count) results · \(deck.get_gram_dictionary_count()) dictionary entries") }
+            } header: { Text(L("dictionary-result-count", ["shown": entries.count, "total": deck.get_gram_dictionary_count()])) }
             // One glass card behind hundreds of lazy rows would be costly, so the
             // rows take the card's translucent fallback instead of opaque white.
             .listRowBackground(Rectangle().fill(.ultraThinMaterial).opacity(0.65).overlay(Tokens.palette.card.color.opacity(0.18)))
@@ -101,20 +101,20 @@ private struct DictionaryDetail: View {
             if let entry {
                 StudyCard {
                     Text((entry.prefix.map { $0.prefix + $0.separator } ?? "") + entry.display_text).font(.largeTitle.bold())
-                    if entry.is_phrase { Text("(phrase)").font(.caption).foregroundStyle(Color.yapMuted) }
+                    if entry.is_phrase { Text(L("dictionary-screen-phrase")).font(.caption).foregroundStyle(Color.yapMuted) }
                     AudioButton(request: entry.audio_request, reviewCount: deck.get_total_reviews())
                     ForEach(entry.senses, id: \.frequency_index) { sense in
                         VStack(alignment: .leading, spacing: 12) {
                             DefinitionBoxesView(definition: sense.definition)
                             let isAdded = added.contains(sense.frequency_index) || sense.is_in_deck
-                            Button(isAdded ? "Added" : "Add to deck", systemImage: isAdded ? "checkmark.circle" : "plus.circle") { add(sense) }
+                            Button(isAdded ? L("dictionary-screen-added") : L("dictionary-screen-add-to-deck"), systemImage: isAdded ? "checkmark.circle" : "plus.circle") { add(sense) }
                                 .buttonStyle(.borderedProminent).foregroundStyle(isAdded ? Color(uiColor: .secondaryLabel) : Color.yapOnAccent)
                                 .disabled(isAdded)
                         }
                     }
                 }.padding(20)
             }
-        }.background(.clear).navigationTitle("Definition").navigationBarTitleDisplayMode(.inline)
+        }.background(.clear).navigationTitle(L("dictionary-screen-definition")).navigationBarTitleDisplayMode(.inline)
         .onDisappear { audio.stop() }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in

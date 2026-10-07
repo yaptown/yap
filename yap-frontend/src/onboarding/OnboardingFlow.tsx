@@ -485,8 +485,6 @@ function SrsIntroScreen({
   view: OnboardingView;
   content: Extract<OnboardingContent, { type: "Review" }>;
 }) {
-  const reviews = content.curves.length - 1;
-
   return (
     <ScreenWrapper screenKey="srs-intro">
       <Card className="w-full p-6 md:p-8 flex flex-col gap-4" animate>
@@ -546,7 +544,7 @@ function SrsIntroScreen({
                 ))}
                 {content.review_label && (
                   <span className="text-sm text-muted-foreground ml-1">
-                    {reviews} {content.review_label}
+                    {content.review_label}
                   </span>
                 )}
               </div>

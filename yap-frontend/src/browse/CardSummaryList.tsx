@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState } from "react";
 import TimeAgo from "react-timeago";
 import type { CardSummary, Language } from "../../../yap-frontend-rs/pkg";
@@ -20,8 +21,12 @@ export function CardSummaryList({
       <table className="w-full table-fixed">
         <thead>
           <tr className="border-b bg-muted/50">
-            <th className="text-left p-3 font-medium">Word</th>
-            <th className="text-left p-3 font-medium">Ready</th>
+            <th className="text-left p-3 font-medium">
+              {t("card-summary-list-word")}
+            </th>
+            <th className="text-left p-3 font-medium">
+              {t("card-summary-list-ready")}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -36,7 +41,9 @@ export function CardSummaryList({
                       <button
                         type="button"
                         className="flex flex-wrap items-center gap-2 text-left font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        aria-label="Reveal listening lexeme"
+                        aria-label={t(
+                          "card-summary-list-reveal-listening-lexeme",
+                        )}
                         onClick={() =>
                           setRevealed((previous) => new Set(previous).add(key))
                         }
@@ -47,7 +54,7 @@ export function CardSummaryList({
                           </TargetLanguageText>
                         </span>
                         <span className="text-xs italic text-muted-foreground">
-                          Tap to reveal
+                          {t("card-summary-list-tap-to-reveal")}
                         </span>
                       </button>
                     ) : (
@@ -66,9 +73,19 @@ export function CardSummaryList({
                 </td>
                 <td className="p-3 text-sm text-muted-foreground">
                   {card.due_timestamp_ms <= timestampMs ? (
-                    <Badge variant="outline">Ready now</Badge>
+                    <Badge variant="outline">
+                      {t("card-summary-list-ready-now")}
+                    </Badge>
                   ) : (
-                    <TimeAgo date={new Date(card.due_timestamp_ms)} />
+                    <TimeAgo
+                      date={new Date(card.due_timestamp_ms)}
+                      formatter={(count, unit, suffix) =>
+                        t(`time-${unit}`, {
+                          count,
+                          direction: suffix === "from now" ? "future" : "past",
+                        })
+                      }
+                    />
                   )}
                 </td>
               </tr>

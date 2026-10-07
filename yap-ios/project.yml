@@ -24,6 +24,7 @@ targets:
     info:
       path: Generated/Info.plist
       properties:
+        CFBundleLocalizations: [en, fr, es, zh-Hans]
         SentryDSN: $(SENTRY_DSN)
         ITSAppUsesNonExemptEncryption: false
         UILaunchScreen:

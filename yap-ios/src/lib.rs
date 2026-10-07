@@ -9,6 +9,24 @@ pub struct YapHost;
 
 #[bridge]
 impl YapHost {
+    pub fn configure_ui_language(preferences: Vec<String>) {
+        yap_i18n::set_ui_language(yap_i18n::negotiate(&preferences).tag());
+    }
+
+    pub fn translate(id: String, arguments: String) -> String {
+        let values: serde_json::Map<String, serde_json::Value> =
+            serde_json::from_str(&arguments).unwrap();
+        let mut args = yap_i18n::FluentArgs::new();
+        for (key, value) in values {
+            match value {
+                serde_json::Value::String(value) => args.set(key, value),
+                serde_json::Value::Number(value) => args.set(key, value.as_f64().unwrap()),
+                _ => panic!("UI arguments must be strings or numbers"),
+            }
+        }
+        yap_i18n::translate(&id, Some(&args))
+    }
+
     pub fn initialize() -> Result<(), Error> {
         // The host deliberately keeps this runtime for the process lifetime.
         // Binding generation does not initialize it.

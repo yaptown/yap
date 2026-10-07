@@ -43,6 +43,7 @@ isotonic = { git = "https://github.com/anchpop/isotonic.git", rev = "25a292f6655
 rustc-hash = "2.1"
 itertools = "0.14.0"
 weblocks.workspace = true
+yap-i18n = { version = "0.1.0", path = "../libraries/yap-i18n" }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.72"

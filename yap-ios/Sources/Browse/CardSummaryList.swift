@@ -8,9 +8,9 @@ struct CardSummaryList: View {
     var body: some View {
         StudyCard {
             HStack {
-                Text("Word")
+                Text(L("card-summary-list-word"))
                 Spacer()
-                Text("Ready").frame(width: readyColumnWidth, alignment: .leading)
+                Text(L("card-summary-list-ready")).frame(width: readyColumnWidth, alignment: .leading)
             }.font(.subheadline.bold())
             LazyVStack(alignment: .leading, spacing: 14) {
                 ForEach(cards, id: \.card_indicator) { card in
@@ -21,15 +21,15 @@ struct CardSummaryList: View {
                                 Button { revealed.insert(card.card_indicator) } label: {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(card.card_text).fontWeight(.semibold).blur(radius: 5).accessibilityHidden(true)
-                                        Text("Tap to reveal").font(.caption).italic().foregroundStyle(Color.yapMuted)
+                                        Text(L("card-summary-list-tap-to-reveal")).font(.caption).italic().foregroundStyle(Color.yapMuted)
                                     }
-                                }.buttonStyle(.plain).accessibilityLabel("Reveal listening lexeme")
+                                }.buttonStyle(.plain).accessibilityLabel(L("card-summary-list-reveal-listening-lexeme"))
                             } else { Text(card.card_text).fontWeight(.semibold) }
                             if let subtitle = card.card_subtitle { Text(subtitle).font(.subheadline).foregroundStyle(Color.yapMuted) }
                         }.frame(maxWidth: .infinity, alignment: .leading)
                         Group {
                             if card.due_timestamp_ms <= timestampMs {
-                                Text("Ready now").foregroundStyle(Color.yapText).padding(.horizontal, 8).padding(.vertical, 3)
+                                Text(L("card-summary-list-ready-now")).foregroundStyle(Color.yapText).padding(.horizontal, 8).padding(.vertical, 3)
                                     .overlay { Capsule().strokeBorder(Color(uiColor: .separator)) }
                             }
                             else { Text(Date(timeIntervalSince1970: card.due_timestamp_ms / 1000), style: .relative) }

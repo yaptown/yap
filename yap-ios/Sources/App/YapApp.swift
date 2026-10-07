@@ -7,6 +7,7 @@ import SwiftUI
     @State private var authSheet = AuthSheet()
     @State private var sessions = SessionLifecycle()
     init() {
+        YapHost.configure_ui_language(preferences: Locale.preferredLanguages)
         do { try YapHost.initialize() } catch { fatalError("Unable to start Yap: \(error)") }
         Telemetry.start()
         _auth = State(initialValue: AuthStore())
@@ -16,15 +17,15 @@ import SwiftUI
         WindowGroup {
             ZStack {
                 AnimatedBackground()
-                if auth.restoring { ProgressView("Restoring your session…") }
+                if auth.restoring { ProgressView(L("yap-app-restoring-your-session")) }
                 else if let session = sessions.session {
                     SessionRoot(session: session, auth: auth).id(session.userId ?? "anon")
                 } else if sessions.flushFailed {
                     ContentUnavailableView {
-                        Label("Couldn't save your progress", systemImage: "exclamationmark.triangle")
+                        Label(L("yap-app-couldn-t-save-your-progress"), systemImage: "exclamationmark.triangle")
                     } description: {
-                        Text("Yap couldn't finish saving your reviews to this device, so it hasn't switched accounts yet. Make sure your device has free storage, then try again.")
-                    } actions: { Button("Try again") { sessions.retry(auth: auth) } }
+                        Text(L("yap-app-yap-couldn-t-finish-saving-your-reviews-to-this"))
+                    } actions: { Button(L("common-try-again-sentence")) { sessions.retry(auth: auth) } }
                 } else { ProgressView() }
             }
             .onChange(of: auth.restoring ? "restoring" : auth.userId ?? "anon", initial: true) { _, _ in

@@ -128,11 +128,11 @@ static LANGUAGE_DATA_HASHES: LazyLock<BTreeMap<Course, &'static str>> = LazyLock
 });
 
 fn describe_part(part: PackPart, course: Course) -> String {
-    let kind = match part {
-        PackPart::Core => "dictionary",
-        PackPart::Sentences => "sentences",
-    };
-    format!("Downloading {} {kind}", course.target_language)
+    let language = crate::get_language_name(course.target_language).full;
+    match part {
+        PackPart::Core => yap_i18n::tr!("loading-dictionary", language = language),
+        PackPart::Sentences => yap_i18n::tr!("loading-sentences", language = language),
+    }
 }
 
 fn language_data_hashes_for_course(course: Course) -> Result<PackMetadata, LanguageDataError> {
@@ -266,7 +266,10 @@ pub(crate) async fn acquire_cache_lock(
     )
     .await
     .map_err(|e| {
-        LanguageDataError::InvalidData(format!("Failed to acquire language pack lock: {e:?}"))
+        LanguageDataError::InvalidData(yap_i18n::tr!(
+            "loading-lock-error",
+            error = format!("{e:?}")
+        ))
     })
 }
 
@@ -348,7 +351,7 @@ pub(crate) async fn load_language_pack(
     )
     .await?;
 
-    set_loading_state("Preparing language data", 100.0);
+    set_loading_state(&yap_i18n::tr!("loading-preparing-language-data"), 100.0);
     let assemble_timer = bridgerton::platform::PerfTimer::new("Assembling language pack");
     let pack = core.with_sentences(sentences);
     drop(assemble_timer);
@@ -391,7 +394,7 @@ async fn load_part<T: Send + 'static>(
     let bytes =
         ensure_part_bytes(language_directory, course, part, meta, set_loading_state).await?;
 
-    set_loading_state("Deserializing language data", 100.0);
+    set_loading_state(&yap_i18n::tr!("loading-deserializing-language-data"), 100.0);
     let _perf_timer = bridgerton::platform::PerfTimer::new("Deserializing language data part");
     match deserialize_part(bytes, deserialize).await {
         Ok(value) => Ok(value),
@@ -465,17 +468,17 @@ pub enum LanguageDataError {
         std::io::Error,
     ),
 
-    #[error("OPFS error: {0:?}")]
+    #[error("{}", pack_storage_error(.0))]
     Persistent(#[bridge(message)] persistent::Error),
 
-    #[error("Rkyv error: {0}")]
+    #[error("{}", pack_archive_error(.0))]
     Rkyv(
         #[source]
         #[bridge(message)]
         rkyv::rancor::Error,
     ),
 
-    #[error("Pack download error for {url}: {source}")]
+    #[error("{}", pack_download_error(.url, .source))]
     Download {
         url: String,
         #[source]
@@ -483,17 +486,45 @@ pub enum LanguageDataError {
         source: fetch_happen::Error,
     },
 
-    #[error("Server returned HTTP {0}")]
+    #[error("{}", pack_server_error(*.0))]
     ServerError(u16),
 
     #[error("{0}")]
     InvalidData(String),
 
-    #[error("Timed out: {0}")]
+    #[error("{}", pack_timeout_error(.0))]
     Timeout(String),
 
-    #[error("Unsupported course: {0:?}")]
+    #[error("{}", pack_unsupported_course(.0))]
     UnsupportedCourse(Course),
+}
+
+fn pack_storage_error(source: &persistent::Error) -> String {
+    yap_i18n::tr!("loading-storage-error", error = format!("{source:?}"))
+}
+
+fn pack_archive_error(source: &rkyv::rancor::Error) -> String {
+    yap_i18n::tr!("loading-archive-error", error = source.to_string())
+}
+
+fn pack_unsupported_course(course: &Course) -> String {
+    yap_i18n::tr!("loading-unsupported-course", course = format!("{course:?}"))
+}
+
+fn pack_download_error(url: &str, source: &fetch_happen::Error) -> String {
+    yap_i18n::tr!(
+        "loading-pack-download-error",
+        url = url,
+        source = source.to_string()
+    )
+}
+
+fn pack_server_error(status: u16) -> String {
+    yap_i18n::tr!("loading-server-error", status = status)
+}
+
+fn pack_timeout_error(detail: &str) -> String {
+    yap_i18n::tr!("loading-timeout-error", detail = detail)
 }
 
 async fn read_cached_language_data(
@@ -537,7 +568,7 @@ async fn read_cached_language_data(
             .map_err(LanguageDataError::Persistent)?;
         bytes.extend_from_slice(&chunk_bytes);
         let progress = (bytes.len() as f64 / meta.size.max(1) as f64) * 100.0;
-        set_loading_state("Loading...", progress as f32);
+        set_loading_state(&yap_i18n::tr!("common-loading"), progress as f32);
     }
 
     let computed_hash = const_xxh3(&bytes);
@@ -607,13 +638,14 @@ async fn download_and_cache_language_data(
     }
 
     if collect_bytes {
-        set_loading_state("Verifying language data", 100.0);
+        set_loading_state(&yap_i18n::tr!("loading-verifying-language-data"), 100.0);
         let computed_hash = const_xxh3(&bytes);
         if computed_hash != meta.hash {
             remove_language_data_files(language_directory_handle, &chunk_filenames).await;
-            return Err(LanguageDataError::InvalidData(format!(
-                "Downloaded language data hash mismatch. Expected {expected}, got {computed_hash}",
-                expected = meta.hash
+            return Err(LanguageDataError::InvalidData(yap_i18n::tr!(
+                "loading-hash-mismatch",
+                expected = meta.hash.to_string(),
+                actual = computed_hash.to_string()
             )));
         }
     }
@@ -684,9 +716,9 @@ async fn fetch_language_data_chunk(
         .await
         .ok_or_else(|| {
             abort.abort();
-            LanguageDataError::Timeout(format!(
-                "no response from the language data server after {}ms",
-                deadlines.first_byte_ms
+            LanguageDataError::Timeout(yap_i18n::tr!(
+                "loading-no-response",
+                milliseconds = deadlines.first_byte_ms
             ))
         })?
         .map_err(|source| LanguageDataError::Download {
@@ -710,9 +742,9 @@ async fn fetch_language_data_chunk(
             && expected_chunk_len == expected_total_size)
     {
         abort.abort();
-        return Err(LanguageDataError::InvalidData(
-            "server ignored pack byte range".into(),
-        ));
+        return Err(LanguageDataError::InvalidData(yap_i18n::tr!(
+            "loading-range-ignored"
+        )));
     }
 
     let reader = response
@@ -732,18 +764,18 @@ async fn fetch_language_data_chunk(
             .await
             .ok_or_else(|| {
                 abort.abort();
-                LanguageDataError::Timeout(format!(
-                    "language data download stalled for {}ms",
-                    deadlines.stall_ms
+                LanguageDataError::Timeout(yap_i18n::tr!(
+                    "loading-stalled",
+                    milliseconds = deadlines.stall_ms
                 ))
             })?;
         match next {
             Ok(Some(chunk)) => {
                 if chunk.len() > expected_chunk_len.saturating_sub(chunk_bytes.len()) {
                     abort.abort();
-                    return Err(LanguageDataError::InvalidData(
-                        "pack range response was oversized".into(),
-                    ));
+                    return Err(LanguageDataError::InvalidData(yap_i18n::tr!(
+                        "loading-range-oversized"
+                    )));
                 }
                 chunk_bytes.extend_from_slice(&chunk);
                 let progress = ((downloaded_before_chunk + chunk_bytes.len()) as f64
@@ -766,9 +798,11 @@ async fn fetch_language_data_chunk(
     }
 
     if chunk_bytes.len() != expected_chunk_len {
-        return Err(LanguageDataError::InvalidData(format!(
-            "Downloaded language data chunk {chunk_index} had {actual} bytes, expected {expected_chunk_len}",
-            actual = chunk_bytes.len()
+        return Err(LanguageDataError::InvalidData(yap_i18n::tr!(
+            "loading-chunk-size",
+            index = chunk_index,
+            actual = chunk_bytes.len(),
+            expected = expected_chunk_len
         )));
     }
 

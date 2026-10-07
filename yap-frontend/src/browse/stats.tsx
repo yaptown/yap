@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import type {
@@ -47,7 +48,7 @@ export function Stats({
         <Suspense
           fallback={
             <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-              Loading chart...
+              {t("stats-loading-chart")}
             </div>
           }
         >

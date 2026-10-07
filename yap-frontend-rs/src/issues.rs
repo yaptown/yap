@@ -32,16 +32,15 @@ pub struct ReportIssueCopy {
 #[bridgerton::stable(strong)]
 pub fn report_issue_copy() -> ReportIssueCopy {
     ReportIssueCopy {
-        menu_label: "Report an Issue".into(),
-        title: "Report an Issue".into(),
-        description:
-            "Describe the issue you're experiencing. We'll look into it as soon as possible.".into(),
-        field_label: "Issue description".into(),
-        placeholder: "Please describe the issue you're experiencing...".into(),
-        cancel_label: "Cancel".into(),
-        submit_label: "Submit Issue".into(),
-        submitting_label: "Submitting...".into(),
-        failed_label: "Couldn't send your report. Please try again.".into(),
+        menu_label: yap_i18n::tr!("issue-report-an-issue"),
+        title: yap_i18n::tr!("issue-report-an-issue"),
+        description: yap_i18n::tr!("issue-describe-the-issue-you-re-experiencing-we-ll-look"),
+        field_label: yap_i18n::tr!("issue-issue-description"),
+        placeholder: yap_i18n::tr!("issue-please-describe-the-issue-you-re-experiencing"),
+        cancel_label: yap_i18n::tr!("common-cancel"),
+        submit_label: yap_i18n::tr!("issue-submit-issue"),
+        submitting_label: yap_i18n::tr!("issue-submitting"),
+        failed_label: yap_i18n::tr!("issue-couldn-t-send-your-report-please-try-again"),
     }
 }
 
@@ -91,9 +90,9 @@ pub async fn report_issue(
         .await
         .map_err(|e| Error::new(format!("{e:?}")))?;
     if !response.ok() {
-        return Err(Error::new(format!(
-            "Couldn't send your report ({})",
-            response.status()
+        return Err(Error::new(yap_i18n::tr!(
+            "issue-submit-error-status",
+            status = (response.status()).to_string()
         )));
     }
     Ok(())

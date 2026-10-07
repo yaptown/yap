@@ -1,3 +1,5 @@
+import { rich } from "@/lib/i18n-react";
+import { t, uiLanguage } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useOutletContext } from "react-router-dom";
@@ -46,7 +48,7 @@ export function UserProfilePage() {
   useEffect(() => {
     async function loadProfile() {
       if (!id) {
-        setError("No user ID provided");
+        setError(t("user-profile-no-user-id-provided"));
         setLoading(false);
         return;
       }
@@ -60,7 +62,7 @@ export function UserProfilePage() {
         setError(null);
       } catch (err) {
         console.error("Error loading profile:", err);
-        setError("Failed to load profile");
+        setError(t("user-profile-failed-to-load-profile"));
       } finally {
         setLoading(false);
       }
@@ -111,7 +113,7 @@ export function UserProfilePage() {
 
   const handleSave = async () => {
     if (!accessToken) {
-      toast.error("You must be logged in to edit your profile");
+      toast.error(t("user-profile-you-must-be-logged-in-to-edit-your-profile"));
       return;
     }
 
@@ -127,10 +129,10 @@ export function UserProfilePage() {
       const profileData = await get_profile_by_id(id!);
       setProfile(profileData);
       setIsEditing(false);
-      toast.success("Profile updated successfully");
+      toast.success(t("user-profile-profile-updated-successfully"));
     } catch (err) {
       console.error("Error updating profile:", err);
-      toast.error("Failed to update profile");
+      toast.error(t("user-profile-failed-to-update-profile"));
     } finally {
       setSaving(false);
     }
@@ -144,7 +146,7 @@ export function UserProfilePage() {
 
   const handleFollow = async () => {
     if (!accessToken || !id) {
-      toast.error("You must be logged in to follow users");
+      toast.error(t("user-profile-you-must-be-logged-in-to-follow-users"));
       return;
     }
 
@@ -160,10 +162,10 @@ export function UserProfilePage() {
             }
           : null,
       );
-      toast.success("Followed successfully");
+      toast.success(t("user-profile-followed-successfully"));
     } catch (err) {
       console.error("Error following user:", err);
-      toast.error("Failed to follow user");
+      toast.error(t("user-profile-failed-to-follow-user"));
     } finally {
       setFollowLoading(false);
     }
@@ -171,7 +173,7 @@ export function UserProfilePage() {
 
   const handleUnfollow = async () => {
     if (!accessToken || !id) {
-      toast.error("You must be logged in to unfollow users");
+      toast.error(t("user-profile-you-must-be-logged-in-to-unfollow-users"));
       return;
     }
 
@@ -187,10 +189,10 @@ export function UserProfilePage() {
             }
           : null,
       );
-      toast.success("Unfollowed successfully");
+      toast.success(t("user-profile-unfollowed-successfully"));
     } catch (err) {
       console.error("Error unfollowing user:", err);
-      toast.error("Failed to unfollow user");
+      toast.error(t("user-profile-failed-to-unfollow-user"));
     } finally {
       setFollowLoading(false);
     }
@@ -201,7 +203,7 @@ export function UserProfilePage() {
       <TopPageLayout
         userInfo={userInfo}
         headerProps={{
-          backButton: { label: "Profile", onBack: () => navigate("/") },
+          backButton: { label: t("home-profile"), onBack: () => navigate("/") },
         }}
       >
         <div className="space-y-4">
@@ -224,13 +226,13 @@ export function UserProfilePage() {
       <TopPageLayout
         userInfo={userInfo}
         headerProps={{
-          backButton: { label: "Profile", onBack: () => navigate("/") },
+          backButton: { label: t("home-profile"), onBack: () => navigate("/") },
         }}
       >
         <Card>
           <CardContent className="pt-6">
             <div className="text-center text-muted-foreground">
-              {error || "Profile not found"}
+              {error || t("user-profile-profile-not-found")}
             </div>
           </CardContent>
         </Card>
@@ -242,7 +244,7 @@ export function UserProfilePage() {
     <TopPageLayout
       userInfo={userInfo}
       headerProps={{
-        backButton: { label: "Profile", onBack: () => navigate("/") },
+        backButton: { label: t("home-profile"), onBack: () => navigate("/") },
       }}
     >
       <div className="space-y-4">
@@ -253,12 +255,14 @@ export function UserProfilePage() {
                 {isEditing ? (
                   <div className="space-y-3">
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="displayName">Display Name</Label>
+                      <Label htmlFor="displayName">
+                        {t("user-profile-display-name")}
+                      </Label>
                       <Input
                         id="displayName"
                         value={editDisplayName}
                         onChange={(e) => setEditDisplayName(e.target.value)}
-                        placeholder="Enter your display name"
+                        placeholder={t("user-profile-enter-your-display-name")}
                         maxLength={50}
                       />
                     </div>
@@ -266,7 +270,7 @@ export function UserProfilePage() {
                 ) : (
                   <>
                     <h2 className="text-3xl font-bold">
-                      {profile.display_name || "Anonymous User"}
+                      {profile.display_name || t("user-profile-anonymous-user")}
                     </h2>
                     {profile.display_name_slug && (
                       <p className="text-sm text-muted-foreground mt-1">
@@ -277,21 +281,49 @@ export function UserProfilePage() {
                       <span>
                         {followStatus ? (
                           <>
-                            <strong>{followStatus.follower_count}</strong>{" "}
-                            followers
+                            {rich(
+                              "profile-followers",
+                              {
+                                number: (
+                                  <strong>{followStatus.follower_count}</strong>
+                                ),
+                              },
+                              { count: followStatus.follower_count },
+                            )}
                           </>
                         ) : (
-                          <span className="invisible">0 followers</span>
+                          <span className="invisible">
+                            {rich(
+                              "profile-followers",
+                              { number: "0" },
+                              { count: 0 },
+                            )}
+                          </span>
                         )}
                       </span>
                       <span>
                         {followStatus ? (
                           <>
-                            <strong>{followStatus.following_count}</strong>{" "}
-                            following
+                            {rich(
+                              "profile-following",
+                              {
+                                number: (
+                                  <strong>
+                                    {followStatus.following_count}
+                                  </strong>
+                                ),
+                              },
+                              { count: followStatus.following_count },
+                            )}
                           </>
                         ) : (
-                          <span className="invisible">0 following</span>
+                          <span className="invisible">
+                            {rich(
+                              "profile-following",
+                              { number: "0" },
+                              { count: 0 },
+                            )}
+                          </span>
                         )}
                       </span>
                     </div>
@@ -307,7 +339,9 @@ export function UserProfilePage() {
                   disabled={followLoading}
                   className="ml-2"
                 >
-                  {followStatus.is_following ? "Unfollow" : "Follow"}
+                  {followStatus.is_following
+                    ? t("user-profile-unfollow")
+                    : t("user-profile-follow")}
                 </Button>
               )}
               {isOwnProfile && !isEditing && (
@@ -346,17 +380,17 @@ export function UserProfilePage() {
             <div className="space-y-3">
               {isEditing ? (
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="bio">Bio</Label>
+                  <Label htmlFor="bio">{t("user-profile-bio")}</Label>
                   <Textarea
                     id="bio"
                     value={editBio}
                     onChange={(e) => setEditBio(e.target.value)}
-                    placeholder="Tell us about yourself"
+                    placeholder={t("user-profile-tell-us-about-yourself")}
                     rows={4}
                     maxLength={500}
                   />
                   <p className="text-xs text-muted-foreground">
-                    {editBio.length}/500 characters
+                    {t("profile-bio-length", { count: editBio.length })}
                   </p>
                 </div>
               ) : (
@@ -366,17 +400,25 @@ export function UserProfilePage() {
                       {profile.bio}
                     </p>
                   ) : (
-                    <p className="text-muted-foreground italic">No bio yet</p>
+                    <p className="text-muted-foreground italic">
+                      {t("user-profile-no-bio-yet")}
+                    </p>
                   )}
                 </>
               )}
 
               <p className="text-xs text-muted-foreground pt-2 border-t">
-                Member since{" "}
-                {new Date(profile.created_at).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
+                {t("profile-member-since", {
+                  date: String(
+                    new Date(profile.created_at).toLocaleDateString(
+                      uiLanguage() === "en" ? "en-US" : uiLanguage(),
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      },
+                    ),
+                  ),
                 })}
               </p>
             </div>
@@ -396,7 +438,9 @@ export function UserProfilePage() {
         ) : languageStats.length > 0 ? (
           <Card>
             <CardHeader>
-              <h3 className="text-xl font-semibold">Languages</h3>
+              <h3 className="text-xl font-semibold">
+                {t("landing-languages-2")}
+              </h3>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -405,45 +449,59 @@ export function UserProfilePage() {
                   return (
                     <div key={stats.language} className="border rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-3">
-                        {icon && <LanguageIcon icon={icon} className="size-8" />}
+                        {icon && (
+                          <LanguageIcon icon={icon} className="size-8" />
+                        )}
                         <h4 className="text-lg font-semibold">
                           {getLanguageName(stats.language)}
                         </h4>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
-                          <p className="text-sm text-muted-foreground">Cards</p>
+                          <p className="text-sm text-muted-foreground">
+                            {t("user-profile-cards")}
+                          </p>
                           <p className="text-2xl font-bold">
                             {stats.total_count}
                           </p>
                         </div>
                         <div>
                           <p className="text-sm text-muted-foreground">
-                            Daily Streak
+                            {t("user-profile-daily-streak")}
                           </p>
                           <p className="text-2xl font-bold">
                             {stats.daily_streak} 🔥
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">XP</p>
+                          <p className="text-sm text-muted-foreground">
+                            {t("stats-xp")}
+                          </p>
                           <p className="text-2xl font-bold">
                             {Math.round(stats.xp)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Mastery</p>
+                          <p className="text-sm text-muted-foreground">
+                            {t("user-profile-mastery")}
+                          </p>
                           <p className="text-2xl font-bold">
                             {stats.percent_known.toFixed(1)}%
                           </p>
                         </div>
                       </div>
                       <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
-                        Learning since{" "}
-                        {new Date(stats.started).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
+                        {t("profile-learning-since", {
+                          date: String(
+                            new Date(stats.started).toLocaleDateString(
+                              uiLanguage() === "en" ? "en-US" : uiLanguage(),
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              },
+                            ),
+                          ),
                         })}
                       </p>
                     </div>

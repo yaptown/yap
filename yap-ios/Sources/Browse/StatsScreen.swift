@@ -33,7 +33,7 @@ struct StatsScreen: View {
                         }.id("chart")
                         VStack(alignment: .leading, spacing: 16) {
                             Text(view.leeches_label).font(.title2.bold()).foregroundStyle(Color.yapText)
-                            Text("Leeches are cards you're really struggling with. The hardest few cards can take disproportionate time, so it's more efficient to set them aside for a while.")
+                            Text(L("leeches-leeches-are-cards-you-re-really-struggling-with-the"))
                                 .font(.subheadline).foregroundStyle(Color.yapMuted)
                             if !view.leeches.isEmpty { CardSummaryList(cards: view.leeches, timestampMs: now) }
                         }.id("leeches")
@@ -76,13 +76,13 @@ private struct KnowledgeChart: View {
         return points.min { abs(log($0.frequency / frequency)) < abs(log($1.frequency / frequency)) }
     }
     var body: some View {
-        if points.isEmpty { Text("No frequency data available") }
+        if points.isEmpty { Text(L("frequency-knowledge-chart-no-frequency-data-available")) }
         else {
             Chart {
                 ForEach(points, id: \.frequency) { point in
-                    LineMark(x: .value("Frequency rank", point.frequency), y: .value("Knowledge (%)", point.predicted_knowledge * 100))
+                    LineMark(x: .value(L("stats-screen-frequency-rank"), point.frequency), y: .value(L("stats-screen-knowledge"), point.predicted_knowledge * 100))
                         .foregroundStyle(Tokens.palette.chart_1.color).lineStyle(StrokeStyle(lineWidth: 2))
-                    PointMark(x: .value("Frequency rank", point.frequency), y: .value("Knowledge (%)", point.predicted_knowledge * 100))
+                    PointMark(x: .value(L("stats-screen-frequency-rank"), point.frequency), y: .value(L("stats-screen-knowledge"), point.predicted_knowledge * 100))
                         .symbol {
                             Circle().strokeBorder(Tokens.palette.chart_1.color, lineWidth: 2)
                                 .background(Circle().fill(.white))
@@ -91,7 +91,7 @@ private struct KnowledgeChart: View {
                         }
                 }
                 if let selected {
-                    RuleMark(x: .value("Frequency rank", selected.frequency)).foregroundStyle(.secondary.opacity(0.4))
+                    RuleMark(x: .value(L("stats-screen-frequency-rank"), selected.frequency)).foregroundStyle(.secondary.opacity(0.4))
                 }
             }
                 .chartXScale(domain: 1.0...10000.0, type: .log)
@@ -105,11 +105,11 @@ private struct KnowledgeChart: View {
                         }
                     }
                 }
-                .chartYAxisLabel("Knowledge (%)")
+                .chartYAxisLabel(L("stats-screen-knowledge"))
                 .chartXSelection(value: $frequency).frame(height: 300)
             if let selected {
-                Text("Frequency: \(frequency_rank_label(rank: selected.frequency)) · Knowledge: \(selected.predicted_knowledge * 100, specifier: "%.1f")%").font(.caption)
-                Text("Examples (\(selected.word_count) words): \(selected.example_words)").font(.caption).foregroundStyle(Color.yapMuted)
+                Text(L("stats-frequency-knowledge", ["frequency": frequency_rank_label(rank: selected.frequency), "knowledge": String(format: "%.1f", selected.predicted_knowledge * 100)])).font(.caption)
+                Text(L("stats-examples-with-words", ["count": selected.word_count, "examples": selected.example_words])).font(.caption).foregroundStyle(Color.yapMuted)
             }
         }
     }

@@ -1,3 +1,5 @@
+import { t } from "@/lib/i18n";
+import { LanguageSettings } from "./language-settings";
 import { Moon, Sun, Monitor, Check, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -22,10 +24,10 @@ export function ModeToggle() {
   const isDarkTheme = theme === "dark" || theme === "oled";
 
   const themes = [
-    { value: "light" as const, icon: Sun, label: "Light" },
-    { value: "dark" as const, icon: Moon, label: "Dark" },
-    { value: "oled" as const, icon: Zap, label: "OLED" },
-    { value: "system" as const, icon: Monitor, label: "System" },
+    { value: "light" as const, icon: Sun, label: t("mode-toggle-light") },
+    { value: "dark" as const, icon: Moon, label: t("mode-toggle-dark") },
+    { value: "oled" as const, icon: Zap, label: t("mode-toggle-oled") },
+    { value: "system" as const, icon: Monitor, label: t("mode-toggle-system") },
   ];
 
   return (
@@ -34,7 +36,7 @@ export function ModeToggle() {
         <Button variant="ghost" size="sm" className="text-muted-foreground">
           <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Toggle theme</span>
+          <span className="sr-only">{t("mode-toggle-toggle-theme")}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
@@ -78,7 +80,7 @@ export function ModeToggle() {
               animatedBackground ? "opacity-100" : "opacity-0",
             )}
           />
-          <span>Animated background</span>
+          <span>{t("mode-toggle-animated-background")}</span>
         </button>
         {isDarkTheme && animatedBackground && (
           <button
@@ -91,9 +93,11 @@ export function ModeToggle() {
                 mouseFollow ? "opacity-100" : "opacity-0",
               )}
             />
-            <span>Mouse follow</span>
+            <span>{t("mode-toggle-mouse-follow")}</span>
           </button>
         )}
+        <DropdownMenuSeparator />
+        <LanguageSettings />
       </DropdownMenuContent>
     </DropdownMenu>
   );

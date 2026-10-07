@@ -5,18 +5,20 @@ use serde::{Deserialize, Serialize};
 
 /// Tier definitions for the frequency list. Each tier covers a range of the most frequent grams.
 /// The first element is the tier name, the second is how many new words this tier adds.
-const TIERS: &[(&str, usize)] = &[
-    ("Elementary", 200),
-    ("Core", 300),
-    ("Basic", 400),
-    ("Essential", 500),
-    ("Functional", 600),
-    ("Intermediate", 700),
-    ("Proficient", 800),
-    ("Advanced", 900),
-    ("Expert", 1000),
-    ("Specialized", 1100),
-    ("Esoteric", usize::MAX), // all remaining
+type TierName = fn() -> String;
+
+const TIERS: &[(TierName, usize)] = &[
+    (|| yap_i18n::tr!("tier-elementary"), 200),
+    (|| yap_i18n::tr!("tier-core"), 300),
+    (|| yap_i18n::tr!("tier-basic"), 400),
+    (|| yap_i18n::tr!("curriculum-essential"), 500),
+    (|| yap_i18n::tr!("tier-functional"), 600),
+    (|| yap_i18n::tr!("tier-intermediate"), 700),
+    (|| yap_i18n::tr!("tier-proficient"), 800),
+    (|| yap_i18n::tr!("tier-advanced"), 900),
+    (|| yap_i18n::tr!("tier-expert"), 1000),
+    (|| yap_i18n::tr!("tier-specialized"), 1100),
+    (|| yap_i18n::tr!("tier-esoteric"), usize::MAX), // all remaining
 ];
 
 pub(crate) const WORDS_PER_LEVEL: usize = 31;
@@ -40,7 +42,7 @@ pub struct TierInfo {
 
 pub(crate) struct TierLevelSlice<'a> {
     tier_idx: usize,
-    tier_name: &'static str,
+    tier_name: TierName,
     level_idx: usize,
     total_levels_in_tier: usize,
     grams: &'a [TaggedGram<SpurGram>],
@@ -87,7 +89,7 @@ impl TierLevelSlice<'_> {
     ) -> TierInfo {
         TierInfo {
             tier: (self.tier_idx + 1) as u32,
-            name: self.tier_name.to_string(),
+            name: (self.tier_name)(),
             level: (self.level_idx + 1) as u32,
             total_levels: self.total_levels_in_tier as u32,
             percent_known,

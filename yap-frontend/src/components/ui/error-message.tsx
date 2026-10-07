@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState } from "react";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,10 +40,14 @@ export function ErrorMessage({
         userAgent,
       );
     const isTablet = /iPad|Android(?!.*Mobile)/i.test(userAgent);
-    const deviceType = isTablet ? "Tablet" : isMobile ? "Mobile" : "Desktop";
+    const deviceType = isTablet
+      ? t("report-tablet")
+      : isMobile
+        ? t("report-mobile")
+        : t("report-desktop");
 
     // Detect OS
-    let os = "Unknown";
+    let os = t("report-unknown");
     if (userAgent.includes("Win")) os = "Windows";
     else if (userAgent.includes("Mac")) os = "macOS";
     else if (userAgent.includes("Linux")) os = "Linux";
@@ -55,7 +60,7 @@ export function ErrorMessage({
       os = "iOS";
 
     // Detect browser
-    let browser = "Unknown";
+    let browser = t("report-unknown");
     if (userAgent.includes("Firefox")) browser = "Firefox";
     else if (userAgent.includes("Edg")) browser = "Edge";
     else if (userAgent.includes("Chrome")) browser = "Chrome";
@@ -64,10 +69,16 @@ export function ErrorMessage({
       browser = "Opera";
 
     const issueTitle = encodeURIComponent(
-      title || "Error loading language data",
+      title || t("report-error-loading-language-data"),
     );
     const issueBody = encodeURIComponent(
-      `## Additional Context\n\n[Please describe what you were doing when this error occurred]\n\n## Device Information\n\n- Device Type: ${deviceType}\n- OS: ${os}\n- Browser: ${browser}\n- User Agent: \`${userAgent}\`\n\n## Error Details\n\n\`\`\`\n${message}\n\`\`\`\n\n`,
+      t("report-template", {
+        device: deviceType,
+        os,
+        browser,
+        userAgent,
+        message,
+      }),
     );
     return `https://github.com/yaptown/yap/issues/new?title=${issueTitle}&body=${issueBody}&labels[]=bug`;
   };
@@ -93,7 +104,11 @@ export function ErrorMessage({
           size="sm"
           className="h-6 w-6 p-0 flex-shrink-0"
           onClick={handleCopy}
-          title={copied ? "Copied!" : "Copy full error message"}
+          title={
+            copied
+              ? t("error-message-copied")
+              : t("error-message-copy-full-error-message")
+          }
         >
           {copied ? (
             <Check className="h-3 w-3 text-positive-foreground" />
@@ -111,7 +126,7 @@ export function ErrorMessage({
           className="inline-flex items-center text-s gap-1"
         >
           <ExternalLink className="h-3 w-3" />
-          Report on GitHub
+          {t("error-message-report-on-github")}
         </a>
       )}
     </div>

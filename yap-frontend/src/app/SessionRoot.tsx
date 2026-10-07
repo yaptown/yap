@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import * as Sentry from "@sentry/react";
 import { useState, useEffect } from "react";
 import { useZeno } from "@/hooks/useZeno";
@@ -83,7 +84,7 @@ function AppCheckBrowserSupport() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center space-y-4">
         <p className="text-muted-foreground animate-fade-in-delay-2">
-          Checking device compatibility...
+          {t("session-root-checking-device-compatibility")}
         </p>
         <Progress
           value={smoothProgress}
@@ -242,7 +243,7 @@ function AppTestWeapon({ userInfo, accessToken }: AppContextType) {
       <div>
         <div className="min-h-screen flex items-center justify-center">
           <p className="text-muted-foreground animate-fade-in-delayed">
-            Loading...
+            {t("common-loading")}
           </p>
         </div>
       </div>
@@ -256,11 +257,11 @@ function AppTestWeapon({ userInfo, accessToken }: AppContextType) {
               <span className="text-negative-foreground text-xl">⚠</span>
             </div>
             <h2 className="text-lg font-semibold mb-2">
-              Failed to Initialize Deck
+              {t("session-root-failed-to-initialize-deck")}
             </h2>
             <p className="text-muted-foreground mb-4">{weaponState.message}</p>
             <Button onClick={() => window.location.reload()} variant="outline">
-              Try Again
+              {t("common-try-again")}
             </Button>
           </Card>
         </div>

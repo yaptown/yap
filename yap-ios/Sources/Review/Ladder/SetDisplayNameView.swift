@@ -8,15 +8,15 @@ struct SetDisplayNameView: View {
     @State private var error: String?
     var body: some View {
         StudyCard {
-            Text("Choose your display name").font(.title2.bold())
-            Text("You've completed \(reviewCount) reviews! Set a display name to personalize your profile.")
-            TextField("Display name", text: $name).textFieldStyle(.roundedBorder).disabled(saving)
+            Text(L("set-display-name-view-choose-your-display-name")).font(.title2.bold())
+            Text(L("profile-display-name-prompt", ["count": reviewCount]))
+            TextField(L("settings-screen-display-name"), text: $name).textFieldStyle(.roundedBorder).disabled(saving)
                 .onChange(of: name) { _, value in name = String(value.prefix(50)) }
-            Text("You can change this at any time.").font(.caption).foregroundStyle(Color.yapMuted)
+            Text(L("set-display-name-you-can-change-this-at-any-time")).font(.caption).foregroundStyle(Color.yapMuted)
             if let error { Text(error).foregroundStyle(Color.yapNegativeForeground) }
             HStack(spacing: 16) {
-                Button("Skip") { actions.skipDisplayName() }.buttonStyle(.bordered)
-                Button(saving ? "Saving…" : "Save") { Task { await save() } }
+                Button(L("common-skip")) { actions.skipDisplayName() }.buttonStyle(.bordered)
+                Button(saving ? L("common-saving-ellipsis") : L("common-save")) { Task { await save() } }
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent)
             }.disabled(saving).controlSize(.large)
         }
@@ -33,7 +33,7 @@ struct SetDisplayNameView: View {
     private func save() async {
         guard !saving else { return }
         let value = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !value.isEmpty else { error = "Please enter a display name"; return }
+        guard !value.isEmpty else { error = L("set-display-name-please-enter-a-display-name"); return }
         saving = true; error = nil
         defer { saving = false }
         do {
@@ -41,6 +41,6 @@ struct SetDisplayNameView: View {
             #if DEBUG
             DebugHarness.log("display name saved")
             #endif
-        } catch { self.error = "Failed to set display name. Please try again." }
+        } catch { self.error = L("set-display-name-failed-to-set-display-name-please-try-again") }
     }
 }

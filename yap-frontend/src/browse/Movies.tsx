@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState, useDeferredValue } from "react";
 import { MoviePosterCard } from "@/review/challenges/MoviePosterCard";
 import type { Deck, MovieMetadataBasic } from "../../../yap-frontend-rs/pkg";
@@ -27,9 +28,17 @@ export function Movies({
 
   // The current movie first, then films made in the language.
   const rank = (movie: MovieWithMetadata) =>
-    movie.id === selectedMovieId ? 0 : movie.original_language === targetLanguageIso ? 1 : 2;
-  const sortedMovies = [...moviesWithMetadata].sort((a, b) => rank(a) - rank(b));
-  const visibleMovies = showAllMovies ? sortedMovies : sortedMovies.slice(0, 12);
+    movie.id === selectedMovieId
+      ? 0
+      : movie.original_language === targetLanguageIso
+        ? 1
+        : 2;
+  const sortedMovies = [...moviesWithMetadata].sort(
+    (a, b) => rank(a) - rank(b),
+  );
+  const visibleMovies = showAllMovies
+    ? sortedMovies
+    : sortedMovies.slice(0, 12);
 
   if (moviesWithMetadata.length === 0) {
     return null;
@@ -38,8 +47,7 @@ export function Movies({
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-muted-foreground">
-        You can usually watch a movie comfortably once you know 95% of the
-        words.
+        {t("movies-you-can-usually-watch-a-movie-comfortably-once-you")}
       </p>
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
         {visibleMovies.map((movie) => (
@@ -52,9 +60,10 @@ export function Movies({
               movie.cards_to_next_milestone !== null &&
               movie.cards_to_next_milestone !== undefined && (
                 <div className="text-white/90 text-xs mt-2 font-medium">
-                  {movie.cards_to_next_milestone}{" "}
-                  {movie.cards_to_next_milestone === 1 ? "card" : "cards"} to{" "}
-                  {Math.ceil(movie.percent_known / 5) * 5}%
+                  {t("movies-next-milestone", {
+                    count: movie.cards_to_next_milestone,
+                    percent: Math.ceil(movie.percent_known / 5) * 5,
+                  })}
                 </div>
               )
             }
@@ -74,7 +83,9 @@ export function Movies({
                 }}
               />
               <span className="relative text-xs font-mono font-semibold text-foreground">
-                {Math.floor(movie.percent_known)}% known
+                {t("curriculum-percent-known", {
+                  percent: Math.floor(movie.percent_known),
+                })}
               </span>
             </div>
           </MoviePosterCard>
@@ -86,7 +97,9 @@ export function Movies({
             onClick={() => setShowAllMovies(true)}
             className="w-full py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200 font-medium rounded-md border border-border"
           >
-            Show all {sortedMovies.length} movies
+            {t("curriculum-show-all-movies", {
+              count: sortedMovies.length,
+            })}
           </button>
         </div>
       )}

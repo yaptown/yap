@@ -1,5 +1,11 @@
+import { t } from "@/lib/i18n";
 import type { ReactNode } from "react";
-import { Navigate, useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import {
+  Navigate,
+  useLocation,
+  useNavigate,
+  useOutletContext,
+} from "react-router-dom";
 import type { AppContextType } from "@/app/context";
 import { CourseAudioPrefetch, useCourseDeck } from "@/review/course-study";
 import type {
@@ -29,22 +35,32 @@ export function DeckPage({
   // A deep link (say, /anki shared on a forum) should ask for a course and
   // come back here, not bounce to the landing page.
   if (state.view.phase.type === "NoLanguageSelected")
-    return <Navigate to={`/select-language?next=${encodeURIComponent(location.pathname + location.search)}`} replace />;
+    return (
+      <Navigate
+        to={`/select-language?next=${encodeURIComponent(location.pathname + location.search)}`}
+        replace
+      />
+    );
   if (state.view.phase.type === "Ready" && state.deck && state.course) {
-    return <>
-      {prefetchAudio && <CourseAudioPrefetch />}
-      {children({
-        ...context,
-        deck: state.deck,
-        targetLanguage: state.course.targetLanguage,
-      })}
-    </>;
+    return (
+      <>
+        {prefetchAudio && <CourseAudioPrefetch />}
+        {children({
+          ...context,
+          deck: state.deck,
+          targetLanguage: state.course.targetLanguage,
+        })}
+      </>
+    );
   }
   return (
     <TopPageLayout
       userInfo={context.userInfo}
       headerProps={{
-        backButton: { label: "Home", onBack: () => navigate("/home") },
+        backButton: {
+          label: t("common-home"),
+          onBack: () => navigate("/home"),
+        },
       }}
     >
       <div className="flex flex-1 items-center justify-center">

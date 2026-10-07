@@ -29,23 +29,23 @@ struct SettingsScreen: View {
                             Button { authSheet.present(tab: .signIn) } label: { RowLabel(account_copy().sign_in_action) }
                         }
                     }
-                    CardSection("Appearance") {
-                        Toggle("Animated background", isOn: $animatedBackground).tint(.yapSwitchTint).frame(minHeight: 44)
+                    CardSection(L("settings-screen-appearance")) {
+                        Toggle(L("mode-toggle-animated-background"), isOn: $animatedBackground).tint(.yapSwitchTint).frame(minHeight: 44)
                     }
-                    CardSection("About") {
-                        SettingsRow(sync?.version_label ?? "Version") { Text(get_app_version()).monospacedDigit() }
+                    CardSection(L("common-about")) {
+                        SettingsRow(sync?.version_label ?? L("settings-screen-version")) { Text(get_app_version()).monospacedDigit() }
                         Divider()
-                        Link(destination: URL(string: "https://yap.town/privacy")!) { SettingsRow("Privacy policy") { Image(systemName: "arrow.up.right") } }
+                        Link(destination: URL(string: "https://yap.town/privacy")!) { SettingsRow(L("settings-screen-privacy-policy")) { Image(systemName: "arrow.up.right") } }
                         Divider()
-                        Link(destination: URL(string: "https://yap.town/terms")!) { SettingsRow("Terms") { Image(systemName: "arrow.up.right") } }
+                        Link(destination: URL(string: "https://yap.town/terms")!) { SettingsRow(L("common-terms")) { Image(systemName: "arrow.up.right") } }
                         Divider()
-                        Link(destination: URL(string: "https://yap.town/about")!) { SettingsRow("Credits") { Image(systemName: "arrow.up.right") } }
+                        Link(destination: URL(string: "https://yap.town/about")!) { SettingsRow(L("common-credits")) { Image(systemName: "arrow.up.right") } }
                     }
                     if let sync, let weapon = session.weapon { diagnostics(sync, deviceId: weapon.device_id) }
                 }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
             }
         }
-        .background(.clear).navigationTitle("Settings")
+        .background(.clear).navigationTitle(L("common-settings"))
         .onAppear { name = auth.displayName ?? "" }
         .onChange(of: auth.displayName) { old, new in if name == (old ?? "") { name = new ?? "" } }
         #if DEBUG
@@ -63,7 +63,7 @@ struct SettingsScreen: View {
         let email = auth.session?.user.email ?? ""
         let shown = (auth.displayName?.isEmpty == false ? auth.displayName : nil) ?? email
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        return CardSection("Account") {
+        return CardSection(L("settings-screen-account")) {
             HStack(spacing: 12) {
                 Text(shown.prefix(1).uppercased())
                     .font(.title3.weight(.semibold)).foregroundStyle(Color.yapOnAccent)
@@ -75,14 +75,14 @@ struct SettingsScreen: View {
             }.padding(.vertical, 12)
             Divider()
             HStack(spacing: 12) {
-                Text("Display name")
-                TextField("Add a name", text: $name)
+                Text(L("settings-screen-display-name"))
+                TextField(L("settings-screen-add-a-name"), text: $name)
                     .multilineTextAlignment(.trailing).foregroundStyle(Color.yapMuted)
                     .focused($editingName).submitLabel(.done)
                     .onSubmit { Task { await save() } }
                     .onChange(of: name) { _, value in name = String(value.prefix(50)) }
                 if trimmed != (auth.displayName ?? "") && !trimmed.isEmpty {
-                    Button(saving ? "Saving…" : "Save") { Task { await save() } }
+                    Button(saving ? L("common-saving-ellipsis") : L("common-save")) { Task { await save() } }
                         .buttonStyle(.borderedProminent).controlSize(.small).foregroundStyle(Color.yapOnAccent).disabled(saving)
                 }
             }.frame(minHeight: 44)
@@ -98,7 +98,7 @@ struct SettingsScreen: View {
                 if let error = sync.error { Text(error).font(.footnote).foregroundStyle(Color.yapNegativeForeground).padding(.bottom, 8) }
             }
             Divider()
-            Button(role: .destructive) { Task { await auth.signOut() } } label: { RowLabel("Sign out") }
+            Button(role: .destructive) { Task { await auth.signOut() } } label: { RowLabel(L("settings-screen-sign-out")) }
                 .disabled(auth.busy || deleting)
             if let error = auth.error { Text(error).font(.footnote).foregroundStyle(Color.yapNegativeForeground).padding(.bottom, 8) }
             Divider()
@@ -107,7 +107,7 @@ struct SettingsScreen: View {
                 .disabled(auth.busy || deleting)
                 .alert(copy.delete_account_title, isPresented: $confirmingDelete) {
                     Button(copy.delete_account_confirm, role: .destructive) { Task { await deleteAccount() } }
-                    Button("Cancel", role: .cancel) {}
+                    Button(L("common-cancel"), role: .cancel) {}
                 } message: { Text(copy.delete_account_body) }
             if deleteFailed { Text(copy.delete_account_failed).font(.footnote).foregroundStyle(Color.yapNegativeForeground).padding(.bottom, 8) }
         }
@@ -125,7 +125,7 @@ struct SettingsScreen: View {
                     Button { self.sync() } label: { RowLabel(sync.sync_button_label) }.disabled(!sync.sync_button_enabled)
                 }
             } label: {
-                Text("Diagnostics").foregroundStyle(Color.yapText).frame(minHeight: 44)
+                Text(L("settings-screen-diagnostics")).foregroundStyle(Color.yapText).frame(minHeight: 44)
             }
         }
     }
@@ -165,7 +165,7 @@ struct SettingsScreen: View {
         do {
             _ = try await update_profile(display_name: value, bio: nil, access_token: token)
             auth.displayName = value; auth.needsDisplayName = false; editingName = false
-        } catch { self.error = "Couldn't save your display name. Please try again." }
+        } catch { self.error = L("settings-screen-couldn-t-save-your-display-name-please-try-again") }
     }
     /// The Weapon deletes the account, wipes its local store and goes inert, so
     /// the sign-out's final flush can't write anything back. Unfinished review

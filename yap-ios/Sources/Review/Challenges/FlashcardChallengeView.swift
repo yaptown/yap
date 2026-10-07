@@ -78,7 +78,7 @@ struct FlashcardChallengeView: View {
             }
             .contentShape(Rectangle())
             .onTapGesture { toggle() }
-            .accessibilityAction(named: revealed ? "Hide answer" : "Reveal answer") { toggle() }
+            .accessibilityAction(named: revealed ? L("flashcard-challenge-view-hide-answer") : L("flashcard-challenge-view-reveal-answer")) { toggle() }
             .swipeToGrade(enabled: canGrade && !actions.submitting, againLabel: againLabel,
                           rememberedLabel: rememberedLabel, rate: rate)
             // Like the web, the breakdown sits under the card rather than inside it.
@@ -195,7 +195,7 @@ private struct MeaningRow: View {
         }
         .buttonStyle(.plain)
         .frame(minWidth: 44, minHeight: 44)
-        .accessibilityLabel(rating == .Again ? "Forgot" : "Remembered")
+        .accessibilityLabel(rating == .Again ? L("common-forgot") : L("common-remembered"))
         .accessibilityAddTraits(active ? .isSelected : [])
     }
 }

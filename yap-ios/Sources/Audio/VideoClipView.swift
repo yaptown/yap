@@ -35,7 +35,7 @@ struct VideoClipView: View {
                                     Color.clear
                                     if !playing { Image(systemName: "play.circle.fill").font(.largeTitle).foregroundStyle(.white) }
                                 }.contentShape(Rectangle())
-                            }.buttonStyle(.plain).accessibilityLabel(playing ? "Pause clip" : "Play clip")
+                            }.buttonStyle(.plain).accessibilityLabel(playing ? L("video-clip-view-pause-clip") : L("video-clip-player-play-clip"))
                         }
                         .aspectRatio(16 / 9, contentMode: .fit)
                         .overlay(alignment: .bottom) {
@@ -65,7 +65,7 @@ struct VideoClipView: View {
                             }
                         }
                         .padding(.top, movie == nil ? 0 : 24)
-                    Button("Replay clip", systemImage: "play.fill") { play(player) }
+                    Button(L("video-clip-view-replay-clip"), systemImage: "play.fill") { play(player) }
                 }
             }
         }

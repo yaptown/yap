@@ -18,7 +18,7 @@ struct SubmissionTextView: UIViewRepresentable {
         view.textContainer.lineFragmentPadding = 0
         view.returnKeyType = .done
         view.isScrollEnabled = false
-        view.accessibilityLabel = "Translation"
+        view.accessibilityLabel = L("common-translation")
         return view
     }
     func updateUIView(_ view: UITextView, context: Context) {

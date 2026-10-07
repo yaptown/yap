@@ -22,9 +22,9 @@ pub struct LanguageMetadata {
     pub icon: String,
     /// The language's name in itself, e.g. Français.
     pub native_name: String,
-    /// English name, disambiguated for script variants.
+    /// UI-localized name, disambiguated for script variants.
     pub english_name: String,
-    /// English name as it reads in a sentence.
+    /// UI-localized name as it reads in a sentence.
     pub common_name: String,
     /// The speakers, as an adjective.
     pub people: String,
@@ -48,9 +48,10 @@ pub struct LanguageMetadata {
 pub fn keyboard_tip(language: Language) -> Option<String> {
     let metadata = get_language_metadata(language);
     let characters = metadata.character_type?;
-    Some(format!(
-        "Enable the {} keyboard on your device to easily type {characters} characters",
-        metadata.english_name
+    Some(yap_i18n::tr!(
+        "keyboard-enable",
+        language = metadata.english_name,
+        characters = characters
     ))
 }
 
@@ -65,9 +66,9 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             status: CourseMaturity::Stable,
             icon: "eng.liberty".into(),
             native_name: "English".into(),
-            english_name: "English".into(),
-            common_name: "English".into(),
-            people: "English".into(),
+            english_name: yap_i18n::tr!("language-name.full", language = language.code()),
+            common_name: yap_i18n::tr!("language-name.common", language = language.code()),
+            people: yap_i18n::tr!("language-name.people", language = language.code()),
             badge: "EN".into(),
             script: None,
             accented_characters: vec![],
@@ -82,9 +83,9 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             status: CourseMaturity::Stable,
             icon: "fra.eiffel".into(),
             native_name: "Français".into(),
-            english_name: "French".into(),
-            common_name: "French".into(),
-            people: "French".into(),
+            english_name: yap_i18n::tr!("language-name.full", language = language.code()),
+            common_name: yap_i18n::tr!("language-name.common", language = language.code()),
+            people: yap_i18n::tr!("language-name.people", language = language.code()),
             badge: "FR".into(),
             script: None,
             accented_characters: vec![
@@ -105,7 +106,10 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
                 "œ".into(),
                 "æ".into(),
             ],
-            character_type: Some("accented".into()),
+            character_type: Some(yap_i18n::tr!(
+                "language-name.characters",
+                language = language.code()
+            )),
             i_speak: "Je parle français".into(),
             yaptown_name: "Yap.Ville".into(),
             lets_go: "Allons-y !".into(),
@@ -121,9 +125,9 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             }
             .into(),
             native_name: "Español".into(),
-            english_name: language.to_string(),
-            common_name: "Spanish".into(),
-            people: "Spanish".into(),
+            english_name: yap_i18n::tr!("language-name.full", language = language.code()),
+            common_name: yap_i18n::tr!("language-name.common", language = language.code()),
+            people: yap_i18n::tr!("language-name.people", language = language.code()),
             badge: if language == SpanishLatinAmerican {
                 "LATAM"
             } else {
@@ -142,7 +146,10 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
                 "¿".into(),
                 "¡".into(),
             ],
-            character_type: Some("accented".into()),
+            character_type: Some(yap_i18n::tr!(
+                "language-name.characters",
+                language = language.code()
+            )),
             i_speak: "Hablo español".into(),
             yaptown_name: "Yap.Ciudad".into(),
             lets_go: "¡Vamos!".into(),
@@ -153,9 +160,9 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             status: CourseMaturity::Stable,
             icon: "deu.neuschwanstein".into(),
             native_name: "Deutsch".into(),
-            english_name: "German".into(),
-            common_name: "German".into(),
-            people: "German".into(),
+            english_name: yap_i18n::tr!("language-name.full", language = language.code()),
+            common_name: yap_i18n::tr!("language-name.common", language = language.code()),
+            people: yap_i18n::tr!("language-name.people", language = language.code()),
             badge: "DE".into(),
             script: None,
             accented_characters: vec![
@@ -167,7 +174,10 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
                 "Ö".into(),
                 "Ü".into(),
             ],
-            character_type: Some("accented".into()),
+            character_type: Some(yap_i18n::tr!(
+                "language-name.characters",
+                language = language.code()
+            )),
             i_speak: "Ich spreche Deutsch".into(),
             yaptown_name: "Yap.Stadt".into(),
             lets_go: "Los geht's!".into(),
@@ -178,9 +188,9 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             status: CourseMaturity::Beta,
             icon: "ita.pisa".into(),
             native_name: "Italiano".into(),
-            english_name: "Italian".into(),
-            common_name: "Italian".into(),
-            people: "Italian".into(),
+            english_name: yap_i18n::tr!("language-name.full", language = language.code()),
+            common_name: yap_i18n::tr!("language-name.common", language = language.code()),
+            people: yap_i18n::tr!("language-name.people", language = language.code()),
             badge: "IT".into(),
             script: None,
             accented_characters: vec![
@@ -191,7 +201,10 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
                 "ò".into(),
                 "ù".into(),
             ],
-            character_type: Some("accented".into()),
+            character_type: Some(yap_i18n::tr!(
+                "language-name.characters",
+                language = language.code()
+            )),
             i_speak: "Parlo italiano".into(),
             yaptown_name: "Yap.Città".into(),
             lets_go: "Andiamo!".into(),
@@ -207,9 +220,9 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             }
             .into(),
             native_name: "Português".into(),
-            english_name: language.to_string(),
-            common_name: "Portuguese".into(),
-            people: "Portuguese".into(),
+            english_name: yap_i18n::tr!("language-name.full", language = language.code()),
+            common_name: yap_i18n::tr!("language-name.common", language = language.code()),
+            people: yap_i18n::tr!("language-name.people", language = language.code()),
             badge: if language == PortugueseBrazilian {
                 "BR"
             } else {
@@ -230,7 +243,10 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
                 "õ".into(),
                 "ç".into(),
             ],
-            character_type: Some("accented".into()),
+            character_type: Some(yap_i18n::tr!(
+                "language-name.characters",
+                language = language.code()
+            )),
             i_speak: "Eu falo português".into(),
             yaptown_name: "Yap.Cidade".into(),
             lets_go: "Vamos lá!".into(),
@@ -241,13 +257,16 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             status: CourseMaturity::Alpha,
             icon: "rus.basil".into(),
             native_name: "Русский".into(),
-            english_name: "Russian".into(),
-            common_name: "Russian".into(),
-            people: "Russian".into(),
+            english_name: yap_i18n::tr!("language-name.full", language = language.code()),
+            common_name: yap_i18n::tr!("language-name.common", language = language.code()),
+            people: yap_i18n::tr!("language-name.people", language = language.code()),
             badge: "RU".into(),
             script: None,
             accented_characters: vec![],
-            character_type: Some("Cyrillic".into()),
+            character_type: Some(yap_i18n::tr!(
+                "language-name.characters",
+                language = language.code()
+            )),
             i_speak: "Я говорю по-русски".into(),
             yaptown_name: "Yap.Город".into(),
             lets_go: "Пойдём!".into(),
@@ -258,13 +277,16 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             status: CourseMaturity::Alpha,
             icon: "kor.gyeongbokgung".into(),
             native_name: "한국어".into(),
-            english_name: "Korean".into(),
-            common_name: "Korean".into(),
-            people: "Korean".into(),
+            english_name: yap_i18n::tr!("language-name.full", language = language.code()),
+            common_name: yap_i18n::tr!("language-name.common", language = language.code()),
+            people: yap_i18n::tr!("language-name.people", language = language.code()),
             badge: "KO".into(),
             script: None,
             accented_characters: vec![],
-            character_type: Some("hangul".into()),
+            character_type: Some(yap_i18n::tr!(
+                "language-name.characters",
+                language = language.code()
+            )),
             i_speak: "한국어를 합니다".into(),
             yaptown_name: "얍.타운".into(),
             lets_go: "가자!".into(),
@@ -275,13 +297,16 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             status: CourseMaturity::Alpha,
             icon: "jpn.torii".into(),
             native_name: "日本語".into(),
-            english_name: "Japanese".into(),
-            common_name: "Japanese".into(),
-            people: "Japanese".into(),
+            english_name: yap_i18n::tr!("language-name.full", language = language.code()),
+            common_name: yap_i18n::tr!("language-name.common", language = language.code()),
+            people: yap_i18n::tr!("language-name.people", language = language.code()),
             badge: "JA".into(),
             script: None,
             accented_characters: vec![],
-            character_type: Some("Japanese".into()),
+            character_type: Some(yap_i18n::tr!(
+                "language-name.characters",
+                language = language.code()
+            )),
             i_speak: "日本語を話します".into(),
             yaptown_name: "Yap.町".into(),
             lets_go: "行こう！".into(),
@@ -292,13 +317,16 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             status: CourseMaturity::Alpha,
             icon: "zho-hans.panda".into(),
             native_name: "简体中文".into(),
-            english_name: "Chinese (Simplified)".into(),
-            common_name: "Chinese".into(),
-            people: "Chinese".into(),
+            english_name: yap_i18n::tr!("language-name.full", language = language.code()),
+            common_name: yap_i18n::tr!("language-name.common", language = language.code()),
+            people: yap_i18n::tr!("language-name.people", language = language.code()),
             badge: "ZH".into(),
             script: Some("Hans".into()),
             accented_characters: vec![],
-            character_type: Some("Chinese".into()),
+            character_type: Some(yap_i18n::tr!(
+                "language-name.characters",
+                language = language.code()
+            )),
             i_speak: "我说中文".into(),
             yaptown_name: "Yap.城".into(),
             lets_go: "走吧！".into(),
@@ -309,13 +337,16 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             status: CourseMaturity::Alpha,
             icon: "zho-hant.boba".into(),
             native_name: "繁體中文".into(),
-            english_name: "Chinese (Traditional)".into(),
-            common_name: "Chinese".into(),
-            people: "Chinese".into(),
+            english_name: yap_i18n::tr!("language-name.full", language = language.code()),
+            common_name: yap_i18n::tr!("language-name.common", language = language.code()),
+            people: yap_i18n::tr!("language-name.people", language = language.code()),
             badge: "ZHT".into(),
             script: Some("Hant".into()),
             accented_characters: vec![],
-            character_type: Some("Chinese".into()),
+            character_type: Some(yap_i18n::tr!(
+                "language-name.characters",
+                language = language.code()
+            )),
             i_speak: "我說中文".into(),
             yaptown_name: "Yap.城".into(),
             lets_go: "走吧！".into(),
@@ -326,13 +357,16 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             status: CourseMaturity::Alpha,
             icon: "hin.tajmahal".into(),
             native_name: "हिन्दी".into(),
-            english_name: "Hindi".into(),
-            common_name: "Hindi".into(),
-            people: "Hindi-speaking".into(),
+            english_name: yap_i18n::tr!("language-name.full", language = language.code()),
+            common_name: yap_i18n::tr!("language-name.common", language = language.code()),
+            people: yap_i18n::tr!("language-name.people", language = language.code()),
             badge: "HI".into(),
             script: None,
             accented_characters: vec![],
-            character_type: Some("Devanagari".into()),
+            character_type: Some(yap_i18n::tr!(
+                "language-name.characters",
+                language = language.code()
+            )),
             i_speak: "मैं हिन्दी बोलता हूँ".into(),
             yaptown_name: "यैप.टाउन".into(),
             lets_go: "चलो!".into(),
@@ -343,13 +377,16 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             status: CourseMaturity::Alpha,
             icon: "tha.elephant".into(),
             native_name: "ไทย".into(),
-            english_name: "Thai".into(),
-            common_name: "Thai".into(),
-            people: "Thai".into(),
+            english_name: yap_i18n::tr!("language-name.full", language = language.code()),
+            common_name: yap_i18n::tr!("language-name.common", language = language.code()),
+            people: yap_i18n::tr!("language-name.people", language = language.code()),
             badge: "TH".into(),
             script: None,
             accented_characters: vec![],
-            character_type: Some("Thai".into()),
+            character_type: Some(yap_i18n::tr!(
+                "language-name.characters",
+                language = language.code()
+            )),
             i_speak: "ฉันพูดภาษาไทย".into(),
             yaptown_name: "Yap.เมือง".into(),
             lets_go: "ไปกันเลย!".into(),
@@ -369,42 +406,22 @@ pub struct LanguageName {
     pub full: String,
 }
 
-/// Every native-language course is English or French, so other readers get English.
+/// A language name in the independent UI locale.
 #[bridgerton::bridge]
 #[bridgerton::stable(strong)]
-pub fn get_language_name(language: Language, reader: Language) -> LanguageName {
+pub fn get_language_name(language: Language) -> LanguageName {
     use Language::*;
-    let (name, variant) = match language {
-        English => (("English", "Anglais"), None),
-        French => (("French", "Français"), None),
-        SpanishLatinAmerican => (
-            ("Spanish", "Espagnol"),
-            Some(("Latin America", "Amérique latine")),
-        ),
-        SpanishPeninsular => (("Spanish", "Espagnol"), Some(("Spain", "Espagne"))),
-        German => (("German", "Allemand"), None),
-        Italian => (("Italian", "Italien"), None),
-        PortugueseBrazilian => (("Portuguese", "Portugais"), Some(("Brazil", "Brésil"))),
-        PortugueseEuropean => (("Portuguese", "Portugais"), Some(("Portugal", "Portugal"))),
-        Russian => (("Russian", "Russe"), None),
-        Korean => (("Korean", "Coréen"), None),
-        Japanese => (("Japanese", "Japonais"), None),
-        ChineseSimplified => (("Chinese", "Chinois"), Some(("Simplified", "Simplifié"))),
-        ChineseTraditional => (
-            ("Chinese", "Chinois"),
-            Some(("Traditional", "Traditionnel")),
-        ),
-        Hindi => (("Hindi", "Hindi"), None),
-        Thai => (("Thai", "Thaï"), None),
+    let variant = match language {
+        SpanishLatinAmerican | SpanishPeninsular | PortugueseBrazilian | PortugueseEuropean
+        | ChineseSimplified | ChineseTraditional => Some(yap_i18n::tr!(
+            "language-name.variant",
+            language = language.code()
+        )),
+        _ => None,
     };
-    let pick = |(en, fr): (&str, &str)| if reader == French { fr } else { en }.to_string();
-    let (name, variant) = (pick(name), variant.map(pick));
     LanguageName {
-        full: match &variant {
-            Some(variant) => format!("{name} ({variant})"),
-            None => name.clone(),
-        },
-        name,
+        name: yap_i18n::tr!("language-name.title", language = language.code()),
+        full: yap_i18n::tr!("language-name.full", language = language.code()),
         variant,
     }
 }

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, TriangleAlert } from "lucide-react";
@@ -9,7 +10,10 @@ import type {
 import { Progress } from "@/components/ui/progress";
 import { TargetLanguageText } from "../../components/TargetLanguageText";
 
-import { get_placement_session_info, toggle_placement_word } from "../../../../yap-frontend-rs/pkg";
+import {
+  get_placement_session_info,
+  toggle_placement_word,
+} from "../../../../yap-frontend-rs/pkg";
 
 interface PlacementTestProps {
   deck: Deck;
@@ -34,16 +38,17 @@ export function PlacementTest({
   const selectedWords = new Set(session.selected_words);
   const tooAdvanced = info.too_advanced;
 
-  const toggleWord = (word: string) => setSession(toggle_placement_word(session, word));
+  const toggleWord = (word: string) =>
+    setSession(toggle_placement_word(session, word));
   const handleNext = () => setSession(deck.advance_placement_session(session));
   const handleBack = () => setSession(deck.start_placement_session());
 
   return (
-    <Card className="max-w w-full p-0 gap-0 select-none overflow-hidden" animate>
-      <Progress
-        value={info.progress_percent}
-        className="rounded-none"
-      />
+    <Card
+      className="max-w w-full p-0 gap-0 select-none overflow-hidden"
+      animate
+    >
+      <Progress value={info.progress_percent} className="rounded-none" />
       <div className="p-6 space-y-4">
         {info.finished ? (
           (() => {
@@ -55,21 +60,27 @@ export function PlacementTest({
                       <TriangleAlert className="w-5 h-5 text-caution" />
                     )}
                     {tooAdvanced
-                      ? "You might be too advanced"
-                      : "Ready to Start!"}
+                      ? t("home-you-might-be-too-advanced")
+                      : t("home-ready-to-start")}
                   </h2>
                 </div>
                 <p className="text-muted-foreground">
                   {tooAdvanced
-                    ? "Yap.Town is designed for intermediate learners. We'll still try our best to find words you don't know!"
-                    : "We've analyzed your knowledge level and will tailor your learning experience."}
+                    ? t(
+                        "placement-test-view-yap-town-is-designed-for-intermediate-learners-we-ll",
+                      )
+                    : t(
+                        "placement-test-view-we-ve-analyzed-your-knowledge-level-and-will-tailor",
+                      )}
                 </p>
                 <Button
                   onClick={() => onComplete(session)}
                   size="lg"
                   className="w-full"
                 >
-                  {tooAdvanced ? "Continue Anyway" : (completeLabel ?? "Begin Learning")}
+                  {tooAdvanced
+                    ? t("placement-test-continue-anyway")
+                    : (completeLabel ?? t("placement-test-begin-learning"))}
                 </Button>
               </>
             );
@@ -85,19 +96,24 @@ export function PlacementTest({
                       size="icon"
                       onClick={handleBack}
                       className="h-8 w-8"
-                      title="Go back"
+                      title={t("placement-test-go-back")}
                     >
                       <ArrowLeft className="w-5 h-5" />
                     </Button>
                   )}
-                  <h2 className="text-xl font-semibold">Placement Test</h2>
+                  <h2 className="text-xl font-semibold">
+                    {t("home-placement-test")}
+                  </h2>
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  Round {round} of {info.total_rounds}
+                  {t("placement-round", {
+                    round: round,
+                    total: info.total_rounds,
+                  })}
                 </span>
               </div>
               <p className="text-muted-foreground">
-                Tap the words you know, then press Next
+                {t("placement-test-tap-the-words-you-know-then-press-next")}
               </p>
             </div>
 
@@ -137,7 +153,7 @@ export function PlacementTest({
             </div>
 
             <Button onClick={handleNext} className="w-full" size="lg">
-              Next
+              {t("common-next")}
             </Button>
           </>
         )}

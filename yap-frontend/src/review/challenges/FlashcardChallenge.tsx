@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import {
   type AudioRequest,
   type CardContent,
@@ -108,7 +109,9 @@ const CardBack = ({
 
       const definitionsGloss = (definitions: DefinitionView[]): string =>
         definitions
-          .flatMap((definition) => definition.senses.map((sense) => sense.meaning))
+          .flatMap((definition) =>
+            definition.senses.map((sense) => sense.meaning),
+          )
           .filter(Boolean)
           .join(", ");
 
@@ -137,37 +140,39 @@ const CardBack = ({
             </div>
           )}
           <div className="grid grid-cols-2 gap-2">
-            {possibleGrams.map(([isKnown, gram, definitions], index: number) => {
-              const gloss = definitionsGloss(definitions);
-              return (
-                <div
-                  key={index}
-                  className={`text-left p-2 rounded-md ${
-                    isKnown
-                      ? "bg-positive-surface border border-positive-border"
-                      : "bg-muted/30 border border-muted/20"
-                  }`}
-                >
-                  <div>
-                    <span className="text-lg">
-                      <TargetLanguageText language={targetLanguage}>
-                        {gramDisplayText(gram)}
-                      </TargetLanguageText>
-                    </span>
-                    {isKnown && (
-                      <span className="text-sm text-positive-foreground ml-2">
-                        {view.known_label}
+            {possibleGrams.map(
+              ([isKnown, gram, definitions], index: number) => {
+                const gloss = definitionsGloss(definitions);
+                return (
+                  <div
+                    key={index}
+                    className={`text-left p-2 rounded-md ${
+                      isKnown
+                        ? "bg-positive-surface border border-positive-border"
+                        : "bg-muted/30 border border-muted/20"
+                    }`}
+                  >
+                    <div>
+                      <span className="text-lg">
+                        <TargetLanguageText language={targetLanguage}>
+                          {gramDisplayText(gram)}
+                        </TargetLanguageText>
                       </span>
+                      {isKnown && (
+                        <span className="text-sm text-positive-foreground ml-2">
+                          {view.known_label}
+                        </span>
+                      )}
+                    </div>
+                    {gloss && (
+                      <div className="text-sm text-muted-foreground">
+                        {gloss}
+                      </div>
                     )}
                   </div>
-                  {gloss && (
-                    <div className="text-sm text-muted-foreground">
-                      {gloss}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                );
+              },
+            )}
           </div>
         </div>
       );
@@ -222,7 +227,9 @@ const CardBack = ({
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
-                    {meaning.label && <MeaningLabel>{meaning.label}</MeaningLabel>}
+                    {meaning.label && (
+                      <MeaningLabel>{meaning.label}</MeaningLabel>
+                    )}
                     {meaning.is_new && view.new_label && (
                       <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
                         {view.new_label}
@@ -298,7 +305,9 @@ const Sense = ({
     {sense.example && (
       <div className="flex items-start gap-2 text-sm">
         <div
-          className={definition.is_phrase && !stacked ? "order-last" : undefined}
+          className={
+            definition.is_phrase && !stacked ? "order-last" : undefined
+          }
           onClick={(e) => e.stopPropagation()}
         >
           <AudioButton
@@ -339,7 +348,9 @@ const MarkToggle = ({
     <button
       type="button"
       aria-pressed={mark === rating}
-      aria-label={rating === "again" ? "Forgot" : "Remembered"}
+      aria-label={
+        rating === "again" ? t("common-forgot") : t("common-remembered")
+      }
       onClick={(e) => {
         e.stopPropagation();
         onMark(mark === rating ? undefined : rating);
@@ -503,13 +514,13 @@ export const FlashcardChallenge = function FlashcardChallenge({
 
       if (e.key === "Enter") {
         e.preventDefault();
-        toast("Use the arrow keys");
+        toast(t("challenge-use-arrow-keys"));
         return;
       }
 
       if (["1", "2", "3", "4"].includes(e.key)) {
         e.preventDefault();
-        toast("Use the arrow keys");
+        toast(t("challenge-use-arrow-keys"));
         return;
       }
 
@@ -700,7 +711,9 @@ export const FlashcardChallenge = function FlashcardChallenge({
                 >
                   <div
                     className={` ${
-                      view.require_answer_reveal ? "font-bold" : "text-muted-foreground"
+                      view.require_answer_reveal
+                        ? "font-bold"
+                        : "text-muted-foreground"
                     }`}
                   >
                     {view.reveal_label}
@@ -759,51 +772,54 @@ export const FlashcardChallenge = function FlashcardChallenge({
                   <AudioErrorBanner onSkip={onCantListen} />
                 )}
                 {onCantListen && view.cant_listen_label && (
-                  <CantListenButton onClick={onCantListen} label={view.cant_listen_label} />
+                  <CantListenButton
+                    onClick={onCantListen}
+                    label={view.cant_listen_label}
+                  />
                 )}
               </>
             )}
             <div className={!canGrade ? "hidden" : "quick-fade-in"}>
               <div className={allMarked ? "grid" : "grid grid-cols-2"}>
-                  {!allMarked && (
-                    <Button
-                      onClick={() => {
-                        if (!canGrade) return;
-                        grade("again");
-                      }}
-                      variant="destructive"
-                      size="lg"
-                      className="h-14 text-lg rounded-r-none group"
-                      disabled={!canGrade}
-                    >
-                      <span className="relative flex items-center justify-center">
-                        <kbd className="absolute right-full mr-2 h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center hide-kbd-mobile opacity-0 group-hover:opacity-100 transition-opacity">
-                          <ArrowLeft className="h-3 w-3" />
-                        </kbd>
-                        {againLabel}
-                      </span>
-                    </Button>
-                  )}
+                {!allMarked && (
                   <Button
                     onClick={() => {
                       if (!canGrade) return;
-                      grade("remembered");
+                      grade("again");
                     }}
-                    variant="default"
+                    variant="destructive"
                     size="lg"
-                    className={cn(
-                      "h-14 text-lg group",
-                      !allMarked && "rounded-l-none",
-                    )}
+                    className="h-14 text-lg rounded-r-none group"
                     disabled={!canGrade}
                   >
                     <span className="relative flex items-center justify-center">
-                      {rememberedLabel}
-                      <kbd className="absolute left-full ml-2 h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center hide-kbd-mobile opacity-0 group-hover:opacity-100 transition-opacity">
-                        <ArrowRight className="h-3 w-3" />
+                      <kbd className="absolute right-full mr-2 h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center hide-kbd-mobile opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ArrowLeft className="h-3 w-3" />
                       </kbd>
+                      {againLabel}
                     </span>
                   </Button>
+                )}
+                <Button
+                  onClick={() => {
+                    if (!canGrade) return;
+                    grade("remembered");
+                  }}
+                  variant="default"
+                  size="lg"
+                  className={cn(
+                    "h-14 text-lg group",
+                    !allMarked && "rounded-l-none",
+                  )}
+                  disabled={!canGrade}
+                >
+                  <span className="relative flex items-center justify-center">
+                    {rememberedLabel}
+                    <kbd className="absolute left-full ml-2 h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center hide-kbd-mobile opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ArrowRight className="h-3 w-3" />
+                    </kbd>
+                  </span>
+                </Button>
               </div>
             </div>
           </div>

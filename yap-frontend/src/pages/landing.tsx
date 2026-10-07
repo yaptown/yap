@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { LanguageIcon } from "@/components/LanguageIcon";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
@@ -80,7 +81,7 @@ function Wordmark({ className }: { className?: string }) {
  *  of this page and landing.css blurs and fades it out over the next one. */
 function LampButton({
   className,
-  children = "Start learning",
+  children = t("idle-start-learning"),
 }: {
   className?: string;
   children?: ReactNode;
@@ -205,18 +206,18 @@ function Hero({ corpus }: { corpus: Corpus }) {
       >
         <h1 className="landing-disp m-0 text-[clamp(38px,6.3vw,92px)] leading-[0.98]">
           <span className="md:whitespace-nowrap">
-            Learn how <br className="md:hidden" />
+            {t("landing-hero.before")}
+            <br className="md:hidden" />
             <RotatingWord words={people} />
           </span>
           <br />
-          people actually talk.
+          {t("landing-hero.after")}
         </h1>
         <p
           className="m-0 max-w-[560px] text-[19px] leading-[1.4] text-(--fg-soft) max-md:max-w-[82%] md:text-[24px]"
           style={{ textWrap: "pretty" }}
         >
-          Yap teaches words in real contexts. Every sentence comes from a real
-          film, book or conversation.
+          {t("landing-yap-teaches-words-in-real-contexts-every-sentence-comes")}
         </p>
         <LampButton />
       </div>
@@ -253,38 +254,41 @@ function Product() {
         )}
       >
         <h2 className="landing-disp m-0 text-[clamp(40px,4.5vw,56px)] leading-none">
-          Every card is a sentence.
+          {t("landing-every-card-is-a-sentence")}
         </h2>
         <p
           className="m-0 mt-8 max-w-[640px] text-[20px] leading-[1.5] text-(--fg-soft)"
           style={{ textWrap: "pretty" }}
         >
-          Hear it, translate it, speak it. Yap analyzes your response and
-          figures out what you learned and what needs review. It understands
-          phrases and grammatical constructs, so you review exactly what you
-          missed.
+          {t("landing-hear-it-translate-it-speak-it-yap-analyzes-your")}
         </p>
         <LampButton className="mt-8 self-start" />
         <div className="mt-16 flex flex-col items-center gap-4 lg:gap-0 lg:pb-40">
           <MockFlashcard />
           <Pin anchor="--sentence" area="left">
             <FeatureCard
-              title="Real sentences"
-              description="Learn words in context, from real films, books and conversation."
+              title={t("landing-real-sentences")}
+              description={t(
+                "landing-learn-words-in-context-from-real-films-books-and",
+              )}
               titleClassName="text-(--lamp)"
             />
           </Pin>
           <Pin anchor="--phrase" area="right">
             <FeatureCard
-              title="Phrase-aware"
-              description="Cards target precise meanings, not just words."
+              title={t("landing-phrase-aware")}
+              description={t(
+                "landing-cards-target-precise-meanings-not-just-words",
+              )}
               titleClassName="text-yellow-400"
             />
           </Pin>
           <Pin anchor="--review" area="bottom">
             <FeatureCard
-              title="Smarter review"
-              description="FSRS brings each word back just before you would forget it."
+              title={t("landing-smarter-review")}
+              description={t(
+                "landing-fsrs-brings-each-word-back-just-before-you-would",
+              )}
               titleClassName="text-sky-600 dark:text-sky-100"
             />
           </Pin>
@@ -380,13 +384,15 @@ function MockFlashcard() {
           </p>
           <MoreVertical className="h-5 w-5 shrink-0 text-muted-foreground" />
         </div>
-        <p className="text-lg text-muted-foreground">Translation...</p>
+        <p className="text-lg text-muted-foreground">
+          {t("translation-translation")}
+        </p>
       </Card>
       <p
         className="px-2 text-center text-sm font-medium text-sky-600 dark:text-sky-100"
         style={{ anchorName: "--review" } as React.CSSProperties}
       >
-        Reviewing 6 words
+        {t("landing-reviewing-6-words")}
       </p>
     </Card>
   );
@@ -446,14 +452,17 @@ function Showcase({ corpus }: { corpus: Corpus }) {
             className="landing-disp m-0 text-[clamp(40px,4.5vw,56px)] leading-none"
             style={{ textWrap: "balance" }}
           >
-            {corpus.sentences.toLocaleString()}+ sentences.
+            {t("landing-sentence-count", {
+              count: String(corpus.sentences.toLocaleString()),
+            })}
           </h2>
           <p
             className="m-0 max-w-[560px] text-[20px] leading-[1.5] text-(--fg-soft)"
             style={{ textWrap: "balance" }}
           >
-            Real sentences from films, books and conversation, in{" "}
-            {corpus.courses.length} languages.
+            {t("landing-language-count", {
+              count: corpus.courses.length,
+            })}
           </p>
         </div>
 
@@ -467,7 +476,7 @@ function Showcase({ corpus }: { corpus: Corpus }) {
           <TabsList className="h-auto flex-wrap gap-1">
             {corpus.courses.map((c, i) => (
               <TabsTrigger key={c.targetLanguage} value={String(i)}>
-                {LANGUAGES[c.targetLanguage].englishName}
+                {t("language-name.title-full", { language: LANGUAGES[c.targetLanguage].isoCode })}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -506,17 +515,20 @@ function Showcase({ corpus }: { corpus: Corpus }) {
               ))}
             </div>
             <p className="m-0 text-[15px] text-(--fg-dim)">
-              {course.sentenceCount.toLocaleString()} sentences in {name}
+              {t("landing-course-sentences", {
+                count: String(course.sentenceCount.toLocaleString()),
+                language: String(name),
+              })}
             </p>
           </motion.div>
         </AnimatePresence>
 
         <div className="flex flex-col items-center gap-2 text-[15px] text-(--fg-dim)">
           <a href="/d/" className="landing-ul">
-            Look up any word in our dictionaries
+            {t("landing-look-up-any-word-in-our-dictionaries")}
           </a>
           <Link to="/anki" className="landing-ul">
-            Or take these sentences with you as an Anki deck
+            {t("landing-or-take-these-sentences-with-you-as-an-anki")}
           </Link>
         </div>
       </div>
@@ -557,10 +569,11 @@ function RecallChart() {
     <div className="mt-14 md:mt-20">
       <div className="landing-label flex items-baseline justify-between text-(--fg-dim)">
         <span>
-          <span className="text-(--fg)">100%</span> recalled
+          <span className="text-(--fg)">100%</span>
+          {t("landing-recalled")}
         </span>
         <span className="landing-tag normal-case tracking-normal">
-          next gap: 55 days, then longer
+          {t("landing-next-gap-55-days-then-longer")}
         </span>
       </div>
       <div className="relative mt-2 h-[220px] md:h-[300px]">
@@ -624,8 +637,8 @@ function RecallChart() {
         ))}
       </div>
       <div className="landing-label mt-2 text-right text-(--fg-dim)">
-        <span className="text-(--fg)">90%</span>, about to forget: the review
-        lands here
+        <span className="text-(--fg)">90%</span>
+        {t("landing-about-to-forget-the-review-lands-here")}
       </div>
       {/* Day labels, on two rows where one row cannot hold them. */}
       <div className="relative mt-4 h-12 border-t border-(--rule-strong) xl:h-6">
@@ -639,7 +652,7 @@ function RecallChart() {
             )}
             style={{ left: `${x(r.day)}%` }}
           >
-            day {r.day}
+            {t("landing-day", { day: r.day })}
             {i > 0 && (
               <span className="text-(--fg-dim)">
                 {" "}
@@ -649,7 +662,7 @@ function RecallChart() {
           </div>
         ))}
         <div className="absolute top-2 right-0 text-[15px] leading-none text-(--fg-dim)">
-          day {HORIZON}
+          {t("landing-day", { day: HORIZON })}
         </div>
       </div>
     </div>
@@ -707,26 +720,22 @@ function Coda() {
                 className="landing-disp m-0 text-[clamp(40px,4.5vw,56px)] leading-none"
                 style={{ textWrap: "balance" }}
               >
-                The scheduler
+                {t("landing-the-scheduler")}
               </h2>
               <p
                 className="m-0 mt-8 max-w-[640px] text-[20px] leading-[1.5] text-(--fg-soft)"
                 style={{ textWrap: "pretty" }}
               >
-                FSRS Spaced Repetition models your memory. By understanding what
-                words and phrases you're struggling with, Yap shows you them
-                more often. By showing you words only when you're about to
-                forget them, your time is used in the most efficient possible
-                manner.
+                {t(
+                  "landing-fsrs-spaced-repetition-models-your-memory-by-understanding-what",
+                )}
               </p>
             </div>
           </div>
           <RecallChart />
           <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between sm:gap-12">
             <div className="landing-tag max-w-[560px] text-(--fg-dim)">
-              Recall of one word over forty days. Each dot is a review where you
-              remembered; the number after the day is the gap since the last
-              one.
+              {t("landing-recall-of-one-word-over-forty-days-each-dot")}
             </div>
             <LampButton className="shrink-0 self-start sm:self-auto" />
           </div>
@@ -742,15 +751,15 @@ function Footer() {
     <div className="flex flex-wrap items-baseline justify-between gap-4 border-t border-(--rule) pt-7 pb-9">
       <Wordmark className="text-[24px]" />
       <div className="flex flex-wrap gap-x-6 gap-y-2 text-[15px] text-(--fg-dim)">
-        <a href="/d/">Dictionary</a>
-        <Link to="/anki">Anki decks</Link>
-        <Link to="/select-language">Languages</Link>
-        <a href="/blog/">Blog</a>
-        <Link to="/about">About</Link>
+        <a href="/d/">{t("common-dictionary")}</a>
+        <Link to="/anki">{t("landing-anki-decks")}</Link>
+        <Link to="/select-language">{t("landing-languages-2")}</Link>
+        <a href="/blog/">{t("landing-blog")}</a>
+        <Link to="/about">{t("common-about")}</Link>
         <a href="https://github.com/yaptown/yap">GitHub</a>
         <a href="https://discord.gg/mpgqfsH">Discord</a>
-        <Link to="/privacy">Privacy</Link>
-        <Link to="/terms">Terms</Link>
+        <Link to="/privacy">{t("common-privacy")}</Link>
+        <Link to="/terms">{t("common-terms")}</Link>
       </div>
     </div>
   );

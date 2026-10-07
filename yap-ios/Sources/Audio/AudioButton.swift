@@ -60,7 +60,7 @@ struct AudioButton: View {
             .contentShape(Circle())
         }.buttonStyle(.plain).foregroundStyle(glyph).disabled(loading)
             .animation(.easeOut(duration: 0.2), value: playing)
-            .accessibilityLabel(error.map { "Play audio. \($0)" } ?? "Play audio")
+            .accessibilityLabel(error.map { L("audio-play-error", ["error": $0]) } ?? L("audio-button-play-audio"))
         .task(id: autoplay) {
             guard autoplay, host.autoplay.reviewCount != reviewCount else { return }
             host.autoplay.reviewCount = reviewCount
@@ -72,7 +72,7 @@ struct AudioButton: View {
         error = nil; loading = true
         defer { loading = false }
         do { try await audio.play(request: request, accessToken: host.accessToken) }
-        catch { if !Task.isCancelled { self.error = error.localizedDescription } }
+        catch { if !Task.isCancelled { self.error = error is AudioPlayer.PlaybackError ? L("audio-player-couldn-t-play-this-audio-please-try-again") : error.localizedDescription } }
     }
 }
 

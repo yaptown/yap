@@ -24,7 +24,7 @@ private struct MoviePosterCard: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: 20))
             .overlay { RoundedRectangle(cornerRadius: 20).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
-            .accessibilityLabel("Poster for \(movie.title)")
+            .accessibilityLabel(L("common-poster-for", ["title": movie.title]))
             .task(id: movie.id) { image = host.deck.get_movie_poster(movie_id: movie.id).flatMap { UIImage(data: Data($0)) } }
     }
 }

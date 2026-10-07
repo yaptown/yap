@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -34,7 +35,7 @@ export function AcceptInvite() {
         setEmail(decodeURIComponent(urlEmail));
       }
     } else {
-      setError("Invalid invite link");
+      setError(t("accept-invite-invalid-invite-link"));
     }
   }, [token_hash, type, searchParams]);
 
@@ -43,12 +44,12 @@ export function AcceptInvite() {
     setError(null);
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("accept-invite-passwords-do-not-match"));
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(t("accept-invite-password-must-be-at-least-6-characters"));
       return;
     }
 
@@ -80,7 +81,7 @@ export function AcceptInvite() {
         }, 2000);
       }
     } else {
-      setError("Invalid invite link");
+      setError(t("accept-invite-invalid-invite-link"));
     }
 
     setLoading(false);
@@ -93,10 +94,12 @@ export function AcceptInvite() {
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold text-positive">
-                Welcome to Yap.Town!
+                {t("accept-invite-welcome-to-yap-town")}
               </CardTitle>
               <CardDescription>
-                Your account has been set up successfully. Redirecting...
+                {t(
+                  "accept-invite-your-account-has-been-set-up-successfully-redirecting",
+                )}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -111,19 +114,23 @@ export function AcceptInvite() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold">
-              Accept Invitation
+              {t("accept-invite-accept-invitation")}
             </CardTitle>
             <CardDescription>
               {email
-                ? `Set up your password for ${email}`
-                : "Set up your password to complete registration"}
+                ? t("auth-invite-password-for", {
+                    email: String(email),
+                  })
+                : t(
+                    "accept-invite-set-up-your-password-to-complete-registration",
+                  )}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {email && (
                 <div className="space-y-2">
-                  <Label>Email</Label>
+                  <Label>{t("auth-email")}</Label>
                   <Input
                     type="email"
                     value={email}
@@ -133,7 +140,7 @@ export function AcceptInvite() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("auth-password")}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -144,7 +151,9 @@ export function AcceptInvite() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Label htmlFor="confirm-password">
+                  {t("accept-invite-confirm-password")}
+                </Label>
                 <Input
                   id="confirm-password"
                   type="password"
@@ -155,7 +164,9 @@ export function AcceptInvite() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Setting up account..." : "Complete Setup"}
+                {loading
+                  ? t("accept-invite-setting-up-account")
+                  : t("accept-invite-complete-setup")}
               </Button>
             </form>
 

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import {
   Dialog,
   DialogContent,
@@ -24,10 +25,12 @@ export function AddToHomeScreenModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Home className="h-5 w-5" />
-            Add Yap.Town to Home Screen
+            {t("add-to-home-screen-modal-add-yap-town-to-home-screen")}
           </DialogTitle>
           <DialogDescription>
-            Install the app for quick access and a better experience
+            {t(
+              "add-to-home-screen-modal-install-the-app-for-quick-access-and-a-better",
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -35,7 +38,7 @@ export function AddToHomeScreenModal({
 
         <div className="flex justify-end gap-2 pt-4">
           <Button onClick={() => onOpenChange(false)} variant="outline">
-            Got it!
+            {t("add-to-home-screen-modal-got-it")}
           </Button>
         </div>
       </DialogContent>

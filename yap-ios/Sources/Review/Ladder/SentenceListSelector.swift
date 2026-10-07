@@ -26,9 +26,9 @@ struct SentenceListSelector: View {
                     }
                     if case .PimsleurLesson = navigation.selection, !pimsleurAcknowledged {
                         Image(systemName: "headphones").font(.title).foregroundStyle(Color.yapMuted)
-                        Text("Yap has word lists for Pimsleur, but is not affiliated with Pimsleur in any way.")
+                        Text(L("curriculum-browser-yap-has-word-lists-for-pimsleur-but-is-not"))
                             .font(.subheadline).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
-                        Button("I understand") { pimsleurAcknowledged = true }
+                        Button(L("curriculum-browser-i-understand")) { pimsleurAcknowledged = true }
                             .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent)
                     } else {
                         if let label = view.next_sentence_list_label, let next = view.next_sentence_list {
@@ -82,7 +82,7 @@ struct SentenceListSelector: View {
             }
             .buttonStyle(.plain).foregroundStyle(Color.yapText.opacity(0.6))
             .opacity(enabled ? 1 : 0).disabled(!enabled)
-            .accessibilityLabel(step < 0 ? "Previous sentence list" : "Next sentence list")
+            .accessibilityLabel(step < 0 ? L("idle-screen-previous-sentence-list") : L("idle-screen-next-sentence-list"))
         }
     }
     private func select(_ category: SentenceListCategory) {
@@ -103,7 +103,7 @@ private struct LearnButton: View {
     var body: some View {
         HStack(spacing: 0) {
             Button(action: learn) {
-                Label(label, systemImage: "sparkles").lineLimit(1).minimumScaleFactor(0.8).padding(.horizontal, 18).frame(minHeight: 50)
+                Label(label, systemImage: "sparkles").lineLimit(1).minimumScaleFactor(0.7).padding(.horizontal, 14).frame(minHeight: 50)
             }
             Rectangle().fill(Tokens.palette.primary_foreground.color.opacity(0.2)).frame(width: 1, height: 50)
             Menu {
@@ -129,7 +129,7 @@ private struct SentenceListPoster: View, Equatable {
     var body: some View {
         if let image = UIImage(data: Data(bytes)) {
             Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 220).clipShape(RoundedRectangle(cornerRadius: 12))
-                .accessibilityLabel("Poster for \(title)")
+                .accessibilityLabel(L("common-poster-for", ["title": title]))
         }
     }
 }

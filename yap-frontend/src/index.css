@@ -246,11 +246,11 @@ ol {
    CJK, Devanagari and Thai render smaller at the same font size as Latin text.
    Uses em so it scales relative to whatever the parent's font-size is. `|=`
    also matches script subtags like zh-Hant; `:lang()` would compound the em on
-   every nested element. */
-[lang|="ko"], [lang|="ja"], [lang|="zh"] {
+   every nested element. The root carries the UI language, not target text. */
+:not(:root):is([lang|="ko"], [lang|="ja"], [lang|="zh"]) {
   font-size: 1.55em;
 }
-[lang|="hi"], [lang|="th"] {
+:not(:root):is([lang|="hi"], [lang|="th"]) {
   font-size: 1.2em;
 }
 

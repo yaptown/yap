@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Home, Share, Plus, MoreVertical } from "lucide-react";
@@ -40,7 +41,7 @@ export function AddToHomeScreen({ onDismiss }: AddToHomeScreenProps) {
           className="w-full sm:w-auto"
         >
           <Home className="mr-2 h-4 w-4" />
-          Add to Home Screen
+          {t("add-to-home-screen-add-to-home-screen")}
         </Button>
       </div>
     );
@@ -50,24 +51,34 @@ export function AddToHomeScreen({ onDismiss }: AddToHomeScreenProps) {
     <div className="space-y-4 p-4 bg-muted rounded-lg">
       <h3 className="font-semibold flex items-center gap-2">
         <Home className="h-5 w-5" />
-        Add Yap.Town to Home Screen
+        {t("add-to-home-screen-modal-add-yap-town-to-home-screen")}
       </h3>
 
       {platform === "ios" && (
         <div className="space-y-3 text-sm">
-          <p>To add this app to your home screen:</p>
+          <p>
+            {t("pwa-install-instructions-to-add-this-app-to-your-home-screen")}
+          </p>
           <ol className="space-y-2 ml-4">
             <li className="flex items-start gap-2">
               <Share className="h-4 w-4 mt-0.5 shrink-0" />
-              <span>Tap the Share button at the bottom of Safari</span>
+              <span>
+                {t(
+                  "add-to-home-screen-tap-the-share-button-at-the-bottom-of-safari",
+                )}
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <Plus className="h-4 w-4 mt-0.5 shrink-0" />
-              <span>Scroll down and tap "Add to Home Screen"</span>
+              <span>
+                {t("add-to-home-screen-scroll-down-and-tap-add-to-home-screen")}
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-lg mt-[-4px]">✓</span>
-              <span>Tap "Add" in the top right corner</span>
+              <span>
+                {t("add-to-home-screen-tap-add-in-the-top-right-corner")}
+              </span>
             </li>
           </ol>
         </div>
@@ -75,19 +86,29 @@ export function AddToHomeScreen({ onDismiss }: AddToHomeScreenProps) {
 
       {platform === "android" && (
         <div className="space-y-3 text-sm">
-          <p>To add this app to your home screen:</p>
+          <p>
+            {t("pwa-install-instructions-to-add-this-app-to-your-home-screen")}
+          </p>
           <ol className="space-y-2 ml-4">
             <li className="flex items-start gap-2">
               <MoreVertical className="h-4 w-4 mt-0.5 shrink-0" />
-              <span>Tap the menu button (three dots) in your browser</span>
+              <span>
+                {t(
+                  "pwa-install-instructions-tap-the-menu-button-three-dots-in-your-browser",
+                )}
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <Home className="h-4 w-4 mt-0.5 shrink-0" />
-              <span>Tap "Add to Home Screen" or "Install App"</span>
+              <span>
+                {t(
+                  "pwa-install-instructions-tap-add-to-home-screen-or-install-app",
+                )}
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-lg mt-[-4px]">✓</span>
-              <span>Tap "Add" or "Install"</span>
+              <span>{t("pwa-install-instructions-tap-add-or-install")}</span>
             </li>
           </ol>
         </div>
@@ -95,18 +116,28 @@ export function AddToHomeScreen({ onDismiss }: AddToHomeScreenProps) {
 
       {platform === "desktop" && (
         <div className="space-y-3 text-sm">
-          <p>To install this app on your computer:</p>
+          <p>{t("add-to-home-screen-to-install-this-app-on-your-computer")}</p>
           <ol className="space-y-2 ml-4">
-            <li>Look for an install button in your browser's address bar</li>
-            <li>Or use the browser menu to find "Install Yap.Town"</li>
-            <li>The app will open in its own window</li>
+            <li>
+              {t(
+                "add-to-home-screen-look-for-an-install-button-in-your-browser-s",
+              )}
+            </li>
+            <li>
+              {t(
+                "add-to-home-screen-or-use-the-browser-menu-to-find-install-yap",
+              )}
+            </li>
+            <li>
+              {t("add-to-home-screen-the-app-will-open-in-its-own-window")}
+            </li>
           </ol>
         </div>
       )}
 
       <div className="flex gap-2 pt-2">
         <Button onClick={handleDismiss} variant="outline" size="sm">
-          Maybe later
+          {t("common-maybe-later")}
         </Button>
       </div>
     </div>

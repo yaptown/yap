@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useLayoutEffect, useRef } from "react";
 
 /** A modal in the top layer also blocks keyboard input and portalled dialogs. */
@@ -16,14 +17,19 @@ export function AccountSwitchOverlay({ active }: { active: boolean }) {
     for (const event of events) window.addEventListener(event, block, true);
     element.showModal();
     return () => {
-      for (const event of events) window.removeEventListener(event, block, true);
+      for (const event of events)
+        window.removeEventListener(event, block, true);
       element.close();
     };
   }, [active]);
-  return <dialog
-    ref={dialog}
-    aria-label="Switching account"
-    onCancel={(event) => event.preventDefault()}
-    className="fixed inset-0 m-auto border-0 bg-transparent p-6 text-foreground outline-none backdrop:bg-background/70"
-  ><p role="status">Loading...</p></dialog>;
+  return (
+    <dialog
+      ref={dialog}
+      aria-label={t("account-switch-overlay-switching-account")}
+      onCancel={(event) => event.preventDefault()}
+      className="fixed inset-0 m-auto border-0 bg-transparent p-6 text-foreground outline-none backdrop:bg-background/70"
+    >
+      <p role="status">{t("common-loading")}</p>
+    </dialog>
+  );
 }

@@ -25,13 +25,20 @@ export type WeaponToken = {
 type WeaponState =
   | { type: "loading" }
   | { type: "error"; message: string }
-  | { type: "ready"; weapon: Weapon; userId: string | undefined; switching: boolean };
+  | {
+      type: "ready";
+      weapon: Weapon;
+      userId: string | undefined;
+      switching: boolean;
+    };
 
 const WeaponContext = createContext<WeaponState | undefined>(undefined);
 // An account switch has two phases: creating the account's store (known
 // here) and then rebuilding the course's deck from it (known only where the
 // deck loads). Deck loaders report the second phase so one overlay covers both.
-const DeckSwitchingContext = createContext<(switching: boolean) => void>(() => {});
+const DeckSwitchingContext = createContext<(switching: boolean) => void>(
+  () => {},
+);
 
 const ORIGINAL_SESSION_KEY = "yap-impersonation-original-session";
 
@@ -54,11 +61,15 @@ export function WeaponProvider({
   const [loaded, setState] = useState<WeaponState>({ type: "loading" });
   // Derive this during render so no child can use the previous store with
   // the new account's credentials before the loading effect runs.
-  const state = useMemo<WeaponState>(() => loaded.type === "ready" && loaded.userId !== userId
-    ? userId === undefined
-      ? { type: "loading" }
-      : { ...loaded, switching: true }
-    : loaded, [loaded, userId]);
+  const state = useMemo<WeaponState>(
+    () =>
+      loaded.type === "ready" && loaded.userId !== userId
+        ? userId === undefined
+          ? { type: "loading" }
+          : { ...loaded, switching: true }
+        : loaded,
+    [loaded, userId],
+  );
   const stateRef = useRef(state);
   const accessTokenRef = useRef<string | undefined>(accessToken);
   const networkState = useNetworkState();
@@ -92,20 +103,29 @@ export function WeaponProvider({
     const abortController = new AbortController();
 
     async function loadWeapon() {
-      setState((previous) => userId !== undefined && previous.type === "ready"
-        ? { ...previous, switching: true }
-        : { type: "loading" });
+      setState((previous) =>
+        userId !== undefined && previous.type === "ready"
+          ? { ...previous, switching: true }
+          : { type: "loading" },
+      );
 
       try {
-        const weapon = await Weapon.create(userId, (listenerId: ListenerKey | undefined, streamId: string) => {
-          if (!abortController.signal.aborted) return sync(listenerId, streamId);
-        });
+        const weapon = await Weapon.create(
+          userId,
+          (listenerId: ListenerKey | undefined, streamId: string) => {
+            if (!abortController.signal.aborted)
+              return sync(listenerId, streamId);
+          },
+        );
         if (!abortController.signal.aborted) {
           setState({ type: "ready", weapon, userId, switching: false });
         }
       } catch (err: unknown) {
         if (!abortController.signal.aborted) {
-          setState({ type: "error", message: err instanceof Error ? err.message : String(err) });
+          setState({
+            type: "error",
+            message: err instanceof Error ? err.message : String(err),
+          });
         }
       }
     }
@@ -127,25 +147,22 @@ export function WeaponProvider({
     };
   }, [state]);
 
-  const syncWithSupabase = useCallback(
-    async (forceUpload?: boolean) => {
-      if (stateRef.current.type !== "ready" || stateRef.current.switching) return;
-      if (accessTokenRef.current === undefined) return;
-      try {
-        if (networkStateRef.current.online) {
-          const upload = forceUpload ?? !isImpersonating();
-          await stateRef.current.weapon.sync_with_supabase(
-            accessTokenRef.current,
-            undefined,
-            upload,
-          );
-        }
-      } catch (e) {
-        console.warn("sync_with_supabase failed", e);
+  const syncWithSupabase = useCallback(async (forceUpload?: boolean) => {
+    if (stateRef.current.type !== "ready" || stateRef.current.switching) return;
+    if (accessTokenRef.current === undefined) return;
+    try {
+      if (networkStateRef.current.online) {
+        const upload = forceUpload ?? !isImpersonating();
+        await stateRef.current.weapon.sync_with_supabase(
+          accessTokenRef.current,
+          undefined,
+          upload,
+        );
       }
-    },
-    [],
-  );
+    } catch (e) {
+      console.warn("sync_with_supabase failed", e);
+    }
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -226,7 +243,8 @@ export function WeaponProvider({
             const current = stateRef.current;
             if (
               current.type === "ready" &&
-              !current.switching && current.userId === userId &&
+              !current.switching &&
+              current.userId === userId &&
               device_id !== current.weapon.device_id
             ) {
               console.log(
@@ -264,7 +282,9 @@ export function WeaponProvider({
           {children}
         </SyncActionsContext.Provider>
       </DeckSwitchingContext.Provider>
-      <AccountSwitchOverlay active={(state.type === "ready" && state.switching) || deckSwitching} />
+      <AccountSwitchOverlay
+        active={(state.type === "ready" && state.switching) || deckSwitching}
+      />
     </WeaponContext.Provider>
   );
 }
@@ -310,10 +330,33 @@ function supportsWasmExternref(): boolean {
   try {
     return WebAssembly.validate(
       new Uint8Array([
-        0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, // magic + version
-        0x01, 0x05, 0x01, 0x60, 0x00, 0x01, 0x6f, // type section: () -> externref
-        0x03, 0x02, 0x01, 0x00, // function section
-        0x0a, 0x06, 0x01, 0x04, 0x00, 0xd0, 0x6f, 0x0b, // code section
+        0x00,
+        0x61,
+        0x73,
+        0x6d,
+        0x01,
+        0x00,
+        0x00,
+        0x00, // magic + version
+        0x01,
+        0x05,
+        0x01,
+        0x60,
+        0x00,
+        0x01,
+        0x6f, // type section: () -> externref
+        0x03,
+        0x02,
+        0x01,
+        0x00, // function section
+        0x0a,
+        0x06,
+        0x01,
+        0x04,
+        0x00,
+        0xd0,
+        0x6f,
+        0x0b, // code section
       ]),
     );
   } catch {
@@ -399,30 +442,4 @@ export function useWeaponSupport(): { browserSupported: true | false | null } {
   }, [setBrowserSupported]);
 
   return { browserSupported };
-}
-
-export function useAsyncMemo<T>(
-  factory: () => Promise<T> | undefined | null,
-  deps: React.DependencyList,
-  initial?: T,
-) {
-  const [val, setVal] = useState<T | undefined>(initial);
-  useEffect(() => {
-    let cancel = false;
-    const promise = factory();
-    if (promise === undefined || promise === null) return;
-    promise.then((val) => {
-      if (!cancel) {
-        setVal(val);
-      }
-    }).catch((error) => {
-      if (!cancel) {
-        console.error("useAsyncMemo rejected:", error);
-      }
-    });
-    return () => {
-      cancel = true;
-    };
-  }, deps);
-  return val;
 }

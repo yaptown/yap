@@ -27,27 +27,27 @@ struct CoursePickerView: View {
             } else {
                 ScrollView {
                     VStack(spacing: 32) {
-                        Text("What language will you speak next?").font(.largeTitle.bold()).multilineTextAlignment(.center)
-                        if let current { resumeCard(current); divider("Or choose a different language") }
+                        Text(L("course-picker-view-what-language-will-you-speak-next")).font(.largeTitle.bold()).multilineTextAlignment(.center)
+                        if let current { resumeCard(current); divider(L("course-picker-or-choose-a-different-language")) }
                         ForEach([CourseMaturity.Stable, .Beta, .Alpha], id: \.self) { maturity in
                             let section = targets.filter { get_language_metadata(language: $0.target_language).status == maturity }
                             if !section.isEmpty {
-                                if maturity != .Stable { divider("\(String(describing: maturity)) Languages") }
+                                if maturity != .Stable { divider(maturity == .Beta ? L("course-picker-beta-languages") : L("course-picker-alpha-languages")) }
                                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 16, alignment: .top), GridItem(.flexible(), spacing: 16, alignment: .top)], spacing: 32) {
                                     ForEach(section, id: \.self, content: tile)
                                 }
                             }
                         }
                         HStack {
-                            Text("Native language:").foregroundStyle(Color.yapMuted)
-                            Picker("Native language", selection: $native) {
+                            Text(L("course-picker-native-language")).foregroundStyle(Color.yapMuted)
+                            Picker(L("course-picker-view-native-language"), selection: $native) {
                                 ForEach(natives, id: \.self) { language in Text(get_language_metadata(language: language).native_name).tag(language) }
                             }.pickerStyle(.menu)
                         }
-                        Text("(Yap.Town is great for beginner and intermediate students.)")
+                        Text(L("course-picker-yap-town-is-great-for-beginner-and-intermediate-students"))
                             .font(.subheadline).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
                     }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
-                }.navigationTitle("Choose a course").navigationBarTitleDisplayMode(.inline)
+                }.navigationTitle(L("course-picker-view-choose-a-course")).navigationBarTitleDisplayMode(.inline)
             }
         }
         .containerBackground(.clear, for: .navigation)
@@ -72,7 +72,7 @@ struct CoursePickerView: View {
         #endif
     }
     private func tile(_ course: Course) -> some View {
-        let name = get_language_name(language: course.target_language, reader: native)
+        let name = get_language_name(language: course.target_language)
         return Button { select(course) } label: {
             VStack(spacing: 2) {
                 icon(course, size: 144)
@@ -82,13 +82,13 @@ struct CoursePickerView: View {
         }.buttonStyle(.plain)
     }
     private func resumeCard(_ course: Course) -> some View {
-        let name = get_language_name(language: course.target_language, reader: native)
+        let name = get_language_name(language: course.target_language)
         return Button { select(course) } label: {
             HStack(spacing: 16) {
                 icon(course, size: 56)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Resume " + name.full).font(.title3.bold()).foregroundStyle(Color.yapText)
-                    Text("Continue where you left off").font(.subheadline).foregroundStyle(Color.yapMuted)
+                    Text(L("onboarding-resume-course", ["language": name.full])).font(.title3.bold()).foregroundStyle(Color.yapText)
+                    Text(L("course-picker-continue-where-you-left-off")).font(.subheadline).foregroundStyle(Color.yapMuted)
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "arrow.right").foregroundStyle(Color.yapText)

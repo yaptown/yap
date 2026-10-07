@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { useOneSignalNotifications } from "@/hooks/use-onesignal-notifications";
 import { Bell } from "lucide-react";
@@ -91,7 +92,7 @@ export function NotificationSettings() {
     if (!isInitialized || loadingProfile) {
       return (
         <div className="text-center">
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t("common-loading")}</p>
         </div>
       );
     }
@@ -101,9 +102,13 @@ export function NotificationSettings() {
         {/* Global notification toggle */}
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <Label htmlFor="notifications-enabled">Notifications</Label>
+            <Label htmlFor="notifications-enabled">
+              {t("notification-settings-notifications")}
+            </Label>
             <p className="text-sm text-muted-foreground">
-              Receive push notifications when cards are due
+              {t(
+                "notification-settings-receive-push-notifications-when-cards-are-due",
+              )}
             </p>
           </div>
           <Switch
@@ -120,17 +125,23 @@ export function NotificationSettings() {
             {!isSupported ? (
               <div className="text-center">
                 <p className="text-muted-foreground">
-                  Push notifications are not supported in your browser.
+                  {t(
+                    "notification-settings-push-notifications-are-not-supported-in-your-browser",
+                  )}
                 </p>
               </div>
             ) : !isSubscribed ? (
               <div className="text-center space-y-4">
                 <Bell className="h-12 w-12 mx-auto text-muted-foreground" />
                 <p className="text-muted-foreground">
-                  Enable browser notifications to receive push alerts.
+                  {t(
+                    "notification-settings-enable-browser-notifications-to-receive-push-alerts",
+                  )}
                 </p>
                 <Button onClick={subscribe} disabled={isLoading}>
-                  {isLoading ? "Enabling..." : "Enable Browser Notifications"}
+                  {isLoading
+                    ? t("onboarding-enabling")
+                    : t("notification-settings-enable-browser-notifications")}
                 </Button>
               </div>
             ) : (
@@ -138,7 +149,7 @@ export function NotificationSettings() {
                 <div className="flex items-center gap-2 text-positive-foreground">
                   <Bell className="h-5 w-5" />
                   <span className="text-sm font-medium">
-                    Browser notifications enabled
+                    {t("notification-settings-browser-notifications-enabled")}
                   </span>
                 </div>
 
@@ -148,12 +159,15 @@ export function NotificationSettings() {
                   variant="outline"
                   className="w-full"
                 >
-                  {isLoading ? "Sending..." : "Send Test Notification"}
+                  {isLoading
+                    ? t("notification-settings-sending")
+                    : t("notification-settings-send-test-notification")}
                 </Button>
 
                 <p className="text-sm text-muted-foreground">
-                  To disable browser notifications, use your browser's
-                  notification settings.
+                  {t(
+                    "notification-settings-to-disable-browser-notifications-use-your-browser-s-notification",
+                  )}
                 </p>
               </div>
             )}
@@ -170,14 +184,18 @@ export function NotificationSettings() {
       <DialogTrigger asChild>
         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
           <Bell className="mr-2 h-4 w-4" />
-          Notifications
+          {t("notification-settings-notifications")}
         </DropdownMenuItem>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Push Notifications</DialogTitle>
+          <DialogTitle>
+            {t("notification-settings-push-notifications")}
+          </DialogTitle>
           <DialogDescription>
-            Get reminded when it's time to study your flashcards.
+            {t(
+              "notification-settings-get-reminded-when-it-s-time-to-study-your",
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">{renderContent()}</div>

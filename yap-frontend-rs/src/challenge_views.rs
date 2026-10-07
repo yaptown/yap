@@ -43,28 +43,53 @@ pub struct FlashcardView {
 
 fn grade_labels(is_new: bool) -> (String, String) {
     if is_new {
-        ("Didn't know".into(), "Already knew".into())
+        (
+            yap_i18n::tr!("challenge-didn-t-know"),
+            yap_i18n::tr!("challenge-already-knew"),
+        )
     } else {
-        ("Forgot".into(), "Remembered".into())
+        (
+            yap_i18n::tr!("common-forgot"),
+            yap_i18n::tr!("common-remembered"),
+        )
     }
 }
 
-pub(crate) fn part_of_speech_label(pos: PartOfSpeech) -> &'static str {
+pub(crate) fn part_of_speech_label(pos: PartOfSpeech) -> String {
     match pos {
-        PartOfSpeech::Adj => "Adjective",
-        PartOfSpeech::Adp => "Adposition",
-        PartOfSpeech::Adv => "Adverb",
-        PartOfSpeech::Aux => "Auxiliary",
-        PartOfSpeech::Cconj => "Conjunction",
-        PartOfSpeech::Det => "Determiner",
-        PartOfSpeech::Intj => "Interjection",
-        PartOfSpeech::Noun => "Noun",
-        PartOfSpeech::Num => "Number",
-        PartOfSpeech::Part => "Particle",
-        PartOfSpeech::Pron => "Pronoun",
-        PartOfSpeech::Sconj => "Subordinating Conjunction",
-        PartOfSpeech::Sym => "Symbol",
-        PartOfSpeech::Verb => "Verb",
+        PartOfSpeech::Adj => yap_i18n::tr!("challenge-adjective"),
+        PartOfSpeech::Adp => yap_i18n::tr!("challenge-adposition"),
+        PartOfSpeech::Adv => yap_i18n::tr!("challenge-adverb"),
+        PartOfSpeech::Aux => yap_i18n::tr!("challenge-auxiliary"),
+        PartOfSpeech::Cconj => yap_i18n::tr!("challenge-conjunction"),
+        PartOfSpeech::Det => yap_i18n::tr!("challenge-determiner"),
+        PartOfSpeech::Intj => yap_i18n::tr!("challenge-interjection"),
+        PartOfSpeech::Noun => yap_i18n::tr!("challenge-noun"),
+        PartOfSpeech::Num => yap_i18n::tr!("challenge-number"),
+        PartOfSpeech::Part => yap_i18n::tr!("challenge-particle"),
+        PartOfSpeech::Pron => yap_i18n::tr!("challenge-pronoun"),
+        PartOfSpeech::Sconj => yap_i18n::tr!("challenge-subordinating-conjunction"),
+        PartOfSpeech::Sym => yap_i18n::tr!("challenge-symbol"),
+        PartOfSpeech::Verb => yap_i18n::tr!("challenge-verb"),
+    }
+}
+
+pub(crate) fn part_of_speech_short_label(pos: PartOfSpeech) -> String {
+    match pos {
+        PartOfSpeech::Adj => yap_i18n::tr!("pos-short-adj"),
+        PartOfSpeech::Adp => yap_i18n::tr!("pos-short-adp"),
+        PartOfSpeech::Adv => yap_i18n::tr!("pos-short-adv"),
+        PartOfSpeech::Aux => yap_i18n::tr!("pos-short-aux"),
+        PartOfSpeech::Cconj => yap_i18n::tr!("pos-short-cconj"),
+        PartOfSpeech::Det => yap_i18n::tr!("pos-short-det"),
+        PartOfSpeech::Intj => yap_i18n::tr!("pos-short-intj"),
+        PartOfSpeech::Noun => yap_i18n::tr!("pos-short-noun"),
+        PartOfSpeech::Num => yap_i18n::tr!("pos-short-num"),
+        PartOfSpeech::Part => yap_i18n::tr!("pos-short-part"),
+        PartOfSpeech::Pron => yap_i18n::tr!("pos-short-pron"),
+        PartOfSpeech::Sconj => yap_i18n::tr!("pos-short-sconj"),
+        PartOfSpeech::Sym => yap_i18n::tr!("pos-short-sym"),
+        PartOfSpeech::Verb => yap_i18n::tr!("pos-short-verb"),
     }
 }
 
@@ -84,74 +109,83 @@ pub fn flashcard_view(
     let all_new = matches!(&flashcard.content, CardContent::Gram { meanings, .. }
         if meanings.iter().all(|meaning| meaning.is_new));
     let (again_label, remembered_label) = if multiple && !all_new {
-        ("Forgot all".into(), "Remembered all".into())
+        (
+            yap_i18n::tr!("challenge-forgot-all"),
+            yap_i18n::tr!("challenge-remembered-all"),
+        )
     } else {
         grade_labels(if multiple { all_new } else { is_new })
     };
-    let (subtitle, tutorial, reveal_label, listening_header, cant_listen_label) = match flashcard
-        .content
-    {
-        CardContent::Gram { gram, .. } => (
-            None,
-            TutorialPrompt {
-                before: "Guess what \"".into(),
-                target: Some(language_utils::literals_to_text(&gram).trim().to_owned()),
-                after: "\" means…".into(),
-            },
-            format!(
-                "Show {}",
-                get_language_metadata(native_language).common_name
-            ),
-            None,
-            None,
-        ),
-        CardContent::Listening { possible_grams } => {
-            let language = get_language_metadata(target_language).common_name;
-            (
-                Some("Guess what's being said!".into()),
+    let (subtitle, tutorial, reveal_label, listening_header, cant_listen_label) =
+        match flashcard.content {
+            CardContent::Gram { gram, .. } => (
+                None,
                 TutorialPrompt {
-                    before: format!("Guess what {language} word is missing"),
-                    target: None,
-                    after: String::new(),
+                    before: yap_i18n::tr!("challenge-guess-meaning.before"),
+                    target: Some(language_utils::literals_to_text(&gram).trim().to_owned()),
+                    after: yap_i18n::tr!("challenge-guess-meaning.after"),
                 },
-                format!("Show {language} word"),
-                (possible_grams.len() > 1).then(|| "It could have been any of these words:".into()),
-                Some("Can't listen now".into()),
-            )
-        }
-    };
+                yap_i18n::tr!(
+                    "challenge-reveal-language",
+                    language = (get_language_metadata(native_language).common_name).to_string()
+                ),
+                None,
+                None,
+            ),
+            CardContent::Listening { possible_grams } => {
+                let language = get_language_metadata(target_language).common_name;
+                (
+                    Some(yap_i18n::tr!("challenge-guess-what-s-being-said")),
+                    TutorialPrompt {
+                        before: yap_i18n::tr!(
+                            "challenge-guess-what-language-word-is-missing",
+                            language = (language).to_string()
+                        ),
+                        target: None,
+                        after: String::new(),
+                    },
+                    yap_i18n::tr!(
+                        "challenge-show-language-word",
+                        language = (language).to_string()
+                    ),
+                    (possible_grams.len() > 1)
+                        .then(|| yap_i18n::tr!("challenge-it-could-have-been-any-of-these-words")),
+                    Some(yap_i18n::tr!("transcription-can-t-listen-now")),
+                )
+            }
+        };
     FlashcardView {
         subtitle,
         tutorial_prompt: disclosure.show_tutorial.then_some(tutorial),
         tutorial_hidden_hint: disclosure
             .show_tutorial
-            .then(|| "Then, tap to see if you're right!".into()),
-        tutorial_revealed_hint: disclosure.show_tutorial.then(|| "Were you right?".into()),
+            .then(|| yap_i18n::tr!("challenge-then-tap-to-see-if-you-re-right")),
+        tutorial_revealed_hint: disclosure
+            .show_tutorial
+            .then(|| yap_i18n::tr!("challenge-were-you-right")),
         reveal_label,
         require_answer_reveal: disclosure.require_answer_reveal,
         listening_header,
-        known_label: "(known)".into(),
+        known_label: yap_i18n::tr!("challenge-known"),
         again_label,
         remembered_label,
         cant_listen_label,
-        new_label: (multiple && !all_new).then(|| "New".into()),
+        new_label: (multiple && !all_new).then(|| yap_i18n::tr!("common-new")),
         again_rest_label: multiple.then(|| {
             if all_new {
-                "Didn't know"
+                yap_i18n::tr!("challenge-didn-t-know")
             } else {
-                "Forgot the rest"
+                yap_i18n::tr!("challenge-forgot-the-rest")
             }
-            .into()
         }),
         remembered_rest_label: multiple.then(|| {
             if all_new {
-                "Already knew"
+                yap_i18n::tr!("challenge-already-knew")
             } else {
-                "Remembered the rest"
+                yap_i18n::tr!("challenge-remembered-the-rest")
             }
-            .into()
         }),
-        continue_label: multiple.then(|| "Continue".into()),
+        continue_label: multiple.then(|| yap_i18n::tr!("common-continue")),
     }
 }
 
@@ -198,11 +232,11 @@ pub fn pronunciation_view(
     let (positioned_pattern, position_note) = match guide.position {
         PatternPosition::Beginning => (
             format!("{pattern}___{suffix}"),
-            Some("Appears at the beginning of words".into()),
+            Some(yap_i18n::tr!("challenge-appears-at-the-beginning-of-words")),
         ),
         PatternPosition::End => (
             format!("___{pattern}{suffix}"),
-            Some("Appears at the end of words".into()),
+            Some(yap_i18n::tr!("challenge-appears-at-the-end-of-words")),
         ),
         PatternPosition::Anywhere => (display_pattern.clone(), None),
     };
@@ -210,11 +244,12 @@ pub fn pronunciation_view(
     let (again_label, remembered_label) = grade_labels(is_new);
     PronunciationView {
         tutorial_prompt: tutorial.then(|| TutorialPrompt {
-            before: "Let's practice saying \"".into(),
+            before: yap_i18n::tr!("challenge-practice-saying.before"),
             target: Some(display_pattern),
-            after: "\"".into(),
+            after: yap_i18n::tr!("challenge-practice-saying.after"),
         }),
-        tutorial_grade_prompt: tutorial.then(|| "How was your pronunciation?".into()),
+        tutorial_grade_prompt: tutorial
+            .then(|| yap_i18n::tr!("challenge-how-was-your-pronunciation")),
         pattern: pattern.clone(),
         position: guide.position,
         positioned_pattern,
@@ -244,7 +279,7 @@ pub fn pronunciation_view(
         description: (!guide.description.is_empty()).then_some(guide.description),
         again_label,
         remembered_label,
-        cant_speak_label: "Can't speak now".into(),
+        cant_speak_label: yap_i18n::tr!("challenge-can-t-speak-now"),
     }
 }
 

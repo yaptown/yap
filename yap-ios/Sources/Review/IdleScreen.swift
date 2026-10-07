@@ -12,9 +12,9 @@ struct IdleScreen: View {
             case let .AudioPending(_, online, week):
                 ReviewStepScrollView {
                     StudyCard {
-                        Text("Just a moment…").font(.title2.bold())
-                        ProgressView("Downloading the audio for your next challenge.")
-                        if !online { Text("Reconnect to download audio.") }
+                        Text(L("idle-screen-just-a-moment")).font(.title2.bold())
+                        ProgressView(L("idle-screen-downloading-the-audio-for-your-next-challenge"))
+                        if !online { Text(L("idle-screen-reconnect-to-download-audio")) }
                     }
                 } actions: {
                     WeekProgressStrip(week: week).equatable()
@@ -29,7 +29,7 @@ struct IdleScreen: View {
                         StudyCard {
                             Text(title).font(.title2.bold())
                             if let nextDue { NextReviewLine(card: nextDue) }
-                            Button("Study more") { showReleasePlan = true }.buttonStyle(.bordered).controlSize(.large)
+                            Button(L("idle-screen-study-more")) { showReleasePlan = true }.buttonStyle(.bordered).controlSize(.large)
                         }
                     } actions: {
                         WeekProgressStrip(week: plan.week).equatable()
@@ -70,7 +70,7 @@ struct IdleScreen: View {
                 if !idle.body.isEmpty { Text(idle.body).foregroundStyle(Color.yapMuted) } else if let card = idle.next_due { NextReviewLine(card: card) }
                 if let notice = idle.banned_notice {
                     Text(notice).foregroundStyle(Color.yapMuted)
-                    Button("Undo restrictions") { actions.undoRestrictions() }.buttonStyle(.bordered)
+                    Button(L("idle-screen-undo-restrictions")) { actions.undoRestrictions() }.buttonStyle(.bordered)
                 }
             }.multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.vertical, 12)
             if let label = idle.smart_add_label, let event = idle.info.smart_add_event {

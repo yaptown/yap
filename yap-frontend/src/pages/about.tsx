@@ -1,3 +1,5 @@
+import { rich } from "@/lib/i18n-react";
+import { t } from "@/lib/i18n";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { InstallPwaButton } from "@/components/InstallPwaButton";
@@ -10,59 +12,50 @@ export function AboutPage() {
           <Link to="/" className="text-2xl">
             ←
           </Link>
-          <h1 className="text-3xl font-bold">About Yap.Town</h1>
+          <h1 className="text-3xl font-bold">{t("about-about-yap-town")}</h1>
         </div>
         <Card className="max-w-2xl w-full p-8 gap-2 text-muted-foreground">
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            Philosophy
+            {t("about-philosophy")}
           </h2>
           <div className="px-2 space-y-2">
             <p>
-              I believe that efficient and effective language learning options
-              should be available and accessible to everyone.
+              {t(
+                "about-i-believe-that-efficient-and-effective-language-learning-options",
+              )}
             </p>
             <p>
-              The most famous concepts in language learning are spaced
-              repetition and comprehensible input. I wanted to combine them into
-              one app, and make it free for all to use.
+              {t(
+                "about-the-most-famous-concepts-in-language-learning-are-spaced",
+              )}
             </p>
           </div>
         </Card>
         <Card className="max-w-2xl w-full p-8 gap-2 text-muted-foreground">
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            How It Works
+            {t("about-how-it-works")}
           </h2>
           <div className="px-2 space-y-2">
+            <p>{t("about-yap-tries-to-keep-track-of-what-words-you")}</p>
             <p>
-              Yap tries to keep track of what words you know show it can show
-              you sentences that contain only those words. This is called
-              "comprehensible input".
+              {t(
+                "about-furthermore-yap-selects-sentences-that-also-contain-words-that",
+              )}
             </p>
             <p>
-              Furthermore, Yap selects sentences that also contain words that
-              you need to review. By spacing out these reviews over time, you
-              can learn an immense amount of vocabulary and grammar in a short
-              amount of time. This is called "spaced repetition".
-            </p>
-            <p>
-              This approach helps you build vocabulary and grammar intuition
-              through context, the same way you learned your first language.
+              {t(
+                "about-this-approach-helps-you-build-vocabulary-and-grammar-intuition",
+              )}
             </p>
           </div>
         </Card>
         <Card className="max-w-2xl w-full p-8 gap-2 text-muted-foreground">
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            Offline First PWA
+            {t("about-offline-first-pwa")}
           </h2>
           <div className="px-2 space-y-2">
-            <p>
-              Yap.Town works fully offline! This means you can learn anywhere
-              without an internet connection.
-            </p>
-            <p>
-              To make use of this, you should install Yap.Town as a Progressive
-              Web App (PWA).
-            </p>
+            <p>{t("about-yap-town-works-fully-offline-this-means-you-can")}</p>
+            <p>{t("about-to-make-use-of-this-you-should-install-yap")}</p>
             <div className="pt-2">
               <InstallPwaButton />
             </div>
@@ -70,56 +63,56 @@ export function AboutPage() {
         </Card>
         <Card className="max-w-2xl w-full p-8 gap-2 text-muted-foreground">
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            Who am I?
+            {t("about-who-am-i")}
           </h2>
           <div className="px-2 space-y-2">
             <p>
-              Created by{" "}
-              <a
-                href="https://twitter.com/chadnauseam"
-                className="underline text-foreground"
-              >
-                André Popovitch
-              </a>
-              .{" "}
+              {rich("about-created-by-author", {
+                author: (
+                  <a
+                    href="https://twitter.com/chadnauseam"
+                    className="underline text-foreground"
+                  >
+                    André Popovitch
+                  </a>
+                ),
+              })}
             </p>
             <p>
               <a
                 href="https://github.com/yaptown/yap"
                 className="underline text-foreground"
               >
-                View on GitHub
+                {t("about-view-on-github")}
               </a>
               {" | "}
               <a
                 href="https://discord.gg/mpgqfsH"
                 className="underline text-foreground"
               >
-                Join the Discord
+                {t("about-join-the-discord")}
               </a>
             </p>
-            <p>Here is a picture of me and my girlfriend Emma :P</p>
+            <p>{t("about-here-is-a-picture-of-me-and-my-girlfriend")}</p>
             <img
               src="/selfie.webp"
-              alt="A man and woman dressed formally. Both are smiling and have red hair."
+              alt={t("about-a-man-and-woman-dressed-formally-both-are-smiling")}
               className="w-full rounded-lg"
             />
           </div>
         </Card>
         <Card className="max-w-2xl w-full p-8 gap-2 text-muted-foreground">
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            Credits
+            {t("common-credits")}
           </h2>
           <div className="px-2 space-y-2">
             <p>
-              Yap's sentences come from Tatoeba and film subtitles, and its
-              pronunciations and word forms from Wiktionary. Films, handwriting,
-              voices, fonts and code all come from other people's work too.{" "}
+              {t("about-yap-s-sentences-come-from-tatoeba-and-film-subtitles")}{" "}
               <a
                 href="https://github.com/yaptown/yap/blob/main/CREDITS.md"
                 className="underline text-foreground"
               >
-                See the full credits and licences
+                {t("about-see-the-full-credits-and-licences")}
               </a>
               .
             </p>

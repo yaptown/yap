@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { CourseAudioPrefetch, useCourseDeck } from "@/review/course-study";
 import { useWeapon } from "../core/weapon";
 import { TopPageLayout } from "@/components/TopPageLayout";
@@ -62,7 +63,7 @@ export function Dictionary({
     if (event) {
       weapon.add_deck_event(event);
       setJustAdded((prev) => new Set(prev).add(sense.frequency_index));
-      toast.success(`Added "${entry.display_text}" to your deck`);
+      toast.success(t("dictionary-added-word", { word: entry.display_text }));
     }
   };
 
@@ -71,7 +72,10 @@ export function Dictionary({
   };
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col" data-page="dictionary">
+    <div
+      className="flex-1 overflow-hidden flex flex-col"
+      data-page="dictionary"
+    >
       <div className="border-b pb-4 mb-4 p-2">
         <div className="dictionary-search relative">
           <Search
@@ -80,7 +84,10 @@ export function Dictionary({
           />
           <input
             type="search"
-            placeholder={`Search in ${targetLangName} or ${nativeLangName}...`}
+            placeholder={t("dictionary-search-placeholder", {
+              target: String(targetLangName),
+              native: String(nativeLangName),
+            })}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             // Arriving from Home's search bar means the learner wants to type.
@@ -89,9 +96,16 @@ export function Dictionary({
           />
         </div>
         <p className="text-sm text-muted-foreground mt-2">
-          Showing {entries.length} of {totalCount}{" "}
-          {totalCount === 1 ? "entry" : "entries"}
-          {searchQuery && ` matching "${searchQuery}"`}
+          {searchQuery
+            ? t("dictionary-results-filtered", {
+                shown: entries.length,
+                count: totalCount,
+                query: searchQuery,
+              })
+            : t("dictionary-results", {
+                shown: entries.length,
+                count: totalCount,
+              })}
         </p>
       </div>
 
@@ -118,7 +132,7 @@ export function Dictionary({
                     </TargetLanguageText>
                     {entry.is_phrase && (
                       <span className="text-sm text-muted-foreground/60 font-normal">
-                        (phrase)
+                        {t("dictionary-screen-phrase")}
                       </span>
                     )}
                   </h2>
@@ -183,7 +197,7 @@ export function Dictionary({
                           className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground cursor-default"
                         >
                           <CircleCheckBig className="w-4 h-4" />
-                          <span>Added</span>
+                          <span>{t("dictionary-screen-added")}</span>
                         </button>
                       ) : (
                         <button
@@ -191,7 +205,7 @@ export function Dictionary({
                           className="flex items-center gap-2 px-3 py-1.5 text-sm text-foreground hover:bg-muted rounded-md transition-colors"
                         >
                           <CirclePlus className="w-4 h-4" />
-                          <span>Add to deck</span>
+                          <span>{t("dictionary-screen-add-to-deck")}</span>
                         </button>
                       )}
                     </div>
@@ -204,8 +218,8 @@ export function Dictionary({
           {entries.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               {searchQuery
-                ? "No entries found matching your search."
-                : "No dictionary entries available."}
+                ? t("dictionary-screen-no-entries-found-matching-your-search")
+                : t("dictionary-screen-no-dictionary-entries-available")}
             </div>
           )}
         </div>
@@ -230,7 +244,10 @@ export function DictionaryPage() {
       <TopPageLayout
         userInfo={userInfo}
         headerProps={{
-          backButton: { label: "Home", onBack: () => navigate("/home") },
+          backButton: {
+            label: t("common-home"),
+            onBack: () => navigate("/home"),
+          },
         }}
       >
         <div className="flex-1 flex items-center justify-center p-4">
@@ -244,7 +261,10 @@ export function DictionaryPage() {
     <TopPageLayout
       userInfo={userInfo}
       headerProps={{
-        backButton: { label: "Home", onBack: () => navigate("/home") },
+        backButton: {
+          label: t("common-home"),
+          onBack: () => navigate("/home"),
+        },
       }}
     >
       <CourseAudioPrefetch />

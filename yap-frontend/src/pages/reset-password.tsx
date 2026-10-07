@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -45,7 +46,9 @@ export function ResetPassword() {
           if (error) {
             console.error("Error setting session:", error);
             setError(
-              "Invalid or expired reset link. Please request a new one.",
+              t(
+                "reset-password-invalid-or-expired-reset-link-please-request-a-new",
+              ),
             );
             setIsValidToken(false);
           } else {
@@ -57,12 +60,16 @@ export function ResetPassword() {
         })
         .catch((e) => {
           console.error("Unexpected error setting session:", e);
-          setError("Invalid or expired reset link. Please request a new one.");
+          setError(
+            t(
+              "reset-password-invalid-or-expired-reset-link-please-request-a-new",
+            ),
+          );
           setIsValidToken(false);
         });
     } else {
       console.log("No tokens found in URL");
-      setError("Invalid reset link. Please request a new one.");
+      setError(t("reset-password-invalid-reset-link-please-request-a-new-one"));
       setIsValidToken(false);
     }
   }, [searchParams]);
@@ -72,12 +79,12 @@ export function ResetPassword() {
     setError(null);
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("accept-invite-passwords-do-not-match"));
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(t("accept-invite-password-must-be-at-least-6-characters"));
       return;
     }
 
@@ -105,10 +112,12 @@ export function ResetPassword() {
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold text-positive">
-                Password Updated!
+                {t("reset-password-password-updated")}
               </CardTitle>
               <CardDescription>
-                Your password has been successfully updated. Redirecting...
+                {t(
+                  "reset-password-your-password-has-been-successfully-updated-redirecting",
+                )}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -125,9 +134,11 @@ export function ResetPassword() {
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold">
-                Verifying Reset Link
+                {t("reset-password-verifying-reset-link")}
               </CardTitle>
-              <CardDescription>Please wait...</CardDescription>
+              <CardDescription>
+                {t("reset-password-please-wait")}
+              </CardDescription>
             </CardHeader>
           </Card>
         </div>
@@ -143,10 +154,12 @@ export function ResetPassword() {
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold">
-                Invalid Reset Link
+                {t("reset-password-invalid-reset-link")}
               </CardTitle>
               <CardDescription>
-                This password reset link is invalid or has expired.
+                {t(
+                  "reset-password-this-password-reset-link-is-invalid-or-has-expired",
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
@@ -159,7 +172,7 @@ export function ResetPassword() {
                 onClick={() => navigate("/forgot-password")}
                 variant="outline"
               >
-                Request New Reset Link
+                {t("reset-password-request-new-reset-link")}
               </Button>
             </CardContent>
           </Card>
@@ -174,14 +187,18 @@ export function ResetPassword() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold">
-              Reset Your Password
+              {t("reset-password-reset-your-password")}
             </CardTitle>
-            <CardDescription>Enter your new password below</CardDescription>
+            <CardDescription>
+              {t("reset-password-enter-your-new-password-below")}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password">New Password</Label>
+                <Label htmlFor="password">
+                  {t("reset-password-new-password")}
+                </Label>
                 <Input
                   id="password"
                   type="password"
@@ -192,7 +209,9 @@ export function ResetPassword() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm New Password</Label>
+                <Label htmlFor="confirm-password">
+                  {t("reset-password-confirm-new-password")}
+                </Label>
                 <Input
                   id="confirm-password"
                   type="password"
@@ -203,7 +222,9 @@ export function ResetPassword() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Updating..." : "Update Password"}
+                {loading
+                  ? t("reset-password-updating")
+                  : t("reset-password-update-password")}
               </Button>
             </form>
 

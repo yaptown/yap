@@ -12,13 +12,17 @@ const frontendSrc = path.resolve(__dirname, "../../yap-frontend/src");
 // still resolves it — type-only imports erase, but a stray value import
 // should fail loudly rather than pull 4 MiB into the iframe.
 export default defineConfig({
+  server: { fs: { allow: [path.resolve(__dirname, "../..")] } },
   plugins: [react(), tailwindcss(), viteSingleFile()],
   resolve: {
     // Reused app components resolve react from yap-frontend/node_modules;
     // dedupe so exactly one React instance ends up in the bundle.
     dedupe: ["react", "react-dom"],
     alias: [
-      { find: "@/lib/utils", replacement: path.resolve(__dirname, "src/shims/utils.ts") },
+      {
+        find: "@/lib/utils",
+        replacement: path.resolve(__dirname, "src/shims/utils.ts"),
+      },
       {
         find: "@/lib/sound-effects",
         replacement: path.resolve(__dirname, "src/shims/sound-effects.ts"),

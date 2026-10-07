@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { account_copy } from "../../../yap-frontend-rs/pkg";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -37,9 +38,12 @@ const PASSKEY_OFFER_DISMISSED_KEY = "yap-passkey-offer-dismissed";
 
 /** Fixed strings only — raw WebAuthn error messages can name authenticator
  * hardware, and Sentry replay records rendered text verbatim. */
-const PASSKEY_SIGNIN_FAILED =
-  "Couldn't sign in with a passkey. Try your password instead.";
-const PASSKEY_SETUP_FAILED = "Couldn't set up a passkey on this device.";
+const PASSKEY_SIGNIN_FAILED = t(
+  "auth-dialog-couldn-t-sign-in-with-a-passkey-try-your",
+);
+const PASSKEY_SETUP_FAILED = t(
+  "passkey-settings-couldn-t-set-up-a-passkey-on-this-device",
+);
 
 /**
  * After a password sign-in, decide whether to show the "skip the password
@@ -231,10 +235,11 @@ export function AuthDialog({
         {passkeyOffer ? (
           <>
             <DialogHeader>
-              <DialogTitle>Skip the password next time?</DialogTitle>
+              <DialogTitle>
+                {t("auth-dialog-skip-the-password-next-time")}
+              </DialogTitle>
               <DialogDescription>
-                Set up a passkey to sign in with your fingerprint, face, or
-                device PIN instead of typing your password.
+                {t("auth-dialog-set-up-a-passkey-to-sign-in-with-your")}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -245,7 +250,9 @@ export function AuthDialog({
                 onClick={handleCreatePasskey}
               >
                 <KeyRound className="mr-2 h-4 w-4" />
-                {loading ? "Working..." : "Set up a passkey"}
+                {loading
+                  ? t("auth-dialog-working")
+                  : t("auth-dialog-set-up-a-passkey")}
               </Button>
               <Button
                 variant="ghost"
@@ -253,7 +260,7 @@ export function AuthDialog({
                 disabled={loading}
                 onClick={handleDeclinePasskey}
               >
-                Not now
+                {t("common-not-now")}
               </Button>
             </div>
           </>
@@ -310,7 +317,7 @@ export function AuthDialog({
                       <div className="flex items-center gap-3">
                         <div className="h-px flex-1 bg-border" />
                         <span className="text-xs text-muted-foreground">
-                          or
+                          {t("auth-dialog-or")}
                         </span>
                         <div className="h-px flex-1 bg-border" />
                       </div>
@@ -322,7 +329,7 @@ export function AuthDialog({
                         onClick={handlePasskeySignIn}
                       >
                         <KeyRound className="mr-2 h-4 w-4" />
-                        Sign in with a passkey
+                        {t("auth-dialog-sign-in-with-a-passkey")}
                       </Button>
                     </>
                   )}

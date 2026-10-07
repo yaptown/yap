@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import {
   frequency_knowledge_ticks,
   frequency_rank_label,
@@ -19,7 +20,7 @@ interface FrequencyKnowledgeChartProps {
 
 const chartConfig = {
   knowledge: {
-    label: "Predicted Knowledge",
+    label: t("frequency-knowledge-chart-predicted-knowledge"),
     color: "var(--chart-1)",
   },
 } satisfies ChartConfig;
@@ -41,7 +42,7 @@ export function FrequencyKnowledgeChart({
   if (data.length === 0) {
     return (
       <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-        <p>No frequency data available</p>
+        <p>{t("frequency-knowledge-chart-no-frequency-data-available")}</p>
       </div>
     );
   }
@@ -65,7 +66,11 @@ export function FrequencyKnowledgeChart({
         <YAxis
           domain={[0, 100]}
           ticks={[0, 25, 50, 75, 100]}
-          label={{ value: "Knowledge (%)", angle: -90, position: "insideLeft" }}
+          label={{
+            value: t("stats-screen-knowledge"),
+            angle: -90,
+            position: "insideLeft",
+          }}
           className="text-xs"
         />
         <ChartTooltip
@@ -74,14 +79,22 @@ export function FrequencyKnowledgeChart({
             const data = payload[0].payload;
             return (
               <div className="bg-background border rounded-lg p-3 shadow-lg max-w-[min(20rem,calc(100vw-2rem))] whitespace-normal break-words">
-                <p className="font-semibold">Frequency: {data.label}</p>
+                <p className="font-semibold">
+                  {t("stats-frequency-label", {
+                    frequency: String(data.label),
+                  })}
+                </p>
                 <p className="text-sm">
-                  Knowledge: {data.knowledge.toFixed(1)}%
+                  {t("stats-knowledge-percent", {
+                    percent: String(data.knowledge.toFixed(1)),
+                  })}
                 </p>
                 {data.words && (
                   <>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Examples ({data.wordCount} words):
+                      {t("stats-examples-count", {
+                        count: String(data.wordCount),
+                      })}
                     </p>
                     <p className="text-sm font-medium">
                       <TargetLanguageText language={targetLanguage}>

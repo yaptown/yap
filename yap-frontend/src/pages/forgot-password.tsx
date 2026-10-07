@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -48,19 +49,22 @@ export function ForgotPassword() {
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold text-positive">
-                Check Your Email
+                {t("forgot-password-check-your-email")}
               </CardTitle>
               <CardDescription>
-                We've sent a password reset link to {email}
+                {t("auth-reset-sent-to", {
+                  email: String(email),
+                })}
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-sm text-muted-foreground mb-4">
-                Click the link in your email to reset your password. If you
-                don't see the email, check your spam folder.
+                {t(
+                  "forgot-password-click-the-link-in-your-email-to-reset-your",
+                )}
               </p>
               <Button onClick={handleBackToSignIn} variant="outline">
-                Back to Sign In
+                {t("forgot-password-back-to-sign-in")}
               </Button>
             </CardContent>
           </Card>
@@ -75,28 +79,29 @@ export function ForgotPassword() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold">
-              Forgot Password?
+              {t("forgot-password-forgot-password")}
             </CardTitle>
             <CardDescription>
-              Enter your email address and we'll send you a link to reset your
-              password
+              {t("forgot-password-enter-your-email-address-and-we-ll-send-you")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("auth-email")}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder={t("forgot-password-you-example-com")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Sending..." : "Send Reset Link"}
+                {loading
+                  ? t("notification-settings-sending")
+                  : t("forgot-password-send-reset-link")}
               </Button>
             </form>
 
@@ -106,7 +111,7 @@ export function ForgotPassword() {
                 variant="ghost"
                 className="text-sm text-muted-foreground hover:text-foreground"
               >
-                Back to Sign In
+                {t("forgot-password-back-to-sign-in")}
               </Button>
             </div>
 

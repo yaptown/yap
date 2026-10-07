@@ -82,7 +82,7 @@ struct TranslationChallengeView: View {
                 HStack {
                     Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)
                         .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-                    if view.is_grading { Button("Cancel") { send(.CancelGrading) } }
+                    if view.is_grading { Button(L("common-cancel")) { send(.CancelGrading) } }
                 }
             }
         } footer: {
@@ -134,11 +134,11 @@ struct TranslationChallengeView: View {
         let status = item.grade.map { $0 == .Remembered }
         return VStack(alignment: .leading, spacing: 4) {
             Text(display).fontWeight(.semibold)
-            Picker("Grade \(display)", selection: Binding<Int?>(get: { status.map { $0 ? 1 : 0 } }, set: { value in
+            Picker(L("transcription-grade-word", ["word": display]), selection: Binding<Int?>(get: { status.map { $0 ? 1 : 0 } }, set: { value in
                 if let value { send(.ItemGraded(item_index: UInt64(index), grade: value == 1 ? .Remembered : .Forgot)) }
             })) {
-                Text("Forgot").tag(Int?.some(0))
-                Text("Remembered").tag(Int?.some(1))
+                Text(L("common-forgot")).tag(Int?.some(0))
+                Text(L("common-remembered")).tag(Int?.some(1))
             }.pickerStyle(.segmented).controlSize(.small)
         }.font(.subheadline)
     }

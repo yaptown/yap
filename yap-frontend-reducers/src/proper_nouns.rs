@@ -22,11 +22,10 @@ fn group(words: &[&str], label: String) -> ProperNounGroup {
         if index > 0 {
             spans.push(TextSpan {
                 text: if index == words.len() - 1 {
-                    " and "
+                    yap_i18n::tr!("names-and")
                 } else {
-                    ", "
-                }
-                .into(),
+                    yap_i18n::tr!("common-list-comma")
+                },
                 target_language: false,
             });
         }
@@ -72,14 +71,16 @@ pub fn proper_noun_groups(definitions: &[(String, ProperNounDefinition)]) -> Vec
     }
 
     let mut groups = Vec::new();
-    for (words, singular, plural) in [
-        (people, "person", "people"),
-        (places, "place", "places"),
-        (organizations, "organization", "organizations"),
+    for (words, label) in [
+        (&people, yap_i18n::tr!("names-people", count = people.len())),
+        (&places, yap_i18n::tr!("names-places", count = places.len())),
+        (
+            &organizations,
+            yap_i18n::tr!("names-organizations", count = organizations.len()),
+        ),
     ] {
         if !words.is_empty() {
-            let label = if words.len() == 1 { singular } else { plural };
-            groups.push(group(&words, label.into()));
+            groups.push(group(words, label));
         }
     }
     groups.extend(translated_descriptions);

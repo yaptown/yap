@@ -1,9 +1,5 @@
-import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-} from "react";
+import { t } from "@/lib/i18n";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Play } from "lucide-react";
 import {
   get_clip,
@@ -192,7 +188,9 @@ export function VideoClipPlayer({
   // clip-relative ms straight from the sidecar; onTimeUpdate's ~4Hz cadence
   // is plenty for subtitle boundaries.
   const currentCue = clip.subtitles.find(
-    (cue) => currentTimeMs >= Number(cue.at_ms) && currentTimeMs < Number(cue.until_ms),
+    (cue) =>
+      currentTimeMs >= Number(cue.at_ms) &&
+      currentTimeMs < Number(cue.until_ms),
   );
 
   const movie = deck ? deck.get_movie_metadata([clip.movieId])[0] : undefined;
@@ -201,73 +199,79 @@ export function VideoClipPlayer({
     <div className="relative animate-feedback-in">
       <div className="relative w-full overflow-hidden rounded-lg">
         <video
-        ref={videoRef}
-        src={clip.url}
-        playsInline
-        preload="auto"
-        className="w-full cursor-pointer"
-        onClick={() => {
-          const video = videoRef.current;
-          if (!video) return;
-          if (video.paused) play();
-          else video.pause();
-        }}
-        onLoadedMetadata={() => {
-          const video = videoRef.current;
-          if (video && !hasPlayedRef.current) {
-            // Poster frame from inside the sentence, not black frame zero.
-            video.currentTime = clip.criticalStartMs / 1000;
-          }
-        }}
-        onTimeUpdate={() => {
-          const video = videoRef.current;
-          if (video) setCurrentTimeMs(video.currentTime * 1000);
-        }}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => {
-          setIsPlaying(false);
-          unregisterRef.current?.();
-          unregisterRef.current = undefined;
-        }}
-        onError={() => {
-          // Cached bytes the element can't decode: forget them so the next
-          // load refetches, and drop back to the audio-only layout.
-          setClip({ status: "unavailable" });
-          onClipChangeRef.current?.(null);
-          void invalidate_clip_cache(language, text).catch((error) => {
-            console.error("Failed to invalidate clip cache:", error);
-          });
-        }}
-      />
-      {isPlaying && currentCue && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center px-3">
-          <span
-            className={`rounded bg-black/60 px-2.5 py-1 text-center text-lg font-medium ${
-              // The target sentence's own line stands apart from the
-              // context dialogue around it.
-              currentCue.role === "sentence" ? "text-amber-300" : "text-white/75"
-            }`}
+          ref={videoRef}
+          src={clip.url}
+          playsInline
+          preload="auto"
+          className="w-full cursor-pointer"
+          onClick={() => {
+            const video = videoRef.current;
+            if (!video) return;
+            if (video.paused) play();
+            else video.pause();
+          }}
+          onLoadedMetadata={() => {
+            const video = videoRef.current;
+            if (video && !hasPlayedRef.current) {
+              // Poster frame from inside the sentence, not black frame zero.
+              video.currentTime = clip.criticalStartMs / 1000;
+            }
+          }}
+          onTimeUpdate={() => {
+            const video = videoRef.current;
+            if (video) setCurrentTimeMs(video.currentTime * 1000);
+          }}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => {
+            setIsPlaying(false);
+            unregisterRef.current?.();
+            unregisterRef.current = undefined;
+          }}
+          onError={() => {
+            // Cached bytes the element can't decode: forget them so the next
+            // load refetches, and drop back to the audio-only layout.
+            setClip({ status: "unavailable" });
+            onClipChangeRef.current?.(null);
+            void invalidate_clip_cache(language, text).catch((error) => {
+              console.error("Failed to invalidate clip cache:", error);
+            });
+          }}
+        />
+        {isPlaying && currentCue && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center px-3">
+            <span
+              className={`rounded bg-black/60 px-2.5 py-1 text-center text-lg font-medium ${
+                // The target sentence's own line stands apart from the
+                // context dialogue around it.
+                currentCue.role === "sentence"
+                  ? "text-amber-300"
+                  : "text-white/75"
+              }`}
+            >
+              <TargetLanguageText language={language}>
+                {currentCue.role === "sentence" && maskedSentence !== undefined
+                  ? transcription_mask_cue(
+                      currentCue.text,
+                      text,
+                      maskedSentence,
+                    )
+                  : currentCue.text}
+              </TargetLanguageText>
+            </span>
+          </div>
+        )}
+        {!isPlaying && (
+          <button
+            type="button"
+            aria-label={t("video-clip-player-play-clip")}
+            className="absolute inset-0 flex items-center justify-center bg-black/30"
+            onClick={play}
           >
-            <TargetLanguageText language={language}>
-              {currentCue.role === "sentence" && maskedSentence !== undefined
-                ? transcription_mask_cue(currentCue.text, text, maskedSentence)
-                : currentCue.text}
-            </TargetLanguageText>
-          </span>
-        </div>
-      )}
-      {!isPlaying && (
-        <button
-          type="button"
-          aria-label="Play clip"
-          className="absolute inset-0 flex items-center justify-center bg-black/30"
-          onClick={play}
-        >
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/50 text-white">
-            <Play className="h-7 w-7 translate-x-0.5" fill="currentColor" />
-          </span>
-        </button>
-      )}
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/50 text-white">
+              <Play className="h-7 w-7 translate-x-0.5" fill="currentColor" />
+            </span>
+          </button>
+        )}
       </div>
       {movie && deck && (
         <div className="pointer-events-none absolute inset-x-0 top-0 rounded-t-lg bg-gradient-to-b from-black/60 via-black/30 to-transparent pb-4">

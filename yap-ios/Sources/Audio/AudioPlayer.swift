@@ -149,7 +149,7 @@ import Observation
         let now = Date().timeIntervalSince1970
         if let last = UserDefaults.standard.object(forKey: key) as? Double, now - last < 86_400 { return }
         UserDefaults.standard.set(now, forKey: key)
-        voiceCredit = "Audio recorded by @\(actor.name), a \(actor.compensation == .Paid ? "paid" : "volunteer") voice actor"
+        voiceCredit = actor.compensation == .Paid ? L("audio-paid-credit-capitalized", ["name": actor.name]) : L("audio-volunteer-credit-capitalized", ["name": actor.name])
         #if DEBUG
         DebugHarness.log("voice credit: \(actor.name)")
         #endif
@@ -215,15 +215,13 @@ import Observation
             if let effect, self.effectPlayer === effect { self.effectPlaying = false; self.deactivateWhenIdle() }
         }
     }
-    /// One generic message for the learner; the case and its payload are what
-    /// the breadcrumb records so a failure can be diagnosed afterwards.
-    enum PlaybackError: LocalizedError, CustomStringConvertible {
+    /// Diagnostic detail stays Sendable; AudioButton resolves learner copy on the main actor.
+    enum PlaybackError: Error, CustomStringConvertible {
         case unreadable(String, bytes: Int)
         case refused(duration: TimeInterval, category: String, otherAudio: Bool)
         case decode(String)
         case stoppedEarly
         case interrupted(at: TimeInterval, duration: TimeInterval)
-        var errorDescription: String? { "Couldn't play this audio. Please try again." }
         var corrupt: Bool { switch self { case .unreadable, .decode: true; default: false } }
         var description: String {
             switch self {

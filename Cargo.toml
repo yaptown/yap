@@ -37,6 +37,7 @@ members = [
     "yap-mcp",
     "yap-ios",
     "xtask",
+    "libraries/yap-i18n",
 ]
 resolver = "3"
 

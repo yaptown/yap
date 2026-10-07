@@ -238,18 +238,17 @@ pub fn deck_load_view(state: DeckLoadState) -> DeckLoadView {
         DeckLoadPhase::NoLanguageSelected
     } else if let Some(message) = error {
         DeckLoadPhase::Error {
-            heading: "Failed to Load Language Data".into(),
-            body: "Unable to load the language pack right now. Try again to retry the download."
-                .into(),
-            title: "Failed to load language data".into(),
+            heading: yap_i18n::tr!("loading-failed-to-load-language-data"),
+            body: yap_i18n::tr!("loading-unable-to-load-the-language-pack-right-now-try"),
+            title: yap_i18n::tr!("loading-failed-to-load-language-data-2"),
             message: message.clone(),
-            retry_label: "Try Again".into(),
+            retry_label: yap_i18n::tr!("common-try-again"),
         }
     } else if state.deck_present {
         DeckLoadPhase::Ready
     } else {
         let progress = state.progress.unwrap_or(DeckLoadProgress {
-            message: "Loading...".into(),
+            message: yap_i18n::tr!("common-loading"),
             percent: 0.0,
         });
         DeckLoadPhase::Loading {
@@ -261,8 +260,8 @@ pub fn deck_load_view(state: DeckLoadState) -> DeckLoadView {
         .pack_error
         .filter(|_| state.deck_present)
         .map(|e| PackBanner {
-            message: format!("Couldn't finish downloading the language pack: {e}"),
-            retry_label: "Retry".into(),
+            message: yap_i18n::tr!("loading-download-error", error = e.as_str()),
+            retry_label: yap_i18n::tr!("common-retry"),
         });
     DeckLoadView { phase, pack_banner }
 }

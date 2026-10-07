@@ -1,13 +1,17 @@
+import { rich } from "@/lib/i18n-react";
+import { t } from "@/lib/i18n";
 import { Link } from "react-router-dom";
 
 export function About() {
   return (
     <div className="text-center text-xs text-muted-foreground mt-4">
-      yap.town is created by{" "}
-      <a href="https://twitter.com/chadnauseam" className="underline">
-        André Popovitch
-      </a>
-      .{" "}
+      {rich("about-author-credit", {
+        author: (
+          <a href="https://twitter.com/chadnauseam" className="underline">
+            André Popovitch
+          </a>
+        ),
+      })}{" "}
       <a href="https://github.com/yaptown/yap" className="underline">
         GitHub
       </a>
@@ -17,15 +21,15 @@ export function About() {
       </a>
       {" | "}
       <Link to="/about" className="underline">
-        About
+        {t("common-about")}
       </Link>
       {" | "}
       <Link to="/privacy" className="underline">
-        Privacy
+        {t("common-privacy")}
       </Link>
       {" | "}
       <Link to="/terms" className="underline">
-        Terms
+        {t("common-terms")}
       </Link>
     </div>
   );

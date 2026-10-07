@@ -237,25 +237,23 @@ pub struct AnkiOptionsCopy {
 pub fn anki_options_copy(reading: bool, listening: bool, word_cards: bool) -> AnkiOptionsCopy {
     AnkiOptionsCopy {
         intro: if word_cards {
-            "At first, the cards will introduce new words, and then they'll be reinforced with cards showing clips from these films. We'll pick words that are right for your knowledge level:"
+            yap_i18n::tr!("anki-at-first-the-cards-will-introduce-new-words-and")
         } else {
-            "Each card teaches a new word with a clip from one of these films. We'll pick words that are right for your knowledge level:"
-        }
-        .into(),
+            yap_i18n::tr!("anki-each-card-teaches-a-new-word-with-a-clip")
+        },
         reading_description: if reading && !listening {
-            "Cards show the subtitle, and you try to translate."
+            yap_i18n::tr!("anki-cards-show-the-subtitle-and-you-try-to-translate")
         } else {
-            "Some cards show the subtitle, and you try to translate."
-        }
-        .into(),
+            yap_i18n::tr!("anki-some-cards-show-the-subtitle-and-you-try-to")
+        },
         listening_description: if listening && !reading {
-            "Cards blank out the words you know in the subtitle, and you try to understand what you hear."
+            yap_i18n::tr!("anki-cards-blank-out-the-words-you-know-in-the")
         } else {
-            "Some cards blank out the words you know in the subtitle, and you try to understand what you hear."
-        }
-        .into(),
-        word_cards_description:
-            "Introduce words as standalone cards before using them in sentences.".into(),
+            yap_i18n::tr!("anki-some-cards-blank-out-the-words-you-know-in")
+        },
+        word_cards_description: yap_i18n::tr!(
+            "anki-introduce-words-as-standalone-cards-before-using-them-in"
+        ),
     }
 }
 
@@ -571,16 +569,31 @@ fn clip_presentation(
 // rethink, so the deck is described by the words it teaches instead.
 /// How many posters the page shows.
 const FILM_COUNT: usize = 24;
-const PLACEMENT_INTRO: &str = "First, tell us which words you know. No account needed.";
-const TOO_ADVANCED: &str = "You already know nearly every word Yap teaches. The deck will still catch gaps, but Yap's app will serve you better.";
-const CLIPS_LOADING: &str = "Movie clips are still loading. Please try again.";
-const TOO_FEW_SENTENCES: &str =
-    "Too few movie clips fit what you know right now to make a good deck.";
-const PLACEMENT_COMPLETE_LABEL: &str = "Generate Anki deck";
+fn placement_intro() -> String {
+    yap_i18n::tr!("anki-first-tell-us-which-words-you-know-no-account")
+}
+fn too_advanced_copy() -> String {
+    yap_i18n::tr!("anki-you-already-know-nearly-every-word-yap-teaches-the")
+}
+fn clips_loading() -> String {
+    yap_i18n::tr!("anki-movie-clips-are-still-loading-please-try-again")
+}
+fn too_few_sentences() -> String {
+    yap_i18n::tr!("anki-too-few-movie-clips-fit-what-you-know-right")
+}
+fn placement_complete_label() -> String {
+    yap_i18n::tr!("anki-generate-anki-deck")
+}
 // Shown while the deck is being built; the page has a minute or two to fill.
-const BACKSTORY: &str = "I wanted language learning to be easier, so I made Yap. I think Yap is the best way to learn, but the same technology makes a really good Anki deck too. Yours is being built right now.";
-const TRY_YAP_BODY: &str = "My goal with Yap was to combine spaced repetition with comprehensible input. Your placement test is saved, so if you start using Yap it'll pick up where you left off.";
-const SAVE_DECK_BODY: &str = "If you create an account, I'll save your placement test so you can easily come back here and modify your deck (or update it with new cards).";
+fn backstory() -> String {
+    yap_i18n::tr!("anki-i-wanted-language-learning-to-be-easier-so-i")
+}
+fn try_yap_body() -> String {
+    yap_i18n::tr!("anki-my-goal-with-yap-was-to-combine-spaced-repetition")
+}
+fn save_deck_body() -> String {
+    yap_i18n::tr!("anki-if-you-create-an-account-i-ll-save-your")
+}
 const DECK_DESCRIPTION: &str = "Made with Yap (https://yap.town/anki): real movie lines built from words you know, each with its clip and a recording.\n\nWhen these run out, Yap keeps going at https://yap.town.";
 
 #[bridgerton::bridge]
@@ -608,40 +621,49 @@ impl Deck {
             .take(FILM_COUNT)
             .collect();
         AnkiExportView {
-            title: format!(
-                "Build a custom Anki deck that reinforces your {language} with clips from famous movies."
+            title: yap_i18n::tr!(
+                "anki-build-a-custom-anki-deck-that-reinforces-your",
+                language = get_language_metadata(language).english_name
             ),
             films,
             needs_placement: starting_fresh != Some(true)
                 && !self.has_taken_placement_test()
                 && self.num_cards_added() < 3,
-            placement_intro: PLACEMENT_INTRO.into(),
-            progress_label: format!("Essential {}", get_language_metadata(language).common_name),
+            placement_intro: placement_intro(),
+            progress_label: yap_i18n::tr!(
+                "anki-essential-course",
+                language = (get_language_metadata(language).common_name).to_string()
+            ),
             percent_known: known.percent_known,
             too_advanced,
-            too_advanced_message: too_advanced.then(|| TOO_ADVANCED.into()),
-            explicit_clips_label: "Allow explicit clips".into(),
+            too_advanced_message: too_advanced.then(too_advanced_copy),
+            explicit_clips_label: yap_i18n::tr!("anki-allow-explicit-clips"),
             clips_loaded: clips::manifest_loaded(language),
             clip_sentence_count,
             course_icon: get_language_metadata(language).icon.clone(),
-            course_label: language.to_string(),
-            card_types_label: "Card types".into(),
-            reading_label: "Reading".into(),
-            listening_label: "Listening".into(),
-            word_cards_label: "Word cards".into(),
-            download_label: format!("Generate {language} deck"),
-            placement_complete_label: PLACEMENT_COMPLETE_LABEL.into(),
-            backstory: BACKSTORY.into(),
+            course_label: yap_i18n::tr!("language-name.title-full", language = language.code()),
+            card_types_label: yap_i18n::tr!("anki-card-types"),
+            reading_label: yap_i18n::tr!("anki-reading"),
+            listening_label: yap_i18n::tr!("common-listening"),
+            word_cards_label: yap_i18n::tr!("anki-word-cards"),
+            download_label: yap_i18n::tr!(
+                "anki-generate-language-deck",
+                language = get_language_metadata(language).english_name
+            ),
+            placement_complete_label: placement_complete_label(),
+            backstory: backstory(),
             backstory_signature: "Andre".into(),
-            try_yap_heading: "If you like the deck, consider trying Yap".into(),
-            try_yap_body: TRY_YAP_BODY.into(),
-            try_yap_label: "Go to Yap".into(),
-            enjoy_deck: "In the meantime, enjoy your Anki deck!".into(),
-            save_deck_heading: "Save your deck".into(),
-            save_deck_body: SAVE_DECK_BODY.into(),
-            sign_up_label: "Create an account".into(),
-            download_again_label: "Download again".into(),
-            audio_unavailable_message: "Audio downloads are temporarily unavailable. Please try again in a few minutes. No deck was downloaded.".into(),
+            try_yap_heading: yap_i18n::tr!("anki-if-you-like-the-deck-consider-trying-yap"),
+            try_yap_body: try_yap_body(),
+            try_yap_label: yap_i18n::tr!("anki-go-to-yap"),
+            enjoy_deck: yap_i18n::tr!("anki-in-the-meantime-enjoy-your-anki-deck"),
+            save_deck_heading: yap_i18n::tr!("anki-save-your-deck"),
+            save_deck_body: save_deck_body(),
+            sign_up_label: yap_i18n::tr!("anki-create-an-account"),
+            download_again_label: yap_i18n::tr!("anki-download-again"),
+            audio_unavailable_message: yap_i18n::tr!(
+                "anki-audio-downloads-are-temporarily-unavailable-please-try-again-in"
+            ),
         }
     }
 
@@ -771,7 +793,7 @@ impl AnkiDeckPlanner {
     ) -> Result<Self, Error> {
         let language = deck.context.course.target_language;
         if !clips::manifest_loaded(language) {
-            return Err(Error::new(CLIPS_LOADING));
+            return Err(Error::new(clips_loading()));
         }
         if !timestamp_ms.is_finite() {
             return Err(Error::new("Invalid export time."));
@@ -841,7 +863,7 @@ impl AnkiDeckPlanner {
     pub fn finish(&self) -> Result<AnkiDeckPlan, Error> {
         let state = self.state.borrow();
         if !state.done {
-            return Err(Error::new("Sentence selection is not finished."));
+            return Err(Error::new(yap_i18n::tr!("anki-selection-unfinished")));
         }
         state.plan()
     }
@@ -852,8 +874,11 @@ impl AnkiDeckPlanner {
 /// single point.
 fn finish_message(before: f64, after: f64, name: &str) -> Option<String> {
     (after - before >= 3.0).then(|| {
-        format!(
-            "Once you finish this deck, you'll understand {after}% of everyday {name}, up from {before}%."
+        yap_i18n::tr!(
+            "anki-once-you-finish-this-deck-you-ll-understand",
+            after = (after).to_string(),
+            name = (name).to_string(),
+            before = (before).to_string()
         )
     })
 }
@@ -1224,7 +1249,7 @@ impl PlannerState {
         let course = self.seed.context.course;
         let language = course.target_language;
         if self.used_sentences.len() < MIN_SENTENCES.min(self.size) {
-            return Err(Error::new(TOO_FEW_SENTENCES));
+            return Err(Error::new(too_few_sentences()));
         }
         let sentence_count = self.used_sentences.len() as u32;
         let word_count = self.used_words.len() as u32;
@@ -2225,7 +2250,10 @@ mod tests {
         let error = deck
             .plan_anki_deck(options(), 55, "token".into(), 1_700_000_000_000.0)
             .unwrap_err();
-        assert_eq!(error.to_string(), TOO_FEW_SENTENCES);
+        assert_eq!(
+            error.to_string(),
+            "Too few movie clips fit what you know right now to make a good deck."
+        );
     }
 
     #[tokio::test]

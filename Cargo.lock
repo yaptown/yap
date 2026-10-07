@@ -1196,7 +1196,7 @@ dependencies = [
  "page_size",
  "plotters",
  "rayon",
- "regex 1.12.4",
+ "regex 1.13.1",
  "serde",
  "serde_json",
  "tinytemplate",
@@ -1597,7 +1597,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1785,7 +1785,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32e90c2accc4b07a8456ea0debdc2e7587bdd890680d71173a15d4ae604f6eef"
 dependencies = [
  "log 0.4.31",
- "regex 1.12.4",
+ "regex 1.13.1",
 ]
 
 [[package]]
@@ -1970,6 +1970,41 @@ dependencies = [
  "crc32fast",
  "miniz_oxide",
  "zlib-rs",
+]
+
+[[package]]
+name = "fluent-bundle"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01203cb8918f5711e73891b347816d932046f95f54207710bda99beaeb423bf4"
+dependencies = [
+ "fluent-langneg",
+ "fluent-syntax",
+ "intl-memoizer",
+ "intl_pluralrules",
+ "rustc-hash 2.1.1",
+ "self_cell",
+ "smallvec",
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent-langneg"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7eebbe59450baee8282d71676f3bfed5689aeab00b27545e83e5f14b1195e8b0"
+dependencies = [
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent-syntax"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54f0d287c53ffd184d04d8677f590f4ac5379785529e5e08b1c8083acdd5c198"
+dependencies = [
+ "memchr",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -2205,7 +2240,7 @@ dependencies = [
  "rand_chacha 0.10.0",
  "rate-limit",
  "rayon",
- "regex 1.12.4",
+ "regex 1.13.1",
  "reqwest 0.13.4",
  "rkyv 0.8.14",
  "rusqlite",
@@ -3121,6 +3156,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "intl-memoizer"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "310da2e345f5eb861e7a07ee182262e94975051db9e4223e909ba90f392f163f"
+dependencies = [
+ "type-map",
+ "unic-langid",
+]
+
+[[package]]
+name = "intl_pluralrules"
+version = "7.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "078ea7b7c29a2b4df841a7f6ac8775ff6074020c6776d48491ce2268e068f972"
+dependencies = [
+ "unic-langid",
+]
+
+[[package]]
 name = "inventory"
 version = "0.3.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3312,7 +3366,7 @@ dependencies = [
  "lindera",
  "lindera-dictionary",
  "once_cell",
- "regex 1.12.4",
+ "regex 1.13.1",
  "serde",
  "thiserror 2.0.18",
 ]
@@ -3520,7 +3574,7 @@ dependencies = [
  "http 1.3.1",
  "lexide-types",
  "osmo",
- "regex 1.12.4",
+ "regex 1.13.1",
  "reqwest 0.13.4",
  "safetensors",
  "serde",
@@ -3613,7 +3667,7 @@ dependencies = [
  "log 0.4.31",
  "once_cell",
  "percent-encoding",
- "regex 1.12.4",
+ "regex 1.13.1",
  "serde",
  "serde_json",
  "serde_yaml_ng",
@@ -3643,7 +3697,7 @@ dependencies = [
  "memmap2",
  "num_cpus",
  "once_cell",
- "regex 1.12.4",
+ "regex 1.13.1",
  "rkyv 0.8.18",
  "serde",
  "serde_json",
@@ -3943,7 +3997,7 @@ dependencies = [
  "html-escape",
  "language-utils",
  "lexide",
- "regex 1.12.4",
+ "regex 1.13.1",
  "schemars",
  "serde",
  "serde_json",
@@ -4097,7 +4151,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4509,7 +4563,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e78deb158fb1d73b29efb4b7e9b9860b78059c670de06bd28df8d0b458ded0eb"
 dependencies = [
  "parse-display-derive",
- "regex 1.12.4",
+ "regex 1.13.1",
  "regex-syntax 0.8.11",
 ]
 
@@ -4521,7 +4575,7 @@ checksum = "8e95a50d1084dab562913062c4c34bb204b68fc6ec38a1395909ff5aaaf4f10a"
 dependencies = [
  "proc-macro2",
  "quote",
- "regex 1.12.4",
+ "regex 1.13.1",
  "regex-syntax 0.8.11",
  "structmeta",
  "syn 2.0.117",
@@ -5213,9 +5267,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.12.4"
+version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1292b7759ae1cb9ec195452d1390a074f0cd8541ab7a5a8c31cd6db45d4a6ba"
+checksum = "f020237b6c8eed93db2e2cb53c00c60a8e1bc73da7d073199a1180401450218d"
 dependencies = [
  "aho-corasick 1.1.3",
  "memchr",
@@ -5225,9 +5279,9 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.4.14"
+version = "0.4.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e1dd4122fc1595e8162618945476892eefca7b88c52820e74af6262213cae8f"
+checksum = "ad8553b9b26413251cbf30e620595c7a41b3887f03da04579c0e6b0d6a06b4b2"
 dependencies = [
  "aho-corasick 1.1.3",
  "memchr",
@@ -5639,7 +5693,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5719,7 +5773,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5927,6 +5981,12 @@ dependencies = [
  "servo_arc",
  "smallvec",
 ]
+
+[[package]]
+name = "self_cell"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ab42ca02749e120097e328d91d415325bdf43b1c72c4c8badf37375fe40a813"
 
 [[package]]
 name = "semver"
@@ -6243,7 +6303,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52d1cfed4120b4d927bf7c0f86d2087a4a7d6027c906d9f9d525a80573b9be51"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6639,7 +6699,7 @@ dependencies = [
  "getrandom 0.4.2",
  "once_cell",
  "rustix",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6810,7 +6870,7 @@ dependencies = [
  "rand 0.9.2",
  "rayon",
  "rayon-cond",
- "regex 1.12.4",
+ "regex 1.13.1",
  "regex-syntax 0.8.11",
  "serde",
  "serde_json",
@@ -7042,6 +7102,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "type-map"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb30dbbd9036155e74adad6812e9898d03ec374946234fbcebd5dfc7b9187b90"
+dependencies = [
+ "rustc-hash 2.1.1",
+]
+
+[[package]]
 name = "typed-path"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7085,6 +7154,24 @@ name = "ucd-util"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "abd2fc5d32b590614af8b0a20d837f32eca055edd0bbead59a9cfe80858be003"
+
+[[package]]
+name = "unic-langid"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a28ba52c9b05311f4f6e62d5d9d46f094bd6e84cb8df7b3ef952748d752a7d05"
+dependencies = [
+ "unic-langid-impl",
+]
+
+[[package]]
+name = "unic-langid-impl"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dce1bf08044d4b7a94028c93786f8566047edc11110595914de93362559bc658"
+dependencies = [
+ "tinystr",
+]
 
 [[package]]
 name = "unicase"
@@ -8149,6 +8236,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.11.0",
+ "yap-i18n",
 ]
 
 [[package]]
@@ -8190,6 +8278,18 @@ dependencies = [
  "weblocks",
  "xxhash-rust",
  "yap-frontend-reducers",
+ "yap-i18n",
+]
+
+[[package]]
+name = "yap-i18n"
+version = "0.1.0"
+dependencies = [
+ "fluent-bundle",
+ "fluent-syntax",
+ "regex 1.13.1",
+ "unic-langid",
+ "walkdir",
 ]
 
 [[package]]
@@ -8203,6 +8303,7 @@ dependencies = [
  "tokio",
  "weapon",
  "yap-frontend-rs",
+ "yap-i18n",
 ]
 
 [[package]]

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,10 @@ interface MobileKeyboardTipProps {
 
 const DISMISS_KEY = "mobile-keyboard-tip-dismissed";
 
-export function MobileKeyboardTip({ tip, className = "" }: MobileKeyboardTipProps) {
+export function MobileKeyboardTip({
+  tip,
+  className = "",
+}: MobileKeyboardTipProps) {
   const [isDismissed, setIsDismissed] = useState(
     () => localStorage.getItem(DISMISS_KEY) === "true",
   );
@@ -28,7 +32,8 @@ export function MobileKeyboardTip({ tip, className = "" }: MobileKeyboardTipProp
       className={`md:hidden flex items-center justify-between gap-2 p-3 mt-3 border rounded-lg bg-muted/30 ${className}`}
     >
       <p className="text-sm text-muted-foreground flex-1">
-        <span className="font-medium">Tip:</span> {tip}
+        <span className="font-medium">{t("mobile-keyboard-tip-tip")}</span>{" "}
+        {tip}
       </p>
       <Button
         variant="ghost"

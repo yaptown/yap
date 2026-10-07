@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState } from "react";
 import {
   account_copy,
@@ -69,7 +70,7 @@ export function DeleteAccountSettings() {
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" disabled={busy}>
-              Cancel
+              {t("common-cancel")}
             </Button>
           </DialogClose>
           <Button variant="destructive" onClick={handleDelete} disabled={busy}>

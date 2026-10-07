@@ -1,3 +1,4 @@
+import { uiLanguage } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -42,7 +43,12 @@ export function SyncStatusDialog() {
   useEffect(() => {
     const update = () => {
       setView(
-        weapon.sync_status(!!isOnline, Date.now(), manualSyncInFlight, undefined),
+        weapon.sync_status(
+          !!isOnline,
+          Date.now(),
+          manualSyncInFlight,
+          undefined,
+        ),
       );
     };
     update();
@@ -114,7 +120,9 @@ export function SyncStatusDialog() {
               view.last_sync_finished_ms != null && (
                 <span className="text-sm text-muted-foreground">
                   {view.last_sync_label}{" "}
-                  {new Date(view.last_sync_finished_ms).toLocaleTimeString()}
+                  {new Date(view.last_sync_finished_ms).toLocaleTimeString(
+                    uiLanguage() === "en" ? undefined : uiLanguage(),
+                  )}
                 </span>
               )}
           </div>

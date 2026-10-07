@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState } from "react";
 import {
   Dialog,
@@ -52,7 +53,9 @@ export function ReportIssueModal({
       } = await supabase.auth.getSession();
 
       if (!session) {
-        throw new Error("Must be logged in to report issues");
+        throw new Error(
+          t("report-issue-modal-must-be-logged-in-to-report-issues"),
+        );
       }
 
       await report_issue(

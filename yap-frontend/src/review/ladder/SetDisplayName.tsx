@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState } from "react";
 import {
   Card,
@@ -138,17 +139,19 @@ export function SetDisplayName({
 
   const handleSave = async () => {
     if (!displayName.trim()) {
-      toast.error("Please enter a display name");
+      toast.error(t("set-display-name-please-enter-a-display-name"));
       return;
     }
 
     try {
       setSaving(true);
       await onSave(displayName.trim());
-      toast.success("Display name set!");
+      toast.success(t("set-display-name-display-name-set"));
     } catch (err) {
       console.error("Error setting display name:", err);
-      toast.error("Failed to set display name. Please try again.");
+      toast.error(
+        t("set-display-name-failed-to-set-display-name-please-try-again"),
+      );
     } finally {
       setSaving(false);
     }
@@ -160,26 +163,29 @@ export function SetDisplayName({
         <CardHeader>
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            <CardTitle>Choose Your Display Name</CardTitle>
+            <CardTitle>{t("home-choose-your-display-name")}</CardTitle>
           </div>
           <CardDescription>
-            You've completed {totalReviewsCompleted} reviews! Set a display name
-            to personalize your profile.
+            {t("profile-display-name-prompt", {
+              count: String(totalReviewsCompleted),
+            })}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="displayName">Display Name</Label>
+            <Label htmlFor="displayName">
+              {t("user-profile-display-name")}
+            </Label>
             <Input
               id="displayName"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Enter your display name"
+              placeholder={t("user-profile-enter-your-display-name")}
               maxLength={50}
               disabled={saving}
             />
             <p className="text-xs text-muted-foreground">
-              You can change this at any time.
+              {t("set-display-name-you-can-change-this-at-any-time")}
             </p>
           </div>
 
@@ -190,10 +196,10 @@ export function SetDisplayName({
               className="flex-1"
               disabled={saving}
             >
-              Skip
+              {t("common-skip")}
             </Button>
             <Button onClick={handleSave} className="flex-1" disabled={saving}>
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("common-saving") : t("common-save")}
             </Button>
           </div>
         </CardContent>

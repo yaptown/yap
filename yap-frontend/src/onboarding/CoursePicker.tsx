@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import * as Sentry from "@sentry/react";
 import { Fragment, useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -178,10 +179,10 @@ export function CoursePicker({
                   className="text-5xl font-bold mb-4"
                   style={{ textWrap: "balance" }}
                 >
-                  What's your native language?
+                  {t("course-picker-what-s-your-native-language")}
                 </h1>
                 <p className="text-xl text-muted-foreground mb-8">
-                  So we can talk to you!
+                  {t("course-picker-so-we-can-talk-to-you")}
                 </p>
               </div>
 
@@ -228,8 +229,12 @@ export function CoursePicker({
                 >
                   <span className="highlight animate-fade-in">
                     {purpose === "AnkiDeck"
-                      ? "What language would you like an Anki deck for?"
-                      : "What language will you speak next?"}
+                      ? t(
+                          "course-picker-what-language-would-you-like-an-anki-deck-for",
+                        )
+                      : t(
+                          "course-picker-view-what-language-will-you-speak-next",
+                        )}
                   </span>
                 </h1>
               </div>
@@ -247,29 +252,29 @@ export function CoursePicker({
                     />
                     <div className="text-left">
                       <h3 className="text-xl md:text-2xl font-bold">
-                        Resume{" "}
-                        {
-                          get_language_name(
-                            currentTargetLanguage,
-                            selectionState.nativeLanguage,
-                          ).full
-                        }
+                        {t("onboarding-resume-course", {
+                          language: String(
+                            get_language_name(currentTargetLanguage).full,
+                          ),
+                        })}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        Continue where you left off
+                        {t("course-picker-continue-where-you-left-off")}
                       </p>
                     </div>
                     <ArrowRight className="h-6 w-6 ml-auto" />
                   </Card>
-                  <SectionDivider label="Or choose a different language" />
+                  <SectionDivider
+                    label={t("course-picker-or-choose-a-different-language")}
+                  />
                 </>
               )}
 
               {(
                 [
                   ["stable", null],
-                  ["beta", "Beta Languages"],
-                  ["alpha", "Alpha Languages"],
+                  ["beta", t("course-picker-beta-languages")],
+                  ["alpha", t("course-picker-alpha-languages")],
                 ] as const
               ).map(([status, label]) => {
                 const languages = targetLanguages.filter(
@@ -284,7 +289,6 @@ export function CoursePicker({
                         <LanguageTile
                           key={lang}
                           language={lang}
-                          reader={selectionState.nativeLanguage}
                           onClick={() =>
                             handleTargetLanguageSelected(
                               selectionState.nativeLanguage,
@@ -301,7 +305,7 @@ export function CoursePicker({
               {/* Native language selector */}
               <div className="flex items-center justify-center gap-2 mb-6">
                 <span className="text-lg text-muted-foreground animate-fade-in">
-                  Native language:
+                  {t("course-picker-native-language")}
                 </span>
                 <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
                   <PopoverTrigger asChild>
@@ -324,9 +328,13 @@ export function CoursePicker({
                   </PopoverTrigger>
                   <PopoverContent className="w-[180px] p-0">
                     <Command>
-                      <CommandInput placeholder="Search language..." />
+                      <CommandInput
+                        placeholder={t("course-picker-search-language")}
+                      />
                       <CommandList>
-                        <CommandEmpty>No language found.</CommandEmpty>
+                        <CommandEmpty>
+                          {t("course-picker-no-language-found")}
+                        </CommandEmpty>
                         <CommandGroup>
                           {nativeLanguages.map((lang) => (
                             <CommandItem
@@ -364,7 +372,9 @@ export function CoursePicker({
 
               <div className="text-center mb-12">
                 <p className="text-xl text-muted-foreground/70">
-                  (Yap.Town is great for beginner and intermediate students.)
+                  {t(
+                    "course-picker-yap-town-is-great-for-beginner-and-intermediate-students",
+                  )}
                 </p>
               </div>
             </div>
@@ -398,14 +408,12 @@ export function CoursePicker({
 
 function LanguageTile({
   language,
-  reader,
   onClick,
 }: {
   language: Language;
-  reader: Language;
   onClick: () => void;
 }) {
-  const { name, variant } = get_language_name(language, reader);
+  const { name, variant } = get_language_name(language);
   return (
     <motion.button
       type="button"

@@ -102,7 +102,7 @@ struct OnboardingFlowView: View {
                             ForEach(1..<curves.count, id: \.self) { index in
                                 Circle().fill(curveColor(index)).frame(width: 12, height: 12).transition(.scale)
                             }
-                            if let reviewLabel { Text(verbatim: "\(curves.count - 1) \(reviewLabel)").font(.subheadline).foregroundStyle(Color.yapMuted) }
+                            if let reviewLabel { Text(reviewLabel).font(.subheadline).foregroundStyle(Color.yapMuted) }
                         }.frame(height: 20)
                         ForgettingCurveChart(curves: curves, copy: chart)
                         Text(caption).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)

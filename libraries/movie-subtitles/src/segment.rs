@@ -407,7 +407,7 @@ mod tests {
             let expected = format!("{before} {after}");
             assert_eq!(
                 merge_german_ordinals(vec![before.into(), after.into()]),
-                [expected.clone()]
+                std::slice::from_ref(&expected)
             );
             let cues = [cue(before, 0, 1000), cue(after, 1100, 2000)];
             let joined = timed_passages(&cues, Language::German);
@@ -429,7 +429,7 @@ mod tests {
             let pair: Vec<String> = pair.map(str::to_owned).to_vec();
             assert_eq!(merge_german_ordinals(pair.clone()), pair);
         }
-        let separate = vec!["Er kam um 10.".to_owned(), "Dann ging er.".to_owned()];
+        let separate = ["Er kam um 10.".to_owned(), "Dann ging er.".to_owned()];
         assert_eq!(
             timed_passages(
                 &[cue(&separate[0], 0, 1000), cue(&separate[1], 1100, 2000)],

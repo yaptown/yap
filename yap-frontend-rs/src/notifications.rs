@@ -35,65 +35,55 @@ impl NotificationType {
     pub(crate) fn show(&self, due_cards: &[&CardSummary]) -> Option<Notification> {
         match self {
             NotificationType::DueNow => (!due_cards.is_empty()).then(|| Notification {
-                title: "Time to study! 📚".to_string(),
-                body: "Your next card is ready for review".to_string(),
+                title: yap_i18n::tr!("notification-time-to-study"),
+                body: yap_i18n::tr!("notification-your-next-card-is-ready-for-review"),
                 notification_type: self.clone(),
             }),
             NotificationType::MorningReminder => (!due_cards.is_empty()).then(|| Notification {
-                title: "Good morning! ☀️".to_string(),
-                body: format!(
-                    "{} card{} to review today",
-                    due_cards.len(),
-                    if due_cards.len() == 1 { "" } else { "s" }
-                ),
+                title: yap_i18n::tr!("notification-good-morning"),
+                body: yap_i18n::tr!("notification-review-today", count = due_cards.len()),
                 notification_type: self.clone(),
             }),
             NotificationType::AfternoonReminder => (due_cards.len() > 2).then(|| Notification {
-                title: "Afternoon study break? ☕".to_string(),
-                body: "Perfect time for a quick review session!".to_string(),
+                title: yap_i18n::tr!("notification-afternoon-study-break"),
+                body: yap_i18n::tr!("notification-perfect-time-for-a-quick-review-session"),
                 notification_type: self.clone(),
             }),
             NotificationType::EveningReminder => (!due_cards.is_empty()).then(|| Notification {
-                title: "Evening review time 🌙".to_string(),
-                body: format!(
-                    "Wrap up the day with {} card{}",
-                    due_cards.len(),
-                    if due_cards.len() == 1 { "" } else { "s" }
-                ),
+                title: yap_i18n::tr!("notification-evening-review-time"),
+                body: yap_i18n::tr!("notification-wrap-up", count = due_cards.len()),
                 notification_type: self.clone(),
             }),
             NotificationType::EncourageNewCards => due_cards.is_empty().then(|| Notification {
-                title: "Keep the momentum going! 🚀".to_string(),
-                body: "You're all caught up! Time to learn some new words?".to_string(),
+                title: yap_i18n::tr!("notification-keep-the-momentum-going"),
+                body: yap_i18n::tr!("notification-you-re-all-caught-up-time-to-learn-some"),
                 notification_type: self.clone(),
             }),
             NotificationType::EncourageNewCards3d => due_cards.is_empty().then(|| Notification {
-                title: "Ready for a challenge? 💪".to_string(),
-                body: "Add 5 new words to keep your learning streak alive!".to_string(),
+                title: yap_i18n::tr!("notification-ready-for-a-challenge"),
+                body: yap_i18n::tr!("notification-add-5-new-words-to-keep-your-learning-streak"),
                 notification_type: self.clone(),
             }),
             NotificationType::WeeklyCheckpoint => (!due_cards.is_empty()).then(|| Notification {
-                title: "Stay on track! 📊".to_string(),
-                body: format!(
-                    "{} cards coming up this week - you've got this!",
-                    due_cards.len()
-                ),
+                title: yap_i18n::tr!("notification-stay-on-track"),
+                body: yap_i18n::tr!("notification-week-checkpoint", count = due_cards.len()),
                 notification_type: self.clone(),
             }),
             NotificationType::WeeklyForecast => (!due_cards.is_empty()).then(|| Notification {
-                title: "Weekly review forecast 📅".to_string(),
-                body: format!("{} cards scheduled for the next week", due_cards.len()),
+                title: yap_i18n::tr!("notification-weekly-review-forecast"),
+                body: yap_i18n::tr!("notification-week-forecast", count = due_cards.len()),
                 notification_type: self.clone(),
             }),
             NotificationType::BiweeklyForecast => (!due_cards.is_empty()).then(|| Notification {
-                title: "Two-week outlook 🔮".to_string(),
-                body: format!("{} cards coming up in the next month", due_cards.len()),
+                title: yap_i18n::tr!("notification-two-week-outlook"),
+                body: yap_i18n::tr!("notification-month-forecast", count = due_cards.len()),
                 notification_type: self.clone(),
             }),
             NotificationType::MonthlyMilestone => (!due_cards.is_empty()).then(|| Notification {
-                title: "Ready to start again? 🏆".to_string(),
-                body: "This will be your last Yap notification until you start Yapping again."
-                    .to_string(),
+                title: yap_i18n::tr!("notification-ready-to-start-again"),
+                body: yap_i18n::tr!(
+                    "notification-this-will-be-your-last-yap-notification-until-you"
+                ),
                 notification_type: self.clone(),
             }),
         }

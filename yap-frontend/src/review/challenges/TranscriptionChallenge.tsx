@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { SentenceChunks } from "@/components/SentenceChunks";
 import { memo, useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { PendingReview } from "@/review/challenges/pending-review";
@@ -90,15 +91,29 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
   totalReviewsCompleted,
   pendingReviewScope,
 }: TranscriptionChallengeProps) {
-  const [storage] = useState(() => initialState ? undefined : new PendingReview<TranscriptionState>(
-    transcription_pending_slot(challenge.parts, pendingReviewScope, get_app_version(), totalReviewsCompleted),
-    (payload) => {
-      const saved = payload as Omit<TranscriptionState, "inputs"> & { inputs: [number, string][] };
-      return transcription_resume({ ...saved, inputs: new Map(saved.inputs) }).state;
-    },
-    // The bridge exposes BTreeMap as a JS Map, which JSON cannot encode.
-    (state) => ({ ...state, inputs: [...state.inputs] }),
-  ));
+  const [storage] = useState(() =>
+    initialState
+      ? undefined
+      : new PendingReview<TranscriptionState>(
+          transcription_pending_slot(
+            challenge.parts,
+            pendingReviewScope,
+            get_app_version(),
+            totalReviewsCompleted,
+          ),
+          (payload) => {
+            const saved = payload as Omit<TranscriptionState, "inputs"> & {
+              inputs: [number, string][];
+            };
+            return transcription_resume({
+              ...saved,
+              inputs: new Map(saved.inputs),
+            }).state;
+          },
+          // The bridge exposes BTreeMap as a JS Map, which JSON cannot encode.
+          (state) => ({ ...state, inputs: [...state.inputs] }),
+        ),
+  );
   const [state, setState] = useState<TranscriptionState>(
     () =>
       initialState ??
@@ -116,7 +131,10 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
   const [audioError, setAudioError] = useState(false);
 
   const [clipMovieId, setClipMovieId] = useState<string | null>(null);
-  const movieData = deck.sentence_posters(challenge.movie_titles.map(([id]) => id), clipMovieId ?? undefined);
+  const movieData = deck.sentence_posters(
+    challenge.movie_titles.map(([id]) => id),
+    clipMovieId ?? undefined,
+  );
   const gradingGenerationRef = useRef(0);
   const [showReportModal, setShowReportModal] = useState(false);
   const [focusedInputIndex, setFocusedInputIndex] = useState<number | null>(
@@ -209,7 +227,9 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
   const send = useCallback(
     (event: TranscriptionEvent) => {
       if (event.type === "CancelGrading") gradingGenerationRef.current++;
-      applyStep(transcription_transition(stateRef.current, event, targetLanguage));
+      applyStep(
+        transcription_transition(stateRef.current, event, targetLanguage),
+      );
     },
     [applyStep, targetLanguage],
   );
@@ -378,7 +398,10 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
             part.part.word.word_type?.type !== "Heteronym"),
       );
 
-    const chunks = transcription_sentence_chunks(challenge.parts, targetLanguage);
+    const chunks = transcription_sentence_chunks(
+      challenge.parts,
+      targetLanguage,
+    );
     return (
       <SentenceChunks chunks={chunks}>
         {(index, last) => {
@@ -449,7 +472,7 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
         <Card animate className="p-5 relative gap-0">
           {challenge.second_chance && (
             <Badge className="absolute -top-2 -left-2 -rotate-12 z-10 shadow-sm text-sm">
-              Second Chance!
+              {t("translation-second-chance")}
             </Badge>
           )}
           <div className="space-y-6">
@@ -643,14 +666,17 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
 
       <div className="mt-4 flex flex-col gap-2 sticky bottom-0">
         {onCantListen && editing && (
-          <CantListenButton onClick={onCantListen} label={view.cant_listen_label} />
+          <CantListenButton
+            onClick={onCantListen}
+            label={view.cant_listen_label}
+          />
         )}
 
         <div>
           {view.is_grading ? (
             <div className="flex gap-2">
               <Button className="flex-1 h-14 text-lg" size="lg" disabled>
-                AI is grading...
+                {t("common-grading")}
               </Button>
               <Button
                 variant="ghost"
@@ -723,7 +749,7 @@ function WordGrades({
             {verdict.word_grades_title}
           </span>
           <span className="text-xs text-muted-foreground">
-            {isOpen ? "Hide" : "Show"}
+            {isOpen ? t("common-hide") : t("common-show")}
           </span>
         </Button>
       </CollapsibleTrigger>

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 // Shared, WASM-value-free presentation for a translation grade — rendered by
 // BOTH the app's TranslationChallenge and the yap-mcp widget's TranslationCard.
 // The verdict layout (and the colored sentence, the class that produced the
@@ -254,8 +255,9 @@ export function SentenceVerdict({
         <>
           {autogradingError && (
             <p className="text-sm text-caution-foreground">
-              Your submission could not be graded automatically. Please grade
-              the words manually below.
+              {t(
+                "translation-verdict-your-submission-could-not-be-graded-automatically-please-grade",
+              )}
             </p>
           )}
           <FeedbackDisplay
@@ -282,7 +284,9 @@ export function TranslationVerdict({
     <SentenceVerdict
       grading={false}
       headline={verdict.headline}
-      correctLabel={verdict.correctLabel ?? "Correct translation"}
+      correctLabel={
+        verdict.correctLabel ?? t("translation-correct-translation")
+      }
       correct={verdict.correctTranslation}
       encouragement={verdict.encouragement}
       explanation={verdict.explanation}

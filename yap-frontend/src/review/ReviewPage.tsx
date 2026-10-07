@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import {
   CourseAudioPrefetch,
   useCourseDeck,
@@ -87,8 +88,11 @@ export function ReviewPage() {
     <TopPageLayout
       userInfo={userInfo}
       headerProps={{
-        title: "Review",
-        backButton: { label: "Home", onBack: () => navigate("/home") },
+        title: t("common-review"),
+        backButton: {
+          label: t("common-home"),
+          onBack: () => navigate("/home"),
+        },
         showSignupNag: false,
       }}
     >
@@ -130,17 +134,21 @@ function Review({
     study.actions.addEvent(event);
     clearSentenceList();
   };
-  const currentChallenge = view.step.type === "Challenge" ? view.step.view.challenge : undefined;
+  const currentChallenge =
+    view.step.type === "Challenge" ? view.step.view.challenge : undefined;
   const [showReportModal, setShowReportModal] = useState(false);
 
   return (
     <TopPageLayout
       userInfo={userInfo}
       headerProps={{
-        title: "Review",
+        title: t("common-review"),
         showSignupNag: view.show_account_prompt,
         dailyGoalPercent: view.progress * 100,
-        backButton: { label: "Home", onBack: () => navigate("/home") },
+        backButton: {
+          label: t("common-home"),
+          onBack: () => navigate("/home"),
+        },
       }}
     >
       <ReviewScreen

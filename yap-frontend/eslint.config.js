@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import reactCompiler from 'eslint-plugin-react-compiler'
 import tseslint from 'typescript-eslint'
 
-export default tseslint.config({ ignores: ['dist'] }, {
+export default tseslint.config({ ignores: ['dist', 'dev-dist'] }, {
   extends: [js.configs.recommended, ...tseslint.configs.recommended],
   files: ['**/*.{ts,tsx}'],
   languageOptions: {

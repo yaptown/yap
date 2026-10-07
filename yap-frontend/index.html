@@ -56,21 +56,21 @@
 
     <!-- title and description -->
     <title>Yap.Town</title>
-    <meta name="description" content="Language learning made easy">
+    <meta name="description" content="%UI_app-description%">
 
     <!-- social preview -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Yap.Town" />
     <meta property="og:url" content="https://yap.town/" />
     <meta property="og:title" content="Yap.Town" />
-    <meta property="og:description" content="Learn how people actually talk. Every sentence comes from a real film, book or conversation." />
+    <meta property="og:description" content="%UI_app-social-description%" />
     <meta property="og:image" content="https://yap.town/og.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="A lamp post on a snowy railway platform at night, with the words: Learn how people actually talk." />
+    <meta property="og:image:alt" content="%UI_app-social-image-description%" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Yap.Town" />
-    <meta name="twitter:description" content="Learn how people actually talk. Every sentence comes from a real film, book or conversation." />
+    <meta name="twitter:description" content="%UI_app-social-description%" />
     <meta name="twitter:image" content="https://yap.town/og.jpg" />
 
     <!-- pwa -->
@@ -157,9 +157,9 @@
   <body>
     <!-- Loading screen -->
     <div id="loading-screen">
-      <div id="loading-text">Loading Yap.Town...</div>
+      <div id="loading-text" data-error="%UI_startup-trouble%">%UI_startup-loading%</div>
       <div id="loading-spinner"></div>
-      <button id="reload-button" onclick="location.reload(true)">Reload Page</button>
+      <button id="reload-button" onclick="location.reload(true)">%UI_startup-reload%</button>
     </div>
     
     <div id="root"></div>
@@ -182,7 +182,7 @@
       function showReloadNow() {
         if (yapBooted) return;
         var loadingText = document.getElementById('loading-text');
-        if (loadingText) loadingText.textContent = 'Having trouble loading Yap.Town';
+        if (loadingText) loadingText.textContent = loadingText.dataset.error;
         var button = document.getElementById('reload-button');
         if (button) button.classList.add('show');
       }
@@ -200,6 +200,6 @@
       };
     </script>
     
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/bootstrap.ts"></script>
   </body>
 </html>

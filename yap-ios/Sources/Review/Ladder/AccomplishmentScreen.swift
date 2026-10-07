@@ -11,11 +11,11 @@ struct AccomplishmentScreen: View {
         ReviewStepScrollView {
             VStack(spacing: 24) {
                 header
-                cards("New today", summary.new_cards)
-                cards("Learned", summary.learned_cards)
-                cards("Back on track", summary.locked_in_cards)
+                cards(L("accomplishment-screen-new-today"), summary.new_cards)
+                cards(L("common-learned"), summary.learned_cards)
+                cards(L("accomplishment-screen-back-on-track"), summary.locked_in_cards)
                 if !summary.reviewed_words.isEmpty {
-                    section("Reviewed (\(summary.reviewed_words.count))") {
+                    section(L("accomplishment-reviewed", ["count": summary.reviewed_words.count])) {
                         SentenceFlow(spacing: 6) {
                             ForEach(Array(summary.reviewed_words.enumerated()), id: \.offset) { _, word in
                                 Text(word).font(.footnote.weight(.medium)).padding(.horizontal, 8).padding(.vertical, 3)
@@ -25,15 +25,15 @@ struct AccomplishmentScreen: View {
                     }
                 }
                 LazyVGrid(columns: Self.columns, spacing: 8) {
-                    if let recall = summary.recall_percent { stat("\(recall)%", "recall") }
-                    stat("\(view.words_known)", "words known")
+                    if let recall = summary.recall_percent { stat("\(recall)%", L("accomplishment-screen-recall")) }
+                    stat("\(view.words_known)", L("accomplishment-screen-words-known", ["count": view.words_known]))
                 }
             }
         } actions: {
             HStack(spacing: 8) {
                 Button { confetti += 1 } label: { Image(systemName: "party.popper").frame(minHeight: 22) }
-                    .buttonStyle(.bordered).accessibilityLabel("Celebrate again")
-                Button(action: onDismiss) { Text("Continue").frame(maxWidth: .infinity) }
+                    .buttonStyle(.bordered).accessibilityLabel(L("accomplishment-screen-celebrate-again"))
+                Button(action: onDismiss) { Text(L("common-continue")).frame(maxWidth: .infinity) }
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent)
             }.controlSize(.large)
         }
@@ -69,7 +69,7 @@ struct AccomplishmentScreen: View {
                 withAnimation(.snappy) { goalOpen.toggle() }
             } label: {
                 HStack(spacing: 4) {
-                    Text("Change daily goal")
+                    Text(L("accomplishment-screen-change-daily-goal"))
                     Image(systemName: "chevron.down").font(.caption.weight(.semibold)).rotationEffect(.degrees(goalOpen ? 180 : 0))
                 }.font(.subheadline).foregroundStyle(Color.yapMuted).padding(.vertical, 6).contentShape(Rectangle())
             }.buttonStyle(.plain)

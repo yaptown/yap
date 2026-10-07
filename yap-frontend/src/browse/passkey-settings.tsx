@@ -1,3 +1,4 @@
+import { t, uiLanguage } from "@/lib/i18n";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { PasskeyListItem } from "@supabase/supabase-js";
@@ -62,7 +63,9 @@ export function PasskeySettings() {
       await refresh();
     } catch (err) {
       if (!isCancelled(err)) {
-        setError("Couldn't set up a passkey on this device.");
+        setError(
+          t("passkey-settings-couldn-t-set-up-a-passkey-on-this-device"),
+        );
       }
     }
     setBusy(false);
@@ -89,23 +92,26 @@ export function PasskeySettings() {
       <DialogTrigger asChild>
         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
           <KeyRound className="mr-2 h-4 w-4" />
-          Passkeys
+          {t("passkey-settings-passkeys")}
         </DropdownMenuItem>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Passkeys</DialogTitle>
+          <DialogTitle>{t("passkey-settings-passkeys")}</DialogTitle>
           <DialogDescription>
-            Sign in with your fingerprint, face, or security key instead of a
-            password.
+            {t(
+              "passkey-settings-sign-in-with-your-fingerprint-face-or-security-key",
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           {passkeys === null ? (
-            <p className="text-muted-foreground text-center">Loading...</p>
+            <p className="text-muted-foreground text-center">
+              {t("common-loading")}
+            </p>
           ) : passkeys.length === 0 ? (
             <p className="text-muted-foreground text-center text-sm">
-              No passkeys registered yet.
+              {t("passkey-settings-no-passkeys-registered-yet")}
             </p>
           ) : (
             <div className="space-y-2">
@@ -117,14 +123,17 @@ export function PasskeySettings() {
                   <KeyRound className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
-                      {pk.friendly_name || "Passkey"}
+                      {pk.friendly_name || t("passkey-settings-passkey")}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Added {new Date(pk.created_at).toLocaleDateString()}
-                      {pk.last_used_at &&
-                        ` · Last used ${new Date(
-                          pk.last_used_at,
-                        ).toLocaleDateString()}`}
+                      {pk.last_used_at
+                        ? t("settings-passkey-dates", {
+                            date: dateLabel(pk.created_at),
+                            last_used: dateLabel(pk.last_used_at),
+                          })
+                        : t("settings-passkey-added", {
+                            date: dateLabel(pk.created_at),
+                          })}
                     </p>
                   </div>
                   <Button
@@ -132,7 +141,7 @@ export function PasskeySettings() {
                     size="icon"
                     onClick={() => handleDelete(pk.id)}
                     disabled={busy}
-                    title="Remove passkey"
+                    title={t("passkey-settings-remove-passkey")}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -142,10 +151,18 @@ export function PasskeySettings() {
           )}
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button onClick={handleRegister} disabled={busy} className="w-full">
-            {busy ? "Working..." : "Add a Passkey"}
+            {busy
+              ? t("auth-dialog-working")
+              : t("passkey-settings-add-a-passkey")}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function dateLabel(value: string): string {
+  return new Date(value).toLocaleDateString(
+    uiLanguage() === "en" ? undefined : uiLanguage(),
   );
 }

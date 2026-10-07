@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Volume2 } from "lucide-react";
@@ -380,7 +381,7 @@ export function AudioButton({
               await new Promise<void>((resolve, reject) => {
                 preAudio.onended = () => resolve();
                 preAudio.onerror = () =>
-                  reject(new Error("Failed to play pre-audio"));
+                  reject(new Error(t("audio-button-failed-to-play-pre-audio")));
                 signal.addEventListener(
                   "abort",
                   () => reject(new DOMException("Aborted", "AbortError")),
@@ -406,11 +407,11 @@ export function AudioButton({
         };
         const onVoiceActor = ({ name, compensation }: VoiceActorInfo) => {
           if (!shouldShowVoiceActorToast(name)) return;
-          const credit =
+          toast(
             compensation === "paid"
-              ? "a paid voice actor"
-              : "a volunteer voice actor";
-          toast(`audio recorded by @${name}, ${credit}`);
+              ? t("audio-paid-credit", { name })
+              : t("audio-volunteer-credit", { name }),
+          );
         };
         await playAudio(audioRequest, accessToken, authCallback, {
           temporary: temp,
@@ -506,7 +507,7 @@ export function AudioButton({
         handlePlayAudio();
       }}
       disabled={isPlaying}
-      title="Play pronunciation"
+      title={t("audio-button-play-pronunciation")}
     >
       <Volume2
         className={`h-6 w-6 ${isPlaying ? "animate-pulse" : ""} size--xl`}
@@ -539,7 +540,7 @@ export function AudioButton({
         hoverRef.current = false;
       }}
       className="inline-flex cursor-pointer items-center gap-3"
-      title="Play pronunciation"
+      title={t("audio-button-play-pronunciation")}
     >
       <div className="relative flex h-32 w-32 items-center justify-center">
         <svg

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import type { DayProgress } from "../../../yap-frontend-rs/pkg";
 import {
   Tooltip,
@@ -5,7 +6,15 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 
-const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
+const DAY_LABELS = [
+  t("weekday-monday-initial"),
+  t("weekday-tuesday-initial"),
+  t("weekday-wednesday-initial"),
+  t("weekday-thursday-initial"),
+  t("weekday-friday-initial"),
+  t("weekday-saturday-initial"),
+  t("weekday-sunday-initial"),
+];
 
 export function WeekProgressStrip({
   week,
@@ -24,17 +33,14 @@ export function WeekProgressStrip({
 }
 
 function DayCell({ day, index }: { day: DayProgress; index: number }) {
-  const fillPercent = day.is_future || day.target_seconds === 0
-    ? 0
-    : Math.min(100, (day.seconds / day.target_seconds) * 100);
+  const fillPercent =
+    day.is_future || day.target_seconds === 0
+      ? 0
+      : Math.min(100, (day.seconds / day.target_seconds) * 100);
 
   const borderL = "";
   const rounded =
-    index === 0
-      ? "rounded-l-lg"
-      : index === 6
-        ? "rounded-r-lg"
-        : "";
+    index === 0 ? "rounded-l-lg" : index === 6 ? "rounded-r-lg" : "";
   const todayClasses = day.is_today
     ? "scale-110 z-10 rounded-lg shadow-lg border border-border"
     : "";
@@ -42,7 +48,9 @@ function DayCell({ day, index }: { day: DayProgress; index: number }) {
   const content = (
     <>
       <span className="text-lg font-semibold leading-none tabular-nums">
-        {day.is_future ? "·" : `+${day.new_cards + day.learned_cards + day.locked_in_cards}`}
+        {day.is_future
+          ? "·"
+          : `+${day.new_cards + day.learned_cards + day.locked_in_cards}`}
       </span>
       <span className="text-[10px] uppercase tracking-wide opacity-70">
         {DAY_LABELS[index]}
@@ -65,7 +73,9 @@ function DayCell({ day, index }: { day: DayProgress; index: number }) {
           )}
 
           {/* Base text layer (normal foreground color) */}
-          <div className={`relative flex flex-col items-center justify-center py-3 gap-0.5 ${day.is_future ? "text-muted-foreground/60" : "text-foreground"}`}>
+          <div
+            className={`relative flex flex-col items-center justify-center py-3 gap-0.5 ${day.is_future ? "text-muted-foreground/60" : "text-foreground"}`}
+          >
             {content}
           </div>
 
@@ -82,10 +92,13 @@ function DayCell({ day, index }: { day: DayProgress; index: number }) {
       </TooltipTrigger>
       <TooltipContent>
         {day.is_future
-          ? "Upcoming"
+          ? t("week-progress-strip-upcoming")
           : day.reviews === 0
-            ? "No activity"
-            : `${day.new_cards} added · ${day.learned_cards + day.locked_in_cards} back on track`}
+            ? t("week-progress-strip-no-activity")
+            : t("review-week-activity", {
+                added: day.new_cards,
+                learned: day.learned_cards + day.locked_in_cards,
+              })}
       </TooltipContent>
     </Tooltip>
   );

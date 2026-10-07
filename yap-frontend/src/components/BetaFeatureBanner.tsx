@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 
@@ -8,10 +9,10 @@ import { Badge } from "@/components/ui/badge";
 export function BetaFeatureBanner({ children }: { children?: ReactNode }) {
   return (
     <div className="flex items-center gap-2">
-      <Badge variant="secondary">🧪 Beta</Badge>
+      <Badge variant="secondary">{t("beta-feature-banner-beta")}</Badge>
       <span className="text-sm text-muted-foreground">
         {children ??
-          "This feature isn't ready for prime time yet, but you can test it here if you want."}
+          t("beta-feature-banner-this-feature-isn-t-ready-for-prime-time-yet")}
       </span>
     </div>
   );

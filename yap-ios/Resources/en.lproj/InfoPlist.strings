@@ -1,0 +1,2 @@
+/* Yap currently requests no permissions with custom usage descriptions. */
+"CFBundleDisplayName" = "Yap";

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { account_copy } from "../../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -96,11 +97,11 @@ export function Header({
                   onClick={() => navigate(`/user/id/${userInfo.id}`)}
                 >
                   <User className="mr-2 h-4 w-4" />
-                  Profile
+                  {t("home-profile")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
+                  {t("header-sign-out")}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DeleteAccountSettings />

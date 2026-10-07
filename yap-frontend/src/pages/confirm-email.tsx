@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -54,7 +55,7 @@ export function ConfirmEmail() {
           }
         }
       } else {
-        setError("Invalid confirmation link");
+        setError(t("confirm-email-invalid-confirmation-link"));
       }
       setLoading(false);
     };
@@ -83,7 +84,9 @@ export function ConfirmEmail() {
       if (isCancelled(err)) {
         navigate("/");
       } else {
-        setPasskeyError("Couldn't set up a passkey on this device.");
+        setPasskeyError(
+          t("passkey-settings-couldn-t-set-up-a-passkey-on-this-device"),
+        );
       }
     }
     setPasskeyBusy(false);
@@ -96,10 +99,12 @@ export function ConfirmEmail() {
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold">
-                Confirming Email...
+                {t("confirm-email-confirming-email")}
               </CardTitle>
               <CardDescription>
-                Please wait while we confirm your email address
+                {t(
+                  "confirm-email-please-wait-while-we-confirm-your-email-address",
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
@@ -118,20 +123,23 @@ export function ConfirmEmail() {
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold text-positive">
-                Email Confirmed!
+                {t("confirm-email-email-confirmed")}
               </CardTitle>
               <CardDescription>
                 {offerPasskey
-                  ? "You're signed in. One more thing — want to skip the password from now on?"
-                  : "Your email has been confirmed and you're signed in."}
+                  ? t("confirm-email-you-re-signed-in-one-more-thing-want-to")
+                  : t(
+                      "confirm-email-your-email-has-been-confirmed-and-you-re-signed",
+                    )}
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
               {offerPasskey ? (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Add a passkey to sign in with your fingerprint, face, or
-                    device PIN.
+                    {t(
+                      "confirm-email-add-a-passkey-to-sign-in-with-your-fingerprint",
+                    )}
                   </p>
                   {passkeyError && (
                     <p className="text-sm text-destructive">{passkeyError}</p>
@@ -142,7 +150,9 @@ export function ConfirmEmail() {
                     onClick={handleCreatePasskey}
                   >
                     <KeyRound className="mr-2 h-4 w-4" />
-                    {passkeyBusy ? "Working..." : "Set up a passkey"}
+                    {passkeyBusy
+                      ? t("auth-dialog-working")
+                      : t("auth-dialog-set-up-a-passkey")}
                   </Button>
                   <Button
                     variant="ghost"
@@ -150,16 +160,16 @@ export function ConfirmEmail() {
                     disabled={passkeyBusy}
                     onClick={handleReturnHome}
                   >
-                    Maybe later
+                    {t("common-maybe-later")}
                   </Button>
                 </div>
               ) : (
                 <>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Redirecting to home page...
+                    {t("confirm-email-redirecting-to-home-page")}
                   </p>
                   <Button onClick={handleReturnHome} variant="outline">
-                    Go to Home
+                    {t("confirm-email-go-to-home")}
                   </Button>
                 </>
               )}
@@ -176,10 +186,12 @@ export function ConfirmEmail() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-destructive">
-              Confirmation Failed
+              {t("confirm-email-confirmation-failed")}
             </CardTitle>
             <CardDescription>
-              There was an issue confirming your email address
+              {t(
+                "confirm-email-there-was-an-issue-confirming-your-email-address",
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
@@ -189,7 +201,7 @@ export function ConfirmEmail() {
               </div>
             )}
             <Button onClick={handleReturnHome} variant="outline">
-              Return to Home
+              {t("confirm-email-return-to-home")}
             </Button>
           </CardContent>
         </Card>

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
@@ -18,7 +19,9 @@ import { AuthDialog } from "@/auth/auth-dialog";
 const ALLOWED_MCP_ORIGINS = [
   "https://mcp.yap.town",
   "https://yap-mcp.fly.dev",
-  ...(import.meta.env.DEV ? ["http://localhost:8080", "http://localhost:8199"] : []),
+  ...(import.meta.env.DEV
+    ? ["http://localhost:8080", "http://localhost:8199"]
+    : []),
 ];
 
 /**
@@ -70,22 +73,23 @@ export function Connect() {
       const body = await response.json();
       if (!response.ok) {
         setError(
-          body.error_description ?? "Something went wrong — try connecting again.",
+          body.error_description ??
+            t("connect-something-went-wrong-try-connecting-again"),
         );
         setConnecting(false);
         return;
       }
       window.location.href = body.redirect;
     } catch {
-      setError("Could not reach the connector server — try again.");
+      setError(t("connect-could-not-reach-the-connector-server-try-again"));
       setConnecting(false);
     }
   };
 
   const invalidReason = !requestId
-    ? "This connect link is missing its request. Start over from the app you're connecting."
+    ? t("connect-this-connect-link-is-missing-its-request-start-over")
     : !mcpOriginAllowed
-      ? "This connect link points at a server yap.town doesn't recognize."
+      ? t("connect-this-connect-link-points-at-a-server-yap-town")
       : null;
 
   return (
@@ -93,9 +97,11 @@ export function Connect() {
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Connect to yap.town</CardTitle>
+            <CardTitle className="text-2xl font-bold">
+              {t("connect-connect-to-yap-town")}
+            </CardTitle>
             <CardDescription>
-              An app wants to use your yap.town account through its connector.
+              {t("connect-an-app-wants-to-use-your-yap-town-account")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -104,19 +110,25 @@ export function Connect() {
                 <div className="p-3 rounded text-sm bg-destructive/10 text-destructive border border-destructive/20">
                   {invalidReason}
                 </div>
-                <Button onClick={() => navigate("/")} variant="outline" className="w-full">
-                  Go Home
+                <Button
+                  onClick={() => navigate("/")}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {t("connect-go-home")}
                 </Button>
               </>
             ) : !sessionLoaded ? (
-              <p className="text-sm text-muted-foreground text-center">Loading…</p>
+              <p className="text-sm text-muted-foreground text-center">
+                {t("common-loading-ellipsis")}
+              </p>
             ) : !session ? (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Sign in to your yap.town account to continue.
+                  {t("connect-sign-in-to-your-yap-town-account-to-continue")}
                 </p>
                 <Button onClick={() => setAuthOpen(true)} className="w-full">
-                  Sign In
+                  {t("auth-sign-in")}
                 </Button>
               </>
             ) : (
@@ -125,8 +137,7 @@ export function Connect() {
                   <p className="font-medium">{session.user.email}</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  This lets it see your deck and stats, quiz you on due cards, log
-                  your reviews, and add new words — everything syncs with the app.
+                  {t("connect-this-lets-it-see-your-deck-and-stats-quiz")}
                 </p>
                 {error && (
                   <div className="p-3 rounded text-sm bg-destructive/10 text-destructive border border-destructive/20">
@@ -140,10 +151,16 @@ export function Connect() {
                     className="flex-1"
                     disabled={connecting}
                   >
-                    Cancel
+                    {t("common-cancel")}
                   </Button>
-                  <Button onClick={handleConnect} className="flex-1" disabled={connecting}>
-                    {connecting ? "Connecting…" : "Connect"}
+                  <Button
+                    onClick={handleConnect}
+                    className="flex-1"
+                    disabled={connecting}
+                  >
+                    {connecting
+                      ? t("connect-connecting")
+                      : t("connect-connect")}
                   </Button>
                 </div>
               </>

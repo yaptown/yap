@@ -35,32 +35,35 @@ pub struct AccountCopy {
 #[bridgerton::stable(strong)]
 pub fn account_copy() -> AccountCopy {
     AccountCopy {
-        delete_account_action: "Delete account".into(),
-        delete_account_title: "Delete your account?".into(),
-        delete_account_body: "This permanently deletes your account and your learning history on every device. It can't be undone.".into(),
-        delete_account_confirm: "Delete account".into(),
-        deleting_account: "Deleting account...".into(),
-        delete_account_failed: "Couldn't delete your account. Check your connection and try again.".into(),
-        prompt_title: "Log in or create an account to make sure you don't lose your progress!"
-            .into(),
-        prompt_body: "Your learning data is currently only stored on this device.".into(),
-        prompt_action: "Create Account".into(),
-        sign_in_action: "Sign In".into(),
-        dialog_title: "Welcome to Yap.Town".into(),
-        dialog_description: "Sign in or create an account to sync your progress across devices"
-            .into(),
-        sign_in_tab: "Sign In".into(),
-        sign_up_tab: "Sign Up".into(),
-        email_label: "Email".into(),
-        password_label: "Password".into(),
-        sign_in_button: "Sign In".into(),
-        signing_in_button: "Signing in...".into(),
-        sign_up_button: "Create Account".into(),
-        signing_up_button: "Creating account...".into(),
-        forgot_password: "Forgot your password?".into(),
-        audio_needs_account_title: "Please log in to play audio".into(),
-        audio_needs_account_body:
-            "Audio playback requires an account to access the text-to-speech service.".into(),
+        delete_account_action: yap_i18n::tr!("auth-delete-account"),
+        delete_account_title: yap_i18n::tr!("auth-delete-your-account"),
+        delete_account_body: yap_i18n::tr!(
+            "auth-this-permanently-deletes-your-account-and-your-learning-history"
+        ),
+        delete_account_confirm: yap_i18n::tr!("auth-delete-account"),
+        deleting_account: yap_i18n::tr!("auth-deleting-account"),
+        delete_account_failed: yap_i18n::tr!(
+            "auth-couldn-t-delete-your-account-check-your-connection-and"
+        ),
+        prompt_title: yap_i18n::tr!("auth-log-in-or-create-an-account-to-make-sure"),
+        prompt_body: yap_i18n::tr!("auth-your-learning-data-is-currently-only-stored-on-this"),
+        prompt_action: yap_i18n::tr!("auth-create-account"),
+        sign_in_action: yap_i18n::tr!("auth-sign-in"),
+        dialog_title: yap_i18n::tr!("auth-welcome-to-yap-town"),
+        dialog_description: yap_i18n::tr!("auth-sign-in-or-create-an-account-to-sync-your"),
+        sign_in_tab: yap_i18n::tr!("auth-sign-in"),
+        sign_up_tab: yap_i18n::tr!("auth-sign-up"),
+        email_label: yap_i18n::tr!("auth-email"),
+        password_label: yap_i18n::tr!("auth-password"),
+        sign_in_button: yap_i18n::tr!("auth-sign-in"),
+        signing_in_button: yap_i18n::tr!("auth-signing-in"),
+        sign_up_button: yap_i18n::tr!("auth-create-account"),
+        signing_up_button: yap_i18n::tr!("auth-creating-account"),
+        forgot_password: yap_i18n::tr!("auth-forgot-your-password"),
+        audio_needs_account_title: yap_i18n::tr!("auth-please-log-in-to-play-audio"),
+        audio_needs_account_body: yap_i18n::tr!(
+            "auth-audio-playback-requires-an-account-to-access-the-text"
+        ),
     }
 }
 
@@ -117,11 +120,11 @@ impl ReviewPlanView {
                     .map(|card| card.card_text.clone())
                     .collect();
                 (!cards.is_empty()).then(|| ReviewPlanGroup {
-                    heading: format!(
-                        "{} {group} {}",
-                        cards.len(),
-                        if cards.len() == 1 { "card" } else { "cards" }
-                    ),
+                    heading: match group {
+                        "reading" => yap_i18n::tr!("plan-reading-cards", count = cards.len()),
+                        "listening" => yap_i18n::tr!("plan-listening-cards", count = cards.len()),
+                        _ => yap_i18n::tr!("plan-pronunciation-cards", count = cards.len()),
+                    },
                     cards,
                 })
             })
@@ -129,13 +132,12 @@ impl ReviewPlanView {
         ReviewPlanView {
             target_language,
             title: if next_plan {
-                "Next review plan:"
+                yap_i18n::tr!("review-plan-next-review-plan")
             } else {
-                "Today's review plan:"
-            }
-            .into(),
+                yap_i18n::tr!("review-plan-today-s-review-plan")
+            },
             groups,
-            accept_label: "Let's go!".into(),
+            accept_label: yap_i18n::tr!("review-plan-let-s-go"),
             event,
             week,
         }
@@ -290,9 +292,10 @@ pub fn relative_time(from_ms: f64, to_ms: f64) -> (String, f64) {
         .unwrap_or(0);
     let (lower, unit, name) = TIERS[tier];
     let value = (seconds / unit).round();
-    let plural = if value == 1.0 { "" } else { "s" };
-    let suffix = if future { "from now" } else { "ago" };
-    let text = format!("{value} {name}{plural} {suffix}");
+    let mut args = yap_i18n::FluentArgs::new();
+    args.set("count", value);
+    args.set("direction", if future { "future" } else { "past" });
+    let text = yap_i18n::translate(&format!("time-{name}"), Some(&args));
     // The text is a function of the whole-second count `seconds`: it changes
     // when that count crosses the rounded-value threshold or the tier bound.
     // Work in whole seconds, then convert back to the raw instant (a raw
@@ -330,43 +333,53 @@ fn curriculum_copy(
         next_progress_milestone(progress.percent_known, info.percent_known_after).map(|m| m as u32);
     let curriculum_headline = EmphasizedText {
         before: match (done, info.recommend_more_cards, milestone) {
-            (true, _, _) => "You're all done with".into(),
-            (false, true, Some(m)) => format!("Soon you'll hit {m}% on"),
-            (false, true, None) => "Keep up the momentum on".into(),
-            (false, false, _) => "You're doing great on".into(),
+            (true, _, _) => yap_i18n::tr!(
+                "curriculum-headline.done",
+                m = milestone.unwrap_or_default()
+            ),
+            (false, true, Some(m)) => yap_i18n::tr!("curriculum-headline.milestone", m = m),
+            (false, true, None) => yap_i18n::tr!(
+                "curriculum-headline.momentum",
+                m = milestone.unwrap_or_default()
+            ),
+            (false, false, _) => yap_i18n::tr!(
+                "curriculum-headline.great",
+                m = milestone.unwrap_or_default()
+            ),
         },
         emphasis: sentence_list_label.into(),
-        after: "!".into(),
+        after: yap_i18n::tr!(
+            "curriculum-headline.after",
+            m = milestone.unwrap_or_default()
+        ),
     };
     let curriculum_learn_label = (!done && info.smart_add_count > 0).then(|| {
-        let mut label = format!(
-            "Learn {} new {}",
-            info.smart_add_count,
-            if info.smart_add_count == 1 {
-                "card"
-            } else {
-                "cards"
-            }
-        );
         if let (Some(m), false) = (milestone, info.recommend_more_cards) {
-            label.push_str(&format!(" to hit {m}%"));
+            yap_i18n::tr!(
+                "curriculum-learn-milestone",
+                count = info.smart_add_count,
+                milestone = m
+            )
+        } else {
+            yap_i18n::tr!("curriculum-learn-cards", count = info.smart_add_count)
         }
-        label
     });
     let next_sentence_list_label =
         done.then_some(next_sentence_list)
             .flatten()
             .map(|next| match next {
-                SentenceListSelection::Movie { .. } => "Next movie".into(),
-                SentenceListSelection::PimsleurLesson { .. } => "Next lesson".into(),
+                SentenceListSelection::Movie { .. } => yap_i18n::tr!("curriculum-next-movie"),
+                SentenceListSelection::PimsleurLesson { .. } => {
+                    yap_i18n::tr!("curriculum-next-lesson")
+                }
             });
     let all_learned_note = (done && next_sentence_list.is_none())
-        .then(|| "You've learned all available words!".into());
+        .then(|| yap_i18n::tr!("idle-you-ve-learned-all-available-words"));
     let level_note = selection.is_none().then(|| {
-        format!(
-            "When you complete this level, you'll understand {:.1}% of everyday {}.",
-            info.tier_info.percent_of_usage,
-            get_language_metadata(target_language).common_name
+        yap_i18n::tr!(
+            "curriculum-level-coverage",
+            percent = format!("{:.1}", info.tier_info.percent_of_usage),
+            language = (get_language_metadata(target_language).common_name).to_string()
         )
     });
     CurriculumCopy {
@@ -388,12 +401,12 @@ pub fn next_review_line(card: CardSummary, now_ms: f64) -> LiveText {
     let (when, refresh_at_ms) = relative_time(now_ms, card.due_timestamp_ms);
     let text = match card.card_indicator {
         CardIndicator::WrittenGram { .. } => EmphasizedText {
-            before: "You'll review ".into(),
+            before: yap_i18n::tr!("next-review-word.before", when = when.as_str()),
             emphasis: card.card_text.clone(),
-            after: format!(" {when}."),
+            after: yap_i18n::tr!("next-review-word.after", when = when),
         },
         _ => EmphasizedText {
-            before: format!("Your next review is {when}."),
+            before: yap_i18n::tr!("review-your-next-review-is-when", when = (when).to_string()),
             emphasis: String::new(),
             after: String::new(),
         },
@@ -486,13 +499,8 @@ impl Deck {
                 return IdleScreenView::ReviewPlanOffer(plan);
             }
             let minutes = (f64::from(self.get_today_time_spent_on(day)) / 60.0).round() as u32;
-            let duration = match minutes {
-                0 => "less than a minute".into(),
-                1 => "1 minute".into(),
-                n => format!("{n} minutes"),
-            };
             return IdleScreenView::StudyPlanComplete {
-                title: format!("You completed the study plan in {duration}!"),
+                title: yap_i18n::tr!("plan-completed", count = minutes),
                 next_due: next_due
                     .filter(|card| card.due_timestamp_ms - timestamp_ms < 30.0 * 60.0 * 1000.0),
                 plan: Box::new(plan),
@@ -517,40 +525,36 @@ impl Deck {
         let (kind, title, body) = if idle.nothing_to_do {
             (
                 IdleKind::NothingToDo,
-                "All done!",
-                "You've learned all available words!".into(),
+                yap_i18n::tr!("idle-all-done"),
+                yap_i18n::tr!("idle-you-ve-learned-all-available-words"),
             )
         } else if idle.has_never_studied {
             (
                 IdleKind::FirstRun,
-                "Ready to start learning?",
-                "We'll start with a couple words you might know.".into(),
+                yap_i18n::tr!("idle-ready-to-start-learning"),
+                yap_i18n::tr!("idle-we-ll-start-with-a-couple-words-you-might"),
             )
         } else if idle.no_schedulable_cards {
             let easy = info.smart_add_regime == SmartAddRegime::Easy;
             (
                 IdleKind::NeedsMoreCards,
                 if easy {
-                    "Adding cards is how you learn more!"
+                    yap_i18n::tr!("idle-adding-cards-is-how-you-learn-more")
                 } else {
-                    "Ready for more?"
+                    yap_i18n::tr!("idle-ready-for-more")
                 },
                 if easy && info.easy_cards_remaining > 0 {
-                    format!(
-                        "{} more easy {}, then we'll add harder ones.",
-                        info.easy_cards_remaining,
-                        if info.easy_cards_remaining == 1 {
-                            "word"
-                        } else {
-                            "words"
-                        }
-                    )
+                    yap_i18n::tr!("idle-easy-words", count = info.easy_cards_remaining)
                 } else {
-                    "Add some cards to keep building your vocabulary.".into()
+                    yap_i18n::tr!("idle-add-some-cards-to-keep-building-your-vocabulary")
                 },
             )
         } else {
-            (IdleKind::AllCaughtUp, "All caught up!", String::new())
+            (
+                IdleKind::AllCaughtUp,
+                yap_i18n::tr!("idle-all-caught-up"),
+                String::new(),
+            )
         };
         let smart_add_label = smart_add_label(&kind, &info);
         let show_sentence_list = kind == IdleKind::AllCaughtUp;
@@ -573,9 +577,9 @@ impl Deck {
             kind,
             smart_add_label,
             show_sentence_list,
-            title: title.into(),
+            title,
             body,
-            manual_add_heading: MANUAL_ADD_HEADING.into(),
+            manual_add_heading: manual_add_heading(),
             manual_add_options,
             info,
             next_due,
@@ -584,13 +588,9 @@ impl Deck {
             next_sentence_list_label,
             all_learned_note,
             level_note,
-            change_curriculum_label: "Change curriculum".into(),
-            banned_notice: (review.due_but_banned_count() > 0).then(|| {
-                format!(
-                    "{} cards paused by listening/speaking restrictions",
-                    review.due_but_banned_count()
-                )
-            }),
+            change_curriculum_label: yap_i18n::tr!("idle-change-curriculum"),
+            banned_notice: (review.due_but_banned_count() > 0)
+                .then(|| yap_i18n::tr!("idle-paused-cards", count = review.due_but_banned_count())),
             week,
             navigation,
             sentence_list_options,
@@ -621,15 +621,20 @@ impl Deck {
             target_language: self.get_target_language(),
             heading: accomplishment_heading(&today.day_of_week),
             accomplishment,
-            studied: format!(
-                "You studied {} min! ({} challenges)",
-                today.time_spent_seconds / 60,
-                today.reviews
+            studied: yap_i18n::tr!(
+                "accomplishment-studied",
+                minutes = today.time_spent_seconds / 60,
+                count = today.reviews
             ),
             today,
             streak,
-            streak_label: (streak > 0)
-                .then(|| format!("{streak} day streak — {}", streak_message(streak))),
+            streak_label: (streak > 0).then(|| {
+                yap_i18n::tr!(
+                    "accomplishment-streak",
+                    streak = streak,
+                    encouragement = streak_message(streak)
+                )
+            }),
             percent_known,
             words_known: (percent_known * self.num_cards_added() as f64).round() as u32,
             target: self.get_daily_review_target_setting(),
@@ -652,31 +657,22 @@ struct CurriculumView {
     commit_curriculum: Option<DeckEvent>,
 }
 
-fn sentence_list_category_label(category: SentenceListCategory) -> &'static str {
+fn sentence_list_category_label(category: SentenceListCategory) -> String {
     match category {
-        SentenceListCategory::Essential => "Essential",
-        SentenceListCategory::Movie => "Movies",
-        SentenceListCategory::Pimsleur => "Pimsleur",
+        SentenceListCategory::Essential => yap_i18n::tr!("curriculum-essential"),
+        SentenceListCategory::Movie => yap_i18n::tr!("common-movies"),
+        SentenceListCategory::Pimsleur => "Pimsleur".to_owned(),
     }
 }
 
 fn smart_add_label(kind: &IdleKind, info: &NoCardsReadyInfo) -> Option<String> {
     match kind {
-        IdleKind::FirstRun => Some("Start learning".into()),
-        IdleKind::NeedsMoreCards => Some(format!(
-            "Add {} {}{}",
-            info.smart_add_count,
-            if info.smart_add_regime == SmartAddRegime::Easy {
-                "easy "
-            } else {
-                ""
-            },
-            if info.smart_add_count == 1 {
-                "card"
-            } else {
-                "cards"
-            },
-        )),
+        IdleKind::FirstRun => Some(yap_i18n::tr!("idle-start-learning")),
+        IdleKind::NeedsMoreCards => Some(if info.smart_add_regime == SmartAddRegime::Easy {
+            yap_i18n::tr!("idle-add-easy-cards", count = info.smart_add_count)
+        } else {
+            yap_i18n::tr!("idle-add-cards", count = info.smart_add_count)
+        }),
         IdleKind::NothingToDo | IdleKind::AllCaughtUp => None,
     }
 }
@@ -715,15 +711,20 @@ impl Deck {
         let progress = self
             .get_sentence_list_progress(navigation.selection.clone(), info.tier_info.percent_known);
         let sentence_list_label = match &navigation.selection {
-            None => format!(
-                "{} {} Level {}",
-                info.tier_info.name,
-                get_language_metadata(self.get_target_language()).common_name,
-                info.tier_info.level
+            None => yap_i18n::tr!(
+                "curriculum-tier-level",
+                tier = (info.tier_info.name).to_string(),
+                language =
+                    (get_language_metadata(self.get_target_language()).common_name).to_string(),
+                level = info.tier_info.level
             ),
             Some(SentenceListSelection::Movie { id }) => self.movie_title(id),
             Some(SentenceListSelection::PimsleurLesson { level, lesson }) => {
-                format!("Pimsleur Level {level}, Lesson {lesson}")
+                yap_i18n::tr!(
+                    "curriculum-pimsleur-level-level-lesson-lesson",
+                    level = *level,
+                    lesson = *lesson
+                )
             }
         };
         let next_sentence_list = if progress.all_available_learned {
@@ -748,7 +749,7 @@ impl Deck {
                 };
                 SentenceListOptionView {
                     category: *category,
-                    label: sentence_list_category_label(*category).into(),
+                    label: sentence_list_category_label(*category),
                     selection,
                 }
             })
@@ -772,7 +773,7 @@ impl Deck {
         self.get_movie_metadata(vec![id.to_string()])
             .first()
             .map(|m| m.title.clone())
-            .unwrap_or_else(|| "Movie".into())
+            .unwrap_or_else(|| yap_i18n::tr!("curriculum-movie"))
     }
 
     /// Home's curriculum row, for the persisted selection (or the idle card's
@@ -783,7 +784,11 @@ impl Deck {
         navigation: SentenceListNavigation,
     ) -> HomeCurriculumView {
         let language = get_language_metadata(self.get_target_language()).common_name;
-        let essential_name = format!("{} {language}", tier.name);
+        let essential_name = yap_i18n::tr!(
+            "curriculum-tier-language",
+            tier = tier.name.as_str(),
+            language = language.as_str()
+        );
         let category = navigation.categories[navigation.selected_index];
         let options = navigation
             .categories
@@ -792,7 +797,7 @@ impl Deck {
                 category: *category,
                 label: match category {
                     SentenceListCategory::Essential => essential_name.clone(),
-                    _ => sentence_list_category_label(*category).into(),
+                    _ => sentence_list_category_label(*category),
                 },
             })
             .collect();
@@ -802,28 +807,37 @@ impl Deck {
             None => (
                 essential_name,
                 None,
-                Some(format!("Level {} of {}", tier.level, tier.total_levels)),
-                Some(format!(
-                    "Unlocks {:.1}% of everyday {language}",
-                    tier.percent_of_usage
+                Some(yap_i18n::tr!(
+                    "curriculum-level-progress",
+                    level = tier.level,
+                    total = tier.total_levels
+                )),
+                Some(yap_i18n::tr!(
+                    "curriculum-unlocks-coverage",
+                    percent = format!("{:.1}", tier.percent_of_usage),
+                    language = (language).to_string()
                 )),
             ),
             Some(SentenceListSelection::Movie { id }) => (
-                "Movies".into(),
+                yap_i18n::tr!("common-movies"),
                 Some(CurriculumItemView {
                     title: self.movie_title(id),
                     movie_id: Some(id.clone()),
-                    browse_label: "Change".into(),
+                    browse_label: yap_i18n::tr!("curriculum-change"),
                 }),
                 None,
                 None,
             ),
             Some(SentenceListSelection::PimsleurLesson { level, lesson }) => (
-                "Pimsleur".into(),
+                "Pimsleur".to_owned(),
                 Some(CurriculumItemView {
-                    title: format!("Level {level}, Lesson {lesson}"),
+                    title: yap_i18n::tr!(
+                        "curriculum-level-level-lesson-lesson",
+                        level = *level,
+                        lesson = *lesson
+                    ),
                     movie_id: None,
-                    browse_label: "Change".into(),
+                    browse_label: yap_i18n::tr!("curriculum-change"),
                 }),
                 None,
                 None,
@@ -845,9 +859,14 @@ impl Deck {
         get_daily_goal_options()
             .into_iter()
             .map(|option| GoalOptionView {
-                label: format!("{:?}", option.value),
-                duration_label: format!("{}m", option.minutes),
-                minutes_label: format!("{} min", option.minutes),
+                label: match option.value {
+                    DailyReviewTarget::Casual => yap_i18n::tr!("goal-casual"),
+                    DailyReviewTarget::Regular => yap_i18n::tr!("goal-regular"),
+                    DailyReviewTarget::Serious => yap_i18n::tr!("goal-serious"),
+                    DailyReviewTarget::Intense => yap_i18n::tr!("goal-intense"),
+                },
+                duration_label: yap_i18n::tr!("goal-minutes-short", minutes = option.minutes),
+                minutes_label: yap_i18n::tr!("common-minutes", minutes = option.minutes),
                 target: option.value.clone(),
                 minutes: option.minutes,
                 event: self.set_daily_review_target(option.value),
@@ -1004,7 +1023,10 @@ pub struct FrequencyKnowledgeTick {
 #[bridgerton::bridge]
 pub fn frequency_rank_label(rank: f64) -> String {
     if rank >= 1000.0 {
-        format!("{:.1}k", rank / 1000.0)
+        yap_i18n::tr!(
+            "stats-thousands",
+            thousands = format!("{:.1}", rank / 1000.0)
+        )
     } else {
         format!("{rank:.0}")
     }
@@ -1061,35 +1083,32 @@ impl Deck {
             .date_naive();
         let days = self.get_daily_streak_on(day);
         StreakCardView {
-            title: "Streak".into(),
+            title: yap_i18n::tr!("stats-streak"),
             days,
-            days_label: format!("{days} {}", if days == 1 { "day" } else { "days" }),
-            today_label: format!(
-                "{} / {} min today",
-                self.get_today_time_spent_on(day) / 60,
-                self.get_daily_review_target() / 60,
+            days_label: yap_i18n::tr!("streak-days", count = days),
+            today_label: yap_i18n::tr!(
+                "stats-today-minutes",
+                studied = self.get_today_time_spent_on(day) / 60,
+                goal = self.get_daily_review_target() / 60
             ),
         }
     }
 
     fn percent_known_label(&self) -> String {
-        format!(
-            "{:.1}% of everyday {}",
-            self.get_percent_of_words_known() * 100.0,
-            get_language_metadata(self.get_target_language()).common_name,
+        yap_i18n::tr!(
+            "stats-language-coverage",
+            percent = format!("{:.1}", self.get_percent_of_words_known() * 100.0),
+            language = (get_language_metadata(self.get_target_language()).common_name).to_string()
         )
     }
 
     fn due_summary_view(&self, ready_now: u64) -> DueSummaryView {
         let total = self.get_all_cards_summary().len() as u64;
         DueSummaryView {
-            title: "Due words".into(),
+            title: yap_i18n::tr!("stats-due-words"),
             ready_now,
             total,
-            label: format!(
-                "{ready_now} ready now · {total} {}",
-                if total == 1 { "card" } else { "cards" }
-            ),
+            label: yap_i18n::tr!("due-summary", ready = ready_now, count = total),
         }
     }
 }
@@ -1104,32 +1123,36 @@ fn challenge_preview(
             CardIndicator::WrittenGram { gram } => (
                 gram.to_display_string(language),
                 UpNextKind::Flashcard,
-                "Flashcard",
+                yap_i18n::tr!("common-flashcard"),
             ),
             CardIndicator::ListeningGram { .. } => (
-                "Listen to the word".into(),
+                yap_i18n::tr!("screen-listen-to-the-word"),
                 UpNextKind::Listening,
-                "Listening",
+                yap_i18n::tr!("common-listening"),
             ),
-            CardIndicator::LetterPronunciation { pattern, .. } => {
-                (pattern.clone(), UpNextKind::Pronunciation, "Pronunciation")
-            }
+            CardIndicator::LetterPronunciation { pattern, .. } => (
+                pattern.clone(),
+                UpNextKind::Pronunciation,
+                yap_i18n::tr!("common-pronunciation"),
+            ),
         },
-        Challenge::PronunciationChallenge { pattern, .. } => {
-            (pattern.clone(), UpNextKind::Pronunciation, "Pronunciation")
-        }
+        Challenge::PronunciationChallenge { pattern, .. } => (
+            pattern.clone(),
+            UpNextKind::Pronunciation,
+            yap_i18n::tr!("common-pronunciation"),
+        ),
         Challenge::TranslateComprehensibleSentence(sentence) => (
             sentence.target_language.clone(),
             UpNextKind::Translation,
-            "Translation",
+            yap_i18n::tr!("common-translation"),
         ),
         Challenge::TranscribeComprehensibleSentence(_) => (
-            "Listen and fill in the blanks".into(),
+            yap_i18n::tr!("transcription-listen-and-fill-in-the-blanks"),
             UpNextKind::Transcription,
-            "Transcription",
+            yap_i18n::tr!("common-transcription"),
         ),
     };
-    (headline, kind, label.into())
+    (headline, kind, label)
 }
 
 #[bridgerton::bridge]
@@ -1169,41 +1192,49 @@ impl Deck {
             ReviewStep::PlacementTest(session) => {
                 let info = get_placement_session_info(session);
                 let headline = if !info.finished {
-                    "Placement Test"
+                    yap_i18n::tr!("home-placement-test")
                 } else if info.too_advanced {
-                    "You might be too advanced"
+                    yap_i18n::tr!("home-you-might-be-too-advanced")
                 } else {
-                    "Ready to Start!"
+                    yap_i18n::tr!("home-ready-to-start")
                 };
-                (headline.into(), "Placement test".into(), None)
+                (headline, yap_i18n::tr!("home-placement-test-2"), None)
             }
-            ReviewStep::ReviewPlan(_) => {
-                ("Your study plan is ready".into(), "Study plan".into(), None)
+            ReviewStep::ReviewPlan(_) => (
+                yap_i18n::tr!("home-your-study-plan-is-ready"),
+                yap_i18n::tr!("home-study-plan"),
+                None,
+            ),
+            ReviewStep::SetDisplayName => (
+                yap_i18n::tr!("home-choose-your-display-name"),
+                yap_i18n::tr!("home-profile"),
+                None,
+            ),
+            ReviewStep::Accomplishment(view) => {
+                (view.heading, yap_i18n::tr!("home-accomplishment"), None)
             }
-            ReviewStep::SetDisplayName => {
-                ("Choose Your Display Name".into(), "Profile".into(), None)
-            }
-            ReviewStep::Accomplishment(view) => (view.heading, "Accomplishment".into(), None),
             ReviewStep::Idle(idle) => {
                 let (headline, kind_label) = match idle.as_ref() {
-                    IdleScreenView::Idle(view) => (view.title.clone(), "Review"),
+                    IdleScreenView::Idle(view) => {
+                        (view.title.clone(), yap_i18n::tr!("common-review"))
+                    }
                     IdleScreenView::AudioPending { online, .. } => (
                         if *online {
-                            "Preparing audio…"
+                            yap_i18n::tr!("home-preparing-audio")
                         } else {
-                            "Connect to download audio"
-                        }
-                        .into(),
-                        "Audio pending",
+                            yap_i18n::tr!("home-connect-to-download-audio")
+                        },
+                        yap_i18n::tr!("home-audio-pending"),
                     ),
-                    IdleScreenView::ReviewPlanOffer(_) => {
-                        ("Your study plan is ready".into(), "Study plan")
-                    }
+                    IdleScreenView::ReviewPlanOffer(_) => (
+                        yap_i18n::tr!("home-your-study-plan-is-ready"),
+                        yap_i18n::tr!("home-study-plan"),
+                    ),
                     IdleScreenView::StudyPlanComplete { title, .. } => {
-                        (title.clone(), "Study plan")
+                        (title.clone(), yap_i18n::tr!("home-study-plan"))
                     }
                 };
-                (headline, kind_label.into(), Some(*idle))
+                (headline, kind_label, Some(*idle))
             }
         };
         let language = get_language_metadata(self.get_target_language());
@@ -1213,37 +1244,49 @@ impl Deck {
             .with_timezone(&self.context.timezone)
             .date_naive();
         HomeScreenView {
-            title: "Home".into(),
-            greeting_lead: "A little".into(),
+            title: yap_i18n::tr!("common-home"),
+            greeting_lead: yap_i18n::tr!("home-greeting.before"),
             course_icon: language.icon.clone(),
             course_name: language.common_name.clone(),
-            greeting_tail: ", every day.".into(),
+            greeting_tail: yap_i18n::tr!("home-greeting.after"),
             native_language: self.context.course.native_language,
             target_language: self.get_target_language(),
             up_next: UpNextView {
-                eyebrow: format!("Up next · {kind_label}"),
+                eyebrow: yap_i18n::tr!(
+                    "home-up-next-kind-label",
+                    kind_label = (kind_label).to_string()
+                ),
                 headline,
                 kind,
                 action_label: if !is_challenge {
-                    "Continue".into()
+                    yap_i18n::tr!("common-continue")
                 } else {
                     // A held challenge can outlive the due queue, but it's still a card.
                     let count = due_count.max(1);
-                    format!(
-                        "Review {count} {}",
-                        if count == 1 { "card" } else { "cards" }
-                    )
+                    yap_i18n::tr!("review-cards", count = count)
                 },
                 due_count,
                 idle,
             },
             curriculum,
             week: WeekCardView {
-                title: "This week".into(),
+                title: yap_i18n::tr!("home-this-week"),
                 today: EmphasizedText {
-                    before: format!("{} / ", self.get_today_time_spent_on(day) / 60),
-                    emphasis: format!("{} min", self.get_daily_review_target() / 60),
-                    after: " today".into(),
+                    before: yap_i18n::tr!(
+                        "home-daily-progress.before",
+                        studied = self.get_today_time_spent_on(day) / 60,
+                        goal = self.get_daily_review_target() / 60
+                    ),
+                    emphasis: yap_i18n::tr!(
+                        "home-daily-progress.goal",
+                        studied = self.get_today_time_spent_on(day) / 60,
+                        goal = self.get_daily_review_target() / 60
+                    ),
+                    after: yap_i18n::tr!(
+                        "home-daily-progress.after",
+                        studied = self.get_today_time_spent_on(day) / 60,
+                        goal = self.get_daily_review_target() / 60
+                    ),
                 },
                 daily_goal: self.get_daily_review_target_setting(),
                 goal_options: self.goal_options_view(),
@@ -1251,25 +1294,23 @@ impl Deck {
             },
             xp: HomeStatView {
                 value: format!("{:.0}", self.get_xp()),
-                caption: "XP earned".into(),
+                caption: yap_i18n::tr!("home-xp-earned"),
                 note: None,
             },
             cards: HomeStatView {
                 value: cards_studied.to_string(),
-                caption: if cards_studied == 1 {
-                    "Card studied"
-                } else {
-                    "Cards studied"
-                }
-                .into(),
+                caption: yap_i18n::tr!("home-cards-studied", count = cards_studied),
                 note: Some(self.percent_known_label()),
             },
             dictionary: DictionaryCardView {
-                title: "Find a word".into(),
-                search_placeholder: format!(
-                    "Search {} or {}",
-                    get_language_metadata(self.get_target_language()).common_name,
-                    get_language_metadata(self.context.course.native_language).common_name,
+                title: yap_i18n::tr!("home-find-a-word"),
+                search_placeholder: yap_i18n::tr!(
+                    "dictionary-search-languages",
+                    target =
+                        (get_language_metadata(self.get_target_language()).common_name).to_string(),
+                    native = (get_language_metadata(self.context.course.native_language)
+                        .common_name)
+                        .to_string()
                 ),
             },
             due_count,
@@ -1291,17 +1332,17 @@ impl Deck {
         let streak = self.streak_card_view(timestamp_ms);
         StatsScreenView {
             target_language: self.get_target_language(),
-            title: "Stats".into(),
+            title: yap_i18n::tr!("common-stats"),
             xp,
             total_reviews,
             tiles: vec![
                 StatTileView {
-                    eyebrow: "XP".into(),
+                    eyebrow: yap_i18n::tr!("stats-xp"),
                     value: format!("{xp:.0}"),
                     caption: None,
                 },
                 StatTileView {
-                    eyebrow: "Reviews".into(),
+                    eyebrow: yap_i18n::tr!("common-reviews"),
                     value: total_reviews.to_string(),
                     caption: None,
                 },
@@ -1311,11 +1352,12 @@ impl Deck {
                     caption: Some(streak.today_label),
                 },
                 StatTileView {
-                    eyebrow: "Vocabulary".into(),
+                    eyebrow: yap_i18n::tr!("stats-vocabulary"),
                     value: format!("{:.1}%", percent_known * 100.0),
-                    caption: Some(format!(
-                        "of everyday {}",
-                        get_language_metadata(self.get_target_language()).common_name
+                    caption: Some(yap_i18n::tr!(
+                        "stats-everyday-language",
+                        language = (get_language_metadata(self.get_target_language()).common_name)
+                            .to_string()
                     )),
                 },
             ],
@@ -1323,12 +1365,9 @@ impl Deck {
             due: self.due_summary_view(review.due_count() as u64),
             leeches,
             leech_count,
-            leeches_label: format!(
-                "{leech_count} {}",
-                if leech_count == 1 { "leech" } else { "leeches" }
-            ),
+            leeches_label: yap_i18n::tr!("stats-leeches", count = leech_count),
             frequency_knowledge_chart_data: self.get_frequency_knowledge_chart_data(),
-            frequency_knowledge_chart_title: "Word knowledge by frequency".into(),
+            frequency_knowledge_chart_title: yap_i18n::tr!("stats-word-knowledge-by-frequency"),
         }
     }
 
@@ -1519,28 +1558,31 @@ impl Deck {
 
 fn accomplishment_heading(day: &str) -> String {
     let message = match day {
-        "Monday" => "Monday can't stop you!",
-        "Tuesday" => "Solid Tuesday session!",
-        "Wednesday" => "Midweek momentum!",
-        "Thursday" => "Thursday well spent!",
-        "Friday" => "Happy Friday!",
-        "Saturday" => "Weekend warrior!",
-        "Sunday" => "So much for the day of rest!",
-        _ => "Nice!",
+        "Monday" => yap_i18n::tr!("accomplishment-monday-can-t-stop-you"),
+        "Tuesday" => yap_i18n::tr!("accomplishment-solid-tuesday-session"),
+        "Wednesday" => yap_i18n::tr!("accomplishment-midweek-momentum"),
+        "Thursday" => yap_i18n::tr!("accomplishment-thursday-well-spent"),
+        "Friday" => yap_i18n::tr!("accomplishment-happy-friday"),
+        "Saturday" => yap_i18n::tr!("accomplishment-weekend-warrior"),
+        "Sunday" => yap_i18n::tr!("accomplishment-so-much-for-the-day-of-rest"),
+        _ => yap_i18n::tr!("accomplishment-nice"),
     };
-    format!("Goal Reached! {message}")
+    yap_i18n::tr!(
+        "accomplishment-goal-reached-message",
+        message = (message).to_string()
+    )
 }
 
-fn streak_message(streak: u32) -> &'static str {
+fn streak_message(streak: u32) -> String {
     match streak {
-        ..=1 => "you're just getting started",
-        2..=3 => "keep it up!",
-        4..=7 => "you're on a roll!",
-        8..=14 => "impressive dedication!",
-        15..=30 => "unstoppable!",
-        31..=60 => "what a habit!",
-        61..=100 => "legendary consistency!",
-        _ => "absolutely incredible!",
+        ..=1 => yap_i18n::tr!("accomplishment-you-re-just-getting-started"),
+        2..=3 => yap_i18n::tr!("accomplishment-keep-it-up"),
+        4..=7 => yap_i18n::tr!("accomplishment-you-re-on-a-roll"),
+        8..=14 => yap_i18n::tr!("accomplishment-impressive-dedication"),
+        15..=30 => yap_i18n::tr!("accomplishment-unstoppable"),
+        31..=60 => yap_i18n::tr!("accomplishment-what-a-habit"),
+        61..=100 => yap_i18n::tr!("accomplishment-legendary-consistency"),
+        _ => yap_i18n::tr!("accomplishment-absolutely-incredible"),
     }
 }
 
@@ -1865,7 +1907,7 @@ mod tests {
         else {
             panic!("new deck should be idle");
         };
-        assert_eq!(idle.manual_add_heading, MANUAL_ADD_HEADING);
+        assert_eq!(idle.manual_add_heading, "Choose cards to add");
     }
 
     fn with_due_cards() -> Deck {

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import {
   account_copy,
   type AccountCopy,
@@ -90,7 +91,8 @@ export async function playAudio(
       if (settled) return;
 
       audio.onended = () => finish();
-      audio.onerror = () => playbackFailed(new Error("Audio playback failed"));
+      audio.onerror = () =>
+        playbackFailed(new Error(t("utils-audio-playback-failed")));
       try {
         await audio.play();
       } catch (error) {
@@ -100,7 +102,7 @@ export async function playAudio(
 
     void start().catch((error) => {
       if (settled) return;
-      finish(error ?? new Error("Audio preparation failed"));
+      finish(error ?? new Error(t("utils-audio-preparation-failed")));
       if (typeof error === "string" && error.includes("400"))
         needsAuth(account_copy());
       console.error("Failed to prepare audio:", error);

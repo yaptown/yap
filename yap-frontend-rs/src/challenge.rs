@@ -297,7 +297,7 @@ impl ReviewInfo {
             let definition = language_pack.gram_definitions[representative].clone();
             let resolved = language_pack.resolve_gram(&representative.gram);
             let label = if matches!(definition, GramDefinition::Phrasebook(_)) {
-                Some("Multiword".to_owned())
+                Some(yap_i18n::tr!("challenge-multiword"))
             } else {
                 resolved
                     .heteronym()

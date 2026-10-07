@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 // Web-specific locale aliases, joined with shared language metadata
 // from Rust. After changing learning_metadata.rs, rebuild WASM and run
 // `pnpm generate:metadata` in yap-frontend; both builds check for stale metadata.
@@ -10,65 +11,78 @@ export interface LanguageMeta extends LanguageMetadata {
   browserCodes: string[];
 }
 
+// Keep generated language facts and autonyms unchanged; localize only display fields.
+function localizedMetadata(metadata: LanguageMetadata): LanguageMetadata {
+  const args = { language: metadata.isoCode };
+  return {
+    ...metadata,
+    englishName: t("language-name.full", args),
+    commonName: t("language-name.common", args),
+    people: t("language-name.people", args),
+    characterType:
+      metadata.characterType && t("language-name.characters", args),
+  };
+}
+
 export const LANGUAGES: Record<Language, LanguageMeta> = {
   English: {
-    ...LANGUAGE_METADATA.English,
+    ...localizedMetadata(LANGUAGE_METADATA.English),
     browserCodes: ["en"],
   },
   French: {
-    ...LANGUAGE_METADATA.French,
+    ...localizedMetadata(LANGUAGE_METADATA.French),
     browserCodes: ["fr"],
   },
   SpanishLatinAmerican: {
-    ...LANGUAGE_METADATA.SpanishLatinAmerican,
+    ...localizedMetadata(LANGUAGE_METADATA.SpanishLatinAmerican),
     browserCodes: ["es", "es-419", "es-mx", "es-us"],
   },
   SpanishPeninsular: {
-    ...LANGUAGE_METADATA.SpanishPeninsular,
+    ...localizedMetadata(LANGUAGE_METADATA.SpanishPeninsular),
     browserCodes: ["es-es"],
   },
   German: {
-    ...LANGUAGE_METADATA.German,
+    ...localizedMetadata(LANGUAGE_METADATA.German),
     browserCodes: ["de"],
   },
   Italian: {
-    ...LANGUAGE_METADATA.Italian,
+    ...localizedMetadata(LANGUAGE_METADATA.Italian),
     browserCodes: ["it"],
   },
   PortugueseBrazilian: {
-    ...LANGUAGE_METADATA.PortugueseBrazilian,
+    ...localizedMetadata(LANGUAGE_METADATA.PortugueseBrazilian),
     browserCodes: ["pt", "pt-br"],
   },
   PortugueseEuropean: {
-    ...LANGUAGE_METADATA.PortugueseEuropean,
+    ...localizedMetadata(LANGUAGE_METADATA.PortugueseEuropean),
     browserCodes: ["pt-pt"],
   },
   Russian: {
-    ...LANGUAGE_METADATA.Russian,
+    ...localizedMetadata(LANGUAGE_METADATA.Russian),
     browserCodes: ["ru"],
   },
   Korean: {
-    ...LANGUAGE_METADATA.Korean,
+    ...localizedMetadata(LANGUAGE_METADATA.Korean),
     browserCodes: ["ko"],
   },
   Japanese: {
-    ...LANGUAGE_METADATA.Japanese,
+    ...localizedMetadata(LANGUAGE_METADATA.Japanese),
     browserCodes: ["ja"],
   },
   ChineseSimplified: {
-    ...LANGUAGE_METADATA.ChineseSimplified,
+    ...localizedMetadata(LANGUAGE_METADATA.ChineseSimplified),
     browserCodes: ["zh", "zh-hans", "zh-cn", "zh-sg"],
   },
   ChineseTraditional: {
-    ...LANGUAGE_METADATA.ChineseTraditional,
+    ...localizedMetadata(LANGUAGE_METADATA.ChineseTraditional),
     browserCodes: ["zh-hant", "zh-tw", "zh-hk", "zh-mo"],
   },
   Hindi: {
-    ...LANGUAGE_METADATA.Hindi,
+    ...localizedMetadata(LANGUAGE_METADATA.Hindi),
     browserCodes: ["hi"],
   },
   Thai: {
-    ...LANGUAGE_METADATA.Thai,
+    ...localizedMetadata(LANGUAGE_METADATA.Thai),
     browserCodes: ["th"],
   },
 };

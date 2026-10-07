@@ -23,7 +23,7 @@ struct SentenceVerdictView: View, Equatable {
             }
             if let headline {
                 if error != nil {
-                    Text("Your submission could not be graded automatically. Please grade the words manually below.")
+                    Text(L("translation-verdict-your-submission-could-not-be-graded-automatically-please-grade"))
                         .font(.footnote).foregroundStyle(Color.yapCautionForeground)
                 }
                 FeedbackSection(tone: headline.tone, encouragement: encouragement, explanation: explanation)
@@ -122,7 +122,7 @@ struct GradeSectionDisclosure<Content: View>: View {
                 HStack {
                     Text(title).font(.subheadline.weight(.medium))
                     Spacer()
-                    Text(isExpanded ? "Hide" : "Show").font(.caption).foregroundStyle(Color.yapMuted)
+                    Text(isExpanded ? L("common-hide") : L("common-show")).font(.caption).foregroundStyle(Color.yapMuted)
                 }.contentShape(Rectangle())
             }.buttonStyle(.plain).frame(minHeight: 32)
             if isExpanded { content() }

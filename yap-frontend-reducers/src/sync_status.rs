@@ -78,40 +78,64 @@ pub fn sync_status_view(inputs: SyncStatusInputs) -> SyncStatusView {
         });
     let error = inputs.last_sync_error.or(inputs.host_sync_error);
     let (status, label, severity) = if !inputs.online {
-        (SyncStatus::Offline, "Offline", SyncSeverity::Neutral)
+        (
+            SyncStatus::Offline,
+            yap_i18n::tr!("sync-offline"),
+            SyncSeverity::Neutral,
+        )
     } else if error.is_some() {
-        (SyncStatus::Error, "Sync error", SyncSeverity::Negative)
+        (
+            SyncStatus::Error,
+            yap_i18n::tr!("sync-sync-error"),
+            SyncSeverity::Negative,
+        )
     } else if inputs
         .earliest_unsynced_ms
         .is_some_and(|earliest| inputs.now_ms - earliest > UNSYNCED_THRESHOLD_MS)
     {
-        (SyncStatus::Unsynced, "Unsynced", SyncSeverity::Caution)
+        (
+            SyncStatus::Unsynced,
+            yap_i18n::tr!("sync-unsynced"),
+            SyncSeverity::Caution,
+        )
     } else {
-        (SyncStatus::Synced, "Synced", SyncSeverity::Neutral)
+        (
+            SyncStatus::Synced,
+            yap_i18n::tr!("sync-synced"),
+            SyncSeverity::Neutral,
+        )
     };
     let indicator = (status != SyncStatus::Synced).then(|| severity.clone());
     SyncStatusView {
         status,
-        label: label.into(),
+        label,
         indicator,
         severity,
         running,
         error,
-        error_title: "Sync Error".into(),
+        error_title: yap_i18n::tr!("sync-sync-error-2"),
         offline_banner: (!inputs.online)
-            .then(|| "You're currently offline. Changes will sync when you reconnect.".into()),
-        sync_button_label: if running { "Syncing..." } else { "Sync Now" }.into(),
+            .then(|| yap_i18n::tr!("sync-you-re-currently-offline-changes-will-sync-when-you")),
+        sync_button_label: if running {
+            yap_i18n::tr!("sync-syncing")
+        } else {
+            yap_i18n::tr!("sync-sync-now")
+        },
         sync_button_enabled: inputs.online && !running,
-        title: "Sync Status".into(),
-        description: "Yap.town keeps your data synchronized across your devices.".into(),
-        last_sync_label: inputs.last_sync_finished_ms.map(|_| "Last sync:".into()),
+        title: yap_i18n::tr!("sync-sync-status"),
+        description: yap_i18n::tr!(
+            "sync-yap-town-keeps-your-data-synchronized-across-your-devices"
+        ),
+        last_sync_label: inputs
+            .last_sync_finished_ms
+            .map(|_| yap_i18n::tr!("sync-last-sync")),
         last_sync_finished_ms: inputs.last_sync_finished_ms,
-        local_events_label: "Local Events".into(),
-        server_events_label: "Server Events".into(),
-        user_id_label: "User ID".into(),
-        logged_out_label: "Logged out".into(),
-        device_id_label: "Device ID".into(),
-        version_label: "Yap.Town version".into(),
+        local_events_label: yap_i18n::tr!("sync-local-events"),
+        server_events_label: yap_i18n::tr!("sync-server-events"),
+        user_id_label: yap_i18n::tr!("sync-user-id"),
+        logged_out_label: yap_i18n::tr!("sync-logged-out"),
+        device_id_label: yap_i18n::tr!("sync-device-id"),
+        version_label: yap_i18n::tr!("sync-yap-town-version"),
         local_events: inputs.local_events,
         server_events: inputs.server_events,
     }

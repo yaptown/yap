@@ -115,7 +115,9 @@ pub fn failed_transcription_review(
     course: Course,
 ) -> transcription_challenge::Grade {
     let mut grade = local_transcription_review(submission, course.target_language);
-    grade.autograding_error = Some("The LLM was not able to grade this transcription".to_string());
+    grade.autograding_error = Some(yap_i18n::tr!(
+        "transcription-the-llm-was-not-able-to-grade-this-transcription"
+    ));
     grade
 }
 
@@ -561,27 +563,30 @@ fn blank_tint(result: Option<&PartGraded>) -> BlankTint {
 #[bridgerton::stable]
 pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
     let grade_options: Vec<_> = [
-        ("Perfect", WordGrade::Perfect { wrote: None }),
         (
-            "Correct with typo",
+            yap_i18n::tr!("transcription-perfect"),
+            WordGrade::Perfect { wrote: None },
+        ),
+        (
+            yap_i18n::tr!("transcription-correct-with-typo"),
             WordGrade::CorrectWithTypo { wrote: None },
         ),
         (
-            "Phonetically identical",
+            yap_i18n::tr!("transcription-phonetically-identical"),
             WordGrade::PhoneticallyIdenticalButContextuallyIncorrect { wrote: None },
         ),
         (
-            "Phonetically similar",
+            yap_i18n::tr!("transcription-phonetically-similar"),
             WordGrade::PhoneticallySimilarButContextuallyIncorrect { wrote: None },
         ),
-        ("Incorrect", WordGrade::Incorrect { wrote: None }),
-        ("Missed", WordGrade::Missed {}),
+        (
+            yap_i18n::tr!("transcription-incorrect"),
+            WordGrade::Incorrect { wrote: None },
+        ),
+        (yap_i18n::tr!("transcription-missed"), WordGrade::Missed {}),
     ]
     .into_iter()
-    .map(|(label, grade)| GradeOptionView {
-        label: label.into(),
-        grade,
-    })
+    .map(|(label, grade)| GradeOptionView { label, grade })
     .collect();
     let editing = matches!(state.phase, TranscriptionPhase::Editing);
     let grade = match &state.phase {
@@ -650,16 +655,16 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
                 .map(|b| b.text.as_str())
                 .collect::<Vec<_>>()
                 .join(" "),
-            submission_label: "Your answer:".into(),
-            continue_label: "Continue".into(),
+            submission_label: yap_i18n::tr!("transcription-your-answer"),
+            continue_label: yap_i18n::tr!("common-continue"),
             encouragement: grade.encouragement.clone(),
             explanation: grade.explanation.clone(),
             autograding_error: grade.autograding_error.clone(),
             compare: grade.compare.clone(),
-            compare_label: "Listen:".into(),
-            translation_label: "English translation (click to reveal):".into(),
+            compare_label: yap_i18n::tr!("transcription-listen"),
+            translation_label: yap_i18n::tr!("transcription-english-translation-click-to-reveal"),
             translation_revealed: *translation_revealed,
-            word_grades_title: "Grade Words Manually".into(),
+            word_grades_title: yap_i18n::tr!("transcription-grade-words-manually"),
             word_grades_open_by_default: grade.autograding_error.is_some(),
             word_grades,
         })
@@ -674,10 +679,10 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
         } else {
             vec![]
         },
-        cant_listen_label: "Can't listen now".into(),
-        correct_label: "Correct sentence".into(),
-        instructions: "Listen and fill in the blanks".into(),
-        placeholder: "Write what you hear".into(),
+        cant_listen_label: yap_i18n::tr!("transcription-can-t-listen-now"),
+        correct_label: yap_i18n::tr!("transcription-correct-sentence"),
+        instructions: yap_i18n::tr!("transcription-listen-and-fill-in-the-blanks"),
+        placeholder: yap_i18n::tr!("transcription-write-what-you-hear"),
         can_submit: editing && state.submission().all_blanks_filled,
         can_continue: matches!(
             state.phase,
@@ -687,11 +692,10 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
             }
         ),
         submit_label: if matches!(state.phase, TranscriptionPhase::Grading { .. }) {
-            "AI is grading..."
+            yap_i18n::tr!("common-grading")
         } else {
-            "Check Answer"
-        }
-        .into(),
+            yap_i18n::tr!("common-check-answer")
+        },
         is_grading: matches!(state.phase, TranscriptionPhase::Grading { .. }),
         blanks,
         verdict,

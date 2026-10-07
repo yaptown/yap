@@ -57,7 +57,9 @@ pub use sentence_lists::{
 };
 pub use transcription_review::get_transcription_review_definitions;
 pub use yap_frontend_reducers::*;
+mod ui_language;
 mod utils;
+pub use ui_language::{set_ui_language, ui_language};
 
 pub use audio::{
     FetchedAudio, VoiceActorInfo, audio_mime_type, fetch_tts, human_audio_applies, tts_endpoint,
@@ -1075,19 +1077,26 @@ pub struct ManualAddOption {
     pub event: DeckEvent,
 }
 
-const MANUAL_ADD_HEADING: &str = "Choose cards to add";
+fn manual_add_heading() -> String {
+    yap_i18n::tr!("cards-choose-to-add")
+}
 
 fn manual_add_label(count: u32, card_type: CardType, course: Course) -> String {
-    let target = course.target_language;
-    let kind = match card_type {
-        CardType::TargetLanguage => format!("{target} → {}", course.native_language),
-        CardType::Listening => format!("{target} listening"),
-        CardType::LetterPronunciation => format!("{target} pronunciation"),
-    };
-    format!(
-        "Learn {count} {kind} {}",
-        if count == 1 { "card" } else { "cards" }
-    )
+    let target = get_language_name(course.target_language).full;
+    match card_type {
+        CardType::TargetLanguage => yap_i18n::tr!(
+            "cards-learn-written",
+            count = count,
+            target = target,
+            native = get_language_name(course.native_language).full
+        ),
+        CardType::Listening => {
+            yap_i18n::tr!("cards-learn-listening", count = count, target = target)
+        }
+        CardType::LetterPronunciation => {
+            yap_i18n::tr!("cards-learn-pronunciation", count = count, target = target)
+        }
+    }
 }
 
 pub use deck_event::current::{CardIndicator, CardReview};
@@ -2515,7 +2524,7 @@ impl Deck {
                         if let language_utils::Atom::Tok(word) = atom
                             && let language_utils::WordType::Heteronym(h) = &word.word_type
                         {
-                            return Some(h.pos.to_string().to_lowercase());
+                            return Some(crate::challenge_views::part_of_speech_short_label(h.pos));
                         }
                         None
                     });
@@ -2527,11 +2536,14 @@ impl Deck {
                         .language_pack
                         .resolve_gram(gram)
                         .to_display_string(self.context.course.target_language);
-                    (text, Some("listening".to_string()))
+                    (text, Some(yap_i18n::tr!("cards-listening")))
                 }
                 CardIndicator::LetterPronunciation { pattern, .. } => {
                     let text = self.context.language_pack.string_rodeo.resolve(pattern);
-                    (format!("[{text}]"), Some("pronunciation".to_string()))
+                    (
+                        format!("[{text}]"),
+                        Some(yap_i18n::tr!("cards-pronunciation")),
+                    )
                 }
             };
 
@@ -5158,7 +5170,9 @@ pub async fn autograde_transcription_llm(
             .collect();
 
         return Ok(transcription_challenge::Grade {
-            encouragement: Some("Perfect! You transcribed everything correctly!".to_string()),
+            encouragement: Some(yap_i18n::tr!(
+                "transcription-perfect-you-transcribed-everything-correctly"
+            )),
             explanation: None,
             results,
             compare: Vec::new(),
@@ -5286,9 +5300,9 @@ impl Deck {
 
         let resolve_card_type = |card: &CardIndicator<SpurGram, Spur>| -> String {
             match card {
-                CardIndicator::WrittenGram { .. } => "reading".to_string(),
-                CardIndicator::ListeningGram { .. } => "listening".to_string(),
-                CardIndicator::LetterPronunciation { .. } => "pronunciation".to_string(),
+                CardIndicator::WrittenGram { .. } => yap_i18n::tr!("cards-reading"),
+                CardIndicator::ListeningGram { .. } => yap_i18n::tr!("cards-listening"),
+                CardIndicator::LetterPronunciation { .. } => yap_i18n::tr!("cards-pronunciation"),
             }
         };
 

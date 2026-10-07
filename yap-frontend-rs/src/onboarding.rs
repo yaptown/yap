@@ -350,11 +350,10 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
     let is_new = state.selections.experience_level == Some(ExperienceLevel::New);
     let mut primary = Some(OnboardingPrimary {
         label: if state.purpose == OnboardingPurpose::AnkiDeck {
-            "Set up my deck"
+            yap_i18n::tr!("onboarding-set-up-my-deck")
         } else {
-            "Continue"
-        }
-        .into(),
+            yap_i18n::tr!("common-continue")
+        },
         enabled: true,
         show_arrow: true,
     });
@@ -380,35 +379,62 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
     };
     let (title, content) = match step {
         OnboardingStep::HeardAbout => choices(
-            "How did you hear about Yap?".into(),
+            yap_i18n::tr!("onboarding-how-did-you-hear-about-yap"),
             [
-                (HeardAbout::FriendsOrFamily, "Friends or family"),
-                (HeardAbout::Reddit, "Reddit"),
-                (HeardAbout::TikTok, "TikTok"),
-                (HeardAbout::GoogleSearch, "Google Search"),
-                (HeardAbout::YouTube, "YouTube"),
-                (HeardAbout::Other, "Other"),
+                (
+                    HeardAbout::FriendsOrFamily,
+                    yap_i18n::tr!("onboarding-friends-or-family"),
+                ),
+                (HeardAbout::Reddit, "Reddit".to_owned()),
+                (HeardAbout::TikTok, "TikTok".to_owned()),
+                (
+                    HeardAbout::GoogleSearch,
+                    yap_i18n::tr!("onboarding-google-search"),
+                ),
+                (HeardAbout::YouTube, "YouTube".to_owned()),
+                (HeardAbout::Other, yap_i18n::tr!("onboarding-other")),
             ]
             .into_iter()
-            .map(|(value, label)| (OnboardingChoice::HeardAbout { value }, label.into(), None))
+            .map(|(value, label)| (OnboardingChoice::HeardAbout { value }, label, None))
             .collect(),
             state
                 .heard_about
                 .map(|value| OnboardingChoice::HeardAbout { value }),
         ),
         OnboardingStep::Motivation => choices(
-            format!("Why are you learning {language}?"),
+            yap_i18n::tr!(
+                "onboarding-why-are-you-learning-language",
+                language = (language).to_string()
+            ),
             [
-                (Motivation::SpendTimeProductively, "Spend time productively"),
-                (Motivation::SupportMyEducation, "Support my education"),
-                (Motivation::ConnectWithPeople, "Connect with people"),
-                (Motivation::BoostMyCareer, "Boost my career"),
-                (Motivation::PrepareForTravel, "Prepare for travel"),
-                (Motivation::JustForFun, "Just for fun"),
-                (Motivation::Other, "Other"),
+                (
+                    Motivation::SpendTimeProductively,
+                    yap_i18n::tr!("onboarding-spend-time-productively"),
+                ),
+                (
+                    Motivation::SupportMyEducation,
+                    yap_i18n::tr!("onboarding-support-my-education"),
+                ),
+                (
+                    Motivation::ConnectWithPeople,
+                    yap_i18n::tr!("onboarding-connect-with-people"),
+                ),
+                (
+                    Motivation::BoostMyCareer,
+                    yap_i18n::tr!("onboarding-boost-my-career"),
+                ),
+                (
+                    Motivation::PrepareForTravel,
+                    yap_i18n::tr!("onboarding-prepare-for-travel"),
+                ),
+                (
+                    Motivation::JustForFun,
+                    yap_i18n::tr!("onboarding-just-for-fun"),
+                ),
+                (Motivation::Other, yap_i18n::tr!("onboarding-other")),
             ]
             .into_iter()
-            .map(|(value, label)| (OnboardingChoice::Motivation { value }, label.into(), None))
+            .map(|(value, label)| (OnboardingChoice::Motivation { value }, label, None))
             .collect(),
             state
                 .selections
@@ -416,24 +442,33 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
                 .map(|value| OnboardingChoice::Motivation { value }),
         ),
         OnboardingStep::Experience => choices(
-            format!("How much {language} do you know?"),
+            yap_i18n::tr!(
+                "onboarding-how-much-language-do-you-know",
+                language = (language).to_string()
+            ),
             [
-                (ExperienceLevel::New, format!("I'm new to {language}")),
+                (
+                    ExperienceLevel::New,
+                    yap_i18n::tr!(
+                        "onboarding-i-m-new-to-language",
+                        language = (language).to_string()
+                    ),
+                ),
                 (
                     ExperienceLevel::CommonWords,
-                    "I know some common words".into(),
+                    yap_i18n::tr!("onboarding-i-know-some-common-words"),
                 ),
                 (
                     ExperienceLevel::BasicConversations,
-                    "I can have basic conversations".into(),
+                    yap_i18n::tr!("onboarding-i-can-have-basic-conversations"),
                 ),
                 (
                     ExperienceLevel::VariousTopics,
-                    "I can talk about various topics".into(),
+                    yap_i18n::tr!("onboarding-i-can-talk-about-various-topics"),
                 ),
                 (
                     ExperienceLevel::MostTopics,
-                    "I can discuss most topics in detail".into(),
+                    yap_i18n::tr!("onboarding-i-can-discuss-most-topics-in-detail"),
                 ),
             ]
             .into_iter()
@@ -445,16 +480,25 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
                 .map(|value| OnboardingChoice::Experience { value }),
         ),
         OnboardingStep::Achievements => (
-            "Here's what you can achieve".into(),
+            yap_i18n::tr!("onboarding-here-s-what-you-can-achieve"),
             Achievements {
                 items: [
-                    ("ui.vocabulary", "Build a large vocabulary".to_string()),
-                    ("ui.media", format!("Enjoy {} media", metadata.common_name)),
+                    (
+                        "ui.vocabulary",
+                        yap_i18n::tr!("onboarding-build-a-large-vocabulary"),
+                    ),
+                    (
+                        "ui.media",
+                        yap_i18n::tr!(
+                            "onboarding-enjoy-media",
+                            language = (metadata.common_name).to_string()
+                        ),
+                    ),
                     (
                         "ui.speakers",
-                        format!(
-                            "Understand how {} speakers actually talk",
-                            metadata.common_name
+                        yap_i18n::tr!(
+                            "onboarding-understand-speakers",
+                            language = (metadata.common_name).to_string()
                         ),
                     ),
                 ]
@@ -466,73 +510,77 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
             },
         ),
         OnboardingStep::SrsTeaser => (
-            "Yap is based on one scientifically proven idea:".into(),
+            yap_i18n::tr!("onboarding-yap-is-based-on-one-scientifically-proven-idea"),
             Studies {
                 studies: studies(),
-                conclusion: "Spaced repetition.".into(),
+                conclusion: yap_i18n::tr!("onboarding-spaced-repetition"),
             },
         ),
         OnboardingStep::SrsIntro => {
             let learned = state.review_count >= LEARNED_AFTER;
             primary = Some(OnboardingPrimary {
-                label: if learned { "Continue" } else { "Review" }.into(),
+                label: if learned {
+                    yap_i18n::tr!("common-continue")
+                } else {
+                    yap_i18n::tr!("common-review")
+                },
                 enabled: true,
                 show_arrow: learned,
             });
             let shown = usize::from(state.review_count.min(LEARNED_AFTER - 1)) + 1;
             (
-                "Every time you review a word, you'll remember it for ".into(),
+                yap_i18n::tr!("onboarding-memory-heading.before"),
                 Review {
-                    eyebrow: "How Yap works".into(),
-                    title_emphasis: "longer.".into(),
+                    eyebrow: yap_i18n::tr!("onboarding-how-yap-works"),
+                    title_emphasis: yap_i18n::tr!("onboarding-memory-heading.emphasis"),
                     curves: forgetting_curves().into_iter().take(shown).collect(),
                     caption: [
-                        "You learn a new word, and right away you start forgetting it.",
-                        "Reviewing it just before it slips away brings it all back…",
-                        "…and each time, you forget it more slowly.",
-                        "So the reviews can get further and further apart.",
+                        yap_i18n::tr!("onboarding-you-learn-a-new-word-and-right-away-you"),
+                        yap_i18n::tr!(
+                            "onboarding-reviewing-it-just-before-it-slips-away-brings-it"
+                        ),
+                        yap_i18n::tr!("onboarding-and-each-time-you-forget-it-more-slowly"),
+                        yap_i18n::tr!(
+                            "onboarding-so-the-reviews-can-get-further-and-further-apart"
+                        ),
                     ][shown - 1]
-                        .into(),
-                    review_label: match state.review_count {
-                        1 => Some("review".into()),
-                        2 | 3 => Some("reviews".into()),
-                        _ => None,
-                    },
+                        .clone(),
+                    review_label: (1..=3).contains(&state.review_count).then(|| {
+                        yap_i18n::tr!("onboarding-review-count", count = state.review_count)
+                    }),
                     learned,
-                    learned_title: "Word learned".into(),
-                    learned_body: "That word is now in long-term memory!".into(),
+                    learned_title: yap_i18n::tr!("onboarding-word-learned"),
+                    learned_body: yap_i18n::tr!("onboarding-that-word-is-now-in-long-term-memory"),
                     chart: OnboardingChart {
-                        x_label: "Time".into(),
-                        y_label: "Memory".into(),
-                        accessibility_label:
-                            "Forgetting curve chart showing how spaced repetition helps memory"
-                                .into(),
+                        x_label: yap_i18n::tr!("onboarding-time"),
+                        y_label: yap_i18n::tr!("onboarding-memory"),
+                        accessibility_label: yap_i18n::tr!(
+                            "onboarding-forgetting-curve-chart-showing-how-spaced-repetition-helps-memory"
+                        ),
                     },
                 },
             )
         }
         OnboardingStep::SrsConclusion => {
-            primary.as_mut().unwrap().label = "Set a goal".into();
+            primary.as_mut().unwrap().label = yap_i18n::tr!("onboarding-set-a-goal");
             (
-                "That's how Yap makes sure you remember everything, with as little reviewing as possible.".into(),
+                yap_i18n::tr!("onboarding-that-s-how-yap-makes-sure-you-remember-everything"),
                 Remember {
-                    words: sample_words(state.target_language)
-                        .map(String::from)
-                        .into(),
+                    words: sample_words(state.target_language).map(String::from).into(),
                 },
             )
         }
         OnboardingStep::StudyGoal => choices(
-            "Set a daily study goal".into(),
+            yap_i18n::tr!("onboarding-set-a-daily-study-goal"),
             get_daily_goal_options()
                 .into_iter()
                 .map(|g| {
                     (
                         OnboardingChoice::StudyGoal { value: g.value },
-                        format!("{} min/day", g.minutes),
-                        Some(format!(
-                            "~{} words in your first week",
-                            g.estimated_first_week_words
+                        yap_i18n::tr!("onboarding-study-minutes", minutes = g.minutes),
+                        Some(yap_i18n::tr!(
+                            "onboarding-first-week-words",
+                            count = g.estimated_first_week_words
                         )),
                     )
                 })
@@ -544,36 +592,44 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
         ),
         OnboardingStep::Notifications => {
             primary = None;
-            ("We'll remind you to practice so it becomes a habit!".into(), Notifications {
-                icon: "ui.reminder".into(),
-                body: "A small daily reminder makes it easy to stay consistent and reach your goals.".into(),
-                enable_label: "Enable reminders".into(), enabling_label: "Enabling...".into(),
-                skip_label: "Not now".into(),
-            })
+            (
+                yap_i18n::tr!("onboarding-we-ll-remind-you-to-practice-so-it-becomes"),
+                Notifications {
+                    icon: "ui.reminder".into(),
+                    body: yap_i18n::tr!("onboarding-a-small-daily-reminder-makes-it-easy-to-stay"),
+                    enable_label: yap_i18n::tr!("onboarding-enable-reminders"),
+                    enabling_label: yap_i18n::tr!("onboarding-enabling"),
+                    skip_label: yap_i18n::tr!("common-not-now"),
+                },
+            )
         }
         OnboardingStep::Ready => {
             primary.as_mut().unwrap().label = if is_new {
                 metadata.lets_go
             } else {
-                "Find my level".into()
+                yap_i18n::tr!("onboarding-find-my-level")
             };
             (
                 if is_new {
-                    "Let's start from the beginning!"
+                    yap_i18n::tr!("onboarding-let-s-start-from-the-beginning")
                 } else {
-                    "Now let's find the best place to start"
-                }
-                .into(),
+                    yap_i18n::tr!("onboarding-now-let-s-find-the-best-place-to-start")
+                },
                 Ready {
                     icon: metadata.icon,
                     body: if is_new {
-                        format!("We'll build your {language} foundation step by step.")
+                        yap_i18n::tr!(
+                            "onboarding-we-ll-build-your-language-foundation-step-by",
+                            language = (language).to_string()
+                        )
                     } else {
-                        format!(
-                            "Since you already know some {language}, we can skip ahead to where you belong."
+                        yap_i18n::tr!(
+                            "onboarding-since-you-already-know-some-language-we-can",
+                            language = (language).to_string()
                         )
                     },
-                    start_fresh_label: (!is_new).then(|| "Start from scratch".into()),
+                    start_fresh_label: (!is_new)
+                        .then(|| yap_i18n::tr!("onboarding-start-from-scratch")),
                 },
             )
         }
@@ -585,8 +641,12 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
         step_number,
         total_steps,
         progress_percent: f64::from(step_number) / f64::from(total_steps) * 100.0,
-        progress_label: format!("Step {step_number} of {total_steps}"),
-        back_label: "Back".into(),
+        progress_label: yap_i18n::tr!(
+            "onboarding-step-step-number-of-total-steps",
+            step_number = step_number,
+            total_steps = total_steps
+        ),
+        back_label: yap_i18n::tr!("common-back"),
         navigation_title: metadata.yaptown_name,
         title,
         content,
@@ -881,8 +941,9 @@ mod tests {
             assert_eq!(
                 review_label.as_deref(),
                 match count {
-                    1 => Some("review"),
-                    2 | 3 => Some("reviews"),
+                    1 => Some("1 review"),
+                    2 => Some("2 reviews"),
+                    3 => Some("3 reviews"),
                     _ => None,
                 }
             );

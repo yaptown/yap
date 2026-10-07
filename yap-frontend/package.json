@@ -16,6 +16,7 @@
     "generate:metadata": "node scripts/generate-learning-metadata.mjs"
   },
   "dependencies": {
+    "@fluent/bundle": "^0.19.1",
     "@fontsource-variable/nunito": "^5.2.7",
     "@fontsource-variable/nunito-sans": "^5.2.7",
     "@fontsource/rock-salt": "^5.2.8",

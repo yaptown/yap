@@ -61,12 +61,15 @@ impl SentenceListProgress {
             percent_known,
             all_available_learned,
             caption: if all_available_learned {
-                "Done!".into()
+                yap_i18n::tr!("curriculum-done")
             } else {
-                format!("{:.0}% known", percent_known.floor())
+                yap_i18n::tr!(
+                    "curriculum-percent-known",
+                    percent = format!("{:.0}", percent_known.floor())
+                )
             },
             bar_label: if all_available_learned {
-                "Done!".into()
+                yap_i18n::tr!("curriculum-done")
             } else {
                 format!("{:.0}%", percent_known.floor())
             },

@@ -32,7 +32,7 @@ struct DailyGoalEditor: View {
             .fixedSize(horizontal: false, vertical: true)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(Color.yapBorder) }
-            Button("Set goal") {
+            Button(L("daily-goal-editor-set-goal")) {
                 if let goal = options.first(where: { $0.target == pendingTarget }) { addEvent(goal.event) }
             }
             .font(.subheadline.weight(.medium)).foregroundStyle(Color.yapOnAccent)

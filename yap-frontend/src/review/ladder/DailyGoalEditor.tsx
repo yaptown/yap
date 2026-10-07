@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useState } from "react";
 import type {
   DailyReviewTarget,
@@ -51,7 +52,7 @@ export function DailyGoalEditor({
           onSave?.();
         }}
       >
-        Set goal
+        {t("daily-goal-editor-set-goal")}
       </Button>
     </div>
   );

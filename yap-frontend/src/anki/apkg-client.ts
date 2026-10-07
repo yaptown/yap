@@ -1,4 +1,8 @@
-import type { AnkiDeckPlan, AnkiMediaSource } from "../../../yap-frontend-rs/pkg";
+import { t, uiLanguage } from "@/lib/i18n";
+import type {
+  AnkiDeckPlan,
+  AnkiMediaSource,
+} from "../../../yap-frontend-rs/pkg";
 import { AudioUnavailableError, type MediaProgress } from "./media";
 import type { PackageRequest, PackageResponse } from "./apkg-worker";
 
@@ -16,30 +20,54 @@ export async function buildApkg(
   fetchBundled: (source: AnkiMediaSource) => Promise<Uint8Array | undefined>,
   onProgress: (progress: MediaProgress) => void,
 ): Promise<Blob> {
-  const worker = new Worker(new URL("./apkg-worker.ts", import.meta.url), { type: "module" });
+  const worker = new Worker(new URL("./apkg-worker.ts", import.meta.url), {
+    type: "module",
+  });
   try {
     return await new Promise<Blob>((resolve, reject) => {
-      const send = (message: PackageRequest, transfer: Transferable[] = []) => worker.postMessage(message, transfer);
+      const send = (message: PackageRequest, transfer: Transferable[] = []) =>
+        worker.postMessage(message, transfer);
       worker.onerror = (event) => reject(new Error(event.message));
-      worker.onmessageerror = () => reject(new Error("Could not read the Anki worker response."));
+      worker.onmessageerror = () =>
+        reject(
+          new Error(t("apkg-client-could-not-read-the-anki-worker-response")),
+        );
       worker.onmessage = async ({ data }: MessageEvent<PackageResponse>) => {
         try {
           switch (data.type) {
             case "media": {
               const bytes = await fetchBundled(data.source);
               // Bridge-returned bytes are owned JS arrays, not WASM memory.
-              send({ type: "media", id: data.id, bytes }, bytes ? [bytes.buffer as ArrayBuffer] : []);
+              send(
+                { type: "media", id: data.id, bytes },
+                bytes ? [bytes.buffer as ArrayBuffer] : [],
+              );
               break;
             }
-            case "progress": onProgress(data.progress); break;
-            case "complete": resolve(data.blob); break;
-            case "error": reject(data.code === "audio_unavailable" ? new AudioUnavailableError() : new Error(data.message)); break;
+            case "progress":
+              onProgress(data.progress);
+              break;
+            case "complete":
+              resolve(data.blob);
+              break;
+            case "error":
+              reject(
+                data.code === "audio_unavailable"
+                  ? new AudioUnavailableError()
+                  : new Error(data.message),
+              );
+              break;
           }
         } catch (error) {
           reject(error);
         }
       };
-      send({ type: "build", plan, modified: nextModificationTime() });
+      send({
+        type: "build",
+        language: uiLanguage(),
+        plan,
+        modified: nextModificationTime(),
+      });
     });
   } finally {
     worker.terminate();

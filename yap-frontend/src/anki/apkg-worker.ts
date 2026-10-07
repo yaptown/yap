@@ -1,9 +1,18 @@
-import type { AnkiDeckPlan, AnkiMediaSource } from "../../../yap-frontend-rs/pkg";
+import { loadUiLanguage, type UiLanguage } from "@/lib/i18n";
+import type {
+  AnkiDeckPlan,
+  AnkiMediaSource,
+} from "../../../yap-frontend-rs/pkg";
 import { buildApkg } from "./apkg";
 import { AudioUnavailableError, type MediaProgress } from "./media";
 
 export type PackageRequest =
-  | { type: "build"; plan: AnkiDeckPlan; modified: number }
+  | {
+      type: "build";
+      language: UiLanguage;
+      plan: AnkiDeckPlan;
+      modified: number;
+    }
   | { type: "media"; id: number; bytes: Uint8Array | undefined };
 export type PackageResponse =
   | { type: "media"; id: number; source: AnkiMediaSource }
@@ -22,14 +31,25 @@ self.onmessage = async ({ data }: MessageEvent<PackageRequest>) => {
     return;
   }
   try {
-    const blob = await buildApkg(data.plan, (source) => new Promise((resolve) => {
-      const id = nextId++;
-      pending.set(id, resolve);
-      send({ type: "media", id, source });
-    }), (progress) => send({ type: "progress", progress }), data.modified);
+    await loadUiLanguage(data.language);
+    const blob = await buildApkg(
+      data.plan,
+      (source) =>
+        new Promise((resolve) => {
+          const id = nextId++;
+          pending.set(id, resolve);
+          send({ type: "media", id, source });
+        }),
+      (progress) => send({ type: "progress", progress }),
+      data.modified,
+    );
     // Blob cloning shares its immutable backing storage, not a main-thread copy.
     send({ type: "complete", blob });
   } catch (error) {
-    send({ type: "error", message: error instanceof Error ? error.message : String(error), code: error instanceof AudioUnavailableError ? error.code : undefined });
+    send({
+      type: "error",
+      message: error instanceof Error ? error.message : String(error),
+      code: error instanceof AudioUnavailableError ? error.code : undefined,
+    });
   }
 };

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Deck, StatsScreenView } from "../../../yap-frontend-rs/pkg";
@@ -22,7 +23,9 @@ export function StatsScreen({
 }) {
   const inputs = useStudyScreenInputs(!injectedView);
   const view = useMemo(
-    () => injectedView ?? deck.stats_screen_view(inputs.banned, inputs.timestamp_ms),
+    () =>
+      injectedView ??
+      deck.stats_screen_view(inputs.banned, inputs.timestamp_ms),
     [injectedView, deck, inputs.banned, inputs.timestamp_ms],
   );
   const navigate = useNavigate();
@@ -30,7 +33,10 @@ export function StatsScreen({
     <TopPageLayout
       userInfo={userInfo}
       headerProps={{
-        backButton: { label: "Home", onBack: () => navigate("/home") },
+        backButton: {
+          label: t("common-home"),
+          onBack: () => navigate("/home"),
+        },
       }}
     >
       <Stats

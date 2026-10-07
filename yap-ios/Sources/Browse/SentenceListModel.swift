@@ -18,9 +18,9 @@ import SwiftUI
     }
     func title(_ selection: SentenceListSelection?) -> String {
         switch selection {
-        case let .Movie(id): metadata[id]?.title ?? "Movie"
-        case let .PimsleurLesson(level, lesson): "Pimsleur Level \(level), Lesson \(lesson)"
-        case nil: "\(tier.name) \(get_language_metadata(language: deck.get_target_language()).common_name) Level \(tier.level)"
+        case let .Movie(id): metadata[id]?.title ?? L("curriculum-movie")
+        case let .PimsleurLesson(level, lesson): L("curriculum-pimsleur-level-level-lesson-lesson", ["level": level, "lesson": lesson])
+        case nil: L("curriculum-tier-level", ["tier": tier.name, "language": get_language_metadata(language: deck.get_target_language()).common_name, "level": tier.level])
         }
     }
 }
@@ -45,7 +45,7 @@ struct MoviePoster: View {
             if let image { Image(uiImage: image).resizable().scaledToFit() }
             else { Image(systemName: "film").resizable().scaledToFit().padding(8).foregroundStyle(Color.yapMuted) }
         }.frame(width: 48, height: 72).clipShape(RoundedRectangle(cornerRadius: 6))
-            .accessibilityLabel("Poster for \(title)")
+            .accessibilityLabel(L("common-poster-for", ["title": title]))
             .task(id: id) { image = host.deck.get_movie_poster(movie_id: id).flatMap { UIImage(data: Data($0)) } }
     }
 }

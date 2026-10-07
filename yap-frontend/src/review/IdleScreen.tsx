@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { next_review_line } from "../../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button";
 import { EngagementPrompts } from "@/review/engagement-prompts";
@@ -37,9 +38,15 @@ import { Poster } from "@/browse/Poster";
 import { TargetLanguageText } from "../components/TargetLanguageText";
 import { ReviewPlanCard } from "./ladder/ReviewPlanScreen";
 import { WeekProgressStrip } from "./WeekProgressStrip";
-import { sentenceListSelectionToSentenceList, type SentenceList } from "@/browse/useSentenceList";
+import {
+  sentenceListSelectionToSentenceList,
+  type SentenceList,
+} from "@/browse/useSentenceList";
 import { CurriculumBrowser } from "@/browse/CurriculumBrowser";
-import { acknowledgePimsleur, pimsleurAcknowledged as readPimsleurAcknowledged } from "@/browse/pimsleur";
+import {
+  acknowledgePimsleur,
+  pimsleurAcknowledged as readPimsleurAcknowledged,
+} from "@/browse/pimsleur";
 
 export interface MovieWithMetadata extends MovieMetadataBasic {
   percent_known: number;
@@ -62,65 +69,146 @@ interface IdleScreenProps {
 export function IdleScreen(props: IdleScreenProps) {
   const { view, deck, addEvent, showWeek = true } = props;
   const [showReleasePlan, setShowReleasePlan] = useState(false);
-  const plan = view.type === "ReviewPlanOffer" ? view : view.type === "StudyPlanComplete" ? view.plan : undefined;
+  const plan =
+    view.type === "ReviewPlanOffer"
+      ? view
+      : view.type === "StudyPlanComplete"
+        ? view.plan
+        : undefined;
   useEffect(() => {
     if (!plan) return;
     const key = (event: KeyboardEvent) => {
-      if ((event.target as HTMLElement).closest("input, textarea, select, button, a")) return;
+      if (
+        (event.target as HTMLElement).closest(
+          "input, textarea, select, button, a",
+        )
+      )
+        return;
       if (event.code !== "Space" && event.code !== "Enter") return;
       event.preventDefault();
-      if (view.type === "StudyPlanComplete" && !showReleasePlan) setShowReleasePlan(true);
+      if (view.type === "StudyPlanComplete" && !showReleasePlan)
+        setShowReleasePlan(true);
       else addEvent(plan.event);
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
   }, [plan, view.type, showReleasePlan, addEvent]);
   switch (view.type) {
-    case "AudioPending": return (
-      <div className="flex flex-col flex-1 gap-4 pt-4">
-        <div className="flex flex-col gap-2 text-center">
-          <p className="text-2xl font-bold">Just a moment…</p>
-          <p className="text-muted-foreground">Downloading the audio for your next challenge.</p>
-          {!view.online && <p>Reconnect to download audio.</p>}
-        </div>
-        <div className="flex justify-center py-4"><LoaderCircle className="h-8 w-8 animate-spin text-muted-foreground" /></div>
-        {showWeek && <WeekProgressStrip week={view.week} className="mt-auto mb-2" />}
-      </div>
-    );
-    case "StudyPlanComplete":
-      if (!showReleasePlan) return (
+    case "AudioPending":
+      return (
         <div className="flex flex-col flex-1 gap-4 pt-4">
           <div className="flex flex-col gap-2 text-center">
-            <p className="text-2xl font-bold">{view.title}</p>
-            {view.next_due && <NextReviewLine key={view.next_due.due_timestamp_ms} card={view.next_due} targetLanguage={view.plan.target_language} />}
+            <p className="text-2xl font-bold">
+              {t("idle-screen-just-a-moment")}
+            </p>
+            <p className="text-muted-foreground">
+              {t("idle-screen-downloading-the-audio-for-your-next-challenge")}
+            </p>
+            {!view.online && (
+              <p>{t("idle-screen-reconnect-to-download-audio")}</p>
+            )}
           </div>
-          <div className="flex justify-center"><Button onClick={() => setShowReleasePlan(true)} size="lg" variant="outline">Study more</Button></div>
-          {showWeek && <WeekProgressStrip week={view.plan.week} className="mt-auto mb-2" />}
+          <div className="flex justify-center py-4">
+            <LoaderCircle className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+          {showWeek && (
+            <WeekProgressStrip week={view.week} className="mt-auto mb-2" />
+          )}
         </div>
       );
-      return <ReviewPlanCard plan={view.plan} onCommit={() => addEvent(view.plan.event)} showWeek={showWeek} />;
-    case "ReviewPlanOffer": return <ReviewPlanCard plan={view} onCommit={() => addEvent(view.event)} showWeek={showWeek} />;
-    case "Idle": return <IdleContent {...props} view={view} deck={deck} />;
+    case "StudyPlanComplete":
+      if (!showReleasePlan)
+        return (
+          <div className="flex flex-col flex-1 gap-4 pt-4">
+            <div className="flex flex-col gap-2 text-center">
+              <p className="text-2xl font-bold">{view.title}</p>
+              {view.next_due && (
+                <NextReviewLine
+                  key={view.next_due.due_timestamp_ms}
+                  card={view.next_due}
+                  targetLanguage={view.plan.target_language}
+                />
+              )}
+            </div>
+            <div className="flex justify-center">
+              <Button
+                onClick={() => setShowReleasePlan(true)}
+                size="lg"
+                variant="outline"
+              >
+                {t("idle-screen-study-more")}
+              </Button>
+            </div>
+            {showWeek && (
+              <WeekProgressStrip
+                week={view.plan.week}
+                className="mt-auto mb-2"
+              />
+            )}
+          </div>
+        );
+      return (
+        <ReviewPlanCard
+          plan={view.plan}
+          onCommit={() => addEvent(view.plan.event)}
+          showWeek={showWeek}
+        />
+      );
+    case "ReviewPlanOffer":
+      return (
+        <ReviewPlanCard
+          plan={view}
+          onCommit={() => addEvent(view.event)}
+          showWeek={showWeek}
+        />
+      );
+    case "Idle":
+      return <IdleContent {...props} view={view} deck={deck} />;
   }
 }
 
-function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, undoRestrictions, deck, setSentenceList, commitSentenceList }: Omit<IdleScreenProps, "view"> & { view: IdleView }) {
-  const [pimsleurAcknowledged, setPimsleurAcknowledged] = useState(readPimsleurAcknowledged);
+function IdleContent({
+  view,
+  showEngagementPrompts,
+  showWeek = true,
+  addEvent,
+  undoRestrictions,
+  deck,
+  setSentenceList,
+  commitSentenceList,
+}: Omit<IdleScreenProps, "view"> & { view: IdleView }) {
+  const [pimsleurAcknowledged, setPimsleurAcknowledged] = useState(
+    readPimsleurAcknowledged,
+  );
   const targetLanguage = view.target_language;
   const info = view.info;
   const manualAddOptions = view.manual_add_options;
   // Adding cards from a browsed curriculum is what commits it.
   const commit = view.commit_curriculum;
-  const add = useCallback((event: DeckEvent) => {
-    if (commit) commitSentenceList(commit);
-    addEvent(event);
-  }, [commit, commitSentenceList, addEvent]);
-  const addSmartCards = useCallback(() => { if (info.smart_add_event) add(info.smart_add_event); }, [info.smart_add_event, add]);
+  const add = useCallback(
+    (event: DeckEvent) => {
+      if (commit) commitSentenceList(commit);
+      addEvent(event);
+    },
+    [commit, commitSentenceList, addEvent],
+  );
+  const addSmartCards = useCallback(() => {
+    if (info.smart_add_event) add(info.smart_add_event);
+  }, [info.smart_add_event, add]);
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
-      if ((event.target as HTMLElement).closest("input, textarea, select, button, a")) return;
-      if ((event.code === "Space" || event.code === "Enter") && info.smart_add_event) {
-        event.preventDefault(); addSmartCards();
+      if (
+        (event.target as HTMLElement).closest(
+          "input, textarea, select, button, a",
+        )
+      )
+        return;
+      if (
+        (event.code === "Space" || event.code === "Enter") &&
+        info.smart_add_event
+      ) {
+        event.preventDefault();
+        addSmartCards();
       }
     };
     window.addEventListener("keydown", key);
@@ -129,7 +217,9 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
   const navigation = view.navigation;
   const categories = navigation.categories;
   const effectiveIndex = navigation.selected_index;
-  const effectiveSentenceList = sentenceListSelectionToSentenceList(navigation.selection);
+  const effectiveSentenceList = sentenceListSelectionToSentenceList(
+    navigation.selection,
+  );
 
   const [browsing, setBrowsing] = useState<SentenceListCategory | null>(null);
 
@@ -140,12 +230,19 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
     const nextIndex =
       direction === "left" ? effectiveIndex - 1 : effectiveIndex + 1;
     if (nextIndex >= 0 && nextIndex < categories.length) {
-      setSentenceList(sentenceListSelectionToSentenceList(view.sentence_list_options[nextIndex].selection));
+      setSentenceList(
+        sentenceListSelectionToSentenceList(
+          view.sentence_list_options[nextIndex].selection,
+        ),
+      );
     }
   };
 
   // Sentence list progress info
-  const { percent_known: sentenceListPercentKnown, all_available_learned: sentenceListDone } = view.progress;
+  const {
+    percent_known: sentenceListPercentKnown,
+    all_available_learned: sentenceListDone,
+  } = view.progress;
   const sentenceListLabel = view.sentence_list_label;
 
   const sentenceListImage = (() => {
@@ -153,7 +250,10 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
       case "essential":
         return { type: "url" as const, url: "/essential-course.webp" };
       case "movie":
-        return { type: "movie" as const, movieId: effectiveSentenceList.movieId };
+        return {
+          type: "movie" as const,
+          movieId: effectiveSentenceList.movieId,
+        };
       case "pimsleur":
         return null;
     }
@@ -163,12 +263,26 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
     <div className="flex flex-col flex-1 gap-4">
       <div className="text-center py-4">
         <div className="flex flex-col gap-2">
-          <p className="text-2xl font-bold">
-            {view.title}
-          </p>
-          {view.body ? <p className="text-muted-foreground">{view.body}</p> : view.next_due && <NextReviewLine key={view.next_due.due_timestamp_ms} card={view.next_due} targetLanguage={targetLanguage} />}
-          {view.banned_notice && <><p className="text-muted-foreground">{view.banned_notice}</p><Button variant="outline" onClick={undoRestrictions}>Undo restrictions</Button></>}
-
+          <p className="text-2xl font-bold">{view.title}</p>
+          {view.body ? (
+            <p className="text-muted-foreground">{view.body}</p>
+          ) : (
+            view.next_due && (
+              <NextReviewLine
+                key={view.next_due.due_timestamp_ms}
+                card={view.next_due}
+                targetLanguage={targetLanguage}
+              />
+            )
+          )}
+          {view.banned_notice && (
+            <>
+              <p className="text-muted-foreground">{view.banned_notice}</p>
+              <Button variant="outline" onClick={undoRestrictions}>
+                {t("idle-screen-undo-restrictions")}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -192,25 +306,30 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
           <p className="text-lg font-semibold px-4 sm:px-8 text-center">
             {view.curriculum_headline.before}
             <br />
-            <span className="uppercase font-bold">{view.curriculum_headline.emphasis}{view.curriculum_headline.after}</span>
+            <span className="uppercase font-bold">
+              {view.curriculum_headline.emphasis}
+              {view.curriculum_headline.after}
+            </span>
           </p>
           <div className="flex items-center justify-between gap-0">
             <button
               onClick={() => navigateSentenceList("left")}
               className={`flex p-1 sm:p-2 self-stretch items-center transition-colors ${canGoLeft ? "text-foreground/60 hover:text-foreground hover:bg-muted/50" : "text-transparent cursor-default"}`}
               disabled={!canGoLeft}
-              aria-label="Previous sentence list"
+              aria-label={t("idle-screen-previous-sentence-list")}
             >
               <ChevronLeft className="h-6 w-6" />
             </button>
 
             <div className="flex-1 flex flex-col sm:flex-row items-center gap-4">
-              {effectiveSentenceList.type === "pimsleur" && !pimsleurAcknowledged ? (
+              {effectiveSentenceList.type === "pimsleur" &&
+              !pimsleurAcknowledged ? (
                 <div className="flex-1 flex flex-col items-center gap-3 py-4 px-2 text-center">
                   <Headphones className="h-8 w-8 text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">
-                    Yap has word lists for Pimsleur, but is not affiliated with
-                    Pimsleur in any way.
+                    {t(
+                      "curriculum-browser-yap-has-word-lists-for-pimsleur-but-is-not",
+                    )}
                   </p>
                   <Button
                     variant="default"
@@ -219,7 +338,7 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
                       setPimsleurAcknowledged(true);
                     }}
                   >
-                    I understand
+                    {t("curriculum-browser-i-understand")}
                   </Button>
                 </div>
               ) : (
@@ -247,9 +366,16 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
                     )}
                   </div>
                   <div className="order-1 sm:order-last flex-1 flex flex-col items-center sm:items-start gap-3 min-w-0 w-full sm:w-auto">
-                    {view.next_sentence_list_label && view.next_sentence_list ? (
+                    {view.next_sentence_list_label &&
+                    view.next_sentence_list ? (
                       <Button
-                        onClick={() => setSentenceList(sentenceListSelectionToSentenceList(view.next_sentence_list!))}
+                        onClick={() =>
+                          setSentenceList(
+                            sentenceListSelectionToSentenceList(
+                              view.next_sentence_list!,
+                            ),
+                          )
+                        }
                         variant="default"
                         size="lg"
                         className="group relative overflow-hidden transition-all hover:scale-105 hover:shadow-lg"
@@ -307,16 +433,14 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
                       </div>
                     ) : (
                       <p className="text-sm">
-                        You've learned all available words!
+                        {t("idle-you-ve-learned-all-available-words")}
                       </p>
                     )}
 
                     <Progress
                       value={sentenceListPercentKnown}
                       projectedValue={
-                        sentenceListDone
-                          ? undefined
-                          : info.percent_known_after
+                        sentenceListDone ? undefined : info.percent_known_after
                       }
                       label={view.progress.bar_label}
                       aria-label={view.progress.caption}
@@ -346,7 +470,7 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
               onClick={() => navigateSentenceList("right")}
               className={`flex p-1 sm:p-2 self-stretch items-center transition-colors ${canGoRight ? "text-foreground/60 hover:text-foreground hover:bg-muted/50" : "text-transparent cursor-default"}`}
               disabled={!canGoRight}
-              aria-label="Next sentence list"
+              aria-label={t("idle-screen-next-sentence-list")}
             >
               <ChevronRight className="h-6 w-6" />
             </button>

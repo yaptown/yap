@@ -48,14 +48,11 @@ pub struct VerdictHeadline {
 impl From<VerdictTone> for VerdictHeadline {
     fn from(tone: VerdictTone) -> Self {
         let text = match tone {
-            VerdictTone::Perfect => "Nailed it!",
-            VerdictTone::Almost => "Almost.",
-            VerdictTone::Wrong => "Not quite.",
+            VerdictTone::Perfect => yap_i18n::tr!("verdict-nailed-it"),
+            VerdictTone::Almost => yap_i18n::tr!("verdict-almost"),
+            VerdictTone::Wrong => yap_i18n::tr!("verdict-not-quite"),
         };
-        VerdictHeadline {
-            tone,
-            text: text.into(),
-        }
+        VerdictHeadline { tone, text }
     }
 }
 
