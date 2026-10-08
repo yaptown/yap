@@ -52,7 +52,7 @@ struct VideoClipView: View {
                                 HStack(spacing: 8) {
                                     MoviePoster(id: movie.id, title: movie.title).rotationEffect(.degrees(4))
                                     (Text(movie.title).font(.subheadline.weight(.semibold)).foregroundStyle(.white)
-                                        + Text(movie.year.map { " (\($0))" } ?? "").font(.subheadline).foregroundStyle(.white.opacity(0.8)))
+                                        + Text(verbatim: movie.year.map { " (\($0))" } ?? "").font(.subheadline).foregroundStyle(.white.opacity(0.8)))
                                         .lineLimit(1).shadow(color: .black.opacity(0.9), radius: 3, y: 1)
                                     Spacer(minLength: 0)
                                     if let score = movie.rotten_tomatoes_score { Text("🍅 \(score)%").font(.subheadline).foregroundStyle(.white).fixedSize().shadow(color: .black.opacity(0.9), radius: 3, y: 1) }
