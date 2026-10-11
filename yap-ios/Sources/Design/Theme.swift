@@ -80,7 +80,26 @@ extension EnvironmentValues {
     @Entry var cardGlass = true
 }
 
+extension CGFloat {
+    /// The web's `max-w-2xl` column: on iPad every screen keeps a phone-like
+    /// measure centered on the background rather than stretching edge to edge.
+    static let readableColumn: CGFloat = 600
+}
+
+/// A list can't take a frame cap without clipping its scroll area to the column,
+/// so it insets its content instead and still scrolls from anywhere on screen.
+private struct ReadableListMargins: ViewModifier {
+    @State private var width: CGFloat = 0
+    func body(content: Content) -> some View {
+        // Nil keeps the list's own inset where the screen is no wider than the column.
+        content.contentMargins(.horizontal, width > .readableColumn ? (width - .readableColumn) / 2 : nil, for: .scrollContent)
+            .onGeometryChange(for: CGFloat.self, of: \.size.width) { width = $0 }
+    }
+}
+
 extension View {
+    func readableListMargins() -> some View { modifier(ReadableListMargins()) }
+
     func cardSurface() -> some View { modifier(CardSurface()) }
 
     /// A lighter surface than a card, for secondary panels that shouldn't compete

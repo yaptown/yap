@@ -95,7 +95,7 @@ struct HomeScreen: View {
                                 Link(L("common-terms"), destination: URL(string: "https://yap.town/terms")!)
                             }
                         }.font(.caption).foregroundStyle(Color.yapMuted).frame(maxWidth: .infinity)
-                    }.padding(20).frame(maxWidth: 600)
+                    }.padding(20).frame(maxWidth: .readableColumn)
                         .frame(maxWidth: .infinity, minHeight: geometry.size.height)
                 }
             }.background(.clear)

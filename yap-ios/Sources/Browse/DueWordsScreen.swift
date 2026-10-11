@@ -11,7 +11,7 @@ struct DueWordsScreen: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Text(view.summary_label).foregroundStyle(Color.yapMuted)
                     CardSummaryList(cards: view.cards, timestampMs: now)
-                }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                }.padding(20).frame(maxWidth: .readableColumn).frame(maxWidth: .infinity)
             }.background(.clear).navigationTitle(view.title)
             #if DEBUG
             .onChange(of: DebugHarness.shared.commandID) { _, _ in

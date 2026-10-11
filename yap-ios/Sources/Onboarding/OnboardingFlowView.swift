@@ -27,7 +27,7 @@ struct OnboardingFlowView: View {
                         .frame(maxWidth: .infinity)
                         .id(view.step)
                         .transition(.asymmetric(insertion: .offset(x: 40).combined(with: .opacity), removal: .opacity))
-                }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                }.padding(20).frame(maxWidth: .readableColumn).frame(maxWidth: .infinity)
             }.bottomBar {
                 VStack(spacing: 12) {
                     if case let .Ready(_, _, startFreshLabel) = view.content, let startFreshLabel {
@@ -43,7 +43,7 @@ struct OnboardingFlowView: View {
                         }
                             .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(!primary.enabled)
                     }
-                }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                }.padding(20).frame(maxWidth: .readableColumn).frame(maxWidth: .infinity)
             }.onChange(of: state.step_index) { _, _ in proxy.scrollTo("top", anchor: .top) }
         }
         .background(.clear)

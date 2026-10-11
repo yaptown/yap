@@ -19,6 +19,7 @@ struct DictionaryScreen: View {
     var body: some View {
         results
         .scrollContentBackground(.hidden)
+        .readableListMargins()
         .navigationTitle(L("common-dictionary"))
         .searchable(text: $query, prompt: L("dictionary-screen-search-words-or-meanings"))
         .searchFocused($searchFocused)
@@ -112,7 +113,7 @@ private struct DictionaryDetail: View {
                                 .disabled(isAdded)
                         }
                     }
-                }.padding(20)
+                }.padding(20).frame(maxWidth: .readableColumn).frame(maxWidth: .infinity)
             }
         }.background(.clear).navigationTitle(L("dictionary-screen-definition")).navigationBarTitleDisplayMode(.inline)
         .onDisappear { audio.stop() }

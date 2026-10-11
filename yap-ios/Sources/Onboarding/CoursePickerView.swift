@@ -46,7 +46,7 @@ struct CoursePickerView: View {
                         }
                         Text(L("course-picker-yap-town-is-great-for-beginner-and-intermediate-students"))
                             .font(.subheadline).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
-                    }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                    }.padding(20).frame(maxWidth: .readableColumn).frame(maxWidth: .infinity)
                 }.navigationTitle(L("course-picker-view-choose-a-course")).navigationBarTitleDisplayMode(.inline)
             }
         }

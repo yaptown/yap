@@ -70,7 +70,7 @@ struct SessionRoot: View {
                 } else {
                     switch session.deckLoadView.phase {
                     case let .Loading(message, percent):
-                        VStack(spacing: 20) { ProgressView(value: Double(percent) / 100); Text(message) }.padding(32)
+                        VStack(spacing: 20) { ProgressView(value: Double(percent) / 100); Text(message) }.padding(32).frame(maxWidth: .readableColumn)
                     case .NoLanguageSelected: NavigationStack { CoursePickerView(session: session) }
                     case let .Error(_, _, title, message, retryLabel):
                         ContentUnavailableView {

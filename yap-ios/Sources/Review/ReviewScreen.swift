@@ -35,7 +35,7 @@ struct ReviewScreen: View {
                     }
                 }
                 if let error = host.authError { Text(error).font(.caption).foregroundStyle(Color.yapMuted) }
-            }.padding(.horizontal, 12).frame(maxWidth: 600)
+            }.padding(.horizontal, 12).frame(maxWidth: .readableColumn)
             switch view.step {
             case let .Challenge(challenge): challengeView(challenge).id(challenge.challenge)
             case let .Accomplishment(accomplishment): AccomplishmentScreen(view: accomplishment, addEvent: actions.addEvent, onDismiss: actions.dismissAccomplishment)
@@ -49,7 +49,7 @@ struct ReviewScreen: View {
                         case .SetDisplayName: SetDisplayNameView(reviewCount: view.total_reviews)
                         default: EmptyView()
                         }
-                    }.padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                    }.padding(12).frame(maxWidth: .readableColumn).frame(maxWidth: .infinity)
                 }
             }
         }
@@ -123,10 +123,10 @@ struct ReviewStepScrollView<Content: View, Actions: View, Footer: View>: View {
                     content()
                     Spacer(minLength: 0)
                     footer()
-                }.padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity, minHeight: viewport.size.height)
+                }.padding(12).frame(maxWidth: .readableColumn).frame(maxWidth: .infinity, minHeight: viewport.size.height)
             }
         }.bottomBar {
-            VStack(spacing: 12, content: actions).padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity)
+            VStack(spacing: 12, content: actions).padding(12).frame(maxWidth: .readableColumn).frame(maxWidth: .infinity)
         }
     }
 }

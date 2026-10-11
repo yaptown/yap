@@ -37,7 +37,7 @@ struct StatsScreen: View {
                                 .font(.subheadline).foregroundStyle(Color.yapMuted)
                             if !view.leeches.isEmpty { CardSummaryList(cards: view.leeches, timestampMs: now) }
                         }.id("leeches")
-                    }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                    }.padding(20).frame(maxWidth: .readableColumn).frame(maxWidth: .infinity)
                 }.background(.clear).navigationTitle(view.title)
                 #if DEBUG
                 .onAppear { DebugHarness.shared.activeScreen = .stats }
