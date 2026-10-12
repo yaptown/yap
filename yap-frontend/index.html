@@ -28,19 +28,33 @@
           safari_web_id: "web.onesignal.auto.29ad6177-53c3-46b5-8017-0e7b95131b37"
         };
 
+        // The production OneSignal app is locked to yap.town and throws
+        // "Can only be used on: https://yap.town" anywhere else (beta
+        // channel, preview deployments), so don't try to init there.
+        const host = window.location.hostname;
+        const isProductionOrigin = host === 'yap.town';
+        if (!isDevelopment && !isProductionOrigin) {
+          console.log(`OneSignal disabled on ${host}`);
+          return;
+        }
+
         console.log(`OneSignal initializing in ${isDevelopment ? 'development' : 'production'} mode`);
 
-        await OneSignal.init({
-          ...config,
-          notifyButton: {
-            enable: false, // Disable the default notification button
-          },
-          welcomeNotification: {
-            disable: true  // This disables the welcome notification
-          },
-          serviceWorkerParam: { scope: "/push/onesignal/" },
-          serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js"
-        });
+        try {
+          await OneSignal.init({
+            ...config,
+            notifyButton: {
+              enable: false, // Disable the default notification button
+            },
+            welcomeNotification: {
+              disable: true  // This disables the welcome notification
+            },
+            serviceWorkerParam: { scope: "/push/onesignal/" },
+            serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js"
+          });
+        } catch (err) {
+          console.warn("OneSignal init failed", err);
+        }
       });
     </script>
 
