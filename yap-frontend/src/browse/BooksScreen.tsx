@@ -55,14 +55,16 @@ function BookCard({ book }: { book: BookCardView }) {
       to={`/books/${encodeURIComponent(book.slug)}`}
       className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <Card className="flex-row items-start gap-4 p-4 transition-colors group-hover:bg-muted/40">
-        <BookCover book={book} />
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h2 className="font-serif text-xl font-semibold leading-tight">{book.title}</h2>
-          <p className="text-muted-foreground">{book.author}</p>
-          {book.teaser && <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{book.teaser}</p>}
+      <Card className="gap-4 p-4 transition-colors group-hover:bg-muted/40">
+        <div className="flex items-center gap-4">
+          <BookCover book={book} />
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <h2 className="font-serif text-xl font-semibold leading-tight">{book.title}</h2>
+            <p className="text-muted-foreground">{book.author}</p>
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         </div>
-        <ChevronRight className="h-4 w-4 shrink-0 self-center text-muted-foreground" aria-hidden />
+        {book.teaser && <p className="text-sm leading-relaxed text-muted-foreground">{book.teaser}</p>}
       </Card>
     </Link>
   );

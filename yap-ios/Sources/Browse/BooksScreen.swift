@@ -69,17 +69,19 @@ private struct BookCover: View {
 private struct BookCard: View {
     let book: BookCardView
     var body: some View {
-        HStack(alignment: .top, spacing: 16) {
-            BookCover(book: book)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(book.title).font(.system(.title3, design: .serif).weight(.semibold)).foregroundStyle(Color.yapText)
-                Text(book.author).foregroundStyle(Color.yapMuted)
-                if let teaser = book.teaser {
-                    Text(teaser).font(.subheadline).foregroundStyle(Color.yapMuted).padding(.top, 4)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 16) {
+                BookCover(book: book)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(book.title).font(.system(.title3, design: .serif).weight(.semibold)).foregroundStyle(Color.yapText)
+                    Text(book.author).foregroundStyle(Color.yapMuted)
                 }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Color.yapMuted)
             }
-            Spacer(minLength: 0)
-            Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Color.yapMuted).frame(maxHeight: .infinity)
+            if let teaser = book.teaser {
+                Text(teaser).font(.subheadline).foregroundStyle(Color.yapMuted)
+            }
         }
         .padding(16).frame(maxWidth: .infinity, alignment: .leading).quietSurface()
     }
