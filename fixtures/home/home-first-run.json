@@ -469,6 +469,10 @@
       "title": "Find a word",
       "search_placeholder": "Search Italian or English"
     },
+    "books": {
+      "title": "Books",
+      "caption": "Read whole novels in Italian"
+    },
     "due_count": 0
   }
 }

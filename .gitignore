@@ -90,3 +90,6 @@ target-review/
 
 # Local scratch experiments (ASR bakeoffs and the like) — never committed
 experiments/
+
+# Generated reader editions (published separately).
+books/*/build/

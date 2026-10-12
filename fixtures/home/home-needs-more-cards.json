@@ -561,6 +561,10 @@
       "title": "Find a word",
       "search_placeholder": "Search German or English"
     },
+    "books": {
+      "title": "Books",
+      "caption": "Read whole novels in German"
+    },
     "due_count": 0
   }
 }

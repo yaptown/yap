@@ -993,7 +993,15 @@ pub struct HomeScreenView {
     pub xp: HomeStatView,
     pub cards: HomeStatView,
     pub dictionary: DictionaryCardView,
+    pub books: HomeBooksView,
     pub due_count: u64,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct HomeBooksView {
+    pub title: String,
+    pub caption: String,
 }
 
 #[bridgerton::bridge(transparent)]
@@ -1311,6 +1319,13 @@ impl Deck {
                     native = (get_language_metadata(self.context.course.native_language)
                         .common_name)
                         .to_string()
+                ),
+            },
+            books: HomeBooksView {
+                title: crate::books::books_copy().title,
+                caption: yap_i18n::tr!(
+                    "books-home-caption",
+                    language = get_language_metadata(self.get_target_language()).common_name
                 ),
             },
             due_count,

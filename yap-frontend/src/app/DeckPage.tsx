@@ -63,14 +63,13 @@ export function DeckPage({
         },
       }}
     >
-      <div className="flex flex-1 items-center justify-center">
-        <DeckLoadStatus phase={state.view.phase} retry={state.retry} />
-      </div>
+      <DeckLoadStatus phase={state.view.phase} retry={state.retry} />
     </TopPageLayout>
   );
 }
 
 // Hosts render the projection; loading/error copy lives only in Rust.
+// Centres itself in the page, so every caller shows it the same way.
 export function DeckLoadStatus({
   phase,
   retry,
@@ -78,23 +77,24 @@ export function DeckLoadStatus({
   phase: DeckLoadPhase;
   retry: () => void;
 }) {
-  if (phase.type === "Error")
-    return (
-      <Card className="w-full max-w-md p-6 gap-4">
-        <h2 className="text-lg font-semibold text-center">{phase.heading}</h2>
-        <p className="text-muted-foreground text-center">{phase.body}</p>
-        <ErrorMessage message={phase.message} title={phase.title} />
-        <Button onClick={retry} variant="outline">
-          {phase.retry_label}
-        </Button>
-      </Card>
-    );
-  if (phase.type === "Loading")
-    return (
-      <div className="flex w-full max-w-md flex-col gap-4 text-center">
-        <p className="text-muted-foreground">{phase.message}</p>
-        <Progress value={phase.percent} />
-      </div>
-    );
-  return null;
+  if (phase.type !== "Error" && phase.type !== "Loading") return null;
+  return (
+    <div className="flex flex-1 items-center justify-center p-4">
+      {phase.type === "Error" ? (
+        <Card className="w-full max-w-md p-6 gap-4">
+          <h2 className="text-lg font-semibold text-center">{phase.heading}</h2>
+          <p className="text-muted-foreground text-center">{phase.body}</p>
+          <ErrorMessage message={phase.message} title={phase.title} />
+          <Button onClick={retry} variant="outline">
+            {phase.retry_label}
+          </Button>
+        </Card>
+      ) : (
+        <div className="flex w-full max-w-md flex-col gap-4 text-center">
+          <p className="text-muted-foreground">{phase.message}</p>
+          <Progress value={phase.percent} />
+        </div>
+      )}
+    </div>
+  );
 }

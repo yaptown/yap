@@ -6,9 +6,11 @@ import {
   BookOpen,
   Check,
   ChevronDown,
+  ChevronRight,
   Headphones,
   Keyboard,
   Languages,
+  Library,
   MessageCircle,
   Mic,
   Search,
@@ -245,6 +247,17 @@ function HomeContent({
             >
               <HomeStat stat={view.xp} icon={Zap} />
               <HomeStat stat={view.cards} icon={BookOpen} />
+            </Link>
+            <Link
+              to="/books"
+              className="flex items-center gap-3 p-5 hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:bg-muted/40"
+            >
+              <Library className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+              <div className="flex flex-col min-w-0 flex-1">
+                <p className="text-lg font-semibold">{view.books.title}</p>
+                <p className="text-sm text-muted-foreground">{view.books.caption}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
             </Link>
           </Card>
           {/* Not a real field: tapping it morphs into the dictionary's search

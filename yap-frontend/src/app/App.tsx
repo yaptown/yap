@@ -1,3 +1,4 @@
+import { BooksPage } from "@/browse/BooksScreen";
 import { HomePage } from "@/browse/HomeScreen";
 import { StatsPage } from "@/browse/StatsScreen";
 import { DueWordsPage } from "@/browse/DueWordsScreen";
@@ -70,6 +71,8 @@ const router = createBrowserRouter([
               { path: "stats", element: <StatsPage /> },
               { path: "due", element: <DueWordsPage /> },
               { path: "dictionary", element: <DictionaryPage /> },
+              { path: "books", element: <BooksPage /> },
+              { path: "books/:slug", element: <BooksPage /> },
               {
                 path: "anki",
                 lazy: async () => {

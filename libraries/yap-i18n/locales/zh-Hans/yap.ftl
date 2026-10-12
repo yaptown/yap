@@ -1192,3 +1192,20 @@ weekday-wednesday-initial = 三
 yap-app-couldn-t-save-your-progress = 无法保存你的进度
 yap-app-restoring-your-session = 正在恢复你的会话…
 yap-app-yap-couldn-t-finish-saving-your-reviews-to-this = Yap 没能把你的复习记录完整保存到这台设备上，所以还没有切换账户。请确保设备有可用的存储空间，然后再试一次。
+
+# Books
+books-title = 图书
+books-contents = 目录
+books-loading = 正在加载图书…
+books-empty = 暂时没有可阅读的图书。
+books-failed = 无法加载图书。请连接互联网后重试。
+books-previous = 上一章
+books-next = 下一章
+books-text-smaller = 缩小字号
+books-text-larger = 放大字号
+books-home-caption = 阅读{ $language }长篇小说全文
+books-unavailable = 暂时没有{ $language }版本
+books-section-unavailable = 第 { $number } 节 — 暂未提供
+books-machine-translated = 本章由机器翻译。
+books-complete = { $language }版全部 { $count } 章
+books-partial = { $language }版共 { $count } 章，已有 { $available } 章

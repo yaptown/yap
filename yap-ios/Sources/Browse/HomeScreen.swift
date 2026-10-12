@@ -76,6 +76,18 @@ struct HomeScreen: View {
                                     HomeStat(stat: view.cards, systemImage: "book")
                                 }.padding(16).contentShape(Rectangle())
                             }.buttonStyle(.plain)
+                            Divider()
+                            Button { navigate(.books) } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "books.vertical").foregroundStyle(Color.yapMuted)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(view.books.title).font(.headline).foregroundStyle(Color.yapText)
+                                        Text(view.books.caption).font(.subheadline).foregroundStyle(Color.yapMuted)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Color.yapMuted)
+                                }.padding(16).contentShape(Rectangle())
+                            }.buttonStyle(.plain)
                         }
                         .quietSurface()
                         // Not a real field: it zooms into the dictionary, whose

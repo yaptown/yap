@@ -1236,3 +1236,26 @@ weekday-wednesday-initial = W
 yap-app-couldn-t-save-your-progress = Couldn't save your progress
 yap-app-restoring-your-session = Restoring your session…
 yap-app-yap-couldn-t-finish-saving-your-reviews-to-this = Yap couldn't finish saving your reviews to this device, so it hasn't switched accounts yet. Make sure your device has free storage, then try again.
+
+# Books
+books-title = Books
+books-contents = Contents
+books-loading = Loading books…
+books-empty = No books available yet.
+books-failed = Couldn't load books. Connect to the internet and try again.
+books-previous = Previous chapter
+books-next = Next chapter
+books-text-smaller = Smaller text
+books-text-larger = Larger text
+books-home-caption = Read whole novels in { $language }
+books-unavailable = Not yet available in { $language }
+books-section-unavailable = Section { $number } — not yet available
+books-machine-translated = This chapter is machine translated.
+books-complete = { $count ->
+    [one] The complete chapter in { $language }
+   *[other] All { $count } chapters in { $language }
+    }
+books-partial = { $count ->
+    [one] { $available } of { $count } chapter in { $language }
+   *[other] { $available } of { $count } chapters in { $language }
+    }

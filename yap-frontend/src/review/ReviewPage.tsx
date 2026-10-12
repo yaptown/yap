@@ -99,9 +99,7 @@ export function ReviewPage() {
       {phase.type === "Loading" ? (
         <LoadingProgress message={phase.message} progress={phase.percent} />
       ) : (
-        <div className="flex-1 flex items-center justify-center p-4">
-          <DeckLoadStatus phase={phase} retry={state.retry} />
-        </div>
+        <DeckLoadStatus phase={phase} retry={state.retry} />
       )}
     </TopPageLayout>
   );

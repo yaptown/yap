@@ -1239,3 +1239,26 @@ weekday-wednesday-initial = X
 yap-app-couldn-t-save-your-progress = No se pudo guardar tu progreso
 yap-app-restoring-your-session = Restaurando tu sesión…
 yap-app-yap-couldn-t-finish-saving-your-reviews-to-this = Yap no pudo terminar de guardar tus repasos en este dispositivo, así que todavía no cambió de cuenta. Asegúrate de que tu dispositivo tenga espacio libre y vuelve a intentarlo.
+
+# Books
+books-title = Libros
+books-contents = Índice
+books-loading = Cargando libros…
+books-empty = Todavía no hay libros disponibles.
+books-failed = No se han podido cargar los libros. Conéctate a Internet e inténtalo de nuevo.
+books-previous = Capítulo anterior
+books-next = Capítulo siguiente
+books-text-smaller = Texto más pequeño
+books-text-larger = Texto más grande
+books-home-caption = Lee novelas completas en { $language }
+books-unavailable = Todavía no disponible en { $language }
+books-section-unavailable = Sección { $number } — todavía no disponible
+books-machine-translated = Este capítulo se ha traducido automáticamente.
+books-complete = { $count ->
+    [one] El capítulo completo en { $language }
+   *[other] Los { $count } capítulos en { $language }
+    }
+books-partial = { $count ->
+    [one] { $available } de { $count } capítulo en { $language }
+   *[other] { $available } de { $count } capítulos en { $language }
+    }

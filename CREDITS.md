@@ -63,3 +63,11 @@ alongside the licence texts.
 - The many other open-source Rust, JavaScript and Swift libraries Yap.Town
   depends on, each under its own licence (listed in `Cargo.lock`,
   `yap-frontend/pnpm-lock.yaml` and the iOS package manifest).
+
+## Books
+
+- **Mistress of the Waves**, by **George Phillies**: Text copyright© 2012
+  George D. J. Phillies. All Rights Reserved. Original manuscript supplied for
+  Yap.Town, used with permission in the free app. Translated editions are clearly
+  marked as machine translations.
+  Acknowledgments and epigraph are retained; the cover artwork is not distributed.

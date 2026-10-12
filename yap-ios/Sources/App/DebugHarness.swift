@@ -3,7 +3,7 @@ import Foundation
 import Observation
 
 enum DebugScreen: String {
-    case review, home, stats, dictionary, due, settings
+    case review, home, stats, dictionary, due, settings, books, bookReader
 }
 
 /// Explicit opt-in simulator driver. Never compiled into release builds. Commands
@@ -22,7 +22,9 @@ enum DebugScreen: String {
 /// `--test-offline` (plus `SIMCTL_CHILD_YAP_PACKS_URL=http://127.0.0.1:9`) fails every
 /// network request, to check that a persisted session and cached deck still open.
 /// Commands are matched in the screen that owns them (grep `DebugHarness.shared.command`);
-/// `status` logs the current state, `tab learn|stats|dictionary|lists|settings` switches tabs.
+/// `status` logs the current state, `tab learn|stats|dictionary|books|settings` switches tabs.
+/// Books: `book SLUG` opens a reader; `chapter N`, `page N`, `next`, `previous`
+/// (pages), `bar`, `text-size STEP` and `contents` drive it.
 @Observable @MainActor final class DebugHarness {
     static let shared = DebugHarness()
     var fixture: Fixture?

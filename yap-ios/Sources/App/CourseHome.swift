@@ -1,7 +1,8 @@
 import SwiftUI
 
 enum CourseRoute: Hashable {
-    case review, stats, dictionary(searching: Bool = false), due, settings
+    case review, stats, dictionary(searching: Bool = false), due, settings, books
+    case book(String)
 }
 
 struct CourseHome: View {
@@ -38,6 +39,8 @@ struct CourseHome: View {
                         case let .dictionary(searching):
                             DictionaryScreen(session: session, searching: searching)
                                 .navigationTransition(.zoom(sourceID: DictionarySearchBar.id, in: dictionarySearch))
+                        case .books: BooksScreen(language: deck.get_target_language())
+                        case let .book(slug): BookReaderScreen(language: deck.get_target_language(), slug: slug)
                         case .due: DueWordsScreen(review: review)
                         case .settings: SettingsScreen(session: session)
                         }
@@ -78,6 +81,7 @@ struct CourseHome: View {
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
             guard DebugHarness.shared.fixture == nil else { return }
             let command = DebugHarness.shared.command
+            if command.hasPrefix("book ") { navigate(.book(String(command.dropFirst(5)))) }
             if command.hasPrefix("clip-text ") { audio.stop(); debugClipAvailable = nil; debugClip = String(command.dropFirst(10)) }
             if command == "clip-close" { debugClip = nil }
             if command.hasPrefix("tab ") {
@@ -86,6 +90,7 @@ struct CourseHome: View {
                 case "learn", "review": navigate(.review)
                 case "stats": navigate(.stats)
                 case "dictionary": navigate(.dictionary())
+                case "books": navigate(.books)
                 case "due": navigate(.due)
                 case "settings": navigate(.settings)
                 default: break

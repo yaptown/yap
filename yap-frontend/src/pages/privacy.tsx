@@ -23,7 +23,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective September 30, 2026.</p>
+            <p className="text-sm">Effective October 11, 2026.</p>
           </div>
         </Card>
 
@@ -49,6 +49,11 @@ export function PrivacyPage() {
               identifier, created by yap and synced with your activity, so
               your devices' histories can be merged; it isn't your phone's
               hardware or advertising identifier.
+            </p>
+            <p>
+              <span className="text-foreground">Books.</span> Downloaded books and
+              your chapter and paragraph reading position stay on this device for
+              offline reading. Reading positions are not synced to your account.
             </p>
             <p>
               <span className="text-foreground">Social.</span> Who you follow

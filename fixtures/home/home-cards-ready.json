@@ -214,6 +214,10 @@
       "title": "Find a word",
       "search_placeholder": "Search French or English"
     },
+    "books": {
+      "title": "Books",
+      "caption": "Read whole novels in French"
+    },
     "due_count": 2
   }
 }
