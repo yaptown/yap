@@ -18,10 +18,11 @@ COPY libraries/autograde-core/Cargo.toml libraries/autograde-core/Cargo.toml
 COPY libraries/audio-codec/Cargo.toml libraries/audio-codec/Cargo.toml
 COPY libraries/bridgerton/Cargo.toml libraries/bridgerton/Cargo.toml
 COPY libraries/bridgerton/macros/Cargo.toml libraries/bridgerton/macros/Cargo.toml
+COPY libraries/yap-i18n/Cargo.toml libraries/yap-i18n/Cargo.toml
 # Trim the workspace to yap-mcp's path-dependency closure, dev-dependencies
 # included (walk the `path = ` entries starting from yap-mcp/Cargo.toml). A
 # missing member fails `cargo chef prepare` right here in the planner stage.
-RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-mcp",\n    "yap-frontend-rs",\n    "yap-frontend-reducers",\n    "language-utils",\n    "libraries/weapon",\n    "libraries/imdex_map",\n    "libraries/eyedee",\n    "libraries/autograde-core",\n    "libraries/audio-codec",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n]' Cargo.toml
+RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-mcp",\n    "yap-frontend-rs",\n    "yap-frontend-reducers",\n    "language-utils",\n    "libraries/weapon",\n    "libraries/imdex_map",\n    "libraries/eyedee",\n    "libraries/autograde-core",\n    "libraries/audio-codec",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n    "libraries/yap-i18n",\n]' Cargo.toml
 # cargo-chef needs stub files for every target declared in the manifests
 RUN mkdir -p yap-mcp/src && echo "fn main() {}" > yap-mcp/src/main.rs
 RUN mkdir -p yap-frontend-rs/src yap-frontend-rs/benches \
@@ -42,6 +43,7 @@ RUN mkdir -p libraries/bridgerton/src libraries/bridgerton/tests libraries/bridg
     && touch libraries/bridgerton/src/lib.rs \
     && echo "fn main() {}" > libraries/bridgerton/tests/tokio_context.rs \
     && touch libraries/bridgerton/macros/src/lib.rs
+RUN mkdir -p libraries/yap-i18n/src && touch libraries/yap-i18n/src/lib.rs
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
@@ -66,6 +68,7 @@ COPY libraries/eyedee libraries/eyedee
 COPY libraries/autograde-core libraries/autograde-core
 COPY libraries/audio-codec libraries/audio-codec
 COPY libraries/bridgerton libraries/bridgerton
+COPY libraries/yap-i18n libraries/yap-i18n
 # Drop target/ within the same layer: it's ~hundreds of MB of incremental
 # artifacts that change every commit, and mode=max cache export would ship
 # all of it to the registry each deploy.
