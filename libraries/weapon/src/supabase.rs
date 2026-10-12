@@ -243,7 +243,13 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
                     unique_devices.len()
                 );
 
-                let upload_url = format!("{supabase_url}/rest/v1/events");
+                // Without an explicit on_conflict, PostgREST targets the
+                // table's primary key (`id`) for `resolution=ignore-duplicates`,
+                // not the `events_unique_stream_device_index` unique constraint
+                // we actually collide on — so it never suppressed the 409 below.
+                let upload_url = format!(
+                    "{supabase_url}/rest/v1/events?on_conflict=user_id,stream_id,device_id,within_device_events_index"
+                );
 
                 let upload_response = client
                     .post(&upload_url)

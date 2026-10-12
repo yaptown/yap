@@ -17,6 +17,17 @@
         const isDevelopment = window.location.hostname === 'localhost' ||
                             window.location.hostname === '127.0.0.1' ||
                             window.location.port === '5173'; // Vite's default dev port
+        const isProduction = window.location.hostname === 'yap.town';
+
+        // The production OneSignal app is locked to the https://yap.town
+        // origin, so initializing it from a Cloudflare Pages preview/branch
+        // URL (e.g. *.pages.dev) throws and left uncaught here. Skip init
+        // entirely rather than let that reach `window.onunhandledrejection`,
+        // which the loading screen treats as a boot failure.
+        if (!isDevelopment && !isProduction) {
+          console.log(`Skipping OneSignal init on unsupported origin: ${window.location.origin}`);
+          return;
+        }
 
         const config = isDevelopment ? {
           // Local development
