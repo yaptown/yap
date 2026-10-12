@@ -33,27 +33,35 @@ struct BooksScreen: View {
     }
 }
 
-/// There's no cover art, so each book gets a stable sea-toned tile from its slug
+/// The book's cover, or for a book without one a stable sea-toned tile from its slug
 /// (the same hash as the web's BookCover).
 private struct BookCover: View {
-    let slug: String
-    let title: String
+    let book: BookCardView
     private var hue: Double {
         var hash: Int32 = 0
-        for unit in slug.utf16 { hash = hash &* 31 &+ Int32(unit) }
+        for unit in book.slug.utf16 { hash = hash &* 31 &+ Int32(unit) }
         return Double(190 + Int(hash.magnitude % 60)) / 360
     }
     var body: some View {
-        RoundedRectangle(cornerRadius: 6, style: .continuous)
-            .fill(LinearGradient(
-                colors: [Color(hue: hue, saturation: 0.6, brightness: 0.65), Color(hue: hue + 25 / 360, saturation: 0.75, brightness: 0.33)],
-                startPoint: .topLeading, endPoint: .bottomTrailing))
+        let shape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+        Group {
+            if let cover = book.cover, let url = URL(string: cover) {
+                AsyncImage(url: url) { image in image.resizable().scaledToFill() } placeholder: { tile }
+            } else { tile }
+        }
+        .frame(width: 80, height: 120)
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(.black.opacity(0.1)))
+        .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
+        .accessibilityHidden(true)
+    }
+    private var tile: some View {
+        LinearGradient(
+            colors: [Color(hue: hue, saturation: 0.6, brightness: 0.65), Color(hue: hue + 25 / 360, saturation: 0.75, brightness: 0.33)],
+            startPoint: .topLeading, endPoint: .bottomTrailing)
             .overlay(alignment: .bottomLeading) {
-                Text(String(title.prefix(1))).font(.system(.title, design: .serif)).foregroundStyle(.white.opacity(0.85)).padding(8)
+                Text(String(book.title.prefix(1))).font(.system(.title, design: .serif)).foregroundStyle(.white.opacity(0.85)).padding(8)
             }
-            .frame(width: 64, height: 96)
-            .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
-            .accessibilityHidden(true)
     }
 }
 
@@ -61,7 +69,7 @@ private struct BookCard: View {
     let book: BookCardView
     var body: some View {
         HStack(spacing: 16) {
-            BookCover(slug: book.slug, title: book.title)
+            BookCover(book: book)
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title).font(.system(.title3, design: .serif).weight(.semibold)).foregroundStyle(Color.yapText)
                 Text(book.author).foregroundStyle(Color.yapMuted)

@@ -42,6 +42,7 @@ struct CatalogRow {
     slug: String,
     title: String,
     author: String,
+    cover: Option<String>,
     total: usize,
     available: usize,
 }
@@ -64,6 +65,8 @@ pub struct BookCardView {
     pub author: String,
     pub availability: String,
     pub enabled: bool,
+    /// The cover image's URL, when the book has one; hosts fall back to a drawn tile.
+    pub cover: Option<String>,
 }
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -229,6 +232,7 @@ fn reader(edition: Edition, language: Language, position: BookPosition) -> BookR
             author: book.author.clone(),
             availability: availability(book.chapters.len(), edition.structure.len(), language),
             enabled: !book.chapters.is_empty(),
+            cover: None,
         },
         copyright: book.copyright.clone(),
         parts,
@@ -379,6 +383,9 @@ pub async fn load_books(language: Language) -> Result<BooksScreenView, Error> {
                 author: r.author,
                 availability: availability(r.available, r.total, language),
                 enabled: r.available > 0,
+                cover: r
+                    .cover
+                    .map(|key| format!("{}/{key}", crate::utils::packs_origin())),
             })
             .collect(),
     })

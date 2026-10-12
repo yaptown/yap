@@ -5,7 +5,7 @@ use anyhow::{Context, ensure};
 use clap::Parser;
 use language_utils::book::{Book, BookChapter};
 use serde_json::{Value, json};
-use std::{collections::BTreeSet, path::PathBuf};
+use std::{collections::BTreeSet, path::PathBuf, time::Duration};
 
 #[derive(Parser)]
 struct Args {
@@ -69,6 +69,51 @@ impl Catalog {
     }
 }
 
+/// Uploads the book's cover (`cover.webp` beside the build directory) to the packs
+/// bucket under a content-hashed key, so a changed cover never meets a stale cached one.
+async fn upload_cover(
+    http: &reqwest::Client,
+    path: &std::path::Path,
+    slug: &str,
+) -> anyhow::Result<String> {
+    let bytes = std::fs::read(path)?;
+    let key = format!(
+        "books/{slug}/cover-{:016x}.webp",
+        xxhash_rust::xxh3::xxh3_64(&bytes)
+    );
+    let var = |name| std::env::var(name).with_context(|| format!("{name} required"));
+    let bucket = rusty_s3::Bucket::new(
+        format!(
+            "https://{}.r2.cloudflarestorage.com",
+            var("CLOUDFLARE_ACCOUNT_ID")?
+        )
+        .parse()?,
+        rusty_s3::UrlStyle::Path,
+        "yap-packs",
+        "auto",
+    )?;
+    let credentials =
+        rusty_s3::Credentials::new(var("R2_ACCESS_KEY_ID")?, var("R2_SECRET_ACCESS_KEY")?);
+    let url = rusty_s3::S3Action::sign(
+        &bucket.put_object(Some(&credentials), &key),
+        Duration::from_secs(600),
+    );
+    http.put(url)
+        .header(reqwest::header::CONTENT_TYPE, "image/webp")
+        .header(
+            reqwest::header::CACHE_CONTROL,
+            "public, max-age=31536000, immutable",
+        )
+        .body(bytes)
+        .send()
+        .await
+        // A presigned URL is a temporary write capability, not log data.
+        .map_err(reqwest::Error::without_url)?
+        .error_for_status()
+        .map_err(reqwest::Error::without_url)?;
+    Ok(key)
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv().ok();
@@ -103,6 +148,13 @@ async fn main() -> anyhow::Result<()> {
         key: std::env::var("SUPABASE_SERVICE_ROLE_KEY")
             .context("SUPABASE_SERVICE_ROLE_KEY required")?,
     };
+    let cover = upload_cover(
+        &catalog.http,
+        &args.build.with_file_name("cover.webp"),
+        &book.slug,
+    )
+    .await?;
+    println!("Uploaded cover {cover}");
     // IDs are allocated only on insert, retained on conflict. NULLS NOT DISTINCT
     // lets PostgREST infer this unique constraint for official (ownerless) books.
     let rows = catalog
@@ -111,7 +163,8 @@ async fn main() -> anyhow::Result<()> {
             "slug,owner_id",
             json!({
                 "slug":book.slug,"owner_id":null,"title":book.title,"author":book.author,
-                "original_language":book.original_language,"copyright":book.copyright
+                "original_language":book.original_language,"copyright":book.copyright,
+                "cover":cover
             }),
         )
         .await?;

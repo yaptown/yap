@@ -70,4 +70,4 @@ alongside the licence texts.
   George D. J. Phillies. All Rights Reserved. Original manuscript supplied for
   Yap.Town, used with permission in the free app. Translated editions are clearly
   marked as machine translations.
-  Acknowledgments and epigraph are retained; the cover artwork is not distributed.
+  Acknowledgments, epigraph and the official cover are retained.

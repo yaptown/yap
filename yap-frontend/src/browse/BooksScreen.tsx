@@ -27,22 +27,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-/** There's no cover art, so each book gets a stable sea-toned tile from its slug. */
-function BookCover({ slug, title }: { slug: string; title: string }) {
+/** The book's cover, or for a book without one a stable sea-toned tile from its slug. */
+function BookCover({ book }: { book: BookCardView }) {
+  const shape = "aspect-[2/3] w-20 shrink-0 rounded-md shadow-sm ring-1 ring-inset ring-black/10";
+  if (book.cover) {
+    return <img src={book.cover} alt="" className={`${shape} object-cover`} loading="lazy" />;
+  }
   let hash = 0;
-  for (const c of slug) hash = (hash * 31 + c.charCodeAt(0)) | 0;
+  for (const c of book.slug) hash = (hash * 31 + c.charCodeAt(0)) | 0;
   const hue = 190 + (Math.abs(hash) % 60);
   return (
     <div
       aria-hidden
-      className="flex h-24 w-16 shrink-0 items-end rounded-md p-2 shadow-sm ring-1 ring-inset ring-white/15"
+      className={`${shape} flex items-end p-2`}
       style={{
         background: `linear-gradient(150deg, hsl(${hue} 55% 42%), hsl(${hue + 25} 60% 20%))`,
       }}
     >
-      <span className="font-serif text-2xl leading-none text-white/85">
-        {title.charAt(0)}
-      </span>
+      <span className="font-serif text-2xl leading-none text-white/85">{book.title.charAt(0)}</span>
     </div>
   );
 }
@@ -50,7 +52,7 @@ function BookCover({ slug, title }: { slug: string; title: string }) {
 function BookCard({ book }: { book: BookCardView }) {
   const card = (
     <Card className="flex-row items-center gap-4 p-4 transition-colors group-hover:bg-muted/40">
-      <BookCover slug={book.slug} title={book.title} />
+      <BookCover book={book} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <h2 className="font-serif text-xl font-semibold leading-tight">
           {book.title}
