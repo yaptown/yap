@@ -24,7 +24,9 @@ use serde_json::json;
 
 use language_utils::{
     Course, Gram, Language, SpurGram, TaggedGram, TtsProvider, TtsRequest, autograde,
-    dictionary_entry_slug, language_pack::LanguagePack, text_cleanup::find_closest_match,
+    dictionary_entry_slug,
+    language_pack::LanguagePack,
+    text_cleanup::{cleanup_sentence, find_closest_match},
 };
 use lasso::Spur;
 use weapon::data_model::{EventStore, EventType};
@@ -425,7 +427,8 @@ impl YapState {
     /// Resolve a written-gram card plus an optional explicit sentence into
     /// the full translation-challenge payload. Explicit sentences are
     /// verified against the corpus (a model- or widget-supplied sentence is
-    /// only accepted verbatim); omitted ones use the app's own selection.
+    /// only accepted after spacing normalization); omitted ones use the
+    /// app's own selection.
     fn translation_challenge_payload(
         &mut self,
         card: &Card,
@@ -444,9 +447,9 @@ impl YapState {
         };
         let spur = match sentence {
             Some(text) => {
-                let text = text.trim();
+                let text = cleanup_sentence(text.to_string(), self.context.course.target_language);
                 let pack = self.pack();
-                let Some(spur) = pack.string_rodeo.get(text) else {
+                let Some(spur) = pack.string_rodeo.get(&text) else {
                     return Err(
                         "that sentence isn't in yap's corpus — pass one exactly as returned by \
                          get_sentences, or omit it to let the server pick"

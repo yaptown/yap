@@ -234,7 +234,10 @@ async fn build_chapters(
                 translated.len() == texts.len(),
                 "chapter paragraph count changed"
             );
-            let mut translated = translated.into_iter();
+            // The same whitespace and French punctuation spacing as corpus sentences.
+            let mut translated = translated
+                .into_iter()
+                .map(|text| language_utils::text_cleanup::cleanup_sentence(text, language));
             chapter.title = translated.next().unwrap();
             for paragraph in &mut chapter.paragraphs {
                 if let BookParagraph::Paragraph(text) = paragraph {

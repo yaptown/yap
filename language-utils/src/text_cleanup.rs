@@ -1,6 +1,6 @@
 use unicode_normalization::UnicodeNormalization;
 
-use crate::Language;
+use crate::{Language, Whitespace};
 
 /// Remove accents/diacritics from a string by NFD-decomposing and stripping combining characters.
 /// Also lowercases the result.
@@ -180,36 +180,49 @@ fn levenshtein_distance(a: &str, b: &str) -> usize {
 
 /// Normalize whitespace, then apply language-specific punctuation spacing.
 pub fn cleanup_sentence(sentence: String, language: Language) -> String {
-    let normalized = sentence.split_whitespace().collect::<Vec<_>>().join(" ");
-
     match language {
-        Language::French => cleanup_french_sentence(normalized),
-        _ => normalized,
+        Language::French => cleanup_french_sentence(sentence),
+        _ => sentence.split_whitespace().collect::<Vec<_>>().join(" "),
     }
 }
 
-/// French ! and ? take a thin non-breaking space (U+202F).
-pub fn cleanup_french_sentence(sentence: String) -> String {
-    const THIN_NBSP: char = '\u{202F}';
-    const NBSP: char = '\u{00A0}';
-    const HIGH_PUNCTUATION: &[char] = &['!', '?'];
-
-    let mut result = String::with_capacity(sentence.len() + 10);
-    let chars: Vec<char> = sentence.chars().collect();
-
-    for (i, &ch) in chars.iter().enumerate() {
-        if HIGH_PUNCTUATION.contains(&ch) && i > 0 {
-            let prev_char = chars[i - 1];
-            if prev_char == ' ' || prev_char == NBSP {
-                result.pop();
-                result.push(THIN_NBSP);
-            } else if prev_char != THIN_NBSP {
-                result.push(THIN_NBSP);
-            }
-        }
-        result.push(ch);
+/// French punctuation boundaries: only !/? introduce missing whitespace.
+/// Prediction assumes a spaced boundary; compact source forms use codec overrides.
+pub(crate) fn french_punctuation_whitespace(
+    left: Option<char>,
+    right: Option<char>,
+    has_space: bool,
+) -> Option<Whitespace> {
+    match (left, right) {
+        (Some(_), Some('!' | '?')) => Some(Whitespace::NarrowNbsp),
+        (_, Some(':')) if has_space => Some(Whitespace::Nbsp),
+        (_, Some(';' | '»')) | (Some('«'), _) if has_space => Some(Whitespace::NarrowNbsp),
+        _ => None,
     }
+}
 
+/// Normalize whitespace and apply French punctuation spacing without expanding
+/// compact colons, semicolons or guillemets (e.g. 12:30 and «bonjour»).
+pub fn cleanup_french_sentence(sentence: String) -> String {
+    let normalized = sentence.split_whitespace().collect::<Vec<_>>().join(" ");
+    let mut result = String::with_capacity(normalized.len());
+    let mut chars = normalized.chars().peekable();
+    let mut previous = None;
+    while let Some(ch) = chars.next() {
+        if ch == ' ' {
+            let whitespace = french_punctuation_whitespace(previous, chars.peek().copied(), true)
+                .unwrap_or(Whitespace::Space);
+            result.push_str(whitespace.as_str());
+        } else {
+            if previous.is_some_and(|c| c != ' ')
+                && let Some(whitespace) = french_punctuation_whitespace(previous, Some(ch), false)
+            {
+                result.push_str(whitespace.as_str());
+            }
+            result.push(ch);
+        }
+        previous = Some(ch);
+    }
     result
 }
 
@@ -226,7 +239,7 @@ mod tests {
             ("Bonjour\u{00A0}!", "Bonjour\u{202F}!"),
             (
                 "Question ? Exclamation ! Colon : Semicolon ;",
-                "Question\u{202F}? Exclamation\u{202F}! Colon : Semicolon ;",
+                "Question\u{202F}? Exclamation\u{202F}! Colon\u{00A0}: Semicolon\u{202F};",
             ),
             ("What ?! Really !", "What\u{202F}?\u{202F}! Really\u{202F}!"),
             (
@@ -237,6 +250,34 @@ mod tests {
         ] {
             assert_eq!(cleanup_french_sentence(input.into()), expected, "{input:?}");
         }
+    }
+
+    #[test]
+    fn french_old_spacing_and_idempotence() {
+        for space in [" ", "\u{00A0}", "\u{202F}", "\t", "\u{2009} \u{00A0}"] {
+            for (left, right, expected_space) in [
+                ("oui", ";", "\u{202F}"),
+                ("oui", "!", "\u{202F}"),
+                ("oui", "?", "\u{202F}"),
+                ("oui", "»", "\u{202F}"),
+                ("«", "oui", "\u{202F}"),
+                ("oui", ":", "\u{00A0}"),
+            ] {
+                let input = format!("{left}{space}{right}");
+                let expected = format!("{left}{expected_space}{right}");
+                assert_eq!(cleanup_sentence(input.clone(), Language::French), expected);
+                assert_eq!(cleanup_french_sentence(input), expected);
+                assert_eq!(
+                    cleanup_sentence(expected.clone(), Language::French),
+                    expected
+                );
+            }
+        }
+        for input in ["12:30", "http://exemple.fr", "«bonjour»", "oui;non"] {
+            assert_eq!(cleanup_sentence(input.into(), Language::French), input);
+        }
+        let english = "Say : « hello ; yes ! no ? »";
+        assert_eq!(cleanup_sentence(english.into(), Language::English), english);
     }
 
     #[test]
@@ -254,7 +295,7 @@ mod tests {
             (
                 Language::French,
                 "Tu as dit \u{ab}\u{a0}bonjour\u{a0}\u{bb} ?",
-                "Tu as dit \u{ab} bonjour \u{bb}\u{202F}?",
+                "Tu as dit \u{ab}\u{202F}bonjour\u{202F}\u{bb}\u{202F}?",
             ),
             (
                 Language::French,

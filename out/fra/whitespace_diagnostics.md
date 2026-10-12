@@ -1,18 +1,10 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 4675772
-Total errors: 643
+Total predictions: 4675776
+Total errors: 401
 Accuracy: 99.99%
 
 ## Error Patterns (sorted by frequency)
-
-### "'" + "?" (27 occurrences)
-- Predicted: None
-- Actual: NarrowNbsp
-- Examples:
-  - Alors, tu disais 'meilleures intentions' ?
-  - C'est donc le célèbre 'Livre des Frères' ?
-  - C'est donc le fameux 'Livre des Frères' ?
 
 ### "," + "p'" (11 occurrences)
 - Predicted: None
@@ -34,17 +26,9 @@ Accuracy: 99.99%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Ah, « tu ne verras pas d'ici » ?
-  - C'est moi, « L'Élu ».
-  - C'est qui, « moi » ?
-
-### "--" + "!" (6 occurrences)
-- Predicted: None
-- Actual: NarrowNbsp
-- Examples:
-  - H-Hey-- !
-  - Où est-ce que-- ! ?
-  - Quoii-- ! ?
+  - Ah, « tu ne verras pas d'ici » ?
+  - C'est moi, « L'Élu ».
+  - C'est qui, « moi » ?
 
 ### "a" + "ida" (5 occurrences)
 - Predicted: Space
@@ -53,14 +37,6 @@ Accuracy: 99.99%
   - Elle l'aida elle-même car personne d'autre ne voulait le faire.
   - Elle l'aida à nouer sa cravate car il ignorait comment faire.
   - Il m'aida à porter le sac.
-
-### "presser" + ";" (5 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Tu n'aurais pas dû te presser ; tu es arrivé trop tôt.
-  - Tu n'aurais pas dû te presser ; tu es arrivée trop tôt.
-  - Vous n'auriez pas dû vous presser ; vous êtes arrivée trop tôt.
 
 ### "," + "c’" (4 occurrences)
 - Predicted: None
@@ -85,14 +61,6 @@ Accuracy: 99.99%
   - C'est qui 'nous' ?
   - Comment ça, 'nous' ?
   - Qu'est-ce que tu veux dire par 'nous' ?
-
-### "pas" + ";" (4 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ceux qui savent ne parlent pas ; ceux qui parlent ne savent pas.
-  - Ne le leur explique pas ; tu perds ton temps.
-  - Ne le leur expliquez pas ; vous perdez votre temps.
 
 ### "'" + "en" (3 occurrences)
 - Predicted: None
@@ -138,17 +106,9 @@ Accuracy: 99.99%
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Ce n'est pas : 'Où est-il' ?
+  - Ce n'est pas : 'Où est-il' ?
   - Qui 'il' ?
   - Qui ça, 'il' ?
-
-### "libre" + ";" (3 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Linux est un système d'exploitation libre ; tu devrais l'essayer.
-  - Linux est un système d'exploitation libre ; vous devriez l'essayer.
-  - Personne n'est libre ; même les oiseaux sont enchaînés au ciel.
 
 ### "on" + "'" (3 occurrences)
 - Predicted: Space
@@ -157,14 +117,6 @@ Accuracy: 99.99%
   - C'est qui, 'on' ?
   - Comment ça, 'on' ?
   - Qui ça, 'on' ?
-
-### "toi" + ";" (3 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Calme-toi ; il ne fait que te taquiner.
-  - Je ne priais pas contre toi ; je priais pour toi.
-  - Je ne te parle pas à toi ; je parle au singe.
 
 ### "…" + "de" (3 occurrences)
 - Predicted: Space
@@ -187,13 +139,6 @@ Accuracy: 99.99%
 - Examples:
   - J'ai fait 'rappel' et c'était toi.
   - Je passe après 'tasse', 'piscine' et 'girafe'.
-
-### "-" + "!" (2 occurrences)
-- Predicted: None
-- Actual: NarrowNbsp
-- Examples:
-  - La poule fait cot cot- !
-  - Merd-- !
 
 ### "-" + "tout" (2 occurrences)
 - Predicted: None
@@ -244,20 +189,6 @@ Accuracy: 99.99%
   - Qu'est ce qu'il y a , Beto ?
   - Qu'est ce qu'y a , baltringue ?
 
-### "aujourd'hui" + ";" (2 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Il ne peut y avoir de crises aujourd'hui ; mon emploi du temps est déjà complet.
-  - Il pleut aujourd'hui ; où ai-je donc mon parapluie ?
-
-### "bien" + ";" (2 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Mettre tout en équilibre, c'est bien ; mettre tout en harmonie, c'est mieux.
-  - Ton ordinateur ne marche pas bien ; supprime les logiciels inutiles.
-
 ### "cheese" + "'" (2 occurrences)
 - Predicted: Space
 - Actual: None
@@ -279,34 +210,6 @@ Accuracy: 99.99%
   - Elle a essayé de s'enfuir.
   - M'en aller, m'enfuir, me terrer quelque part !
 
-### "filles" + ";" (2 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Il a trois filles ; une est mariée, mais pas les autres.
-  - Surveille les filles ; elles ne savent pas nager.
-
-### "flèche" + ";" (2 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Le temps file comme une flèche ; un fruit s'effiloche comme une banane.
-  - Le temps vole comme une flèche ; les drosophiles aiment une banane.
-
-### "fumer" + ";" (2 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je suis surpris de vous voir fumer ; vous ne le faisiez pas.
-  - Je suis surprise de vous voir fumer ; vous ne le faisiez pas.
-
-### "grand-mère" + ";" (2 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Bien sûr, grand-mère ; allons te coucher.
-  - Bien sûr, grand-mère ; allons te mettre au lit.
-
 ### "i" + "I" (2 occurrences)
 - Predicted: Space
 - Actual: None
@@ -314,26 +217,12 @@ Accuracy: 99.99%
   - Mais qu'iI finisse ce qu'iI a commencé.
   - Mais qu'iI finisse ce qu'iI a commencé.
 
-### "jeune" + ";" (2 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Tu es jeune ; tu ne peux pas prendre ta retraite.
-  - Vous êtes jeune ; vous ne pouvez pas prendre votre retraite.
-
 ### "l" + "'" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Il a fait un sans-faute à l'examen.
   - On a fini les travaux juste avant l'hiver.
-
-### "le" + ";" (2 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ignore-le ; c'est juste un gosse embêtant qui veut attirer l'attention.
-  - Ignorez-le ; c'est juste un gosse embêtant qui veut attirer l'attention.
 
 ### "là" + "." (2 occurrences)
 - Predicted: None
@@ -383,69 +272,6 @@ Accuracy: 99.99%
 - Examples:
   - En fait c'est lui qui te ressemble .
   - Je lui ressemble .
-
-### "règles" + ";" (2 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - L'anarchie n'est pas un manque de règles ; c'est un manque de dirigeants.
-  - Rien à foutre des règles ; j'ai du fric !
-
-### "utile" + ";" (2 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ce logiciel n'est pas utile ; supprime-le.
-  - Ce logiciel n'est pas utile ; supprimez-le.
-
-### "vous" + ";" (2 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Calmez-vous ; il ne fait que vous taquiner.
-  - Ne dites jamais du mal de vous ; vos amis en diront toujours assez.
-
-### "«" + "Tom" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ils l'appellent « Tom ».
-  - Son père l'appelle « Tom ».
-
-### "«" + "craigslist" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Je l'ai vendu sur « craigslist ».
-  - Je l'ai vendue sur « craigslist ».
-
-### "«" + "ouistiti" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Dis « ouistiti ».
-  - Dites « ouistiti » !
-
-### "«" + "soit" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Je dis « soit », tu dis.
-  - Tu dis « soit ».
-
-### "«" + "tu" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ah, « tu ne verras pas d'ici » ?
-  - Un « tiens » vaut mieux que deux « tu l'auras ».
-
-### "«" + "vieille" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - C’est impoli de l’appeler « vieille peau ».
-  - Dis plutôt « vieille dame ».
 
 ### "…" + "vous" (2 occurrences)
 - Predicted: Space
@@ -602,7 +428,7 @@ Accuracy: 99.99%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Pas toi, bien sûr ; tu es une femme - enfin presque.
+  - Pas toi, bien sûr ; tu es une femme - enfin presque.
 
 ### "-" + "et" (1 occurrences)
 - Predicted: None
@@ -784,12 +610,6 @@ Accuracy: 99.99%
 - Examples:
   - Allez , pas de blague, personne ne veut être blessé, d'accord ?
 
-### "Amour" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Tout l'univers obéit à l'Amour ; aimez, aimez, tout le reste n'est rien.
-
 ### "Anderson" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -813,12 +633,6 @@ Accuracy: 99.99%
 - Actual: None
 - Examples:
   - Qu'on vous appelle le 'Chasseur de juifs'.
-
-### "Cherche" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Cherche ; trouve ; découvre !
 
 ### "Chuchotements" + "." (1 occurrences)
 - Predicted: None
@@ -891,12 +705,6 @@ Accuracy: 99.99%
 - Actual: Space
 - Examples:
   - Son ventre me rappelle les cartes postales du Japon - plat et joli.
-
-### "Kitaro" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Tenez, du porc pané de chez Kitaro ; mais pas extra.
 
 ### "La Taverne" + "'" (1 occurrences)
 - Predicted: Space
@@ -982,12 +790,6 @@ Accuracy: 99.99%
 - Examples:
   - T'aurais pas un 'R' à me prêter ?
 
-### "Rabbiosu" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Rabbiosu ; rageur, furieux.
-
 ### "Sarfaraz" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1007,7 +809,7 @@ Accuracy: 99.99%
   - MESSAGE D'URGENCE … s'est divisé à l'infini pour se répandre sur le globe.
 
 ### "Urban Legends" + "»" (1 occurrences)
-- Predicted: Space
+- Predicted: NarrowNbsp
 - Actual: None
 - Examples:
   - Notre prochaine fonctionnalité est «Urban Legends».
@@ -1024,12 +826,6 @@ Accuracy: 99.99%
 - Examples:
   - Place un 'X' à l'endroit opportun.
 
-### "Y" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Les hommes ont un chromosome X et un Y ; les femmes, deux X.
-
 ### "abandonnée" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
 - Actual: None
@@ -1042,23 +838,11 @@ Accuracy: 99.99%
 - Examples:
   - Excellente activité .
 
-### "additionne" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Qui travaille seul additionne ; qui travaille ensemble multiplie.
-
 ### "ah" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Dites 'ah'.
-
-### "aller" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Il ne veut pas y aller ; moi non plus.
 
 ### "ambitieux" + "-" (1 occurrences)
 - Predicted: None
@@ -1074,12 +858,6 @@ Accuracy: 99.99%
 
 ### "amour" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ce qui compte, c'est l'amour ; tout le reste est superflu.
-
-### "amour" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
 - Actual: None
 - Examples:
   - Nous sommes nés de l'amour; l'amour est notre mère.
@@ -1090,23 +868,11 @@ Accuracy: 99.99%
 - Examples:
   - C'est une sensation merveilleuse d'être 'annulée'.
 
-### "appartient" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ce livre m'appartient ; j'ai moi-même écrit mon nom à l'intérieur.
-
 ### "apprenti" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
 - Actual: None
 - Examples:
   - En vous quittant, j'étais l'apprenti; maintenant, c'est moi le maître.
-
-### "araignée" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je ne l'appellerais pas une araignée ; je l'appellerais un monstre.
 
 ### "argent" + "," (1 occurrences)
 - Predicted: None
@@ -1120,18 +886,6 @@ Accuracy: 99.99%
 - Examples:
   - Ils peuvent vous arranger la moelle épinière si vous avez de l'argent .
 
-### "argent" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Il ne volera pas mon argent ; j'ai confiance en lui.
-
-### "arêtes" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ce poisson est plein d'arêtes ; ne le mange pas.
-
 ### "assez" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1144,12 +898,6 @@ Accuracy: 99.99%
 - Examples:
   - Il a étudié assidûment; autrement il aurait échoué de nouveau.
 
-### "autres" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Elle ne prête pas attention aux autres ; en d'autres termes, elle est égoïste.
-
 ### "baronne" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1161,24 +909,6 @@ Accuracy: 99.99%
 - Actual: Space
 - Examples:
   - Tu ne resteras pas une nuit de plus là-bas ..
-
-### "beaucoup" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Merci beaucoup ; c'était parfait.
-
-### "berger" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Le Seigneur est mon berger ; je ne manquerai de rien.
-
-### "besoin" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Elle n'en aurait pas eu besoin ; elle allait bientôt mourir.
 
 ### "bible" + "," (1 occurrences)
 - Predicted: None
@@ -1228,12 +958,6 @@ Accuracy: 99.99%
 - Examples:
   - La presse a appelé ça 'la défense bonbon'.
 
-### "bonne" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ma vue n'est pas bonne ; je dois porter des lunettes.
-
 ### "bébé" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1253,34 +977,16 @@ Accuracy: 99.99%
   - Marie n'a pas de cabot; elle a un chaton.
 
 ### "cadeau" + ":" (1 occurrences)
-- Predicted: Space
+- Predicted: Nbsp
 - Actual: None
 - Examples:
   - Alors il lui a acheté un cadeau: ce chaton.
-
-### "cannabis" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je vais à la boutique de cannabis ; tu veux venir avec moi ?
-
-### "cardinal" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Un est un nombre cardinal ; premier est un nombre ordinal.
 
 ### "ceci" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Il lui faut du repos et ceci - à prendre trois fois par jour.
-
-### "changement" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - L'univers est soumis au changement ; notre vie est ce que nos pensées en font.
 
 ### "chasse" + "'" (1 occurrences)
 - Predicted: Space
@@ -1293,24 +999,6 @@ Accuracy: 99.99%
 - Actual: None
 - Examples:
   - Ma mère sait à peine compter ou épeler 'chat'.
-
-### "chaton" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Tom a un chien et Marie un chaton ; les deux animaux s’entendent bien.
-
-### "cheveux" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Il est grand temps de vous faire couper les cheveux ; ils sont trop longs.
-
-### "chiens" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je n'aime pas vraiment les chiens ; Je suis plutôt une personne chat.
 
 ### "chip" + "'" (1 occurrences)
 - Predicted: Space
@@ -1325,22 +1013,10 @@ Accuracy: 99.99%
   - Je crois qu'il te manque quelque chose .
 
 ### "chose" + ":" (1 occurrences)
-- Predicted: Space
+- Predicted: Nbsp
 - Actual: None
 - Examples:
   - Interrogez-vous sur chaque chose: quelle est son essence ?
-
-### "circonstances" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Au diable les circonstances ; je crée des opportunités.
-
-### "cochon" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ce n'est pas un cochon ; c'est un singe.
 
 ### "cola" + "-" (1 occurrences)
 - Predicted: None
@@ -1348,53 +1024,17 @@ Accuracy: 99.99%
 - Examples:
   - Pendant un moment, j'aimais vraiment le cola - j'en buvais tous les jours.
 
-### "colère" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Tu ne seras pas puni pour ta colère ; Tu seras puni par ta colère.
-
 ### "communautaire" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Nous avons une auto-protection communautaire .
 
-### "conviens" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je ne suis pas brave, j’en conviens ; mais je ne suis pas superstitieux.
-
-### "cornes" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Les chevaux n'ont pas de cornes ; les vaches et les moutons en ont.
-
-### "correcte" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - La phrase est correcte ; je la formulerais cependant autrement.
-
-### "couleur" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je n'ai jamais vu un métal de cette couleur ; c'est probablement un alliage.
-
 ### "courriel" + ">" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Envoyez-nous votre CV détaillé à <courriel>.
-
-### "cristal" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - J'ai trouvé un cristal ; regardez-le !
 
 ### "cœur" + "-" (1 occurrences)
 - Predicted: None
@@ -1407,12 +1047,6 @@ Accuracy: 99.99%
 - Actual: None
 - Examples:
   - J'ai un 'cube du destin' sur moi.
-
-### "destin" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je suis le maître de mon destin ; je suis le capitaine de mon âme.
 
 ### "devoir" + "'" (1 occurrences)
 - Predicted: Space
@@ -1438,12 +1072,6 @@ Accuracy: 99.99%
 - Examples:
   - Le sage sait ce qu'il dit; le sot dit ce qu'il sait.
 
-### "diversité" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ils aiment la diversité ; ils n'aiment pas rester au même endroit.
-
 ### "désastre" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1456,23 +1084,11 @@ Accuracy: 99.99%
 - Examples:
   - Le deuxième acte s'appelle 'l'effet'.
 
-### "effrayée" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Marie a été effrayée ; mais Tom n'a pas eu peur.
-
 ### "encore" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Comment ça, 'encore' ?
-
-### "enfin" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - L'aube parut enfin ; la longue nuit s'achevait.
 
 ### "ennemis" + "-" (1 occurrences)
 - Predicted: None
@@ -1480,41 +1096,11 @@ Accuracy: 99.99%
 - Examples:
   - Pardonnez toujours à vos ennemis - rien ne les agace plus que cela.
 
-### "ennui" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Une morale nue apporte de l'ennui ; le conte fait passer le précepte avec lui.
-
-### "ennuyeux" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Tu me trouves ennuyeux ; admets-le.
-
-### "entêté" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je ne suis pas entêté ; je suis tenace.
-
-### "es" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - J'étais ce que tu es ; tu seras ce que je suis.
-
 ### "est" + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Ramasser des champignons c'est …c'est merveilleux…vous savez.
-
-### "faim" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Il ne peut pas avoir faim ; il vient de déjeuner.
 
 ### "fait" + "." (1 occurrences)
 - Predicted: None
@@ -1528,12 +1114,6 @@ Accuracy: 99.99%
 - Examples:
   - Il s'est excusé, mais le mal était fait; après, c'était trop tard.
 
-### "fardeau" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je sais que je suis un fardeau ; inutile de le répéter.
-
 ### "faut" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1544,19 +1124,7 @@ Accuracy: 99.99%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Pas toi, bien sûr ; tu es une femme - enfin presque.
-
-### "fille" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Vous aimez ma fille ; mais êtes-vous sûr qu’elle vous aime ?
-
-### "foire" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Nous allons à la foire ; viens-tu ?
+  - Pas toi, bien sûr ; tu es une femme - enfin presque.
 
 ### "froid" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
@@ -1569,12 +1137,6 @@ Accuracy: 99.99%
 - Actual: None
 - Examples:
   - J'ai oublié le nom de votre frère; comment se nomme-t-il ?
-
-### "fulminer" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Rien ne sert de fulminer ; s'indigner suffirait.
 
 ### "garde du corps" + "'" (1 occurrences)
 - Predicted: Space
@@ -1600,12 +1162,6 @@ Accuracy: 99.99%
 - Examples:
   - Je ne sens plus mon pied gauche; je n'y ai plus de sensation.
 
-### "gaz" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - On ne peut pas voir le gaz ; il est invisible.
-
 ### "gentillesse" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1624,12 +1180,6 @@ Accuracy: 99.99%
 - Examples:
   - Ensuite, qu'est-ce qui constitue le 'meilleur gouvernement' ?
 
-### "grec" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ils sont en grec ; on ne peut pas les lire.
-
 ### "gâteau" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
 - Actual: None
@@ -1643,7 +1193,7 @@ Accuracy: 99.99%
   - Et comme vous avez le même génotype , vous pourriez enfiler ses chaussures.
 
 ### "ha" + "»" (1 occurrences)
-- Predicted: Space
+- Predicted: NarrowNbsp
 - Actual: None
 - Examples:
   - Et je sais que la posture «ha».
@@ -1666,35 +1216,17 @@ Accuracy: 99.99%
 - Examples:
   - Dites juste 'conséquences pour la santé de l'homme'.
 
-### "homme" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je suis un très vieil homme ; de quel âge, je l'ignore.
-
 ### "horrible" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
 - Actual: None
 - Examples:
   - Pas spécialement horrible; non, non, pas du tout.
 
-### "ici" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Elle n'est pas ici ; elle est chez le médecin.
-
 ### "ils" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Qui ça, 'ils' ?
-
-### "immense" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Le parc était immense ; on s'y est presque perdus.
 
 ### "important" + "-" (1 occurrences)
 - Predicted: None
@@ -1744,18 +1276,6 @@ Accuracy: 99.99%
 - Examples:
   - L'entrée principale semble être la seule issue; pas d'autre sur votre niveau.
 
-### "jeunesse" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - J'ai lu beaucoup de livres dans ma jeunesse ; je suis un érudit à ma manière.
-
-### "jour" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Seize heures font un jour ; huit heures font une nuit.
-
 ### "juifs" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1767,12 +1287,6 @@ Accuracy: 99.99%
 - Actual: None
 - Examples:
   - Il m'a posé un lapin; je l'ai attendu toute la soirée !
-
-### "ligne" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Elle est en ligne ; qu'est-ce que je fais ?
 
 ### "limites" + "…" (1 occurrences)
 - Predicted: None
@@ -1792,59 +1306,17 @@ Accuracy: 99.99%
 - Examples:
   - Je lis; tu écris.
 
-### "lit" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Maintenant je lis, tu lis et il lit ; nous lisons tous.
-
-### "loin" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Fais l'effort d'aller un peu plus loin ; ce n'est pas surpeuplé.
-
 ### "longs" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Tes pantalons sont trop longs - tu vas marcher dessus.
 
-### "loup" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - J'ai une faim de loup ; où puis-je trouver quelque chose à manger ?
-
-### "lui" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je suis jaloux de lui ; tu l'aimes plus que moi.
-
-### "là" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - C'est bien, là ; ni trop lourd ni trop léger.
-
 ### "là" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
 - Actual: None
 - Examples:
   - Erina est là; il faut que je sorte.
-
-### "m" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Et là, il dit : 'Tape-m'en quatre.'
-
-### "maintenant" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Il est trois heures maintenant ; je reviendrai dans une heure.
 
 ### "mais" + "'" (1 occurrences)
 - Predicted: Space
@@ -1858,12 +1330,6 @@ Accuracy: 99.99%
 - Examples:
   - La lettre que Tom reçut disait qu'il devait rentrer au plus tôt à la maison .
 
-### "manger" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je ne vis pas pour manger ; je mange pour vivre.
-
 ### "marines" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1876,12 +1342,6 @@ Accuracy: 99.99%
 - Examples:
   - La qualité d'image est vraiment mauvaise - la résolution est si basse.
 
-### "maître" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Le temps est un grand maître ; le problème, c'est qu'il tue ses élèves.
-
 ### "me" + "ure" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1889,28 +1349,10 @@ Accuracy: 99.99%
   - Et maintenant, ils attendent tous qu'à mon tour, je meure.
 
 ### "merci" + "»" (1 occurrences)
-- Predicted: Space
+- Predicted: NarrowNbsp
 - Actual: None
 - Examples:
   - Je voudrais dire «merci» à Tom.
-
-### "message" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - J'entends parfaitement le message ; c'est de foi que je manque.
-
-### "mien" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ce livre est le mien ; mon nom est écrit à l'intérieur.
-
-### "mieux" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Si ça marche, tant mieux ; sinon, on aura essayé.
 
 ### "moi" + "'" (1 occurrences)
 - Predicted: Space
@@ -1936,18 +1378,6 @@ Accuracy: 99.99%
 - Examples:
   - Ma vie est comme l'eau qui a passé le moulin; elle ne fait pas tourner de roue.
 
-### "mourir" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - J'aime, je puis mourir ; j'ai vécu le meilleur et le plus beau des rêves !
-
-### "musique" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je n'aime pas leur musique ; je trouve la voix de la chanteuse stridente.
-
 ### "musique" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
 - Actual: None
@@ -1972,18 +1402,6 @@ Accuracy: 99.99%
 - Examples:
   - Ça allait devenir 'L'année de la grande neige'.
 
-### "noir" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Il a peur du noir ; ne l'y laisse pas.
-
-### "non" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Malheureusement non ; au contraire.
-
 ### "nu" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1995,12 +1413,6 @@ Accuracy: 99.99%
 - Actual: None
 - Examples:
   - Oui, c'est une grande nuit; vous avez raison.
-
-### "numéro" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Laissez-nous votre numéro ; nous vous rappellerons.
 
 ### "objets" + "'" (1 occurrences)
 - Predicted: Space
@@ -2020,12 +1432,6 @@ Accuracy: 99.99%
 - Examples:
   - Elle hochait la tête pour dire oui; et je restais couchée.
 
-### "outrageusement" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Elle s'habille si outrageusement ; ça a l'air complètement ridicule !
-
 ### "où" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2037,18 +1443,6 @@ Accuracy: 99.99%
 - Actual: None
 - Examples:
   - La première partie s'appelle 'le pacte'.
-
-### "pain" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je ne beurre même pas mon pain ; je considère que c'est cuisiner.
-
-### "pardon" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Vous demandez en vain le pardon ; votre acte ne peut pas être pardonné.
 
 ### "parlent" + "…" (1 occurrences)
 - Predicted: None
@@ -2080,23 +1474,11 @@ Accuracy: 99.99%
 - Examples:
   - On croit mourir pour la patrie; on meurt pour les industriels.
 
-### "pauvre" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - D'une part, je suis pauvre ; d'autre part, je suis occupé.
-
 ### "payés" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - C'est pour ça qu'ils sont payés .
-
-### "personnelle" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Cette lettre est personnelle ; je ne veux pas que quelqu'un d'autre la lise.
 
 ### "peu" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
@@ -2115,12 +1497,6 @@ Accuracy: 99.99%
 - Actual: None
 - Examples:
   - Comment dit-on 'planque' en français ?
-
-### "plaît" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Change de chaîne, s'il te plaît ; cette musique est insupportable.
 
 ### "point" + "point" (1 occurrences)
 - Predicted: None
@@ -2146,12 +1522,6 @@ Accuracy: 99.99%
 - Examples:
   - Vous avez oublié deux mots très importants 'si possible'.
 
-### "pot" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ne tournez-pas autour du pot ; nous avons un problème, n'est-ce pas ?
-
 ### "pote" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2164,23 +1534,11 @@ Accuracy: 99.99%
 - Examples:
   - Entre nous, on s'appelait 'les potes'.
 
-### "pourquoi" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ne demandez pas pourquoi ; faites-le, tout simplement.
-
 ### "pouvoir" + "»" (1 occurrences)
-- Predicted: Space
+- Predicted: NarrowNbsp
 - Actual: None
 - Examples:
   - Le temps n’est pas un «pouvoir».
-
-### "poète" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ce n'est pas un poète ; il écrit de la prose.
 
 ### "promis" + "." (1 occurrences)
 - Predicted: None
@@ -2206,12 +1564,6 @@ Accuracy: 99.99%
 - Examples:
   - C'est pas facile, les rapports père—fille.
 
-### "pêcher" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - J'aime pêcher ; c'est une façon très relaxante de passer la journée.
-
 ### "qu" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2236,12 +1588,6 @@ Accuracy: 99.99%
 - Examples:
   - Je viens d'acheter une pièce de la 'rabbit'.
 
-### "raide" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - J'ai marché sur une corde raide ; je ne sais pas si je vais réussir.
-
 ### "raison" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2253,18 +1599,6 @@ Accuracy: 99.99%
 - Actual: None
 - Examples:
   - J'ai fait 'rappel' et c'était toi.
-
-### "recevrez" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Demandez et vous recevrez ; votre joie sera parfaite.
-
-### "rien" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Mais nous ne savons vraiment rien ; car la vérité se trouve tout au fond.
 
 ### "roi" + "'" (1 occurrences)
 - Predicted: Space
@@ -2284,24 +1618,6 @@ Accuracy: 99.99%
 - Examples:
   - L'amour, c'est comme la rubéole - tout le monde doit en faire l'expérience.
 
-### "rythmée" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - La musique électronique est rythmée ; elle sonne comme des battements du cœur.
-
-### "récemment" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je ne l'ai pas vu récemment ; passe-lui le bonjour.
-
-### "réussi" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je ne lui en veux pas d'avoir réussi ; elle a travaillé dur pour ça.
-
 ### "sais" + "--" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2314,41 +1630,11 @@ Accuracy: 99.99%
 - Examples:
   - Oui, je sais; t'es amoureuse de Richie ce que je trouve malsain et dégoûtant.
 
-### "sales" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Tes chaussures de sport sont sales ; retire-les avant d'entrer.
-
 ### "savoir-faire" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - C'est quoi une 'marque de savoir-faire' ?
-
-### "sens" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - La paix est un mot vide de sens ; c'est une paix glorieuse qu'il nous faut.
-
-### "sentencieux" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Il est si facile d'être sentencieux ; il est si dur d'être frivole.
-
-### "serveurs" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Le bar Zailaiba embauche des serveurs ; es-tu intéressé ?
-
-### "seul" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Il était tout seul ; pas un chat n'était en vue.
 
 ### "sincère" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
@@ -2374,30 +1660,6 @@ Accuracy: 99.99%
 - Examples:
   - Je suis -- Douglas Kelley.
 
-### "suis" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Je ne sais pas où je suis ; pouvez-vous m'aider ?
-
-### "survivront" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Les forts survivront ; les faibles périront.
-
-### "séparions" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Il faut que nous nous séparions ; le jour ne va pas tarder à paraître.
-
-### "sûr" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Pas toi, bien sûr ; tu es une femme - enfin presque.
-
 ### "sûrs" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2416,23 +1678,11 @@ Accuracy: 99.99%
 - Examples:
   - Le dernier mot qu'il a entendu était 'tapette'.
 
-### "tard" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Nous le ferons plus tard ; ce n'est pas urgent.
-
 ### "tasse" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Je passe après 'tasse', 'piscine' et 'girafe'.
-
-### "temps" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Nous ne devons pas perdre de temps ; nous avons quelque chose à faire.
 
 ### "test" + "'" (1 occurrences)
 - Predicted: Space
@@ -2453,7 +1703,7 @@ Accuracy: 99.99%
   - Sauf que 'toi' ne veut plus rien dire.
 
 ### "toi" + ":" (1 occurrences)
-- Predicted: Space
+- Predicted: Nbsp
 - Actual: None
 - Examples:
   - Souviens-toi: ouvre le avant de le manger.
@@ -2506,24 +1756,6 @@ Accuracy: 99.99%
 - Examples:
   - Je n'ai pas envie de travailler; et si nous allions plutôt au cinéma ?
 
-### "trouve" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Cherche ; trouve ; découvre !
-
-### "vie" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Avec les animaux je veux passer ma vie ; ils sont si bonne compagnie !
-
-### "vies" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - J'ai trois vies ; je peux en perdre jusqu'à deux.
-
 ### "vivifie" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
 - Actual: None
@@ -2554,18 +1786,6 @@ Accuracy: 99.99%
 - Examples:
   - Ce qui fait de vous … un moins que rien.
 
-### "vrai" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Rien n'est vrai ; tout est permis.
-
-### "vue" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Ce n'est pas mon point de vue ; ce n'est que ma traduction !
-
 ### "y" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2584,365 +1804,29 @@ Accuracy: 99.99%
 - Examples:
   - Quoi d'autre, 'hors de la zone' ?
 
-### "«" + "Abide With Me" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "«" + "Urban Legends" (1 occurrences)
+- Predicted: NarrowNbsp
+- Actual: None
 - Examples:
-  - Du clerc épiscopalien écossais Henry Francis Lyte, « Abide With Me ».
+  - Notre prochaine fonctionnalité est «Urban Legends».
 
-### "«" + "Avatar" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "«" + "ha" (1 occurrences)
+- Predicted: NarrowNbsp
+- Actual: None
 - Examples:
-  - Connaissez-vous le film « Avatar » ?
-
-### "«" + "Der Stürmer" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Fondateur du journal national antisémite « Der Stürmer ».
-
-### "«" + "Docteur" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ils s'adressèrent à moi par « Docteur ».
-
-### "«" + "Fonds Monétaire International" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - FMI signifie « Fonds Monétaire International ».
-
-### "«" + "Ha" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - La première exclamation de John était, « Ha-ha !
-
-### "«" + "Hummers" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Les « Hummers » sont des gouffres à carburant.
-
-### "«" + "Joyeuse" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - L'épée, on l'a baptisée « Joyeuse ».
-
-### "«" + "L'" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - C'est moi, « L'Élu ».
-
-### "«" + "Le" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - C'est appelé « Le ménage ».
-
-### "«" + "Les" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Les enfants vont maintenant chanter « Les quatre Questions ».
-
-### "«" + "Maman" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - J'appelle toujours ma mère « Maman ».
-
-### "«" + "On" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Va falloir qu'on fasse ça tous les soirs pendant deux semaines « On » ?
-
-### "«" + "Partenaires en Crise" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Bienvenue à « Partenaires en Crise », un atelier pour duos au bord du désastre.
-
-### "«" + "R" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - J'ai finalement appris comment rouler mes « R » !
-
-### "«" + "Saint-Sylvestre" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Le dernier jour de l'année est appelé « Saint-Sylvestre ».
-
-### "«" + "Strauss" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ça se prononce « Strauss ».
-
-### "«" + "a" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Tes « o » ressemblent à des « a ».
-
-### "«" + "ah" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Puis dites « ah ».
-
-### "«" + "au" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Il a quitté la maison sans dire « au revoir ».
-
-### "«" + "bagage" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Nous avons des interprétations différentes de ce que signifie le mot « bagage ».
-
-### "«" + "bien" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Je dis « bien sûr » beaucoup trop souvent, n'est-ce pas ?
-
-### "«" + "brillant" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Que vous êtes un « brillant spécialiste des têtes ».
-
-### "«" + "bœuf" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Le pluriel de « bœuf » est « bœufs ».
-
-### "«" + "bœufs" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Le pluriel de « bœuf » est « bœufs ».
-
-### "«" + "disparu" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - J'ai dit « disparu ».
-
-### "«" + "d’" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Lors de son combat contre Rengoku-san, Akaza a parlé « d’esprit combatif ».
-
-### "«" + "exilés" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Le chef des « exilés » de la nation.
-
-### "«" + "givre" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - On appelle l'eau gelée « glace », et la rosée solidifiée « givre ».
-
-### "«" + "glace" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - On appelle l'eau gelée « glace », et la rosée solidifiée « givre ».
-
-### "«" + "homard" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Comment dis-tu « homard » en français ?
-
-### "«" + "hommage" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Quel est le mot juste pour « hommage », Sharon ?
-
-### "«" + "ici" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Quel est simplement le mystère de ce lieu appelé « ici » ?
-
-### "«" + "idiot" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Il y’a marqué « idiot » sur mon front ?
-
-### "«" + "il" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Qu'est-ce que tu veux dire par « il y a un problème », Lou ?
-
-### "«" + "je" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Elle me fit un clin d’œil qui semblait signifier « je t'aime ».
-
-### "«" + "l'" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Il baptisa le navire « l'Hirondelle ».
-
-### "«" + "la" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Si on s'arrête ici, on se retrouvera à « la case départ » !
-
-### "«" + "lobster" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Comment dis-tu « lobster » en français ?
+  - Et je sais que la posture «ha».
 
 ### "«" + "merci" (1 occurrences)
-- Predicted: None
-- Actual: Space
+- Predicted: NarrowNbsp
+- Actual: None
 - Examples:
-  - Tu devrais au moins dire « merci ».
+  - Je voudrais dire «merci» à Tom.
 
-### "«" + "moi" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "«" + "pouvoir" (1 occurrences)
+- Predicted: NarrowNbsp
+- Actual: None
 - Examples:
-  - C'est qui, « moi » ?
-
-### "«" + "mon" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - J'aurai, comme vous dites, « mon jour au tribunal ».
-
-### "«" + "ni" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Je dis « ni l'un ni l'autre », tu dis.
-
-### "«" + "non" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Je ne prends pas « non » pour une réponse.
-
-### "«" + "nègre" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Tom a utilisé le mot « nègre ».
-
-### "«" + "o" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Tes « o » ressemblent à des « a ».
-
-### "«" + "oui" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - La réponse est « oui ».
-
-### "«" + "pape" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Tom ne connaît pas la différence entre « pape » et « pope ».
-
-### "«" + "pope" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Tom ne connaît pas la différence entre « pape » et « pope ».
-
-### "«" + "science" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Hitler qualifiait la physique quantique de « science juive ».
-
-### "«" + "smoothie" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Je n'aime même pas prononcer le mot « smoothie ».
-
-### "«" + "solution" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Non, « solution finale ».
-
-### "«" + "synonyme" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Y a t-il un autre mot pour « synonyme » ?
-
-### "«" + "tant" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Que voulez-vous dire par « tant de personnes » ?
-
-### "«" + "tiens" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Un « tiens » vaut mieux que deux « tu l'auras ».
-
-### "«" + "travailler" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Tu connais ce mot, « travailler » ?
-
-### "«" + "trobairitz" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Une femme troubadour est appelée communément « trobairitz ».
-
-### "«" + "une" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Il est ce qu'on appelle « une encyclopédie sur pattes ».
-
-### "«" + "viré" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Être licencié, c'est être « viré » ?
-
-### "«" + "état" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ESPT signifie « état de stress post-traumatique ».
+  - Le temps n’est pas un «pouvoir».
 
 ### "État" + ".." (1 occurrences)
 - Predicted: None
@@ -2973,12 +1857,6 @@ Accuracy: 99.99%
 - Actual: Space
 - Examples:
   - Mais avec le vieux Tony, rien à lire, rien à écrire - tout dans la tête.
-
-### "égalité" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Nous sommes sur le même plan d'égalité ; pas d'infériorité ni de supériorité.
 
 ### "église" + "-" (1 occurrences)
 - Predicted: None

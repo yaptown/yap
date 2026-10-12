@@ -387,47 +387,18 @@ impl LanguagePack {
         sentence: &Spur,
         language: crate::Language,
     ) -> Option<Vec<Literal<String>>> {
-        let sentence_grams = self.encoded_sentences.get(sentence)?;
-
-        // Collect all words from gram atoms
-        let mut all_words: Vec<crate::Word<String>> = Vec::new();
-        for gram in &sentence_grams.grams {
-            let spur_gram = match gram {
-                SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => g,
-            };
-            let gram_resolved = self
-                .gram_rodeo
-                .resolve(&spur_gram.gram)
-                .resolve(&self.string_rodeo);
-            for atom in gram_resolved.iter() {
-                if let Atom::Tok(word) = atom {
-                    all_words.push(word.clone());
-                }
-            }
-        }
-
-        // Capitalize first word if needed
-        if sentence_grams.capitalize_first
-            && let Some(first_word) = all_words.first_mut()
-        {
-            first_word.text = crate::capitalize_first_letter(&first_word.text);
-        }
-
-        // Build literals with whitespace prediction
-        let literals = all_words
-            .iter()
-            .enumerate()
-            .map(|(i, word)| {
-                let next_word = all_words.get(i + 1);
-                let whitespace = crate::predict_whitespace(word, next_word, language);
-                Literal {
-                    word: word.clone(),
-                    whitespace,
-                }
-            })
-            .collect();
-
-        Some(literals)
+        Some(
+            self.encoded_sentences
+                .get(sentence)?
+                .clone()
+                .to_literals(&self.string_rodeo, &self.gram_rodeo, language)
+                .into_iter()
+                .flat_map(|gram| match gram {
+                    SentenceGram::Learnable((_, literals))
+                    | SentenceGram::Obvious((_, literals)) => literals,
+                })
+                .collect(),
+        )
     }
 
     /// Get the maximum frequency for any word with this pronunciation

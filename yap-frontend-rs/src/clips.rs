@@ -22,6 +22,7 @@ use futures::FutureExt;
 use futures::future::{LocalBoxFuture, Shared};
 use language_utils::Language;
 use language_utils::language_pack::LanguagePack;
+use language_utils::text_cleanup::cleanup_sentence;
 use opfs::{DirectoryHandle as _, FileHandle as _, WritableFileStream as _};
 use std::cell::{Cell, RefCell};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -42,7 +43,7 @@ const CLIP_TOUCH_GRANULARITY_SECS: i64 = 60 * 60;
 const CLIP_INDEX_FILENAME: &str = "last_used.json";
 
 /// One manifest row: a course sentence with a published clip, as served by
-/// the backend (which NFC-normalizes the text).
+/// the backend (which normalizes Unicode and language-specific spacing).
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ClipRow {
     #[serde(rename = "id")]
@@ -156,8 +157,8 @@ type SharedClipFetch = Shared<LocalBoxFuture<'static, Result<Vec<u8>, String>>>;
 
 thread_local! {
     /// Synchronous mirror of each language's clip manifest, keyed by exact
-    /// sentence text (NFC). `None` for a language means no manifest has
-    /// loaded yet — treated as "no clips", never as an error.
+    /// sentence text (NFC and language-specific spacing). `None` means no
+    /// manifest has loaded yet — treated as "no clips", never as an error.
     static CLIP_MANIFESTS: RefCell<BTreeMap<Language, ClipManifest>> =
         const { RefCell::new(BTreeMap::new()) };
 
@@ -194,10 +195,11 @@ fn clip_allowed(row: &ClipRow, only_all_audiences: bool) -> bool {
 
 pub(crate) fn publish_manifest(language: Language, rows: Vec<ClipRow>) {
     let mut by_sentence: HashMap<String, Vec<ClipRow>> = HashMap::new();
-    for row in rows
+    for mut row in rows
         .into_iter()
         .filter(|row| clip_allowed(row, ONLY_ALL_AUDIENCES_CLIPS))
     {
+        row.sentence = cleanup_sentence(row.sentence.nfc().collect(), language);
         by_sentence
             .entry(row.sentence.clone())
             .or_default()
@@ -216,7 +218,7 @@ pub(crate) fn clip_manifest_version() -> u32 {
 }
 
 /// The manifest row for a sentence, if its language's manifest is loaded and
-/// lists it. NFC-normalizes the lookup so callers can pass text from any
+/// lists it. Normalizes Unicode and spacing so callers can pass text from any
 /// source.
 pub(crate) fn clip_for_sentence(language: Language, text: &str) -> Option<ClipRow> {
     clip_for_sentence_where(language, text, |_| true)
@@ -227,7 +229,7 @@ pub(crate) fn clip_for_sentence_where(
     text: &str,
     allowed: impl Fn(&ClipRow) -> bool,
 ) -> Option<ClipRow> {
-    let text: String = text.nfc().collect();
+    let text = cleanup_sentence(text.nfc().collect(), language);
     let pack = CLIP_PACKS.with(|packs| packs.borrow().get(&language).and_then(Weak::upgrade));
     CLIP_MANIFESTS.with(|m| {
         let manifests = m.borrow();
@@ -336,6 +338,21 @@ mod tests {
             "critical": {"start_ms": 0, "end_ms": 1000}
         }))
         .unwrap()
+    }
+
+    #[test]
+    fn old_manifest_spacing_matches_current_sentences() {
+        let old = "Il dit : « cafe\u{301} ; oui ! non ? »";
+        let expected = "Il dit\u{00A0}: «\u{202F}café\u{202F}; oui\u{202F}! non\u{202F}?\u{202F}»";
+        let mut clip = row("old-spacing");
+        clip.sentence = old.into();
+        publish_manifest(Language::French, vec![clip]);
+        let found = clip_for_sentence(Language::French, expected).unwrap();
+        assert_eq!(found.sentence, expected);
+        assert_eq!(
+            clip_for_sentence(Language::French, old).unwrap().clip_id,
+            "old-spacing"
+        );
     }
 
     #[test]

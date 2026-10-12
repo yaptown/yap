@@ -5270,9 +5270,6 @@ mod tts_cache_key_tests {
 // Whitespace prediction for reconstructing text from atoms
 // ============================================================================
 
-/// French punctuation that requires narrow non-breaking space before it
-const FRENCH_HIGH_PUNCT: &[char] = &['?', '!', ';', '»'];
-
 /// Common Korean particles that attach directly to the preceding word
 const KOREAN_PARTICLES: &[&str] = &[
     "이", "가", "을", "를", "은", "는", "에", "에서", "으로", "로", "와", "과", "하고", "의", "도",
@@ -5418,6 +5415,13 @@ pub fn predict_whitespace(
     let left_last = left_text.chars().last();
     let right_first = right_text.chars().next();
 
+    if language == Language::French
+        && let Some(whitespace) =
+            text_cleanup::french_punctuation_whitespace(left_last, right_first, true)
+    {
+        return whitespace;
+    }
+
     if let Some(c) = left_last
         && ATTACHING_SUFFIXES.contains(&c)
     {
@@ -5427,10 +5431,6 @@ pub fn predict_whitespace(
     if let Some(c) = right_first {
         // No space before closing punct, commas, periods
         if NO_SPACE_BEFORE.contains(&c) {
-            // Special case: French high punctuation needs narrow nbsp (only for French)
-            if language == Language::French && FRENCH_HIGH_PUNCT.contains(&c) && c != '»' {
-                return Whitespace::NarrowNbsp;
-            }
             return Whitespace::None;
         }
     }
@@ -5786,6 +5786,84 @@ mod predict_whitespace_tests {
 
     fn predict(left: &Word<String>, right: &Word<String>, language: Language) -> Whitespace {
         predict_whitespace(left, Some(right), language)
+    }
+
+    fn punct(text: &str) -> Word<String> {
+        Word {
+            text: text.into(),
+            word_type: WordType::Other(OtherWord {
+                other_tag: OtherWordType::Punct,
+            }),
+        }
+    }
+
+    #[test]
+    fn french_prediction_matches_cleanup() {
+        let words = [
+            word("oui", PartOfSpeech::Intj),
+            punct(";"),
+            word("non", PartOfSpeech::Intj),
+            punct(":"),
+            punct("«"),
+            word("bonjour", PartOfSpeech::Intj),
+            punct("!"),
+            punct("»"),
+            punct("?"),
+        ];
+        let predicted: Vec<_> = words
+            .iter()
+            .enumerate()
+            .map(|(i, word)| Literal {
+                word: word.clone(),
+                whitespace: predict_whitespace(word, words.get(i + 1), Language::French),
+            })
+            .collect();
+        let expected =
+            text_cleanup::cleanup_sentence("oui ; non : « bonjour ! » ?".into(), Language::French);
+        assert_eq!(literals_to_text(&predicted), expected);
+        let (atoms, _) = literals_to_atoms(&predicted, Language::French);
+        assert!(atoms.iter().all(|atom| matches!(atom, Atom::Tok(_))));
+        assert_eq!(
+            literals_to_text(&atoms_to_literals(&atoms, Language::French)),
+            expected
+        );
+    }
+
+    #[test]
+    fn compact_french_boundaries_keep_codec_overrides() {
+        for words in [
+            vec![
+                word("12", PartOfSpeech::Num),
+                punct(":"),
+                word("30", PartOfSpeech::Num),
+            ],
+            vec![word("http", PartOfSpeech::Noun), punct(":"), punct("//")],
+            vec![punct("«"), word("bonjour", PartOfSpeech::Intj), punct("»")],
+            vec![
+                word("oui", PartOfSpeech::Intj),
+                punct(";"),
+                word("non", PartOfSpeech::Intj),
+            ],
+        ] {
+            let literals: Vec<_> = words
+                .into_iter()
+                .map(|word| Literal {
+                    word,
+                    whitespace: Whitespace::None,
+                })
+                .collect();
+            let original = literals_to_text(&literals);
+            let (atoms, _) = literals_to_atoms(&literals, Language::French);
+            assert!(atoms.iter().any(|atom| matches!(atom, Atom::Control(_))));
+            assert_eq!(
+                literals_to_text(&atoms_to_literals(&atoms, Language::French)),
+                original
+            );
+            assert_eq!(
+                text_cleanup::cleanup_sentence(original.clone(), Language::French),
+                original
+            );
+        }
     }
 
     #[test]

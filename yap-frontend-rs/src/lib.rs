@@ -6991,6 +6991,38 @@ mod tests {
         );
     }
 
+    #[test]
+    fn french_pack_punctuation_and_old_event_sentences_resolve() {
+        use language_utils::text_cleanup::cleanup_sentence;
+        let pack = language_utils::language_pack::load_split_dir(std::path::Path::new(
+            "../out/fra_for_eng",
+        ))
+        .expect("Failed to load French pack - run `cargo run --bin generate-data -- fra` first");
+        let mut seen = std::collections::BTreeSet::new();
+        for sentence in pack.encoded_sentences.keys() {
+            let text = pack.string_rodeo.resolve(sentence);
+            if !text.contains([';', ':', '«', '»', '!', '?']) {
+                continue;
+            }
+            let literals = pack
+                .sentence_to_literals(sentence, Language::French)
+                .unwrap();
+            let reconstructed = language_utils::literals_to_text(&literals);
+            assert_eq!(reconstructed, text);
+            assert_eq!(cleanup_sentence(text.into(), Language::French), text);
+            // Stored event payloads keep their old spaces. Replay cleans only
+            // the lookup copy, which must still identify this encoded sentence.
+            let old = text.replace(['\u{202F}', '\u{00A0}'], " ");
+            let cleaned = cleanup_sentence(old, Language::French);
+            assert_eq!(pack.string_rodeo.get(&cleaned), Some(*sentence));
+            seen.extend(
+                text.chars()
+                    .filter(|c| [';', ':', '«', '»', '!', '?'].contains(c)),
+            );
+        }
+        assert_eq!(seen, [';', ':', '«', '»', '!', '?'].into_iter().collect());
+    }
+
     /// Regression test: sentences with empty translations should not be selected
     /// as comprehensible sentences, because they cause listening/translation challenges
     /// to silently fall back to flashcards.

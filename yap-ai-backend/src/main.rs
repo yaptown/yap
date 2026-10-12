@@ -19,6 +19,7 @@ use language_utils::{
         UpdateLanguageStatsRequest, UpdateLanguageStatsResponse, UpdateProfileRequest,
         UpdateProfileResponse,
     },
+    text_cleanup::cleanup_sentence,
     transcription_challenge,
 };
 use lexide::pronunciation::{
@@ -1993,11 +1994,11 @@ static CLIP_INDEXES: LazyLock<
 > = LazyLock::new(Default::default);
 
 /// Parse one language's index.jsonl into manifest rows, keeping only course
-/// sentences (the only ones the app can ever show) and NFC-normalizing the
-/// text so the app's lookups don't depend on which normalization either side
+/// sentences (the only ones the app can ever show) and normalizing Unicode
+/// and spacing so lookups don't depend on which normalization either side
 /// used. Bad lines are skipped: one malformed row must not take down the
 /// language.
-fn parse_clip_index(jsonl: &str) -> Vec<ClipRow> {
+fn parse_clip_index(jsonl: &str, language: Language) -> Vec<ClipRow> {
     use unicode_normalization::UnicodeNormalization;
     let mut rows = Vec::new();
     for line in jsonl.lines().filter(|l| !l.trim().is_empty()) {
@@ -2010,7 +2011,7 @@ fn parse_clip_index(jsonl: &str) -> Vec<ClipRow> {
         let Ok(mut clip) = serde_json::from_value::<ClipRow>(row.clone()) else {
             continue;
         };
-        clip.sentence = clip.sentence.nfc().collect();
+        clip.sentence = cleanup_sentence(clip.sentence.nfc().collect(), language);
         rows.push(clip);
     }
     rows
@@ -2041,7 +2042,7 @@ async fn clip_manifest(language: Language) -> Result<Vec<ClipRow>, StatusCode> {
         Vec::new()
     } else if response.status().is_success() {
         let text = response.text().await.map_err(|_| StatusCode::BAD_GATEWAY)?;
-        parse_clip_index(&text)
+        parse_clip_index(&text, language)
     } else {
         return Err(StatusCode::BAD_GATEWAY);
     };
@@ -2803,7 +2804,7 @@ mod tests {
         // come out NFC, bad lines and non-course sentences must be skipped,
         // and rows keep their metadata.
         let jsonl = concat!(
-            r#"{"id":"tt0101700-3fa2c81d-0","imdb_id":"tt0101700","title":"Delicatessen","sentence":"C'était bien.","course_sentence":true,"duration_ms":2400,"critical":{"start_ms":300,"end_ms":2100},"hi_bytes":900000,"lo_bytes":120000}"#,
+            r#"{"id":"tt0101700-3fa2c81d-0","imdb_id":"tt0101700","title":"Delicatessen","sentence":"C'était : « bien ; oui ! non ? »","course_sentence":true,"duration_ms":2400,"critical":{"start_ms":300,"end_ms":2100},"hi_bytes":900000,"lo_bytes":120000}"#,
             "\n",
             "not json\n",
             r#"{"id":"tt0101700-deadbeef-0","sentence":"Sans les champs requis."}"#,
@@ -2811,10 +2812,13 @@ mod tests {
             r#"{"id":"tt0101700-11111111-0","sentence":"Pas une phrase de cours.","course_sentence":false,"duration_ms":1000,"critical":{"start_ms":0,"end_ms":900}}"#,
             "\n",
         );
-        let rows = parse_clip_index(jsonl);
+        let rows = parse_clip_index(jsonl, Language::French);
         assert_eq!(rows.len(), 1);
         let clip = &rows[0];
-        assert_eq!(clip.sentence, "C'était bien.");
+        assert_eq!(
+            clip.sentence,
+            "C'était\u{00A0}: «\u{202F}bien\u{202F}; oui\u{202F}! non\u{202F}?\u{202F}»"
+        );
         assert_eq!(clip.clip_id, "tt0101700-3fa2c81d-0");
         assert_eq!(clip.duration_ms, 2400);
         assert_eq!(clip.critical.start_ms, 300);

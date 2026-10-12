@@ -1,5 +1,5 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-dire quelque chose	filled	9333	11	12	0.92	yes	Qu'est-ce que ça veut dire au juste ?	Qu' … dire
+dire quelque chose	filled	9334	11	12	0.92	yes	Qu'est-ce que ça veut dire exactement ?	Qu' … dire
 dire quelque chose	clitic	2393	12	12	1.00	yes		
 sa mère	clitic	2129	12	12	1.00	yes		
 sortir quelque chose	filled	685	6	12	0.50	no	A-t-on une chance de faire sortir Bohr du Danemark ?	sortir … Bohr
