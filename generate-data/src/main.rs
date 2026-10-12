@@ -389,9 +389,10 @@ async fn main() -> anyhow::Result<()> {
         // have MWE phrasebook entries
         let gram_phrasebook_file = native_specific_dir.join("gram_phrasebook.jsonl");
         let corpus = generate_data::corpus_samples::CorpusIndex::new(&encoded_sentences_with_grams);
-        let mut gram_sentences = generate_data::corpus_samples::SampleCache::<Gram<String>>::load(
-            native_specific_dir.join("gram_sentences.jsonl"),
-        )?;
+        let mut gram_sentences =
+            generate_data::corpus_samples::SampleSelections::<Gram<String>>::load(
+                native_specific_dir.join("gram_sentences.jsonl"),
+            )?;
         let mut gram_phrasebook = generate_data::dict::create_gram_phrasebook(
             *course,
             &filtered_gram_frequencies,
@@ -644,7 +645,7 @@ async fn main() -> anyhow::Result<()> {
             language_utils::Heteronym<String>,
             language_utils::DictionaryEntry,
         > = {
-            let mut heteronym_sentences = generate_data::corpus_samples::SampleCache::<
+            let mut heteronym_sentences = generate_data::corpus_samples::SampleSelections::<
                 language_utils::Heteronym<String>,
             >::load(
                 native_specific_dir.join("heteronym_sentences.jsonl")
