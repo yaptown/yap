@@ -30,17 +30,23 @@
 
         console.log(`OneSignal initializing in ${isDevelopment ? 'development' : 'production'} mode`);
 
-        await OneSignal.init({
-          ...config,
-          notifyButton: {
-            enable: false, // Disable the default notification button
-          },
-          welcomeNotification: {
-            disable: true  // This disables the welcome notification
-          },
-          serviceWorkerParam: { scope: "/push/onesignal/" },
-          serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js"
-        });
+        try {
+          await OneSignal.init({
+            ...config,
+            notifyButton: {
+              enable: false, // Disable the default notification button
+            },
+            welcomeNotification: {
+              disable: true  // This disables the welcome notification
+            },
+            serviceWorkerParam: { scope: "/push/onesignal/" },
+            serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js"
+          });
+        } catch (err) {
+          // OneSignal rejects init on origins other than the one configured
+          // for the app (e.g. beta.yap.town). Push just isn't available there.
+          console.warn("OneSignal init failed:", err);
+        }
       });
     </script>
 
