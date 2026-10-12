@@ -43,8 +43,7 @@ struct CatalogRow {
     title: String,
     author: String,
     cover: Option<String>,
-    total: usize,
-    available: usize,
+    teaser: Option<String>,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct Structure {
@@ -63,8 +62,7 @@ pub struct BookCardView {
     pub slug: String,
     pub title: String,
     pub author: String,
-    pub availability: String,
-    pub enabled: bool,
+    pub teaser: Option<String>,
     /// The cover image's URL, when the book has one; hosts fall back to a drawn tile.
     pub cover: Option<String>,
 }
@@ -101,7 +99,8 @@ pub struct BookBlockView {
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BookReaderView {
-    pub card: BookCardView,
+    pub title: String,
+    pub author: String,
     pub copyright: Option<String>,
     pub parts: Vec<BookPartView>,
     pub position: BookPosition,
@@ -170,25 +169,6 @@ pub fn reader_layout(width: f64, height: f64, text_size: Option<u32>) -> ReaderL
     }
 }
 
-/// A partial edition must never read as the whole book, so the label always says how
-/// much of it exists in this language.
-fn availability(available: usize, total: usize, language: Language) -> String {
-    let language = yap_i18n::tr!("language-name.common", language = language.code());
-    match available {
-        0 => yap_i18n::tr!("books-unavailable", language = language.as_str()),
-        _ if available == total => yap_i18n::tr!(
-            "books-complete",
-            count = total,
-            language = language.as_str()
-        ),
-        _ => yap_i18n::tr!(
-            "books-partial",
-            available = available,
-            count = total,
-            language = language.as_str()
-        ),
-    }
-}
 fn reader(edition: Edition, language: Language, position: BookPosition) -> BookReaderView {
     let book = edition.book;
     let chapter = book
@@ -226,14 +206,8 @@ fn reader(edition: Edition, language: Language, position: BookPosition) -> BookR
         });
     }
     BookReaderView {
-        card: BookCardView {
-            slug: book.slug.clone(),
-            title: book.title.clone(),
-            author: book.author.clone(),
-            availability: availability(book.chapters.len(), edition.structure.len(), language),
-            enabled: !book.chapters.is_empty(),
-            cover: None,
-        },
+        title: book.title.clone(),
+        author: book.author.clone(),
         copyright: book.copyright.clone(),
         parts,
         chapter_title: chapter.map(|c| c.title.clone()),
@@ -365,12 +339,15 @@ async fn cached<T: DeserializeOwned + Serialize>(
     }
 }
 #[bridgerton::bridge]
-pub async fn load_books(language: Language) -> Result<BooksScreenView, Error> {
+pub async fn load_books(
+    language: Language,
+    native_language: Language,
+) -> Result<BooksScreenView, Error> {
     let rows: Vec<CatalogRow> = cached(
-        &format!("{}-catalog.json", language.code()),
+        &format!("{}-{}-catalog.json", language.code(), native_language.code()),
         false,
         "book_catalog",
-        serde_json::json!({"requested_language": language.code()}),
+        serde_json::json!({"requested_language": language.code(), "native_language": native_language.code()}),
     )
     .await?;
     Ok(BooksScreenView {
@@ -381,8 +358,7 @@ pub async fn load_books(language: Language) -> Result<BooksScreenView, Error> {
                 slug: r.slug,
                 title: r.title,
                 author: r.author,
-                availability: availability(r.available, r.total, language),
-                enabled: r.available > 0,
+                teaser: r.teaser,
                 cover: r
                     .cover
                     .map(|key| format!("{}/{key}", crate::utils::packs_origin())),
@@ -478,7 +454,6 @@ mod tests {
     #[test]
     fn partial_navigation_and_scene_break() {
         let view = reader(edition(), Language::French, BookPosition::default());
-        assert_eq!(view.card.availability, "2 of 3 chapters in French");
         assert!(!view.parts[0].chapters[1].enabled);
         assert_eq!(view.next, Some(2));
         assert_eq!(view.previous, None);
@@ -525,7 +500,6 @@ mod tests {
         edition.book.chapters.clear();
         edition.structure[2].part_start = Some(2);
         let view = reader(edition, Language::French, BookPosition::default());
-        assert!(!view.card.enabled);
         assert_eq!(view.parts.len(), 2);
         assert_eq!(view.parts[0].chapters.len(), 2);
         assert_eq!(view.parts[1].chapters.len(), 1);

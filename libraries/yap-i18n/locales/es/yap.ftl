@@ -1251,14 +1251,5 @@ books-next = Capítulo siguiente
 books-text-smaller = Texto más pequeño
 books-text-larger = Texto más grande
 books-home-caption = Lee novelas completas en { $language }
-books-unavailable = Todavía no disponible en { $language }
 books-section-unavailable = Sección { $number } — todavía no disponible
 books-machine-translated = Este capítulo se ha traducido automáticamente.
-books-complete = { $count ->
-    [one] El capítulo completo en { $language }
-   *[other] Los { $count } capítulos en { $language }
-    }
-books-partial = { $count ->
-    [one] { $available } de { $count } capítulo en { $language }
-   *[other] { $available } de { $count } capítulos en { $language }
-    }

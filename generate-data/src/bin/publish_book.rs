@@ -9,8 +9,8 @@ use std::{collections::BTreeSet, path::PathBuf, time::Duration};
 
 #[derive(Parser)]
 struct Args {
-    #[arg(long, default_value = "books/mistress-of-the-waves/build")]
-    build: PathBuf,
+    #[arg(long, default_value = "books")]
+    books: PathBuf,
     /// Validate and print the exact publication plan without network calls or credentials.
     #[arg(long)]
     check: bool,
@@ -118,123 +118,165 @@ async fn upload_cover(
 async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv().ok();
     let args = Args::parse();
-    let (book, chapters) = load(&args.build)?;
-    let languages: BTreeSet<_> = chapters.iter().map(|c| c.language.as_str()).collect();
-    println!(
-        "{}: {} complete chapter texts in {} languages; {} structural chapters",
-        book.slug,
-        chapters.len(),
-        languages.len(),
-        book.chapters.len()
-    );
-    for language in &languages {
-        println!(
-            "{language}: {} complete chapters",
-            chapters.iter().filter(|c| c.language == *language).count()
-        );
-    }
-    if args.check {
-        println!("Read-only check: no database writes.");
-        return Ok(());
-    }
-    let catalog = Catalog {
-        http: reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(120))
-            .build()?,
-        url: std::env::var("SUPABASE_URL")
-            .context("SUPABASE_URL required")?
-            .trim_end_matches('/')
-            .into(),
-        key: std::env::var("SUPABASE_SERVICE_ROLE_KEY")
-            .context("SUPABASE_SERVICE_ROLE_KEY required")?,
+    let catalog = if args.check {
+        None
+    } else {
+        Some(Catalog {
+            http: reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(120))
+                .build()?,
+            url: std::env::var("SUPABASE_URL")
+                .context("SUPABASE_URL required")?
+                .trim_end_matches('/')
+                .into(),
+            key: std::env::var("SUPABASE_SERVICE_ROLE_KEY")
+                .context("SUPABASE_SERVICE_ROLE_KEY required")?,
+        })
     };
-    let cover = upload_cover(
-        &catalog.http,
-        &args.build.with_file_name("cover.webp"),
-        &book.slug,
-    )
-    .await?;
-    println!("Uploaded cover {cover}");
-    // IDs are allocated only on insert, retained on conflict. NULLS NOT DISTINCT
-    // lets PostgREST infer this unique constraint for official (ownerless) books.
-    let rows = catalog
-        .upsert(
-            "books",
-            "slug,owner_id",
-            json!({
-                "slug":book.slug,"owner_id":null,"title":book.title,"author":book.author,
-                "original_language":book.original_language,"copyright":book.copyright,
-                "cover":cover
-            }),
-        )
-        .await?;
-    let book_id = rows
-        .first()
-        .and_then(|r| r["id"].as_str())
-        .context("book upsert returned no id")?;
-    let mut part_start = None;
-    let mut previous_part = None;
-    // Each part's title per language, from whichever of its chapters that language has.
-    let mut parts = std::collections::BTreeMap::new();
-    for original in &book.chapters {
-        if original.part != previous_part {
-            part_start = original.part.as_ref().map(|_| original.position);
-            previous_part = original.part.clone();
+    for entry in generate_data::reader_books::discover(&args.books)? {
+        let (book, chapters) = load(&entry.build())?;
+        entry.validate(&book)?;
+        ensure!(
+            entry.translate
+                || chapters
+                    .iter()
+                    .all(|c| c.language == book.original_language && !c.machine_translated),
+            "public-domain books must only publish original editions"
+        );
+        let teasers: std::collections::BTreeMap<String, String> = match std::fs::read(
+            entry.build().join("teasers.json"),
+        ) {
+            Ok(bytes) => serde_json::from_slice(&bytes)?,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                println!(
+                    "{}: no teasers built; publishing chapter texts only, leaving existing teasers unchanged",
+                    book.slug
+                );
+                Default::default()
+            }
+            Err(error) => return Err(error.into()),
+        };
+        ensure!(
+            teasers.values().all(|t| !t.trim().is_empty()),
+            "empty teaser"
+        );
+        let languages: BTreeSet<_> = chapters.iter().map(|c| c.language.as_str()).collect();
+        println!(
+            "{}: {} complete chapter texts in {} languages; {} structural chapters",
+            book.slug,
+            chapters.len(),
+            languages.len(),
+            book.chapters.len()
+        );
+        for language in &languages {
+            println!(
+                "{language}: {} complete chapters",
+                chapters.iter().filter(|c| c.language == *language).count()
+            );
         }
-        let texts: Vec<_> = chapters
-            .iter()
-            .filter(|c| c.position == original.position)
-            .collect();
-
+        if args.check {
+            println!("Read-only check: no database writes.");
+            continue;
+        }
+        let catalog = catalog.as_ref().unwrap();
+        let cover_path = entry.directory.join("cover.webp");
+        let cover = if cover_path.is_file() {
+            Some(upload_cover(&catalog.http, &cover_path, &book.slug).await?)
+        } else {
+            None
+        };
+        // IDs are allocated only on insert, retained on conflict. NULLS NOT DISTINCT
+        // lets PostgREST infer this unique constraint for official (ownerless) books.
         let rows = catalog
             .upsert(
-                "book_chapters",
-                "book_id,position",
+                "books",
+                "slug,owner_id",
                 json!({
-                    "book_id":book_id,"position":original.position,"part_start":part_start
+                    "slug":book.slug,"owner_id":null,"title":book.title,"author":book.author,
+                    "original_language":book.original_language,"copyright":book.copyright,
+                    "cover":cover
                 }),
             )
             .await?;
-        let chapter_id = rows
+        let book_id = rows
             .first()
             .and_then(|r| r["id"].as_str())
-            .context("chapter upsert returned no id")?;
-        for text in &texts {
-            if let (Some(start), Some(title)) = (part_start, &text.part) {
-                parts.insert((start, &text.language), title);
+            .context("book upsert returned no id")?;
+        let mut part_start = None;
+        let mut previous_part = None;
+        // Each part's title per language, from whichever of its chapters that language has.
+        let mut parts = std::collections::BTreeMap::new();
+        for original in &book.chapters {
+            if original.part != previous_part {
+                part_start = original.part.as_ref().map(|_| original.position);
+                previous_part = original.part.clone();
             }
-        }
-        let values: Vec<_> = texts
-            .iter()
-            .map(|c| {
-                json!({
-                    "chapter_id":chapter_id,"language":c.language,"title":c.title,
-                    "paragraphs":c.paragraphs,"machine_translated":c.machine_translated
-                })
-            })
-            .collect();
-        if !values.is_empty() {
-            catalog
-                .upsert("chapter_texts", "chapter_id,language", json!(values))
+            let texts: Vec<_> = chapters
+                .iter()
+                .filter(|c| c.position == original.position)
+                .collect();
+
+            let rows = catalog
+                .upsert(
+                    "book_chapters",
+                    "book_id,position",
+                    json!({
+                        "book_id":book_id,"position":original.position,"part_start":part_start
+                    }),
+                )
                 .await?;
+            let chapter_id = rows
+                .first()
+                .and_then(|r| r["id"].as_str())
+                .context("chapter upsert returned no id")?;
+            for text in &texts {
+                if let (Some(start), Some(title)) = (part_start, &text.part) {
+                    parts.insert((start, &text.language), title);
+                }
+            }
+            let values: Vec<_> = texts
+                .iter()
+                .map(|c| {
+                    json!({
+                        "chapter_id":chapter_id,"language":c.language,"title":c.title,
+                        "paragraphs":c.paragraphs,"machine_translated":c.machine_translated
+                    })
+                })
+                .collect();
+            if !values.is_empty() {
+                catalog
+                    .upsert("chapter_texts", "chapter_id,language", json!(values))
+                    .await?;
+            }
+            println!(
+                "Published chapter {} in {} languages",
+                original.position,
+                texts.len()
+            );
         }
-        println!(
-            "Published chapter {} in {} languages",
-            original.position,
-            texts.len()
-        );
-    }
-    let parts: Vec<_> = parts
+        let parts: Vec<_> = parts
         .into_iter()
         .map(|((start, language), title)| {
             json!({"book_id":book_id,"start":start,"language":language,"title":title})
         })
         .collect();
-    if !parts.is_empty() {
-        catalog
-            .upsert("book_parts", "book_id,start,language", json!(parts))
-            .await?;
+        if !parts.is_empty() {
+            catalog
+                .upsert("book_parts", "book_id,start,language", json!(parts))
+                .await?;
+        }
+        println!("Published {} part titles", parts.len());
+        let teasers: Vec<_> = teasers
+            .into_iter()
+            .map(
+                |(language, teaser)| json!({"book_id":book_id,"language":language,"teaser":teaser}),
+            )
+            .collect();
+        if !teasers.is_empty() {
+            catalog
+                .upsert("book_teasers", "book_id,language", json!(teasers))
+                .await?;
+        }
     }
-    println!("Published {} part titles", parts.len());
     Ok(())
 }

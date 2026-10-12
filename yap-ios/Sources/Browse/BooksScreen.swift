@@ -3,6 +3,7 @@ import SwiftUI
 
 struct BooksScreen: View {
     let language: Language
+    let nativeLanguage: Language
     @State private var catalog: BooksScreenView?
     @State private var failed = false
     private var copy: BooksCopy { catalog?.copy ?? books_copy() }
@@ -15,13 +16,13 @@ struct BooksScreen: View {
                     ForEach(books, id: \.slug) { book in
                         NavigationLink(value: CourseRoute.book(book.slug)) {
                             BookCard(book: book)
-                        }.disabled(!book.enabled).buttonStyle(.plain)
+                        }.buttonStyle(.plain)
                     }
                 } else if !failed { ProgressView(copy.loading).frame(maxWidth: .infinity) }
             }.padding(20).frame(maxWidth: .readableColumn).frame(maxWidth: .infinity)
         }.navigationTitle(copy.title)
             .task {
-                do { catalog = try await load_books(language: language) } catch { failed = true }
+                do { catalog = try await load_books(language: language, native_language: nativeLanguage) } catch { failed = true }
             }
             #if DEBUG
             .onAppear { DebugHarness.shared.activeScreen = .books }
@@ -68,18 +69,19 @@ private struct BookCover: View {
 private struct BookCard: View {
     let book: BookCardView
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(alignment: .top, spacing: 16) {
             BookCover(book: book)
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title).font(.system(.title3, design: .serif).weight(.semibold)).foregroundStyle(Color.yapText)
                 Text(book.author).foregroundStyle(Color.yapMuted)
-                Text(book.availability).font(.subheadline).foregroundStyle(Color.yapMuted)
+                if let teaser = book.teaser {
+                    Text(teaser).font(.subheadline).foregroundStyle(Color.yapMuted).padding(.top, 4)
+                }
             }
             Spacer(minLength: 0)
-            if book.enabled { Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Color.yapMuted) }
+            Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Color.yapMuted).frame(maxHeight: .infinity)
         }
         .padding(16).frame(maxWidth: .infinity, alignment: .leading).quietSurface()
-        .opacity(book.enabled ? 1 : 0.6)
     }
 }
 
@@ -121,7 +123,7 @@ struct BookReaderScreen: View {
                     }.foregroundStyle(Paper.muted).frame(maxWidth: .infinity).padding(.top, 96)
                 }
                 if barShown || view == nil {
-                    ReaderBar(title: view?.card.title, copy: copy, layout: view == nil ? nil : layout,
+                    ReaderBar(title: view?.title, copy: copy, layout: view == nil ? nil : layout,
                               setTextSize: { textSize = Int($0) }, back: { dismiss() },
                               contents: view == nil ? nil : { showingContents = true })
                         .transition(.move(edge: .top))
@@ -476,7 +478,7 @@ private struct BookContents: View {
             .navigationTitle(copy.contents)
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .top) {
-                Text("\(view.card.author) · \(view.card.availability)").font(.footnote).foregroundStyle(Color.yapMuted).padding(.bottom, 4)
+                Text(view.author).font(.footnote).foregroundStyle(Color.yapMuted).padding(.bottom, 4)
             }
         }
     }

@@ -1248,14 +1248,5 @@ books-next = Next chapter
 books-text-smaller = Smaller text
 books-text-larger = Larger text
 books-home-caption = Read whole novels in { $language }
-books-unavailable = Not yet available in { $language }
 books-section-unavailable = Section { $number } — not yet available
 books-machine-translated = This chapter is machine translated.
-books-complete = { $count ->
-    [one] The complete chapter in { $language }
-   *[other] All { $count } chapters in { $language }
-    }
-books-partial = { $count ->
-    [one] { $available } of { $count } chapter in { $language }
-   *[other] { $available } of { $count } chapters in { $language }
-    }

@@ -1315,14 +1315,5 @@ books-next = Chapitre suivant
 books-text-smaller = Texte plus petit
 books-text-larger = Texte plus grand
 books-home-caption = Lis des romans entiers en { $language }
-books-unavailable = Pas encore disponible en { $language }
 books-section-unavailable = Section { $number } — pas encore disponible
 books-machine-translated = Ce chapitre a été traduit automatiquement.
-books-complete = { $count ->
-    [one] Le chapitre complet en { $language }
-   *[other] Les { $count } chapitres en { $language }
-    }
-books-partial = { $available ->
-    [one] { $available } chapitre disponible sur { $count } en { $language }
-   *[other] { $available } chapitres disponibles sur { $count } en { $language }
-    }

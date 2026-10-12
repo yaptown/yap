@@ -66,4 +66,4 @@ generate-data/data/*/sentence-sources/books/**/metadata.jsonl -filter -diff
 secrets/** filter=git-crypt diff=git-crypt
 
 # Encrypted original book manuscripts.
-books/**/source.* filter=git-crypt diff=git-crypt
+books/**/source.doc filter=git-crypt diff=git-crypt

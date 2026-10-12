@@ -3518,6 +3518,10 @@ impl Deck {
         self.context.course.target_language
     }
 
+    pub fn get_native_language(&self) -> Language {
+        self.context.course.native_language
+    }
+
     fn max_cards_to_add(&self) -> usize {
         let current_cards = self.num_cards_added();
 

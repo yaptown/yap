@@ -50,46 +50,38 @@ function BookCover({ book }: { book: BookCardView }) {
 }
 
 function BookCard({ book }: { book: BookCardView }) {
-  const card = (
-    <Card className="flex-row items-center gap-4 p-4 transition-colors group-hover:bg-muted/40">
-      <BookCover book={book} />
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <h2 className="font-serif text-xl font-semibold leading-tight">
-          {book.title}
-        </h2>
-        <p className="text-muted-foreground">{book.author}</p>
-        <p className="text-sm text-muted-foreground">{book.availability}</p>
-      </div>
-      {book.enabled && (
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-      )}
-    </Card>
-  );
-  if (!book.enabled) return <div className="opacity-60">{card}</div>;
   return (
     <Link
       to={`/books/${encodeURIComponent(book.slug)}`}
       className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      {card}
+      <Card className="flex-row items-start gap-4 p-4 transition-colors group-hover:bg-muted/40">
+        <BookCover book={book} />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <h2 className="font-serif text-xl font-semibold leading-tight">{book.title}</h2>
+          <p className="text-muted-foreground">{book.author}</p>
+          {book.teaser && <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{book.teaser}</p>}
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 self-center text-muted-foreground" aria-hidden />
+      </Card>
     </Link>
   );
 }
 
-function Catalog({ language }: { language: Language }) {
+function Catalog({ language, nativeLanguage }: { language: Language; nativeLanguage: Language }) {
   const { userInfo } = useOutletContext<AppContextType>();
   const navigate = useNavigate();
   const [view, setView] = useState<BooksScreenView>();
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    load_books(language)
+    load_books(language, nativeLanguage)
       .then((v) => !cancelled && setView(v))
       .catch(() => !cancelled && setFailed(true));
     return () => {
       cancelled = true;
     };
-  }, [language]);
+  }, [language, nativeLanguage]);
   const copy = view?.copy ?? books_copy();
   return (
     <TopPageLayout
@@ -452,7 +444,7 @@ function Reader({ language, slug }: { language: Language; slug: string }) {
     >
       <ReaderBar
         shown={barShown || !view}
-        title={view?.card.title}
+        title={view?.title}
         copy={copy}
         layout={view && layout}
         setTextSize={saveTextSize}
@@ -482,9 +474,9 @@ function Reader({ language, slug }: { language: Language; slug: string }) {
         <Dialog open={contentsOpen} onOpenChange={setContentsOpen}>
           <DialogContent className="max-h-[85dvh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="font-serif text-2xl">{view.card.title}</DialogTitle>
+              <DialogTitle className="font-serif text-2xl">{view.title}</DialogTitle>
               <DialogDescription>
-                {view.card.author} · {view.card.availability}
+                {view.author}
               </DialogDescription>
             </DialogHeader>
             <TableOfContents view={view} language={language} select={(chapter) => open(chapter, 0)} />
@@ -509,6 +501,6 @@ export function BooksPage() {
   return slug ? (
     <Reader key={`${language}-${slug}`} language={language} slug={slug} />
   ) : (
-    <Catalog key={language} language={language} />
+    <Catalog key={language} language={language} nativeLanguage={deck.course.nativeLanguage} />
   );
 }
