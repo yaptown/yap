@@ -337,7 +337,7 @@ fn normalize(v: &mut [f32]) {
 /// which blocks SIMD (float addition is not associative) and runs at FP-add
 /// latency per element; spelling out the lanes fixes a *parallel* summation
 /// order the compiler can vectorize. Deterministic across runs and builds.
-fn dot(a: &[f32], b: &[f32]) -> f32 {
+pub(crate) fn dot(a: &[f32], b: &[f32]) -> f32 {
     let mut acc = [0.0f32; 8];
     for (ca, cb) in a.chunks_exact(8).zip(b.chunks_exact(8)) {
         for k in 0..8 {
@@ -356,7 +356,7 @@ fn dot(a: &[f32], b: &[f32]) -> f32 {
     (((acc[0] + acc[4]) + (acc[1] + acc[5])) + ((acc[2] + acc[6]) + (acc[3] + acc[7]))) + tail
 }
 
-fn mean_normalized(vectors: &[&Vec<f32>]) -> Vec<f32> {
+pub(crate) fn mean_normalized(vectors: &[&Vec<f32>]) -> Vec<f32> {
     let dim = vectors[0].len();
     let mut out = vec![0.0f32; dim];
     for v in vectors {
@@ -774,14 +774,14 @@ fn build_forced_proposal(key: GramId, vectors: &[Vec<f32>]) -> Option<KeyProposa
 /// validator rejects).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "lowercase")]
-enum UsageKind {
+pub(crate) enum UsageKind {
     Meaning,
     Construction,
     Formula,
 }
 
 impl UsageKind {
-    fn as_str(self) -> &'static str {
+    pub(crate) fn as_str(self) -> &'static str {
         match self {
             UsageKind::Meaning => "meaning",
             UsageKind::Construction => "construction",
@@ -1448,6 +1448,13 @@ pub struct UsageAnchor {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UsageEntry {
+    /// Reading-created slots are an output ledger, not semantic input to B.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
+    /// Defining canonical reading set of a reading-created sense, not an
+    /// annotation table. Semantic-discovery usages leave this absent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub readings: Option<Vec<String>>,
     /// "meaning" | "construction" | "formula".
     pub kind: String,
     pub gloss: String,
@@ -1462,6 +1469,14 @@ pub struct UsageEntry {
     /// in embedding space.
     pub loo_correct: usize,
     pub anchors: Vec<UsageAnchor>,
+}
+
+impl UsageEntry {
+    pub(crate) fn is_reading_split(&self) -> bool {
+        self.source
+            .as_deref()
+            .is_some_and(|source| source.starts_with("reading-hierarchy:"))
+    }
 }
 
 /// A gram's usage inventory: the pedagogical units it splits into, with
@@ -1494,8 +1509,11 @@ pub struct UsageInventory {
 }
 
 impl UsageInventory {
-    fn retire_usages(&mut self) {
+    pub(crate) fn retire_usages(&mut self) {
         for usage in &mut self.usages {
+            if !usage.is_reading_split() {
+                usage.readings = None;
+            }
             usage.anchors.clear();
             usage.n_gold = 0;
             usage.n_assigned = 0;
@@ -1506,7 +1524,10 @@ impl UsageInventory {
     /// Preserve ids even when the judge reorders or stops returning a usage.
     fn keep_sense_ids(&mut self, mut previous: Self) {
         previous.retire_usages();
-        for usage in std::mem::take(&mut self.usages) {
+        for mut usage in std::mem::take(&mut self.usages) {
+            if !usage.is_reading_split() {
+                usage.readings = None;
+            }
             if let Some(slot) = previous
                 .usages
                 .iter_mut()
@@ -2455,6 +2476,8 @@ pub async fn discover(
                 })
                 .collect();
             let entry = |kind: &str| UsageEntry {
+                source: None,
+                readings: None,
                 kind: kind.to_string(),
                 gloss: class.gloss.to_string(),
                 n_gold: class.gold.len(),
@@ -2848,6 +2871,7 @@ pub async fn assign_senses(
     restricted: &mut BTreeMap<String, SentenceInfo>,
     interners: &language_utils::GramInterners,
     store: &osmo::Store,
+    readings: &crate::readings::CorpusReadings,
 ) -> Result<BTreeMap<Gram<String>, UsageInventory>> {
     use language_utils::SpurGram;
     use std::num::NonZeroU32;
@@ -2862,6 +2886,7 @@ pub async fn assign_senses(
     };
     let mut inventories = BTreeMap::new();
     struct Classifier {
+        has_readings: Vec<bool>,
         centroids: Vec<(NonZeroU32, Vec<f32>)>,
         counts: Vec<u32>,
         historical: Vec<usize>,
@@ -2882,6 +2907,9 @@ pub async fn assign_senses(
             );
             continue;
         };
+        let has_readings: Vec<_> = (1..=inventory.usages.len())
+            .map(|i| readings.has_observed_sense(&inventory.gram, i as u32))
+            .collect();
         let mut centroids = Vec::new();
         for (index, usage) in inventory.usages.iter_mut().enumerate() {
             usage.anchors.retain(|anchor| {
@@ -2892,15 +2920,18 @@ pub async fn assign_senses(
                     centroids.push((NonZeroU32::new(u32::try_from(index + 1)?).unwrap(), vector))
                 }
                 Err(_) => {
-                    usage.anchors.clear();
+                    if !has_readings[index] {
+                        usage.anchors.clear();
+                    }
                     skipped += 1;
                 }
             }
         }
-        if !centroids.is_empty() {
+        if !centroids.is_empty() || has_readings.iter().any(|&observed| observed) {
             classifiers.insert(
                 gram,
                 Classifier {
+                    has_readings,
                     centroids,
                     counts: vec![0; inventory.usages.len()],
                     historical: inventory
@@ -2925,7 +2956,7 @@ pub async fn assign_senses(
     for (text, info) in app.iter_mut().chain(restricted.iter_mut()) {
         let (_, index) = index_sentence(text, info, interners, language);
         let mut word_index = 0usize;
-        for token in &mut info.sentence.tokens {
+        for (gram_index, token) in info.sentence.tokens.iter_mut().enumerate() {
             let word_count = interners
                 .atoms(token.gram)
                 .iter()
@@ -2943,6 +2974,12 @@ pub async fn assign_senses(
             else {
                 continue;
             };
+            if let Some(sense) = readings.sense(text, gram_index) {
+                token.sense = Some(sense);
+                counts[sense.get() as usize - 1] += 1;
+                tagged += 1;
+                continue;
+            }
             if spans.is_empty() {
                 continue;
             }
@@ -2955,8 +2992,10 @@ pub async fn assign_senses(
             let sense = centroids
                 .iter()
                 .max_by(|a, b| dot(&vector, &a.1).total_cmp(&dot(&vector, &b.1)))
-                .unwrap()
-                .0;
+                .map(|(sense, _)| *sense);
+            let Some(sense) = sense else {
+                continue;
+            };
             token.sense = Some(sense);
             tagged += 1;
             counts[sense.get() as usize - 1] += 1;
@@ -2965,20 +3004,23 @@ pub async fn assign_senses(
     let defaults: HashMap<_, _> = classifiers
         .iter()
         .map(|(gram, classifier)| {
-            let sense = classifier
-                .centroids
-                .iter()
-                .max_by_key(|(sense, _)| {
-                    let index = sense.get() as usize - 1;
+            let index = (0..classifier.counts.len())
+                .filter(|&i| {
+                    classifier.has_readings[i]
+                        || classifier
+                            .centroids
+                            .iter()
+                            .any(|(s, _)| s.get() as usize == i + 1)
+                })
+                .max_by_key(|&index| {
                     (
                         classifier.counts[index],
                         classifier.historical[index],
-                        std::cmp::Reverse(*sense),
+                        std::cmp::Reverse(index),
                     )
                 })
-                .unwrap()
-                .0;
-            (*gram, sense)
+                .unwrap();
+            (*gram, NonZeroU32::new((index + 1) as u32).unwrap())
         })
         .collect();
     let fallbacks: usize = app
@@ -3105,6 +3147,8 @@ mod tests {
                 usages: glosses
                     .iter()
                     .map(|gloss| UsageEntry {
+                        source: None,
+                        readings: None,
                         kind: "meaning".into(),
                         gloss: (*gloss).into(),
                         n_gold: 1,
@@ -3122,9 +3166,12 @@ mod tests {
                 source: "test".into(),
             }
         }
-        let previous = inventory(&["first", "second", "third"]);
+        let mut previous = inventory(&["first", "second", "third"]);
+        previous.usages[0].readings = Some(vec!["かな".into()]);
         let mut next = inventory(&["third", "first", "new"]);
+        next.usages[1].readings = Some(vec!["かんじ".into()]);
         next.keep_sense_ids(previous);
+        assert!(next.usages.iter().all(|u| u.readings.is_none()));
         assert_eq!(
             next.usages
                 .iter()

@@ -527,6 +527,7 @@ mod tests {
             // Every learnable gram in a sentence should have a definition
             for gram in &sentence_grams.grams {
                 if let SentenceGram::Learnable(gram_spur) = gram {
+                    let gram_spur = &gram_spur.sense;
                     assert!(
                         lp.gram_definitions.contains_key(gram_spur),
                         "[{label}] Learnable gram {:?} in sentence {:?} has no definition",

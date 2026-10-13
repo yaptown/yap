@@ -6,7 +6,7 @@ use opfs::{DirectoryHandle as _, FileHandle as _, WritableFileStream as _, persi
 /// Match learnable grams to literal statuses, using each literal at most once.
 #[allow(clippy::type_complexity)]
 pub fn match_grams_to_literals<'a, T>(
-    encoded_sentence: &SentenceGrams<TaggedGram<SpurGram>>,
+    encoded_sentence: &SentenceGrams<language_utils::ReadingTaggedGram<SpurGram, Spur>>,
     literals: &'a [(Literal<Spur>, T)],
     language_pack: &LanguagePack,
 ) -> Vec<(TaggedGram<SpurGram>, Vec<(Literal<Spur>, &'a T)>)> {
@@ -14,7 +14,7 @@ pub fn match_grams_to_literals<'a, T>(
     let mut results = Vec::new();
 
     for sentence_gram in &encoded_sentence.grams {
-        let Some(gram_spur) = sentence_gram.learnable().copied() else {
+        let Some(gram_spur) = sentence_gram.learnable().map(|g| g.sense) else {
             continue;
         };
 

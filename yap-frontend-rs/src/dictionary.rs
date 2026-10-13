@@ -632,7 +632,15 @@ mod translation_sense_tests {
                 .iter()
                 .map(|(text, _)| (text.clone(), vec!["Une traduction".into()]))
                 .collect(),
-            encoded_sentences: sentences,
+            encoded_sentences: sentences
+                .into_iter()
+                .map(|(text, sentence)| {
+                    (
+                        text,
+                        sentence.map(language_utils::ReadingTaggedGram::without_reading),
+                    )
+                })
+                .collect(),
             gram_vocabulary: entries
                 .iter()
                 .map(|g| GramVocabEntry {

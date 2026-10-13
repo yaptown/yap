@@ -68,6 +68,17 @@ pub struct RoutingCandidates {
     pub restricted_sentences: Vec<(String, Vec<PimsleurLesson>)>,
 }
 
+impl RoutingCandidates {
+    fn retain_script(&mut self, language: Language) {
+        // Script is a course identity boundary, not a source quality heuristic.
+        // Apply it once to every source, including manual and restricted text.
+        self.sentences
+            .retain(|(text, _, _)| !language.contains_wrong_han_script(text));
+        self.restricted_sentences
+            .retain(|(text, _)| !language.contains_wrong_han_script(text));
+    }
+}
+
 pub async fn load_routing_candidates(course: Course) -> anyhow::Result<RoutingCandidates> {
     let source_data_path = PathBuf::from(format!(
         "./generate-data/data/{}",
@@ -188,10 +199,12 @@ pub async fn load_routing_candidates(course: Course) -> anyhow::Result<RoutingCa
         }
     }
 
-    Ok(RoutingCandidates {
+    let mut candidates = RoutingCandidates {
         sentences: result,
         restricted_sentences: load_pimsleur_sentences(&source_data_path, course)?,
-    })
+    };
+    candidates.retain_script(course.target_language);
+    Ok(candidates)
 }
 
 pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSentences> {
@@ -756,6 +769,48 @@ pub fn should_include_pair(target_sentence: &str, native_sentence: &str, course:
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn script_boundary_applies_to_every_source_in_both_directions() {
+        let mut sources = vec![SentenceSource::none(); 5];
+        sources[0].from_anki = true;
+        sources[1].from_tatoeba = true;
+        sources[2].from_manual = true;
+        sources[3].book_ids.push("book".into());
+        sources[4].movie_ids.push("movie".into());
+        for (language, good, bad) in [
+            (
+                Language::ChineseSimplified,
+                "汤姆应该喜欢妳吗",
+                "湯姆應該喜歡妳嗎",
+            ),
+            (
+                Language::ChineseTraditional,
+                "湯姆應該喜歡妳嗎",
+                "汤姆应该喜欢妳吗",
+            ),
+        ] {
+            let mut candidates = RoutingCandidates {
+                sentences: sources
+                    .iter()
+                    .flat_map(|source| [good, bad].map(|text| (text.into(), None, source.clone())))
+                    .collect(),
+                restricted_sentences: vec![(good.into(), vec![]), (bad.into(), vec![])],
+            };
+            candidates.retain_script(language);
+            assert_eq!(candidates.sentences.len(), sources.len());
+            assert!(candidates.sentences.iter().all(|(s, _, _)| s == good));
+            assert_eq!(candidates.restricted_sentences.len(), 1);
+        }
+        for language in [
+            Language::ChineseSimplified,
+            Language::ChineseTraditional,
+            Language::Japanese,
+        ] {
+            assert!(!language.contains_wrong_han_script("妳乾坤著作狼藉沈"));
+        }
+        assert!(!Language::Japanese.contains_wrong_han_script("應該"));
+    }
 
     #[test]
     fn film_variety_votes_ignore_neutral_conflicts_and_ties() {

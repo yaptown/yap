@@ -411,14 +411,18 @@ pub struct SegmentedCorpus {
 pub async fn segment_corpus(
     course: &Course,
     sentence_corpus: &TargetSentences,
+    scratch: Option<&Path>,
 ) -> anyhow::Result<SegmentedCorpus> {
     let course = *course;
     let mut timer = crate::StageTimer::new();
-    let CourseDirs {
-        corpus_dir,
-        target_language_dir,
-        ..
-    } = course_dirs(&course)?;
+    // Sample runs seed their input caches in scratch; every incremental cache
+    // and derived output stays there, without changing any matching logic.
+    let (corpus_dir, target_language_dir) = if let Some(scratch) = scratch {
+        (scratch.to_owned(), scratch.to_owned())
+    } else {
+        let dirs = course_dirs(&course)?;
+        (dirs.corpus_dir, dirs.target_language_dir)
+    };
     let banned_words = load_banned_words(&course)?;
 
     // The sentence set: sentence_corpus app sentences, deduplicated by text (last

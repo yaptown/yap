@@ -871,14 +871,14 @@ impl PlannerState {
                 continue;
             };
             let learnable = encoded.grams.iter().filter_map(|g| match g {
-                SentenceGram::Learnable(g) => Some(g),
+                SentenceGram::Learnable(g) => Some(&g.sense),
                 SentenceGram::Obvious(_) => None,
             });
             let multiword = encoded
                 .multiword_terms
                 .iter()
                 .chain(&encoded.low_confidence_multiword_terms)
-                .map(|m| &m.gram);
+                .map(|m| &m.gram.sense);
             let grams: Vec<&TaggedGram<SpurGram>> = learnable.chain(multiword).collect();
             let Some(ranks) = grams
                 .iter()
@@ -899,7 +899,7 @@ impl PlannerState {
                 .iter()
                 .filter(|g| match g {
                     SentenceGram::Obvious(g) => {
-                        g.resolve(&pack.gram_rodeo).gram.iter().any(|atom| {
+                        g.sense.resolve(&pack.gram_rodeo).gram.iter().any(|atom| {
                             matches!(
                                 atom,
                                 Atom::Tok(Word {
@@ -1043,14 +1043,14 @@ impl PlannerState {
         let mut prerequisites = vec![gram];
         if let Some(encoded) = pack.encoded_sentences.get(&sentence) {
             let learnable = encoded.grams.iter().filter_map(|g| match g {
-                SentenceGram::Learnable(g) => Some(*g),
+                SentenceGram::Learnable(g) => Some(g.sense),
                 SentenceGram::Obvious(_) => None,
             });
             let multiword = encoded
                 .multiword_terms
                 .iter()
                 .chain(&encoded.low_confidence_multiword_terms)
-                .map(|m| m.gram);
+                .map(|m| m.gram.sense);
             prerequisites.extend(
                 learnable
                     .chain(multiword)
@@ -1085,7 +1085,7 @@ impl PlannerState {
                             .iter()
                             .map(|g| {
                                 let (SentenceGram::Learnable(g) | SentenceGram::Obvious(g)) = g;
-                                *g
+                                g.sense
                             })
                             .filter(|g| {
                                 pack.gram_rodeo.resolve(&g.gram).iter().any(|atom| {
@@ -1388,7 +1388,15 @@ mod tests {
                 .iter()
                 .map(|(text, _)| (text.clone(), vec![format!("translation {text}")]))
                 .collect(),
-            encoded_sentences: sentences,
+            encoded_sentences: sentences
+                .into_iter()
+                .map(|(text, sentence)| {
+                    (
+                        text,
+                        sentence.map(language_utils::ReadingTaggedGram::without_reading),
+                    )
+                })
+                .collect(),
             gram_vocabulary: entries
                 .iter()
                 .map(|g| GramVocabEntry {
@@ -1813,7 +1821,9 @@ mod tests {
                     });
                     encoded.grams.insert(
                         position,
-                        SentenceGram::Obvious(TaggedGram { gram, sense: None }),
+                        SentenceGram::Obvious(language_utils::ReadingTaggedGram::without_reading(
+                            TaggedGram { gram, sense: None },
+                        )),
                     );
                 }
                 encoded.capitalize_first = capitalize;

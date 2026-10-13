@@ -240,7 +240,7 @@ impl DeckEvent {
                                         .multiword_terms
                                         .iter()
                                         .chain(&encoded.low_confidence_multiword_terms)
-                                        .map(|term| &term.gram)
+                                        .map(|term| &term.gram.sense)
                                         .find(|entry| {
                                             pack.resolve_gram(&entry.gram)
                                                 .to_display_string(context.course.target_language)
@@ -371,7 +371,8 @@ mod tests {
                         matched_word_indices: vec![0],
                     }],
                     low_confidence_multiword_terms: vec![],
-                },
+                }
+                .map(language_utils::ReadingTaggedGram::without_reading),
             )],
             ..Default::default()
         };

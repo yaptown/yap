@@ -51,6 +51,7 @@ async fn main() -> anyhow::Result<()> {
         cache_only,
         sync_cache_only,
         pronunciation_audio_only,
+        readings_sample,
     } = Args::parse(std::env::args().skip(1))?;
     if !lang_filter.is_empty() {
         println!(
@@ -59,6 +60,10 @@ async fn main() -> anyhow::Result<()> {
         );
     }
     generate_data::set_cache_only(cache_only);
+    // Branch before metadata refresh, translation warmup, or any out/ writes.
+    if let Some(sample) = readings_sample {
+        return generate_data::readings::sample_run::run(sample, &lang_filter).await;
+    }
     if pronunciation_audio_only {
         if cache_only {
             println!(
@@ -186,7 +191,8 @@ async fn main() -> anyhow::Result<()> {
         );
         println!("================================================");
 
-        let (sentence_corpus, translator) = loaded.await.context("Course warmup task failed")??;
+        let (mut sentence_corpus, translator) =
+            loaded.await.context("Course warmup task failed")??;
         let generate_data::pipeline::SegmentedCorpus {
             mut nlp_sentences,
             mut restricted_nlp_sentences,
@@ -200,21 +206,37 @@ async fn main() -> anyhow::Result<()> {
                     citations,
                 },
             encoder,
-        } = generate_data::pipeline::segment_corpus(course, &sentence_corpus).await?;
+        } = generate_data::pipeline::segment_corpus(course, &sentence_corpus, None).await?;
+        let embedding_store = generate_data::cache_remote::store();
         generate_data::token_embeddings::ensure_token_embeddings(
             course.target_language,
             nlp_sentences.iter().chain(restricted_nlp_sentences.iter()),
             &interners,
-            &generate_data::cache_remote::store(),
+            &embedding_store,
         )
         .await
         .context("Failed to ensure token embeddings")?;
+        let readings = generate_data::readings::CorpusReadings::generate(
+            course.target_language,
+            &nlp_sentences,
+            &restricted_nlp_sentences,
+            &interners,
+            &embedding_store,
+            None,
+        )
+        .await?;
+        readings.retain_corpus(
+            &mut sentence_corpus,
+            &mut nlp_sentences,
+            &mut restricted_nlp_sentences,
+        );
         let inventories = generate_data::usage_discovery::assign_senses(
             course.target_language,
             &mut nlp_sentences,
             &mut restricted_nlp_sentences,
             &interners,
-            &generate_data::cache_remote::store(),
+            &embedding_store,
+            &readings,
         )
         .await?;
         let translator = translator
@@ -1107,6 +1129,10 @@ async fn main() -> anyhow::Result<()> {
                         .iter()
                         .flat_map(|s| [s.sentence1.clone(), s.sentence2.clone()])
                 })
+                .filter(|sentence| {
+                    readings.includes_sentence(sentence)
+                        && !course.target_language.contains_wrong_han_script(sentence)
+                })
                 .collect();
 
             let tokenizations = generate_data::nlp::process_sentences(
@@ -1810,6 +1836,9 @@ async fn main() -> anyhow::Result<()> {
             strokes.len()
         );
 
+        let encoded_sentences_with_grams =
+            readings.pack(encoded_sentences_with_grams, course.target_language);
+
         // Create consolidated data structure
         let consolidated_data = language_utils::ConsolidatedLanguageData {
             redundant_senses,
@@ -1862,13 +1891,28 @@ struct Args {
     cache_only: bool,
     sync_cache_only: bool,
     pronunciation_audio_only: bool,
+    readings_sample: Option<generate_data::readings::sample_run::Sample>,
 }
 
 impl Args {
     fn parse(args: impl IntoIterator<Item = String>) -> anyhow::Result<Self> {
         let mut parsed = Self::default();
-        for arg in args {
+        let mut args = args.into_iter();
+        while let Some(arg) = args.next() {
             match arg.as_str() {
+                "--readings-sample" => {
+                    anyhow::ensure!(
+                        parsed.readings_sample.is_none(),
+                        "duplicate --readings-sample"
+                    );
+                    let percent = args
+                        .next()
+                        .context("--readings-sample requires a percent")?
+                        .parse::<f64>()
+                        .context("--readings-sample requires a numeric percent")?;
+                    parsed.readings_sample =
+                        Some(generate_data::readings::sample_run::Sample::new(percent)?);
+                }
                 "--cache-only" => parsed.cache_only = true,
                 "--sync-cache" => parsed.sync_cache_only = true,
                 "--pronunciation-audio-only" => parsed.pronunciation_audio_only = true,
@@ -1882,6 +1926,20 @@ impl Args {
             !(parsed.pronunciation_audio_only && parsed.sync_cache_only),
             "--pronunciation-audio-only conflicts with --sync-cache"
         );
+        if parsed.readings_sample.is_some() {
+            anyhow::ensure!(
+                !parsed.sync_cache_only && !parsed.pronunciation_audio_only,
+                "--readings-sample conflicts with --sync-cache and --pronunciation-audio-only"
+            );
+            anyhow::ensure!(
+                !parsed.lang_filter.is_empty()
+                    && parsed
+                        .lang_filter
+                        .iter()
+                        .all(|code| matches!(code.as_str(), "jpn" | "zho-hans")),
+                "--readings-sample requires explicit jpn and/or zho-hans language codes"
+            );
+        }
         let known: BTreeSet<&str> = COURSES.iter().map(|c| c.target_language.code()).collect();
         let unknown: Vec<&str> = parsed
             .lang_filter
@@ -1905,6 +1963,42 @@ mod args_tests {
 
     fn parse(args: &[&str]) -> anyhow::Result<Args> {
         Args::parse(args.iter().map(|arg| (*arg).to_owned()))
+    }
+
+    #[test]
+    fn readings_sample_validates_percent_languages_and_conflicts() {
+        assert!(
+            parse(&[
+                "--readings-sample",
+                "2.5",
+                "jpn",
+                "zho-hans",
+                "--cache-only"
+            ])
+            .unwrap()
+            .readings_sample
+            .is_some()
+        );
+        for args in [
+            vec!["--readings-sample"],
+            vec!["--readings-sample", "NaN", "jpn"],
+            vec!["--readings-sample", "0", "jpn"],
+            vec!["--readings-sample", "101", "jpn"],
+            vec!["--readings-sample", "-1", "jpn"],
+            vec!["--readings-sample", "inf", "jpn"],
+            vec!["--readings-sample", "5"],
+            vec!["--readings-sample", "5", "fra"],
+            vec!["--readings-sample", "5", "jpn", "--sync-cache"],
+            vec![
+                "--readings-sample",
+                "5",
+                "jpn",
+                "--pronunciation-audio-only",
+            ],
+            vec!["--readings-sample", "5", "jpn", "--readings-sample", "5"],
+        ] {
+            assert!(parse(&args).is_err(), "accepted {args:?}");
+        }
     }
 
     #[test]

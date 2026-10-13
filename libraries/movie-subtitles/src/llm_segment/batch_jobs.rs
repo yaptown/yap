@@ -8,8 +8,11 @@ use tysm::{
     },
 };
 
-/// A handful of misses should not become a 24-hour batch.
-pub const SMALL_BATCH_THRESHOLD: usize = 16;
+/// Misses up to this many go out as live calls instead of a batch. A batch
+/// takes hours however small it is, so the small follow-up rounds of a
+/// pipeline (retries, verification, escape repairs) would otherwise each add
+/// hours of wall time; live prices on a couple of thousand requests cost cents.
+pub const SMALL_BATCH_THRESHOLD: usize = 2_000;
 
 pub const MAX_REQUESTS: usize = 40_000;
 const MAX_BYTES: usize = 180_000_000;
