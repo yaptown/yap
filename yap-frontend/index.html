@@ -30,6 +30,10 @@
 
         console.log(`OneSignal initializing in ${isDevelopment ? 'development' : 'production'} mode`);
 
+        // OneSignal's app is restricted to https://yap.town, so init rejects on
+        // other origins (e.g. the yap-beta *.pages.dev channel). Push just
+        // isn't available there; don't surface it as an error.
+        try {
         await OneSignal.init({
           ...config,
           notifyButton: {
@@ -41,6 +45,9 @@
           serviceWorkerParam: { scope: "/push/onesignal/" },
           serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js"
         });
+        } catch (e) {
+          console.info("OneSignal unavailable on this origin", e);
+        }
       });
     </script>
 
