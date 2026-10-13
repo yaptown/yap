@@ -1253,3 +1253,9 @@ books-text-larger = Texto más grande
 books-home-caption = Lee novelas completas en { $language }
 books-section-unavailable = Sección { $number } — todavía no disponible
 books-machine-translated = Este capítulo se ha traducido automáticamente.
+
+books-appearance = Temas y ajustes
+books-theme-system = Automático
+books-theme-paper = Papel
+books-theme-sepia = Sepia
+books-theme-night = Noche

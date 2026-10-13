@@ -23,7 +23,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective October 11, 2026.</p>
+            <p className="text-sm">Effective October 13, 2026.</p>
           </div>
         </Card>
 
@@ -53,7 +53,9 @@ export function PrivacyPage() {
             <p>
               <span className="text-foreground">Books.</span> Downloaded books and
               your chapter and paragraph reading position stay on this device for
-              offline reading. Reading positions are not synced to your account.
+              offline reading. Your reader theme and text-size preferences are also saved
+              on this device. Reading positions and reader preferences are not
+              synced to your account.
             </p>
             <p>
               <span className="text-foreground">Social.</span> Who you follow

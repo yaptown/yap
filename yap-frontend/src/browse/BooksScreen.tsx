@@ -1,4 +1,8 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
+import { useTheme } from "@/components/theme-provider";
+import { animatePageTurn, type PageSnapshot } from "./page-turn";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { ArrowLeft, ChevronRight, List } from "lucide-react";
 import {
@@ -12,6 +16,8 @@ import {
   type Language,
   type ReaderLayout,
   reader_layout,
+  reader_themes,
+  type ReaderTheme,
 } from "../../../yap-frontend-rs/pkg";
 import { useCourseDeck } from "@/review/course-study";
 import type { AppContextType } from "@/app/context";
@@ -130,7 +136,7 @@ function TableOfContents({
               aria-current={
                 chapter.position === view.position.chapter ? "page" : undefined
               }
-              className="rounded-lg px-3 py-2 text-left font-serif hover:bg-muted/60 aria-[current=page]:bg-muted aria-[current=page]:font-semibold disabled:text-muted-foreground disabled:hover:bg-transparent"
+              className="rounded-lg px-3 py-2 text-left font-serif hover:bg-current/5 aria-[current=page]:bg-current/10 aria-[current=page]:font-semibold disabled:opacity-40 disabled:hover:bg-transparent"
               onClick={() => select(chapter.position)}
             >
               {chapter.enabled ? (
@@ -150,16 +156,20 @@ const TEXT_SIZE_KEY = "yap-reader-text-size";
 
 /** Where to open a chapter: the saved paragraph, or its last page when paging backwards. */
 type Opening = number | "end";
+type OpeningTurn = { before: PageSnapshot; direction: 1 | -1; layout: ReaderLayout };
 
 /**
- * Lays a chapter out as pages with CSS columns and turns them by sliding the column
- * strip. The geometry comes from Rust's `reader_layout`, shared with iOS.
+ * CSS columns paginate the live text; a temporary curved sheet animates each turn.
+ * The geometry comes from Rust's `reader_layout`, shared with iOS.
  */
 function ChapterPages({
   view,
   layout,
   opening,
+  openingTurn,
+  controlsShown,
   paused,
+  language,
   remember,
   turnPast,
   turned,
@@ -168,70 +178,92 @@ function ChapterPages({
   view: BookReaderView;
   layout: ReaderLayout;
   opening: Opening;
+  openingTurn?: OpeningTurn;
+  controlsShown: boolean;
   paused: boolean;
+  language: Language;
   remember: (paragraph: number) => void;
   /** Turning beyond the first or last page moves to the neighbouring chapter. */
-  turnPast: (direction: 1 | -1) => void;
+  turnPast: (direction: 1 | -1, before: PageSnapshot) => void;
   /** Called on every page turn the reader makes. */
   turned: () => void;
   tapMiddle: () => void;
 }) {
+  const host = useRef<HTMLDivElement>(null);
   const flow = useRef<HTMLDivElement>(null);
+  const cancelTurn = useRef<(() => void) | undefined>(undefined);
   const [page, setPage] = useState(0);
   const [pages, setPages] = useState(1);
-  const [animate, setAnimate] = useState(false);
+  const [leafCount, setLeafCount] = useState(1);
   // The paragraph to keep in view when the layout changes (resize, text size).
   const anchor = useRef<Opening>(opening);
-  // Set when the layout picked the page, so the page it lands on doesn't move the anchor:
-  // a paragraph straddling two pages would otherwise pull every relayout back a page.
-  const placed = useRef(false);
+  const arrival = useRef(openingTurn);
 
   const width = layout.page_width * layout.columns + layout.gap * (layout.columns - 1);
   const stride = width + layout.gap;
-  const blocks = () => [...flow.current!.querySelectorAll<HTMLElement>("[data-paragraph]")];
-  const pageOf = (rect: DOMRect) =>
-    Math.floor((rect.left - flow.current!.getBoundingClientRect().left + 1) / stride);
+  const blocks = useCallback(() => [...flow.current!.querySelectorAll<HTMLElement>("[data-paragraph]")], []);
+  const pageOf = useCallback((rect: DOMRect) =>
+    Math.floor((rect.left - flow.current!.getBoundingClientRect().left + 1) / stride), [stride]);
+  const rememberRef = useRef(remember);
+  useLayoutEffect(() => { rememberRef.current = remember; });
 
   useLayoutEffect(() => {
-    const place = () => {
-      const total = Math.max(1, Math.round((flow.current!.scrollWidth + layout.gap) / stride));
+    let cancelled = false;
+    const place = (animateArrival = false) => {
+      if (cancelled || !flow.current) return;
+      cancelTurn.current?.();
+      cancelTurn.current = undefined;
+      const rects = [...flow.current.lastElementChild!.getClientRects()];
+      const right = Math.max(...rects.map((rect) => rect.right)) - flow.current.getBoundingClientRect().left;
+      const leaves = Math.max(1, Math.ceil((right - 1) / (layout.page_width + layout.gap)));
+      const total = Math.ceil(leaves / layout.columns);
+      setLeafCount(leaves);
       const target = anchor.current;
       const block = target === "end" ? undefined : blocks()[target];
-      setAnimate(false);
-      placed.current = true;
       setPages(total);
-      setPage(block ? Math.min(pageOf(block.getClientRects()[0]), total - 1) : target === "end" ? total - 1 : 0);
+      const next = block ? Math.min(pageOf(block.getClientRects()[0]), total - 1) : target === "end" ? total - 1 : 0;
+      setPage(next);
+      const first = blocks().findIndex((block) => [...block.getClientRects()].some((rect) => pageOf(rect) >= next));
+      if (first >= 0) rememberRef.current(first);
+      const transition = arrival.current;
+      if (animateArrival && transition) {
+        arrival.current = undefined;
+        if (JSON.stringify(transition.layout) === JSON.stringify(layout) && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          cancelTurn.current = animatePageTurn(host.current!, flow.current, layout, transition.before, { flow: flow.current, page: next }, transition.direction, () => { cancelTurn.current = undefined; });
+        }
+      }
     };
     place();
-    document.fonts.ready.then(place);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- relayout only when the geometry or text changes
-  }, [layout, view]);
-
-  // The first paragraph showing on this page is the reading position.
-  useEffect(() => {
-    const first = blocks().findIndex((block) =>
-      [...block.getClientRects()].some((rect) => pageOf(rect) >= page),
-    );
-    if (first === -1) return;
-    if (!placed.current) anchor.current = first;
-    placed.current = false;
-    remember(first);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- recorded per page turn
-  }, [page, pages]);
+    document.fonts.ready.then(() => place(true));
+    return () => { cancelled = true; cancelTurn.current?.(); cancelTurn.current = undefined; };
+  }, [layout, view, blocks, pageOf]);
 
   const turn = (direction: 1 | -1) => {
+    if (paused || cancelTurn.current) return;
     turned();
     const next = page + direction;
-    if (next < 0 || next >= pages) return turnPast(direction);
-    placed.current = false;
-    setAnimate(true);
-    setPage(next);
+    if (next < 0 || next >= pages) return turnPast(direction, { flow: flow.current!.cloneNode(true) as HTMLElement, page });
+    const commit = () => {
+      const first = blocks().findIndex((block) => [...block.getClientRects()].some((rect) => pageOf(rect) >= next));
+      if (first >= 0) { anchor.current = first; rememberRef.current(first); }
+      setPage(next);
+    };
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      commit();
+    } else {
+      cancelTurn.current = animatePageTurn(host.current!, flow.current!, layout, { flow: flow.current!, page }, { flow: flow.current!, page: next }, direction, () => {
+        flushSync(commit);
+        cancelTurn.current = undefined;
+      });
+    }
   };
   const turnRef = useRef(turn);
-  turnRef.current = turn;
+  useLayoutEffect(() => { turnRef.current = turn; });
   useEffect(() => {
     if (paused) return;
     const onKey = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLElement && event.target.closest("input, select, textarea, [contenteditable=true]")) return;
+      if (event.key === " " && event.target instanceof HTMLElement && event.target.closest("button")) return;
       if (["ArrowRight", "PageDown", " "].includes(event.key)) turnRef.current(1);
       else if (["ArrowLeft", "PageUp"].includes(event.key)) turnRef.current(-1);
       else return;
@@ -242,20 +274,24 @@ function ChapterPages({
   }, [paused]);
 
   // Tap the outer thirds to turn, the middle to show the controls; or swipe.
-  const touch = useRef({ x: 0, swiped: false });
+  const touch = useRef({ x: 0, y: 0, swiped: false });
   return (
     <div
+      ref={host}
       className="relative flex-1 select-none overflow-hidden"
-      onTouchStart={(e) => (touch.current = { x: e.touches[0].clientX, swiped: false })}
+      onTouchStart={(e) => (touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, swiped: false })}
       onTouchEnd={(e) => {
         const dx = e.changedTouches[0].clientX - touch.current.x;
-        if (Math.abs(dx) < 40) return;
+        const dy = e.changedTouches[0].clientY - touch.current.y;
+        if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
         touch.current.swiped = true;
         turn(dx < 0 ? 1 : -1);
       }}
       onClick={(e) => {
-        if (touch.current.swiped) return;
-        const x = e.clientX / window.innerWidth;
+        if (touch.current.swiped) { touch.current.swiped = false; return; }
+        if (paused) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
         if (x < 0.3) turn(-1);
         else if (x > 0.7) turn(1);
         else tapMiddle();
@@ -278,13 +314,13 @@ function ChapterPages({
             fontSize: layout.font_size,
             lineHeight: layout.line_height,
             transform: `translateX(${-page * stride}px)`,
-            transition: animate ? "transform 300ms ease" : undefined,
+
           }}
         >
-          <header className="mb-10 break-inside-avoid text-left">
-            <p className="text-[0.7em] text-neutral-500">{view.byline}</p>
+          <header className="flex break-inside-avoid flex-col items-end gap-5 pb-[3em] pt-[2em] text-right">
+            <p className="max-w-[85%] text-[0.65em] text-[var(--reader-muted)]">{view.byline}</p>
             {view.chapter_title && (
-              <h1 className="mt-3 font-serif text-[1.9em] font-semibold leading-tight">{view.chapter_title}</h1>
+              <h1 className="max-w-[90%] font-serif text-[1.7em] font-semibold leading-tight"><TargetLanguageText language={language}>{view.chapter_title}</TargetLanguageText></h1>
             )}
           </header>
           {view.paragraphs.map((block, i) =>
@@ -303,7 +339,7 @@ function ChapterPages({
                 data-paragraph={i}
                 className={i > 0 && view.paragraphs[i - 1].text != null ? "indent-[1.5em]" : ""}
               >
-                {block.text}
+                <TargetLanguageText language={language}>{block.text}</TargetLanguageText>
               </p>
             ),
           )}
@@ -312,81 +348,87 @@ function ChapterPages({
           )}
         </div>
       </div>
-      <p className="absolute inset-x-0 bottom-5 text-center text-xs tabular-nums text-neutral-400">
-        {page + 1} / {pages}
-      </p>
-    </div>
-  );
-}
-
-/** The reader's controls, shown when the book opens and on tapping the page's middle. */
-function ReaderBar({
-  shown,
-  title,
-  copy,
-  layout,
-  setTextSize,
-  onContents,
-}: {
-  shown: boolean;
-  title?: string;
-  copy: ReturnType<typeof books_copy>;
-  layout?: ReaderLayout;
-  setTextSize: (step: number) => void;
-  onContents?: () => void;
-}) {
-  const navigate = useNavigate();
-  const smaller = layout?.smaller;
-  const larger = layout?.larger;
-  return (
-    <div
-      className={`absolute inset-x-0 top-0 z-10 border-b border-neutral-200 bg-white transition-transform duration-300 dark:border-neutral-800 dark:bg-black ${shown ? "" : "-translate-y-full"}`}
-    >
-      <div className="mx-auto flex h-14 max-w-5xl items-center gap-1 px-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/books")} aria-label={copy.title}>
-          <ArrowLeft aria-hidden />
-        </Button>
-        <p className="min-w-0 flex-1 truncate text-center text-sm font-medium">{title}</p>
-        {layout && (
-          <>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => smaller != null && setTextSize(smaller)}
-              disabled={smaller == null}
-              aria-label={copy.text_smaller}
-            >
-              <span aria-hidden className="font-serif text-sm">
-                A
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => larger != null && setTextSize(larger)}
-              disabled={larger == null}
-              aria-label={copy.text_larger}
-            >
-              <span aria-hidden className="font-serif text-xl">
-                A
-              </span>
-            </Button>
-          </>
-        )}
-        <Button variant="ghost" size="icon" onClick={onContents} disabled={!onContents} aria-label={copy.contents}>
-          <List aria-hidden />
-        </Button>
+      <div className={`pointer-events-none absolute inset-x-0 top-7 flex text-center text-xs text-[var(--reader-muted)] transition-opacity ${controlsShown ? "opacity-0" : ""}`} aria-hidden>
+        <p className="flex-1 truncate px-16"><TargetLanguageText language={language}>{view.title}</TargetLanguageText></p>
+        {layout.columns === 2 && <p className="flex-1 truncate px-16"><TargetLanguageText language={language}>{view.chapter_title}</TargetLanguageText></p>}
+      </div>
+      <div className="pointer-events-none absolute inset-x-0 bottom-6 flex text-center text-xs tabular-nums text-[var(--reader-muted)]" aria-live="polite" aria-atomic="true">
+        {Array.from({ length: layout.columns }, (_, column) => {
+          const number = page * layout.columns + column + 1;
+          return <p key={column} className="flex-1">{number <= leafCount ? number : ""}</p>;
+        })}
       </div>
     </div>
   );
 }
 
-function Reader({ language, slug }: { language: Language; slug: string }) {
+/** Floating controls leave the page geometry untouched when revealed. */
+function ReaderBar({
+  shown, copy, layout, setTextSize, onContents, theme, themes, setTheme, settingsOpen, setSettingsOpen,
+}: {
+  shown: boolean;
+  copy: ReturnType<typeof books_copy>;
+  layout?: ReaderLayout;
+  setTextSize: (step: number) => void;
+  onContents?: () => void;
+  theme: ReaderTheme;
+  themes: ReaderTheme[];
+  setTheme: (id: string) => void;
+  settingsOpen: boolean;
+  setSettingsOpen: (open: boolean) => void;
+}) {
+  const navigate = useNavigate();
+  const surface = { background: theme.background, color: theme.ink };
+  const pill = "rounded-full border border-current/10 shadow-lg backdrop-blur-xl";
+  return (
+    <div inert={!shown} className={`pointer-events-none absolute inset-x-0 top-4 z-10 flex items-start justify-between gap-4 px-5 transition-opacity duration-200 motion-reduce:transition-none ${shown ? "" : "opacity-0"}`}>
+      <Button className={`pointer-events-auto h-11 w-11 ${pill}`} style={surface} variant="ghost" size="icon" onClick={() => navigate("/books")} aria-label={copy.title}>
+        <ArrowLeft aria-hidden />
+      </Button>
+      <div className={`pointer-events-auto flex items-center gap-1 p-1 ${pill}`} style={surface}>
+        <Button variant="ghost" className="rounded-full hover:bg-current/5 hover:text-inherit" size="icon" onClick={onContents} disabled={!onContents} aria-label={copy.contents}><List aria-hidden /></Button>
+        <Popover open={settingsOpen} onOpenChange={setSettingsOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" className="rounded-full hover:bg-current/5 hover:text-inherit" size="icon" disabled={!layout} aria-label={copy.appearance}><span className="text-lg">Aa</span></Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" sideOffset={12} className="flex w-80 flex-col gap-6 rounded-3xl border-current/10 p-5 shadow-xl" style={surface}>
+            <h2 className="text-sm font-semibold">{copy.appearance}</h2>
+            <div className="flex items-center justify-between gap-4 rounded-full bg-current/5 p-1">
+              <Button variant="ghost" className="h-11 flex-1 rounded-full hover:bg-current/5 hover:text-inherit font-serif text-lg" disabled={layout?.smaller == null} onClick={() => layout?.smaller != null && setTextSize(layout.smaller)} aria-label={copy.text_smaller}>A</Button>
+              <span className="text-xs tabular-nums" style={{ color: theme.muted }}>{layout?.font_size}</span>
+              <Button variant="ghost" className="h-11 flex-1 rounded-full hover:bg-current/5 hover:text-inherit font-serif text-3xl" disabled={layout?.larger == null} onClick={() => layout?.larger != null && setTextSize(layout.larger)} aria-label={copy.text_larger}>A</Button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {themes.map((option) => <button key={option.id} aria-pressed={theme.id === option.id} onClick={() => setTheme(option.id)} style={{ background: option.background, color: option.ink }} className="flex flex-col items-center gap-1 rounded-2xl border border-current/15 px-2 py-4 outline-offset-4 aria-pressed:ring-2 aria-pressed:ring-current">
+                <span className="font-serif text-3xl" aria-hidden>Aa</span><span className="text-xs">{option.label}</span>
+              </button>)}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
+  );
+}
+
+export function BookReader({ language, slug }: { language: Language; slug: string }) {
   const copy = books_copy();
   const [view, setView] = useState<BookReaderView>();
   const [failed, setFailed] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
   const [barShown, setBarShown] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { theme: appTheme } = useTheme();
+  const [systemDark, setSystemDark] = useState(() => matchMedia("(prefers-color-scheme: dark)").matches);
+  useEffect(() => {
+    const media = matchMedia("(prefers-color-scheme: dark)");
+    const changed = () => setSystemDark(media.matches);
+    media.addEventListener("change", changed);
+    return () => media.removeEventListener("change", changed);
+  }, []);
+  const themes = reader_themes(appTheme === "system" ? systemDark : appTheme !== "light");
+  const [themeId, setThemeId] = useState(() => localStorage.getItem("yap-reader-theme") ?? "system");
+  const theme = themes.find((option) => option.id === themeId) ?? themes[0];
+  const saveTheme = (id: string) => { localStorage.setItem("yap-reader-theme", id); setThemeId(id); };
   const [textSize, setTextSize] = useState(() => {
     const saved = localStorage.getItem(TEXT_SIZE_KEY);
     return saved === null ? undefined : Number(saved);
@@ -410,15 +452,15 @@ function Reader({ language, slug }: { language: Language; slug: string }) {
     [size, textSize],
   );
   // undefined opens at the saved position; otherwise a chapter's start or end.
-  const [request, setRequest] = useState<{ chapter: number; opening: Opening; revision: number }>();
-  const [opened, setOpened] = useState<{ opening: Opening; revision: number }>();
+  const [request, setRequest] = useState<{ chapter: number; opening: Opening; revision: number; turn?: OpeningTurn }>();
+  const [opened, setOpened] = useState<{ opening: Opening; revision: number; turn?: OpeningTurn }>();
   useEffect(() => {
     let cancelled = false;
     load_book(language, slug, request === undefined ? undefined : { chapter: request.chapter, paragraph: 0 })
       .then((v) => {
         if (cancelled) return;
         setView(v);
-        setOpened({ opening: request?.opening ?? v.position.paragraph, revision: request?.revision ?? 0 });
+        setOpened({ opening: request?.opening ?? v.position.paragraph, revision: request?.revision ?? 0, turn: request?.turn });
       })
       .catch(() => !cancelled && setFailed(true));
     return () => {
@@ -433,21 +475,26 @@ function Reader({ language, slug }: { language: Language; slug: string }) {
       .then(() => save_book_position(language, slug, { chapter, paragraph }))
       .catch(() => {});
   };
-  const open = (chapter: number, opening: Opening) => {
+  const open = (chapter: number, opening: Opening, turn?: OpeningTurn) => {
     setContentsOpen(false);
-    setRequest((previous) => ({ chapter, opening, revision: (previous?.revision ?? 0) + 1 }));
+    setRequest((previous) => ({ chapter, opening, revision: (previous?.revision ?? 0) + 1, turn }));
   };
 
   return (
     <div
       ref={screen}
-      className="fixed inset-0 z-10 flex flex-col bg-white text-neutral-900 dark:bg-black dark:text-neutral-200"
+      className="fixed inset-0 z-10 flex flex-col bg-[var(--reader-paper)] text-[var(--reader-ink)]"
+      style={{ "--reader-paper": theme.background, "--reader-ink": theme.ink, "--reader-muted": theme.muted } as CSSProperties}
       data-page="book-reader"
     >
       <ReaderBar
         shown={barShown || !view}
-        title={view?.title}
         copy={copy}
+        theme={theme}
+        themes={themes}
+        setTheme={saveTheme}
+        settingsOpen={settingsOpen}
+        setSettingsOpen={setSettingsOpen}
         layout={view && layout}
         setTextSize={saveTextSize}
         onContents={view && (() => setContentsOpen(true))}
@@ -458,12 +505,15 @@ function Reader({ language, slug }: { language: Language; slug: string }) {
           view={view}
           layout={layout}
           opening={opened.opening}
-          paused={contentsOpen}
+          openingTurn={opened.turn}
+          controlsShown={barShown}
+          paused={contentsOpen || settingsOpen}
+          language={language}
           remember={remember(view.position.chapter)}
           turned={() => setBarShown(false)}
-          turnPast={(direction) => {
+          turnPast={(direction, before) => {
             const chapter = direction === 1 ? view.next : view.previous;
-            if (chapter != null) open(chapter, direction === 1 ? 0 : "end");
+            if (chapter != null) open(chapter, direction === 1 ? 0 : "end", { before, direction, layout });
           }}
           tapMiddle={() => setBarShown((shown) => !shown)}
         />
@@ -474,10 +524,10 @@ function Reader({ language, slug }: { language: Language; slug: string }) {
       )}
       {view && (
         <Dialog open={contentsOpen} onOpenChange={setContentsOpen}>
-          <DialogContent className="max-h-[85dvh] overflow-y-auto">
+          <DialogContent className="max-h-[85dvh] overflow-y-auto rounded-3xl border-current/15" style={{ background: theme.background, color: theme.ink }}>
             <DialogHeader>
-              <DialogTitle className="font-serif text-2xl">{view.title}</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="font-serif text-2xl"><TargetLanguageText language={language}>{view.title}</TargetLanguageText></DialogTitle>
+              <DialogDescription style={{ color: theme.muted }}>
                 {view.author}
               </DialogDescription>
             </DialogHeader>
@@ -501,7 +551,7 @@ export function BooksPage() {
   if (!deck.course) return null;
   const language = deck.course.targetLanguage;
   return slug ? (
-    <Reader key={`${language}-${slug}`} language={language} slug={slug} />
+    <BookReader key={`${language}-${slug}`} language={language} slug={slug} />
   ) : (
     <Catalog key={language} language={language} nativeLanguage={deck.course.nativeLanguage} />
   );

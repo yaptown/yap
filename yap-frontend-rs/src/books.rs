@@ -21,6 +21,7 @@ pub struct BooksCopy {
     pub next: String,
     pub text_smaller: String,
     pub text_larger: String,
+    pub appearance: String,
 }
 #[bridgerton::bridge]
 pub fn books_copy() -> BooksCopy {
@@ -35,6 +36,7 @@ pub fn books_copy() -> BooksCopy {
         next: yap_i18n::tr!("books-next"),
         text_smaller: yap_i18n::tr!("books-text-smaller"),
         text_larger: yap_i18n::tr!("books-text-larger"),
+        appearance: yap_i18n::tr!("books-appearance"),
     }
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -113,6 +115,57 @@ pub struct BookReaderView {
     pub previous: Option<usize>,
     pub next: Option<usize>,
 }
+/// Reader-specific paper and ink, independent of the rest of the app's theme.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ReaderTheme {
+    pub id: String,
+    pub label: String,
+    pub background: String,
+    pub ink: String,
+    pub muted: String,
+}
+
+#[bridgerton::bridge]
+pub fn reader_themes(dark: bool) -> Vec<ReaderTheme> {
+    let palette = |id: &str, label: String, background: &str, ink: &str, muted: &str| ReaderTheme {
+        id: id.into(),
+        label,
+        background: background.into(),
+        ink: ink.into(),
+        muted: muted.into(),
+    };
+    let paper = palette(
+        "paper",
+        yap_i18n::tr!("books-theme-paper"),
+        "#faf9f6",
+        "#292823",
+        "#77746c",
+    );
+    let night = palette(
+        "night",
+        yap_i18n::tr!("books-theme-night"),
+        "#101010",
+        "#deddd8",
+        "#96948f",
+    );
+    let mut system = if dark { night.clone() } else { paper.clone() };
+    system.id = "system".into();
+    system.label = yap_i18n::tr!("books-theme-system");
+    vec![
+        system,
+        paper,
+        palette(
+            "sepia",
+            yap_i18n::tr!("books-theme-sepia"),
+            "#efe5cf",
+            "#443a2c",
+            "#796b56",
+        ),
+        night,
+    ]
+}
+
 /// Text sizes the reader steps through, in points (CSS pixels on web).
 const TEXT_SIZES: [f64; 6] = [16.0, 18.0, 20.0, 22.0, 25.0, 28.0];
 const DEFAULT_TEXT_SIZE: u32 = 2;
@@ -157,11 +210,11 @@ pub fn reader_layout(width: f64, height: f64, text_size: Option<u32>) -> ReaderL
     ReaderLayout {
         columns,
         page_width,
-        page_height: height - 144.0,
+        page_height: (height - 144.0).max(48.0),
         gap,
         top: 80.0,
         font_size: TEXT_SIZES[step as usize],
-        line_height: 1.6,
+        line_height: 1.5,
         justified: page_width >= 480.0,
         text_size: step,
         smaller: step.checked_sub(1),

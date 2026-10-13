@@ -1206,3 +1206,9 @@ books-text-larger = 放大字号
 books-home-caption = 阅读{ $language }长篇小说全文
 books-section-unavailable = 第 { $number } 节 — 暂未提供
 books-machine-translated = 本章由机器翻译。
+
+books-appearance = 主题与设置
+books-theme-system = 自动
+books-theme-paper = 纸张
+books-theme-sepia = 棕褐
+books-theme-night = 夜间

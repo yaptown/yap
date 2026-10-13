@@ -102,6 +102,11 @@ struct BookReaderScreen: View {
     @State private var requestID = 0
     @State private var showingContents = false
     @State private var barShown = true
+    @State private var showingSettings = false
+    @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("yap-reader-theme") private var themeID = "system"
+    private var themes: [ReaderTheme] { reader_themes(dark: colorScheme == .dark) }
+    private var paper: Paper { Paper(theme: themes.first { $0.id == themeID } ?? themes[0]) }
     @AppStorage("yap-reader-text-size") private var textSize: Int?
     @State private var saveTask: Task<Void, Never>?
     private let copy = books_copy()
@@ -110,7 +115,7 @@ struct BookReaderScreen: View {
             let layout = reader_layout(width: geometry.size.width, height: geometry.size.height, text_size: textSize.map(UInt32.init))
             ZStack(alignment: .top) {
                 if let view {
-                    ChapterPages(view: view, layout: layout, width: geometry.size.width, opening: opening, remember: remember,
+                    ChapterPages(view: view, layout: layout, paper: paper, controlsShown: barShown, opening: opening, remember: remember,
                                  turned: { withAnimation { barShown = false } },
                                  turnPast: { direction in
                                      guard let chapter = direction == 1 ? view.next : view.previous else { return false }
@@ -122,24 +127,48 @@ struct BookReaderScreen: View {
                 } else {
                     Group {
                         if failed { Text(copy.failed) } else { ProgressView(copy.loading) }
-                    }.foregroundStyle(Paper.muted).frame(maxWidth: .infinity).padding(.top, 96)
+                    }.foregroundStyle(paper.muted).frame(maxWidth: .infinity).padding(.top, 96)
                 }
                 if barShown || view == nil {
-                    ReaderBar(title: view?.title, copy: copy, layout: view == nil ? nil : layout,
-                              setTextSize: { textSize = Int($0) }, back: { dismiss() },
+                    ReaderBar(copy: copy, paper: paper, back: { dismiss() }, settings: { showingSettings = true },
                               contents: view == nil ? nil : { showingContents = true })
-                        .transition(.move(edge: .top))
+                        .transition(.opacity)
                 }
             }
+            .sheet(isPresented: $showingSettings) {
+                VStack(alignment: .leading, spacing: 24) {
+                    Text(copy.appearance).font(.headline)
+                    HStack {
+                        Button { layout.smaller.map { textSize = Int($0) } } label: { Text("A").font(.system(size: 18, design: .serif)).frame(maxWidth: .infinity, minHeight: 44) }
+                            .disabled(layout.smaller == nil).accessibilityLabel(copy.text_smaller)
+                        Text("\(Int(layout.font_size))").font(.caption.monospacedDigit()).foregroundStyle(paper.muted)
+                        Button { layout.larger.map { textSize = Int($0) } } label: { Text("A").font(.system(size: 30, design: .serif)).frame(maxWidth: .infinity, minHeight: 44) }
+                            .disabled(layout.larger == nil).accessibilityLabel(copy.text_larger)
+                    }.background(paper.text.opacity(0.05), in: Capsule())
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                        ForEach(themes, id: \.id) { theme in
+                            let option = Paper(theme: theme)
+                            Button { themeID = theme.id } label: {
+                                VStack(spacing: 4) { Text("Aa").font(.system(size: 30, design: .serif)); Text(theme.label).font(.caption) }
+                                    .frame(maxWidth: .infinity).padding(.vertical, 16)
+                                    .foregroundStyle(option.text).background(option.background, in: RoundedRectangle(cornerRadius: 16))
+                                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(option.text.opacity(themeID == theme.id ? 1 : 0.15), lineWidth: themeID == theme.id ? 2 : 1))
+                            }.accessibilityAddTraits(themeID == theme.id ? .isSelected : [])
+                        }
+                    }
+                }.buttonStyle(.plain).padding(24).foregroundStyle(paper.text)
+                    .presentationBackground(paper.background).presentationDetents([.height(380)])
+                    .presentationDragIndicator(.visible)
+            }
         }
-        .foregroundStyle(Paper.text)
-        .background(Paper.background.ignoresSafeArea())
+        .foregroundStyle(paper.text)
+        .background(paper.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .statusBarHidden()
         .persistentSystemOverlays(.hidden)
         .sheet(isPresented: $showingContents) {
             if let view {
-                BookContents(view: view, copy: copy) { chapter in
+                BookContents(view: view, copy: copy, paper: paper) { chapter in
                     showingContents = false
                     Task { await load(chapter: chapter, opening: .paragraph(0)) }
                 }.presentationDetents([.medium, .large])
@@ -183,61 +212,56 @@ struct BookReaderScreen: View {
     }
 }
 
-/// Books are read on plain paper: white in light mode, black in dark.
-private enum Paper {
-    static let background = Color(uiColor: ui(light: 1, dark: 0))
-    static let text = Color(uiColor: ink)
-    static let muted = Color(uiColor: mutedInk)
-    static let faint = Color(uiColor: faintInk)
-    static let rule = Color(uiColor: ui(light: 0.898, dark: 0.149))
-    // Tailwind's neutral-900/-200, -500 and -400, as on web.
-    static let ink = ui(light: 0.090, dark: 0.898)
-    static let mutedInk = UIColor(white: 0.451, alpha: 1)
-    static let faintInk = UIColor(white: 0.639, alpha: 1)
-    private static func ui(light: CGFloat, dark: CGFloat) -> UIColor {
-        UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: dark, alpha: 1) : UIColor(white: light, alpha: 1) }
+/// Shared Rust palette, resolved once for this reader's selected appearance.
+private struct Paper {
+    let theme: ReaderTheme
+    var background: Color { Color(uiColor: Self.color(theme.background)) }
+    var text: Color { Color(uiColor: ink) }
+    var muted: Color { Color(uiColor: mutedInk) }
+    var ink: UIColor { Self.color(theme.ink) }
+    var mutedInk: UIColor { Self.color(theme.muted) }
+    private static func color(_ hex: String) -> UIColor {
+        let rgb = UInt32(hex.dropFirst(), radix: 16) ?? 0
+        return UIColor(red: CGFloat((rgb >> 16) & 255) / 255, green: CGFloat((rgb >> 8) & 255) / 255, blue: CGFloat(rgb & 255) / 255, alpha: 1)
     }
 }
 
-/// The reader's controls, shown when the book opens and on tapping the page's middle.
+/// Floating controls do not change the page's geometry when revealed.
 private struct ReaderBar: View {
-    let title: String?
     let copy: BooksCopy
-    let layout: ReaderLayout?
-    let setTextSize: (UInt32) -> Void
+    let paper: Paper
     let back: () -> Void
+    let settings: () -> Void
     let contents: (() -> Void)?
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(alignment: .top) {
             button("chevron.left", copy.title, back)
-            Text(title ?? "").font(.subheadline.weight(.medium)).lineLimit(1).frame(maxWidth: .infinity)
-            if let layout {
-                Button { layout.smaller.map(setTextSize) } label: { Text("A").font(.system(size: 14, design: .serif)).frame(width: 40, height: 40) }
-                    .disabled(layout.smaller == nil).accessibilityLabel(copy.text_smaller)
-                Button { layout.larger.map(setTextSize) } label: { Text("A").font(.system(size: 21, design: .serif)).frame(width: 40, height: 40) }
-                    .disabled(layout.larger == nil).accessibilityLabel(copy.text_larger)
-            }
-            button("list.bullet", copy.contents, contents ?? {}).disabled(contents == nil)
-        }
-        .buttonStyle(.plain).padding(.horizontal, 8).frame(height: 56).frame(maxWidth: 1024)
-        .frame(maxWidth: .infinity)
-        .background(Paper.background.ignoresSafeArea(edges: .top))
-        .overlay(alignment: .bottom) { Paper.rule.frame(height: 1) }
+                .background(paper.background.opacity(0.95), in: Capsule())
+                .overlay(Capsule().stroke(paper.text.opacity(0.1)))
+            Spacer()
+            HStack(spacing: 4) {
+                button("list.bullet", copy.contents, contents ?? {}).disabled(contents == nil)
+                Button(action: settings) { Text("Aa").font(.system(size: 18)).frame(width: 44, height: 44) }
+                    .disabled(contents == nil).accessibilityLabel(copy.appearance)
+            }.padding(4).background(paper.background.opacity(0.95), in: Capsule())
+                .overlay(Capsule().stroke(paper.text.opacity(0.1)))
+        }.buttonStyle(.plain).shadow(color: .black.opacity(0.1), radius: 10, y: 4)
+            .padding(.horizontal, 20).padding(.top, 16)
     }
     private func button(_ symbol: String, _ label: String, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) { Image(systemName: symbol).frame(width: 40, height: 40).contentShape(Rectangle()) }
+        Button(action: action) { Image(systemName: symbol).frame(width: 44, height: 44).contentShape(Rectangle()) }
             .accessibilityLabel(label)
     }
 }
 
-/// A chapter laid out into pages with TextKit, turned with a paged TabView. The geometry
+/// A chapter laid out into pages with TextKit and turned with a native curl. The geometry
 /// comes from Rust's `reader_layout`, shared with web. Pages -1 and `spreads` are blank
 /// sentinels: landing on one turns into the neighbouring chapter.
 private struct ChapterPages: View {
     let view: BookReaderView
     let layout: ReaderLayout
-    /// The screen's width, for telling taps on its outer thirds from the middle.
-    let width: CGFloat
+    let paper: Paper
+    let controlsShown: Bool
     let opening: Opening
     let remember: (Int) -> Void
     /// Called on every page turn the reader makes.
@@ -245,7 +269,6 @@ private struct ChapterPages: View {
     /// Turning beyond the first or last page; false at the start or end of the book.
     let turnPast: (Int) -> Bool
     let tapMiddle: () -> Void
-    @Environment(\.colorScheme) private var colorScheme
     @State private var pagination: Pagination?
     @State private var spread = 0
     // The paragraph to keep in view when the layout changes (rotation, text size).
@@ -255,33 +278,29 @@ private struct ChapterPages: View {
     @State private var placed = false
     var body: some View {
         let spreads = pagination?.spreads(layout) ?? 1
-        TabView(selection: $spread) {
-            ForEach(-1...spreads, id: \.self) { index in
-                Group {
-                    if let pagination, index >= 0, index < spreads {
-                        HStack(alignment: .top, spacing: layout.gap) {
-                            ForEach(0..<Int(layout.columns), id: \.self) { column in
-                                PageCanvas(pagination: pagination, page: index * Int(layout.columns) + column, colorScheme: colorScheme)
-                                    .frame(width: layout.page_width, height: layout.page_height)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                        .padding(.top, layout.top)
-                    } else { Color.clear }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture { location in
-                    let x = location.x / width
-                    if x < 0.3 { turn(-1) } else if x > 0.7 { turn(1) } else { tapMiddle() }
-                }
-                .tag(index)
-            }
+        CurlPages(pagination: pagination, layout: layout, paper: paper, spread: $spread,
+                  hasPrevious: view.previous != nil, hasNext: view.next != nil, tapMiddle: tapMiddle)
+        .id(layout.columns)
+        .accessibilityScrollAction { direction in
+            if direction == .trailing { turn(1) }
+            if direction == .leading { turn(-1) }
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
         .overlay(alignment: .bottom) {
-            Text("\(min(max(spread, 0), spreads - 1) + 1) / \(spreads)").font(.caption.monospacedDigit())
-                .foregroundStyle(Paper.faint).padding(.bottom, 20)
+            HStack(spacing: 0) {
+                ForEach(0..<Int(layout.columns), id: \.self) { column in
+                    let page = min(max(spread, 0), spreads - 1) * Int(layout.columns) + column + 1
+                    Text(page <= (pagination?.containers.count ?? 0) ? "\(page)" : "")
+                        .frame(maxWidth: .infinity)
+                }
+            }.font(.caption.monospacedDigit()).foregroundStyle(paper.muted).padding(.bottom, 24)
         }
+        .overlay(alignment: .top) {
+            HStack(spacing: 0) {
+                Text(view.title).lineLimit(1).padding(.horizontal, 64).frame(maxWidth: .infinity)
+                if layout.columns == 2 { Text(view.chapter_title ?? "").lineLimit(1).padding(.horizontal, 64).frame(maxWidth: .infinity) }
+            }.font(.caption).foregroundStyle(paper.muted).padding(.top, 28).opacity(controlsShown ? 0 : 1).allowsHitTesting(false)
+        }
+        .onChange(of: paper.theme) { _, _ in place(layout) }
         .onChange(of: layout, initial: true) { _, layout in place(layout) }
         .onChange(of: spread) { old, new in
             if new < 0 || new >= spreads {
@@ -305,9 +324,14 @@ private struct ChapterPages: View {
         }
         #endif
     }
-    private func turn(_ direction: Int) { withAnimation { spread += direction } }
+    private func turn(_ direction: Int) {
+        let next = spread + direction
+        let count = pagination?.spreads(layout) ?? 1
+        if next < 0 || next >= count { turned(); _ = turnPast(direction) }
+        else { spread = next }
+    }
     private func place(_ layout: ReaderLayout) {
-        let pagination = Pagination(view: view, layout: layout)
+        let pagination = Pagination(view: view, layout: layout, paper: paper)
         self.pagination = pagination
         let spreads = pagination.spreads(layout)
         let target = switch anchor ?? opening {
@@ -324,6 +348,123 @@ private struct ChapterPages: View {
     }
 }
 
+/// UIKit supplies a flexible sheet on iPhone and a centre-spined spread on iPad.
+/// TextKit remains responsible for pagination and reading anchors.
+private struct CurlPages: UIViewControllerRepresentable {
+    let pagination: Pagination?
+    let layout: ReaderLayout
+    let paper: Paper
+    @Binding var spread: Int
+    let hasPrevious: Bool
+    let hasNext: Bool
+    let tapMiddle: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+    func makeUIViewController(context: Context) -> UIPageViewController {
+        let controller = UIPageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal,
+            options: [.spineLocation: NSNumber(value: layout.columns == 2 ? UIPageViewController.SpineLocation.mid.rawValue : UIPageViewController.SpineLocation.min.rawValue)])
+        controller.isDoubleSided = layout.columns == 2
+        controller.dataSource = context.coordinator
+        controller.delegate = context.coordinator
+        for recognizer in controller.gestureRecognizers where recognizer is UITapGestureRecognizer { recognizer.isEnabled = false }
+        let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tap(_:)))
+        tap.delegate = context.coordinator
+        controller.view.addGestureRecognizer(tap)
+        for direction: UISwipeGestureRecognizer.Direction in [.left, .right] {
+            let swipe = UISwipeGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.swipe(_:)))
+            swipe.direction = direction
+            controller.view.addGestureRecognizer(swipe)
+            context.coordinator.swipes.append(swipe)
+        }
+        return controller
+    }
+    func updateUIViewController(_ controller: UIPageViewController, context: Context) {
+        let coordinator = context.coordinator
+        coordinator.parent = self
+        for recognizer in controller.gestureRecognizers where !(recognizer is UITapGestureRecognizer) { recognizer.isEnabled = !reduceMotion }
+        coordinator.swipes.forEach { $0.isEnabled = reduceMotion }
+        controller.view.backgroundColor = UIColor(paper.background)
+        coordinator.render(controller)
+    }
+
+    final class Leaf: UIHostingController<AnyView> {
+        let index: Int
+        init(index: Int, content: AnyView) { self.index = index; super.init(rootView: content) }
+        @MainActor required dynamic init?(coder: NSCoder) { fatalError() }
+    }
+    final class Coordinator: NSObject, UIPageViewControllerDataSource, UIPageViewControllerDelegate, UIGestureRecognizerDelegate {
+        var parent: CurlPages
+        var pagination: Pagination?
+        var turning = false
+        var swipes: [UISwipeGestureRecognizer] = []
+        init(_ parent: CurlPages) { self.parent = parent }
+        func render(_ controller: UIPageViewController) {
+            guard let nextPagination = parent.pagination, !turning else { return }
+            let changed = pagination !== nextPagination
+            let first = parent.spread * Int(parent.layout.columns)
+            let current = (controller.viewControllers?.first as? Leaf)?.index
+            guard changed || current != first else { return }
+            pagination = nextPagination
+            let leaves = (0..<Int(parent.layout.columns)).map { leaf(first + $0) }
+            turning = true
+            controller.setViewControllers(leaves, direction: first >= (current ?? 0) ? .forward : .reverse,
+                                          animated: !changed && current != nil && !parent.reduceMotion) { [weak self, weak controller] _ in
+                guard let self, let controller else { return }
+                turning = false
+                // A resize or appearance change during the curl must still reach UIKit.
+                render(controller)
+            }
+        }
+        func leaf(_ index: Int) -> Leaf {
+            let content = AnyView(Group {
+                if let pagination, pagination.containers.indices.contains(index) {
+                    PageCanvas(pagination: pagination, page: index)
+                        .frame(width: parent.layout.page_width, height: parent.layout.page_height)
+                } else { Color.clear.frame(width: parent.layout.page_width, height: parent.layout.page_height) }
+            }.frame(maxWidth: .infinity, alignment: parent.layout.columns == 1 ? .center : (index.isMultiple(of: 2) ? .trailing : .leading))
+                .padding(.horizontal, parent.layout.columns == 2 ? parent.layout.gap / 2 : 0)
+                .padding(.top, parent.layout.top)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .background(parent.paper.background))
+            let leaf = Leaf(index: index, content: content)
+            leaf.view.backgroundColor = UIColor(parent.paper.background)
+            return leaf
+        }
+        func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+            guard let index = (viewController as? Leaf)?.index else { return nil }
+            let minimum = parent.hasPrevious ? -Int(parent.layout.columns) : 0
+            return index > minimum ? leaf(index - 1) : nil
+        }
+        func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+            guard let index = (viewController as? Leaf)?.index, let pagination else { return nil }
+            let limit = (pagination.spreads(parent.layout) + (parent.hasNext ? 1 : 0)) * Int(parent.layout.columns)
+            return index + 1 < limit ? leaf(index + 1) : nil
+        }
+        func pageViewController(_ pageViewController: UIPageViewController, willTransitionTo pendingViewControllers: [UIViewController]) { turning = true }
+        func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
+            turning = false
+            guard pagination === parent.pagination else { render(pageViewController); return }
+            guard completed, let index = (pageViewController.viewControllers?.first as? Leaf)?.index else { return }
+            parent.spread = Int(floor(Double(index) / Double(parent.layout.columns)))
+        }
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool { true }
+        private func step(_ direction: Int) {
+            guard !turning, let pagination else { return }
+            let next = parent.spread + direction
+            if next < 0 && !parent.hasPrevious { return }
+            if next >= pagination.spreads(parent.layout) && !parent.hasNext { return }
+            parent.spread = next
+        }
+        @objc func tap(_ recognizer: UITapGestureRecognizer) {
+            guard !turning, let view = recognizer.view else { return }
+            let x = recognizer.location(in: view).x / view.bounds.width
+            if x < 0.3 { step(-1) } else if x > 0.7 { step(1) } else { parent.tapMiddle() }
+        }
+        @objc func swipe(_ recognizer: UISwipeGestureRecognizer) { step(recognizer.direction == .left ? 1 : -1) }
+    }
+}
+
 /// The chapter set as one attributed string and split into page-sized text containers.
 @MainActor private final class Pagination {
     let layoutManager = NSLayoutManager()
@@ -333,7 +474,7 @@ private struct ChapterPages: View {
     private let starts: [Int]
     let lang: String
 
-    init(view: BookReaderView, layout: ReaderLayout) {
+    init(view: BookReaderView, layout: ReaderLayout, paper: Paper) {
         let size = layout.font_size
         let font = Self.serif(size)
         let lineHeight = size * layout.line_height
@@ -346,15 +487,15 @@ private struct ChapterPages: View {
         func append(_ string: String, _ attributes: [NSAttributedString.Key: Any]) {
             text.append(NSAttributedString(string: string, attributes: attributes))
         }
-        append(view.byline + "\n", [.font: Self.serif(size * 0.7), .foregroundColor: Paper.mutedInk,
-                                    .paragraphStyle: style { $0.paragraphSpacing = size * 0.4 }])
+        append(view.byline + "\n", [.font: Self.serif(size * 0.65), .foregroundColor: paper.mutedInk,
+                                    .paragraphStyle: style { $0.alignment = .right; $0.paragraphSpacingBefore = size * 2; $0.paragraphSpacing = view.chapter_title == nil ? size * 3 : size }])
         if let title = view.chapter_title {
-            append(title + "\n", [.font: Self.serif(size * 1.9, weight: .semibold), .foregroundColor: Paper.ink,
-                                  .paragraphStyle: style { $0.lineHeightMultiple = 1.05; $0.paragraphSpacing = 40 }])
+            append(title + "\n", [.font: Self.serif(size * 1.7, weight: .semibold), .foregroundColor: paper.ink,
+                                  .paragraphStyle: style { $0.alignment = .right; $0.lineHeightMultiple = 1.05; $0.paragraphSpacing = size * 3 }])
         }
         // Line height is set exactly, with the glyphs centred in the line as CSS does.
         let body: [NSAttributedString.Key: Any] = [
-            .font: font, .foregroundColor: Paper.ink,
+            .font: font, .foregroundColor: paper.ink,
             .baselineOffset: (lineHeight - font.lineHeight) / 2,
             NSAttributedString.Key(kCTLanguageAttributeName as String): view.lang,
         ]
@@ -371,7 +512,7 @@ private struct ChapterPages: View {
                     $0.firstLineHeadIndent = indented ? size * 1.5 : 0
                 }]) { $1 })
             } else {
-                append("⁂" + (last ? "" : "\n"), body.merging([.foregroundColor: Paper.faintInk, .paragraphStyle: style {
+                append("⁂" + (last ? "" : "\n"), body.merging([.foregroundColor: paper.mutedInk, .paragraphStyle: style {
                     $0.minimumLineHeight = lineHeight; $0.maximumLineHeight = lineHeight
                     $0.alignment = .center
                     $0.paragraphSpacingBefore = lineHeight / 2; $0.paragraphSpacing = lineHeight / 2
@@ -379,7 +520,7 @@ private struct ChapterPages: View {
             }
         }
         if let copyright = view.copyright, view.next == nil {
-            append("\n" + copyright, [.font: Self.serif(size * 0.6), .foregroundColor: Paper.mutedInk,
+            append("\n" + copyright, [.font: Self.serif(size * 0.6), .foregroundColor: paper.mutedInk,
                                       .paragraphStyle: style { $0.alignment = .center; $0.paragraphSpacingBefore = 40 }])
         }
         self.starts = starts
@@ -426,8 +567,6 @@ private struct ChapterPages: View {
 private struct PageCanvas: UIViewRepresentable {
     let pagination: Pagination
     let page: Int
-    /// Redraws when the appearance flips, so the dynamic colours resolve again.
-    let colorScheme: ColorScheme
     func makeUIView(context: Context) -> Canvas { Canvas() }
     func updateUIView(_ canvas: Canvas, context: Context) {
         canvas.pagination = pagination
@@ -458,6 +597,7 @@ private struct PageCanvas: UIViewRepresentable {
 private struct BookContents: View {
     let view: BookReaderView
     let copy: BooksCopy
+    let paper: Paper
     let select: (UInt64) -> Void
     var body: some View {
         NavigationStack {
@@ -468,19 +608,22 @@ private struct BookContents: View {
                             Button { select(chapter.position) } label: {
                                 Text(chapter.title).font(.system(.body, design: .serif))
                                     .fontWeight(chapter.position == view.position.chapter ? .semibold : .regular)
-                                    .foregroundStyle(chapter.enabled ? Color.yapText : Color.yapMuted)
-                            }.disabled(!chapter.enabled)
+                                    .foregroundStyle(chapter.enabled ? paper.text : paper.muted)
+                            }.disabled(!chapter.enabled).listRowBackground(paper.background)
                         }
                     } header: {
                         if let title = part.title { Text(title) }
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(paper.background)
+            .foregroundStyle(paper.text)
             .readableListMargins()
             .navigationTitle(copy.contents)
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .top) {
-                Text(view.author).font(.footnote).foregroundStyle(Color.yapMuted).padding(.bottom, 4)
+                Text(view.author).font(.footnote).foregroundStyle(paper.muted).padding(.bottom, 4)
             }
         }
     }
