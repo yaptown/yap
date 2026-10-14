@@ -121,8 +121,10 @@ extension View {
     /// Pins controls below a scroll view without a hard-edged backdrop, so the
     /// animated background runs unbroken to the bottom of the screen. On iOS 26
     /// the system's soft scroll-edge effect fades content scrolling beneath them.
+    /// It's asked for explicitly: iOS 27's automatic style draws a hard-edged
+    /// frosted slab behind the whole bar instead.
     @ViewBuilder func bottomBar<Bar: View>(@ViewBuilder _ bar: () -> Bar) -> some View {
-        if #available(iOS 26, *) { safeAreaBar(edge: .bottom, spacing: 0, content: bar) }
+        if #available(iOS 26, *) { scrollEdgeEffectStyle(.soft, for: .bottom).safeAreaBar(edge: .bottom, spacing: 0, content: bar) }
         else { safeAreaInset(edge: .bottom, spacing: 0, content: bar) }
     }
 }
