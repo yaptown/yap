@@ -6,11 +6,13 @@ import type { AnkiExportView } from "../../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { APP_STORE_URL, IS_IOS } from "@/lib/ios-app";
 import { saveFile } from "./save-file";
 
 /**
  * What comes after the deck downloads. Signed-in learners are invited into
- * the app; signed-out visitors get one call to action, saving their deck.
+ * the app (the App Store one, on iOS); signed-out visitors get one call to
+ * action, saving their deck.
  * Either way the deck can be saved again or fetched by link.
  */
 export function ExportResult({
@@ -43,14 +45,20 @@ export function ExportResult({
           {signedIn ? view.try_yap_body : view.save_deck_body}
         </Body>
       </div>
-      <Button
-        type="button"
-        size="lg"
-        className="h-11 self-start text-base"
-        onClick={signedIn ? onGoToYap : onSignUp}
-      >
-        {signedIn ? view.try_yap_label : view.sign_up_label}
-      </Button>
+      {signedIn && IS_IOS ? (
+        <Button asChild size="lg" className="h-11 self-start text-base">
+          <a href={APP_STORE_URL}>{t("ios-app-download")}</a>
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          size="lg"
+          className="h-11 self-start text-base"
+          onClick={signedIn ? onGoToYap : onSignUp}
+        >
+          {signedIn ? view.try_yap_label : view.sign_up_label}
+        </Button>
+      )}
       <div className="flex flex-col gap-3 border-t pt-5">
         {signedIn && <p>{view.enjoy_deck}</p>}
         {file && (
