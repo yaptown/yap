@@ -2,5 +2,7 @@ term	realization	matches	good	total	precision	kept	example_failure	example_failu
 对……来说	clitic	5	5	5	1.00	yes		
 对……来说	filled	5	5	5	1.00	yes		
 包在……身上	filled	3	3	3	1.00	yes		
+得个……字	clitic	1	0	1	0.00	no	她把这三个字说得斩钉截铁。	个 … 字 … 得
+得个……字	filled	1	0	1	0.00	no	她把这三个字说得斩钉截铁。	个 … 字 … 得
 非……不可	clitic	1	1	1	1.00	yes		
 非……不可	filled	1	1	1	1.00	yes		

@@ -24,14 +24,12 @@ pub struct TargetSentences {
     /// Film id → the dialect most of its marked sentences belong to (dialect
     /// corpora only), so the app can prefer clips of the course's variety.
     pub movie_varieties: HashMap<String, Language>,
-    /// Sentences that can be used in the app (Anki, Tatoeba, manual, movies, songs)
+    /// Attribution derived alongside the corpus, shared with language-pack assembly.
+    pub books: rustc_hash::FxHashMap<String, language_utils::BookMetadata>,
+    /// Sentences that can be used in the app, including eligible reader-book prose.
     pub app_sentences: Vec<(String, Option<String>, SentenceSource)>,
-    /// Sentences whose only source is book prose. Kept out of `app_sentences` (and thus
-    /// the language packs) for now: the NLP models generate-data relies on were trained
-    /// on the non-book distribution and mislabel book prose. clean-nlp-data DOES include
-    /// these — the gold data it produces is what will retrain the models on book
-    /// distribution. A sentence that also appears in another source stays in
-    /// `app_sentences` (with its `book_ids` intact).
+    /// Legacy training-book-only prose, kept out of packs and included by clean-nlp-data.
+    /// Overlap with a reader book or any other shipping source stays in app_sentences.
     pub book_sentences: Vec<(String, Option<String>, SentenceSource)>,
     /// Restricted sentences (e.g. Pimsleur) — used for frequency/tokenization only, not in the app.
     /// Each entry is (target_sentence, list of lessons it appears in).
@@ -64,6 +62,7 @@ pub fn contains_xprotect_tripwire(s: &str) -> bool {
 /// Cleaned, deduplicated inputs to dialect routing, including manual and books.
 /// Exposed separately for audits that must count requests without submitting them.
 pub struct RoutingCandidates {
+    pub book_catalog: crate::books::BookCatalog,
     pub sentences: Vec<(String, Option<String>, SentenceSource)>,
     pub restricted_sentences: Vec<(String, Vec<PimsleurLesson>)>,
 }
@@ -123,7 +122,14 @@ pub async fn load_routing_candidates(course: Course) -> anyhow::Result<RoutingCa
 
     let movie_sentences = load_movie_sentences(&source_data_path, course.target_language).await?;
 
-    let book_sentences = crate::books::load_book_sentences(&source_data_path)?;
+    let crate::books::BookCorpus {
+        sentences: book_sentences,
+        catalog: book_catalog,
+    } = crate::books::BookCorpus::load(
+        std::path::Path::new("./generate-data/data"),
+        std::path::Path::new("books"),
+        course.target_language,
+    )?;
 
     println!(
         "  Loaded sentences: Anki: {}, Tatoeba: {}, Movies: {}, Books: {}, Manual: {}",
@@ -189,6 +195,7 @@ pub async fn load_routing_candidates(course: Course) -> anyhow::Result<RoutingCa
     }
 
     Ok(RoutingCandidates {
+        book_catalog,
         sentences: result,
         restricted_sentences: load_pimsleur_sentences(&source_data_path, course)?,
     })
@@ -196,6 +203,7 @@ pub async fn load_routing_candidates(course: Course) -> anyhow::Result<RoutingCa
 
 pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSentences> {
     let RoutingCandidates {
+        book_catalog,
         sentences: mut result,
         mut restricted_sentences,
     } = load_routing_candidates(course).await?;
@@ -223,10 +231,9 @@ pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSenten
         );
     }
 
-    // Route books too, before separating them from the app distribution.
-    let (book_sentences, app_sentences): (Vec<_>, Vec<_>) = result
-        .into_iter()
-        .partition(|(_, _, source)| source.is_book_only());
+    // Dialect routing applies to both distributions; only legacy-exclusive prose
+    // stays in the gold pool. Reader provenance is a real shipping source.
+    let (book_sentences, app_sentences) = partition_book_sentences(result, &book_catalog);
 
     println!(
         "  Loaded restricted sentences: Pimsleur: {}",
@@ -234,11 +241,23 @@ pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSenten
     );
 
     Ok(TargetSentences {
+        books: book_catalog.metadata,
         movie_varieties,
         app_sentences,
         book_sentences,
         restricted_sentences,
     })
+}
+
+type SourcedSentence = (String, Option<String>, SentenceSource);
+
+pub(crate) fn partition_book_sentences(
+    sentences: Vec<SourcedSentence>,
+    catalog: &crate::books::BookCatalog,
+) -> (Vec<SourcedSentence>, Vec<SourcedSentence>) {
+    sentences
+        .into_iter()
+        .partition(|(_, _, source)| catalog.is_training_only(source))
 }
 
 /// Explicit film metadata wins; otherwise vote before course filtering.

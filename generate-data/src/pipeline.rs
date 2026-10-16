@@ -965,7 +965,7 @@ pub async fn translate_sentences(
     );
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
-    use futures::StreamExt;
+    use futures::{StreamExt, TryStreamExt};
     let translator_ref = &translator;
     let pb_ref = &pb;
     let all_translations: BTreeMap<String, IndexSet<String>> =
@@ -982,9 +982,9 @@ pub async fn translate_sentences(
                             }
                         }
                         Err(e) => {
-                            eprintln!(
-                                "Error translating sentence '{target_language_sentence}': {e}"
-                            );
+                            crate::translate::report_translation_failure(
+                                e.context(format!("translate {target_language_sentence:?}")),
+                            )?;
                         }
                     };
                     if let Some(native_sentence) = native_sentence {
@@ -997,13 +997,13 @@ pub async fn translate_sentences(
                     translation_set
                         .retain(|t| !crate::target_sentences::contains_xprotect_tripwire(t));
                     pb_ref.inc(1);
-                    (target_language_sentence, translation_set)
+                    anyhow::Ok((target_language_sentence, translation_set))
                 }
             },
         ))
-        .buffered(100)
-        .collect()
-        .await;
+        .buffer_unordered(100)
+        .try_collect()
+        .await?;
 
     pb.finish_with_message(format!(
         "~${:.4} · {} calls",

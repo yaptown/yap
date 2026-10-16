@@ -271,14 +271,20 @@ pub fn should_include_sentence(sentence: &str, language: Language) -> bool {
     // segmenter left joined. The period of a title abbreviation (M. Godefroy,
     // Mrs. Smith) is not a sentence boundary and doesn't count.
     let without_titles = TITLE_ABBREVIATION.replace_all(sentence, "$title$name");
-    // A run like `?!` or `!!!` is one mark, not several sentences.
-    let punct_count = without_titles
-        .chars()
-        .fold((0, false), |(count, in_run), c| {
-            let terminal = matches!(c, '.' | '!' | '?' | '。' | '！' | '？' | '।');
-            (count + usize::from(terminal && !in_run), terminal)
+    // A run like `?!` or `!!!` is one mark, not several sentences, and a mark
+    // closing a quotation (“Stop!” she cried.) ends the quote, not the sentence.
+    let chars: Vec<char> = without_titles.chars().collect();
+    let punct_count = chars
+        .iter()
+        .enumerate()
+        .filter(|&(i, c)| {
+            let terminal = |c: &char| matches!(c, '.' | '!' | '?' | '。' | '！' | '？' | '।');
+            terminal(c)
+                && !chars
+                    .get(i + 1)
+                    .is_some_and(|n| terminal(n) || DOUBLE_QUOTES.contains(n))
         })
-        .0;
+        .count();
 
     if punct_count > 1 {
         return false;
@@ -353,6 +359,12 @@ pub fn has_encoding_corruption(sentence: &str) -> bool {
     })
 }
 
+/// Double quotation marks in every course's typography, treated as one class:
+/// a sentence's quotes balance when it has an even number of them.
+pub const DOUBLE_QUOTES: [char; 13] = [
+    '"', '“', '”', '„', '‟', '«', '»', '‹', '›', '「', '」', '『', '』',
+];
+
 /// Does the text use an apostrophe as a quotation mark — that is, anywhere
 /// other than between two letters?
 pub fn has_quote_apostrophe(text: &str) -> bool {
@@ -376,8 +388,14 @@ pub fn is_proper_sentence(text: &str, language: Language) -> bool {
         return false;
     }
 
-    let first_char = text.chars().next().unwrap();
-    let last_char = text.chars().last().unwrap();
+    // Quoted dialogue and Spanish ¿¡ are checked by the words inside them.
+    let core = text
+        .trim_start_matches(|c: char| DOUBLE_QUOTES.contains(&c) || matches!(c, '¿' | '¡'))
+        .trim_end_matches(DOUBLE_QUOTES)
+        .trim();
+    let (Some(first_char), Some(last_char)) = (core.chars().next(), core.chars().last()) else {
+        return false;
+    };
 
     // Language-specific checks
     match language {
@@ -484,10 +502,13 @@ pub fn is_proper_sentence(text: &str, language: Language) -> bool {
         }
     }
 
-    // Reject sentences with quotation marks (often dialogue or non-standard).
-    // An apostrophe *inside* a word is elision or contraction (c'est, l'ami,
-    // don't) and stays; one at a word edge is a quote and goes.
-    if text.contains(['"', '“', '”', '„']) || has_quote_apostrophe(text) {
+    // Reject unbalanced double quotes (a quotation cut by the segmenter) and
+    // single-quote quotations. An apostrophe *inside* a word is elision or
+    // contraction (c'est, l'ami, don't) and stays; one at a word edge is a
+    // quote and goes.
+    if text.chars().filter(|c| DOUBLE_QUOTES.contains(c)).count() % 2 == 1
+        || has_quote_apostrophe(text)
+    {
         return false;
     }
 
@@ -561,6 +582,30 @@ mod split_tests {
         assert!(!rules[0].course_worthy);
         assert!(!model[0].course_worthy);
         assert_eq!(rules[0].sentence, "Canto # ancora.");
+    }
+
+    #[test]
+    fn balanced_quotes_and_inverted_marks_are_proper() {
+        for (text, language) in [
+            ("¿Qué haces aquí?", Language::SpanishLatinAmerican),
+            ("¡Vamos ya!", Language::SpanishPeninsular),
+            ("“¿Dónde está?”", Language::SpanishLatinAmerican),
+            ("“Hello,” he said.", Language::English),
+            ("“Stop!” she cried.", Language::English),
+            ("«\u{202F}Bonjour\u{202F}», dit-il.", Language::French),
+            ("„Komm her!“, rief er.", Language::German),
+            ("「打て」と言った。", Language::Japanese),
+        ] {
+            assert!(should_include_sentence(text, language), "{text}");
+        }
+        for (text, language) in [
+            ("“Hello, he said.", Language::English),
+            ("Komm her!“", Language::German),
+            ("“Stop!” She left. Then?", Language::English),
+            ("¿qué haces?", Language::SpanishLatinAmerican),
+        ] {
+            assert!(!should_include_sentence(text, language), "{text}");
+        }
     }
 
     #[test]

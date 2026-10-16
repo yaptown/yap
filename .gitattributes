@@ -62,6 +62,9 @@ generate-data/data/*/sentence-sources/pimsleur/** filter=git-crypt diff=git-cryp
 generate-data/data/*/sentence-sources/books/** filter=git-crypt diff=git-crypt
 generate-data/data/*/sentence-sources/books/**/metadata.jsonl -filter -diff
 
+# Reader public-domain prose stays plaintext. Only Mistress is copyrighted.
+generate-data/data/*/sentence-sources/reader-books/mistress-of-the-waves.jsonl filter=git-crypt diff=git-crypt
+
 # Encrypted secrets
 secrets/** filter=git-crypt diff=git-crypt
 

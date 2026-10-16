@@ -368,8 +368,8 @@ pub struct SentenceSource {
     pub from_manual: bool,
     /// Sentence came from a song in sentence-sources/songs/
     pub from_song: bool,
-    /// Book slugs if this sentence came from translated/segmented books in
-    /// sentence-sources/books/ (e.g. ["pale-lights"]; serde default so data
+    /// Book slugs from training books/ or shipping reader-books/ corpora
+    /// (e.g. ["pale-lights"]; serde default so data
     /// written before this field existed still loads)
     #[serde(default)]
     pub book_ids: Vec<String>,
@@ -583,8 +583,9 @@ impl From<MovieMetadataBasic> for MovieMetadata {
 
 /// Metadata for a book used as a sentence source, keyed by the slug that
 /// appears in [`SentenceSource::book_ids`]. Stored per language in
-/// `sentence-sources/books/<series>/metadata.jsonl` (one line per book in the
-/// series) and carried into the language pack for attribution display.
+/// `sentence-sources/books/<series>/metadata.jsonl` for training books; reader
+/// attribution is derived from canonical Book sources or manuscript metadata.
+/// Both are carried into the language pack for attribution display.
 #[bridgerton::bridge(transparent)]
 #[derive(
     Clone,
@@ -602,8 +603,8 @@ impl From<MovieMetadataBasic> for MovieMetadata {
 pub struct BookMetadata {
     /// Book slug, e.g. "pale-lights"
     pub id: String,
-    /// Series slug — the folder the book lives in under sentence-sources/books/
-    /// (e.g. "pale-lights"; a standalone book is a one-book series)
+    /// Series slug (the training-corpus folder); a standalone reader book uses
+    /// its own book slug as a one-book series.
     pub series: String,
     /// Book title (kept in the original language even for translated courses)
     pub title: String,

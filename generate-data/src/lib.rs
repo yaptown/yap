@@ -184,6 +184,7 @@ mod pronunciation_whisper;
 pub mod pronunciations;
 pub mod proper_noun_definitions;
 pub mod read_anki;
+pub mod reader_book_sentences;
 pub mod reader_books;
 pub mod sense_redundancy;
 pub mod slot_analysis;

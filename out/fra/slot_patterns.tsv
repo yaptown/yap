@@ -1,42 +1,43 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-dire quelque chose	filled	9334	11	12	0.92	yes	Qu'est-ce que ça veut dire exactement ?	Qu' … dire
-dire quelque chose	clitic	2393	12	12	1.00	yes		
-sa mère	clitic	2129	12	12	1.00	yes		
-sortir quelque chose	filled	685	6	12	0.50	no	A-t-on une chance de faire sortir Bohr du Danemark ?	sortir … Bohr
-arriver à quelqu'un	filled	606	6	12	0.50	no	Alors que le procès du siècle arrive finalement à son terme.	arrive … à … terme
-arriver à quelqu'un	clitic	544	12	12	1.00	yes		
-sortir quelque chose	clitic	350	8	12	0.67	yes	Comment vas-tu t'en sortir sans boulot ?	t' … sortir
-désolé de faire quelque chose	infinitive	247	12	12	1.00	yes		
-ravi de faire quelque chose	infinitive	204	12	12	1.00	yes		
-faire de son mieux	clitic	156	12	12	1.00	yes		
-sa mère	filled	130	11	12	0.92	yes	La grand-mère de Tom est décédée.	mère … Tom
+dire quelque chose	filled	9600	11	12	0.92	yes	T'a-t-il dit pourquoi il l'a fait ?	T' … dit
+dire quelque chose	clitic	2429	10	12	0.83	yes	Ne les laisse pas te dire que tu es folle.	te … dire
+sa mère	clitic	2137	12	12	1.00	yes		
+sortir quelque chose	filled	706	9	12	0.75	yes	Et ils savent aussi que vous êtes capable de tout pour vous en sortir.	vous … sortir
+arriver à quelqu'un	filled	618	6	12	0.50	no	Dan est arrivé à la deuxième place à la course.	arrivé … à … place
+arriver à quelqu'un	clitic	554	12	12	1.00	yes		
+sortir quelque chose	clitic	354	8	12	0.67	yes	Comment va-t-on s'en sortir ?	s' … sortir
+désolé de faire quelque chose	infinitive	250	12	12	1.00	yes		
+ravi de faire quelque chose	infinitive	214	12	12	1.00	yes		
+faire de son mieux	clitic	157	12	12	1.00	yes		
+sa mère	filled	131	10	12	0.83	yes	J'ai la meilleure mère du monde !	mère … monde
 bien dans ses baskets	clitic	91	0	12	0.00	no	C'est la seconde fois que je te reprends mon bien.	mon … bien
-but contre son camp	clitic	66	0	12	0.00	no	Ainsi c'est là votre but, entrer dans la montagne.	votre … but
-prendre son temps	clitic	58	12	12	1.00	yes		
+but contre son camp	clitic	67	0	12	0.00	no	Ainsi c'est là votre but, entrer dans la montagne.	votre … but
+prendre son temps	clitic	59	12	12	1.00	yes		
 faire son possible	clitic	49	12	12	1.00	yes		
-y être pour quelque chose	filled	35	10	12	0.83	yes	Elle y était pour lui, son fiancé était via Tasso.	y … était … pour … lui
-enchanté de faire quelque chose	infinitive	33	12	12	1.00	yes		
+y être pour quelque chose	filled	37	11	12	0.92	yes	J'y suis pour l'argent !	y … suis … pour … argent
+enchanté de faire quelque chose	infinitive	34	11	12	0.92	yes	Cela m'enchante de vous voir.	enchante … de … voir
 donner sa parole	clitic	31	12	12	1.00	yes		
 faire ses valises	clitic	30	12	12	1.00	yes		
 dans son monde	filled	25	1	12	0.08	no	Bienvenue dans le monde à l'intérieur du tableau.	dans … monde … intérieur
-mettre dans sa poche	clitic	22	12	12	1.00	yes		
-faire son lit	clitic	21	12	12	1.00	yes		
+mettre dans sa poche	clitic	23	12	12	1.00	yes		
+faire son lit	clitic	20	12	12	1.00	yes		
 garder son calme	clitic	19	12	12	1.00	yes		
 sur ses gardes	clitic	19	12	12	1.00	yes		
-dans son monde	clitic	17	3	12	0.25	no	Bienvenue dans mon monde.	dans … mon … monde
-mettre fin à ses jours	filled	17	2	12	0.17	no	Et cela aurait également contribué à mettre fin à la guerre.	mettre … fin … à … guerre
-ouvrir ses portes	filled	15	0	12	0.00	no	Ce mariage ouvrira la porte de votre prison.	ouvrira … porte … prison
-régler ses comptes	clitic	15	4	12	0.33	no	Il aurait dû venir pour le premier défi, on lui aurait réglé son compte.	réglé … son … compte
-régler son compte	clitic	15	12	12	1.00	yes		
+dans son monde	clitic	18	11	12	0.92	yes	Les étrangers rentrèrent dans leur monde agonisant.	dans … leur … monde
+mettre fin à ses jours	filled	18	3	12	0.25	no	"Le moment est venu de mettre fin à notre liaison."	mettre … fin … à … liaison
+ouvrir ses portes	filled	17	0	12	0.00	no	Ce mariage ouvrira la porte de votre prison.	ouvrira … porte … prison
+régler ses comptes	clitic	16	12	12	1.00	yes		
+régler son compte	clitic	16	12	12	1.00	yes		
 tirer quelque chose au clair	filled	15	12	12	1.00	yes		
+dans son coin	clitic	13	10	12	0.83	yes	Pas dans mon coin.	dans … mon … coin
 faire son affaire	clitic	13	5	12	0.42	no	Alors comme ça au premier coup d’œil Vous faites pas mon affaire.	faites … mon … affaire
+lever son verre	clitic	12	12	12	1.00	yes		
 perdre son chemin	clitic	12	12	12	1.00	yes		
 avoir ses règles	filled	11	0	11	0.00	no	Avec ce qu'il avait bu, il était excité.	ce … avait
-dans son coin	clitic	11	9	11	0.82	yes	Pas dans mon coin.	dans … mon … coin
 faire sa B.A.	filled	11	0	11	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
 faire son apparition	filled	11	0	11	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
 faire son entrée	filled	11	0	11	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
-lever son verre	clitic	11	11	11	1.00	yes		
+prendre son parti	clitic	11	4	11	0.36	no	J'ai décidé de prendre son parti contre les autres.	prendre … son … parti
 être victime de son succès	filled	11	0	11	0.00	no	Ce criminel est une victime de ses gènes.	est … victime … de … gènes
 avoir son compte	clitic	9	9	9	1.00	yes		
 dans son coin	filled	9	0	9	0.00	no	Aujourd'hui, je veux te baiser dans chaque coin de cette pièce.	dans … coin … pièce
@@ -47,23 +48,24 @@ faire son possible	filled	9	9	9	1.00	yes
 avoir son compte	filled	8	1	8	0.12	no	Avons-nous le compte des prisonniers ?	Avons … compte … prisonniers
 avoir son mot à dire	clitic	8	8	8	1.00	yes		
 dans son ensemble	clitic	8	8	8	1.00	yes		
+passer son chemin	clitic	8	8	8	1.00	yes		
 passer son tour	clitic	8	8	8	1.00	yes		
-prendre son parti	clitic	8	1	8	0.12	no	J'ai décidé de prendre son parti contre les autres.	prendre … son … parti
 heureux de faire quelque chose	infinitive	7	7	7	1.00	yes		
-passer son chemin	clitic	7	7	7	1.00	yes		
 de son propre chef	clitic	6	6	6	1.00	yes		
 creuser sa tombe	clitic	5	5	5	1.00	yes		
+faire ses comptes	clitic	5	5	5	1.00	yes		
+faire son compte	clitic	5	2	5	0.40	no	Est-ce que tu ne fais pas tes comptes aujourd'hui ?	fais … tes … comptes
 le bonjour de quelqu'un	filled	5	4	5	0.80	yes	Le premier bonjour de la journée vient toujours de lui.	Le … bonjour … de … journée
 mettre tous ses œufs dans le même panier	clitic	5	5	5	1.00	yes		
+ne pas en croire ses oreilles	clitic	5	5	5	1.00	yes		
+ne pas en croire ses yeux	clitic	5	5	5	1.00	yes		
 payer de sa vie	clitic	5	5	5	1.00	yes		
 porter dans son cœur	clitic	5	4	5	0.80	yes	Mais nous portons des armes dans nos cœurs.	portons … dans … nos … cœurs
 refaire sa vie	clitic	5	5	5	1.00	yes		
 avoir fait son temps	clitic	4	4	4	1.00	yes		
 faire savoir quelque chose à quelqu’un	clitic	4	4	4	1.00	yes		
-faire ses comptes	clitic	4	2	4	0.50	no	Comment avons-nous fait notre compte pour ne pas le voir ?	fait … notre … compte
-faire son compte	clitic	4	2	4	0.50	no	Est-ce que tu ne fais pas tes comptes aujourd'hui ?	fais … tes … comptes
-ne pas en croire ses oreilles	clitic	4	4	4	1.00	yes		
-ne pas en croire ses yeux	clitic	4	4	4	1.00	yes		
+mettre de l'eau dans son vin	clitic	4	4	4	1.00	yes		
+ouvrir ses portes	clitic	4	1	4	0.25	no	Maintenant ouvrez votre porte que nous puissions vous parler.	ouvrez … votre … porte
 prendre sous son aile	clitic	4	4	4	1.00	yes		
 prunelle de ses yeux	clitic	4	4	4	1.00	yes		
 tremper son biscuit	clitic	4	0	4	0.00	no	Tom a trempé son biscuit dans son lait.	trempé … son … biscuit
@@ -74,11 +76,10 @@ cacher sa joie	clitic	3	3	3	1.00	yes
 donner sa parole	filled	3	3	3	1.00	yes		
 finir ses jours	clitic	3	3	3	1.00	yes		
 garder son sang-froid	clitic	3	3	3	1.00	yes		
-mettre de l'eau dans son vin	clitic	3	3	3	1.00	yes		
 mettre son grain de sel	clitic	3	3	3	1.00	yes		
-ouvrir ses portes	clitic	3	1	3	0.33	no	Maintenant ouvrez votre porte que nous puissions vous parler.	ouvrez … votre … porte
 poser ses valises	clitic	3	0	3	0.00	no	J'ai posé ma valise.	posé … ma … valise
 prendre son temps	filled	3	0	3	0.00	no	Maman a pris le temps hors du travail.	pris … temps … travail
+rendre la monnaie de sa pièce	clitic	3	3	3	1.00	yes		
 retrousser ses manches	clitic	3	3	3	1.00	yes		
 sûr de son coup	clitic	3	3	3	1.00	yes		
 tomber de sa chaise	clitic	3	3	3	1.00	yes		
@@ -91,6 +92,7 @@ attendre son heure	clitic	2	2	2	1.00	yes
 casser sa pipe	clitic	2	2	2	1.00	yes		
 de son choix	filled	2	0	2	0.00	no	Le magasin dispose d'un grand choix de vins.	d' … choix … vins
 faire ses dents	clitic	2	2	2	1.00	yes		
+faire son affaire	filled	2	1	2	0.50	no	Il fit des affaires en or et se fit plein d’amis.	fit … affaires … or
 faire son beurre	clitic	2	2	2	1.00	yes		
 faire son chemin	clitic	2	1	2	0.50	no	Elle a fait son chemin jusqu'ici dans un navire anglais.	fait … son … chemin
 faire son maximum	clitic	2	2	2	1.00	yes		
@@ -103,6 +105,7 @@ signer son arrêt de mort	clitic	2	2	2	1.00	yes
 tisser sa toile	clitic	2	0	2	0.00	no	As-tu déjà vu une araignée tisser sa toile ?	tisser … sa … toile
 à sa sauce	clitic	2	2	2	1.00	yes		
 aller son chemin	clitic	1	1	1	1.00	yes		
+attendre son heure	filled	1	0	1	0.00	no	Là, elle passera la nuit en attendant l'heure du sacrifice.	attendant … heure … sacrifice
 avoir plus d'une corde à son arc	clitic	1	1	1	1.00	yes		
 avoir ses entrées	clitic	1	1	1	1.00	yes		
 bien porter son nom	clitic	1	1	1	1.00	yes		
@@ -114,12 +117,12 @@ en avance sur son temps	clitic	1	1	1	1.00	yes
 en avoir sa dose	clitic	1	1	1	1.00	yes		
 faire ses armes	filled	1	0	1	0.00	no	On y fait les armes les plus puissantes de tout l'univers.	fait … armes … univers
 faire ses classes	clitic	1	1	1	1.00	yes		
-faire son affaire	filled	1	1	1	1.00	yes		
 faire son intéressant	clitic	1	1	1	1.00	yes		
 faire son marché	clitic	1	1	1	1.00	yes		
 faire son maximum	filled	1	1	1	1.00	yes		
 faire son retour	clitic	1	1	1	1.00	yes		
 l'heure de quelqu'un viendra	filled	1	0	1	0.00	no	Voici venue pour vous l'heure de vérité.	venue … l' … heure … de … vérité
+lever son verre	filled	1	1	1	1.00	yes		
 manger à sa faim	clitic	1	0	1	0.00	no	Son manger, ses habits, c'est vous qui payez.	Son … manger
 mettre dans sa poche	filled	1	0	1	0.00	no	Vous mettez les mains dans les poches de Dieu ?	mettez … dans … poches … Dieu
 mettre sa main au feu	filled	1	0	1	0.00	no	J'ai envie de tous leur mettre des droites dans la face.	tous … mettre
@@ -136,10 +139,10 @@ prendre son parti	filled	1	1	1	1.00	yes
 prendre son élan	clitic	1	1	1	1.00	yes		
 péter plus haut que son cul	clitic	1	1	1	1.00	yes		
 recharger ses batteries	clitic	1	1	1	1.00	yes		
-rendre la monnaie de sa pièce	clitic	1	1	1	1.00	yes		
 régler ses comptes	filled	1	0	1	0.00	no	Je règle les comptes de la Famille.	règle … comptes … Famille
 régler son compte	filled	1	0	1	0.00	no	Je règle les comptes de la Famille.	règle … comptes … Famille
 son compte est bon	clitic	1	1	1	1.00	yes		
 sur son trente-et-un	clitic	1	1	1	1.00	yes		
 tirer son plan	filled	1	0	1	0.00	no	Tu es en train de tirer des plans sur la comète.	tirer … plans … comète
 trouver son bonheur	filled	1	0	1	0.00	no	Elle a trouvé un porte-monnaie dans la rue.	trouvé … porte
+unique en son genre	clitic	1	0	1	0.00	no	"Mon unique, je te souhaite un bon anniversaire."	Mon … unique

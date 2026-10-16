@@ -23,7 +23,10 @@ use generate_data::translate::{TranslationBackend, Translator};
 struct CourseWarmup {
     course: Course,
     loaded: tokio::task::JoinHandle<
-        anyhow::Result<(TargetSentences, tokio::task::JoinHandle<Translator>)>,
+        anyhow::Result<(
+            TargetSentences,
+            tokio::task::JoinHandle<anyhow::Result<Translator>>,
+        )>,
     >,
 }
 
@@ -159,14 +162,14 @@ async fn main() -> anyhow::Result<()> {
                 .await
                 .context("Failed to create translator")?;
                 let translator = tokio::spawn(async move {
-                    translator.prime(&targets).await;
+                    translator.prime(&targets).await?;
                     println!(
                         "translations {} → {}: cache warmup complete (~${:.4})",
                         course.target_language.iso_639_1(),
                         course.native_language.iso_639_1(),
                         translator.cost_estimate_usd(),
                     );
-                    translator
+                    anyhow::Ok(translator)
                 });
                 anyhow::Ok((sentence_corpus, translator))
             });
@@ -219,7 +222,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
         let translator = translator
             .await
-            .context("Translation cache warmup task failed")?;
+            .context("Translation cache warmup task failed")??;
         let translations_map =
             generate_data::pipeline::translate_sentences(course, &sentence_corpus, translator)
                 .await
@@ -1548,40 +1551,8 @@ async fn main() -> anyhow::Result<()> {
             movies
         };
 
-        // Load book metadata (attribution for book-sourced sentences, incl. the
-        // machine-translated flag) from each series folder's metadata.jsonl
-        let books = {
-            let books_dir = source_data_path.join("sentence-sources/books");
-            let mut books = FxHashMap::default();
-            if books_dir.exists() {
-                for series_entry in
-                    std::fs::read_dir(&books_dir).context("Failed to read books directory")?
-                {
-                    let series_dir = series_entry?.path();
-                    let metadata_file = series_dir.join("metadata.jsonl");
-                    if !series_dir.is_dir() || !metadata_file.exists() {
-                        continue;
-                    }
-                    let content = std::fs::read_to_string(&metadata_file)
-                        .context("Failed to read book metadata file")?;
-                    for line in content.lines().filter(|l| !l.trim().is_empty()) {
-                        let book: language_utils::BookMetadata =
-                            serde_json::from_str(line).context("Failed to parse book metadata")?;
-                        anyhow::ensure!(
-                            series_dir
-                                .file_name()
-                                .is_some_and(|n| *n == *book.series.as_str()),
-                            "book {:?} declares series {:?} but lives in {}",
-                            book.id,
-                            book.series,
-                            series_dir.display()
-                        );
-                        books.insert(book.id.clone(), book);
-                    }
-                }
-            }
-            books
-        };
+        // The corpus loader derives reader attribution and loads legacy metadata once.
+        let books = sentence_corpus.books;
         // Sentence sources come straight from sourcing (deduplicated by
         // text, last source wins, matching the written sentence_sources.jsonl).
         let sentence_sources: Vec<(String, language_utils::SentenceSource)> = sentence_corpus
@@ -1596,7 +1567,7 @@ async fn main() -> anyhow::Result<()> {
                 anyhow::ensure!(
                     books.contains_key(book_id),
                     "sentence source references book {book_id:?} with no entry in \
-                     sentence-sources/books/metadata.jsonl"
+                     the loaded book catalog"
                 );
             }
         }

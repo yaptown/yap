@@ -5,7 +5,7 @@ use std::{collections::BTreeMap, path::PathBuf};
 use anyhow::{Context, ensure};
 use clap::Parser;
 use futures::{StreamExt, future::BoxFuture};
-use generate_data::cache_remote;
+use generate_data::{cache_remote, reader_books::ManuscriptMetadata};
 use language_utils::{
     COURSES, Language,
     book::{Book, BookChapter, BookParagraph},
@@ -37,29 +37,30 @@ fn excluded_cover_credit(line: &str) -> bool {
     .contains(&line)
 }
 
-fn parse_source(text: &str) -> anyhow::Result<Book> {
+fn parse_source(text: &str, slug: &str, metadata: &ManuscriptMetadata) -> anyhow::Result<Book> {
     let mut book = Book {
-        slug: "mistress-of-the-waves".into(),
-        title: "Mistress of the Waves".into(),
-        author: "George Phillies".into(),
-        original_language: "eng".into(),
+        slug: slug.into(),
+        title: metadata.title.clone(),
+        author: metadata.author.clone(),
+        original_language: metadata.original_language.clone(),
         copyright: None,
         chapters: vec![BookChapter {
             position: 0,
             part: None,
-            language: "eng".into(),
+            language: metadata.original_language.clone(),
             title: "Front matter".into(),
             machine_translated: false,
             paragraphs: vec![],
         }],
     };
+    let byline = format!("By {}", metadata.author);
     let mut part = None;
     let mut chapter = 0;
     for line in text.lines().map(str::trim).filter(|l| !l.is_empty()) {
         if excluded_cover_credit(line)
             || line.starts_with("HYPERLINK ")
             || line == book.title
-            || line == "By George Phillies"
+            || line == byline
         {
             continue;
         }
@@ -83,7 +84,7 @@ fn parse_source(text: &str) -> anyhow::Result<Book> {
             book.chapters.push(BookChapter {
                 position: book.chapters.len(),
                 part: part.clone(),
-                language: "eng".into(),
+                language: metadata.original_language.clone(),
                 title: line.into(),
                 machine_translated: false,
                 paragraphs: vec![],
@@ -92,7 +93,7 @@ fn parse_source(text: &str) -> anyhow::Result<Book> {
             book.chapters.push(BookChapter {
                 position: book.chapters.len(),
                 part: None,
-                language: "eng".into(),
+                language: metadata.original_language.clone(),
                 title: line.into(),
                 machine_translated: false,
                 paragraphs: vec![],
@@ -319,7 +320,11 @@ async fn main() -> anyhow::Result<()> {
                     "textutil failed: {}",
                     String::from_utf8_lossy(&output.stderr)
                 );
-                parse_source(std::str::from_utf8(&output.stdout)?)?
+                parse_source(
+                    std::str::from_utf8(&output.stdout)?,
+                    &entry.slug,
+                    &entry.manuscript_metadata()?,
+                )?
             } else {
                 serde_json::from_slice(&std::fs::read(entry.directory.join("source.json"))?)?
             };
@@ -352,7 +357,7 @@ async fn main() -> anyhow::Result<()> {
                             .values()
                             .copied()
                             .filter(|l| {
-                                l.code() != "eng"
+                                l.code() != source.original_language
                                     && args.only.as_ref().is_none_or(|only| only == l.code())
                             })
                             .map(|language| build_chapters(source, language, client, out)),
@@ -458,6 +463,12 @@ async fn build_teasers(
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn manuscript_metadata() -> ManuscriptMetadata {
+        serde_json::from_str(include_str!(
+            "../../../books/mistress-of-the-waves/metadata.json"
+        ))
+        .unwrap()
+    }
     #[test]
     fn teaser_uses_only_bounded_opening_prose() {
         let mut book = Book {
@@ -507,7 +518,39 @@ mod tests {
             ));
         }
         text.push_str("\u{c}About Goddard\nFinal paragraph\n");
-        let book = parse_source(&text).unwrap();
+        let book = parse_source(&text, "mistress-of-the-waves", &manuscript_metadata()).unwrap();
+        assert_eq!(book.title, "Mistress of the Waves");
+        assert_eq!(book.author, "George Phillies");
+        assert_eq!(book.original_language, "eng");
+        assert_eq!(
+            book.copyright.as_deref(),
+            Some("Text copyright© 2012 George D. J. Phillies\nAll Rights Reserved")
+        );
+        let metadata = ManuscriptMetadata {
+            translate: true,
+            title: "Fixture title".into(),
+            author: "Fixture author".into(),
+            original_language: "fra".into(),
+        };
+        let fixture = text
+            .replace("Mistress of the Waves", "Fixture title")
+            .replace("By George Phillies", "By Fixture author");
+        let configured = parse_source(&fixture, "fixture-slug", &metadata).unwrap();
+        assert_eq!(configured.slug, "fixture-slug");
+        assert_eq!(configured.title, metadata.title);
+        assert_eq!(configured.author, metadata.author);
+        assert_eq!(configured.original_language, "fra");
+        assert!(
+            configured
+                .chapters
+                .iter()
+                .all(|chapter| chapter.language == "fra")
+        );
+        assert_eq!(configured.copyright, book.copyright);
+        assert_eq!(
+            configured.chapters[0].paragraphs,
+            book.chapters[0].paragraphs
+        );
         assert_eq!(book.chapters.len(), 35);
         assert_eq!(book.chapters[13].part.as_deref(), Some("Part II"));
         assert_eq!(book.chapters[23].part.as_deref(), Some("Part III"));
@@ -517,7 +560,14 @@ mod tests {
             book.chapters[34].paragraphs,
             vec![BookParagraph::Paragraph("Final paragraph".into())]
         );
-        assert!(parse_source(&text.replace(" Chapter 7 \n", "")).is_err());
+        assert!(
+            parse_source(
+                &text.replace(" Chapter 7 \n", ""),
+                "mistress-of-the-waves",
+                &manuscript_metadata()
+            )
+            .is_err()
+        );
     }
     #[test]
     fn real_manuscript_is_complete() {
@@ -534,13 +584,14 @@ mod tests {
             .unwrap();
         assert!(output.status.success());
         let text = std::str::from_utf8(&output.stdout).unwrap();
-        let book = parse_source(text).unwrap();
+        let book = parse_source(text, "mistress-of-the-waves", &manuscript_metadata()).unwrap();
         let input: Vec<_> = text
             .lines()
             .map(str::trim)
             .filter(|l| !l.is_empty() && !l.starts_with("HYPERLINK ") && !excluded_cover_credit(l))
             .collect();
-        let mut recovered = vec![book.title.as_str(), "By George Phillies"];
+        let byline = format!("By {}", book.author);
+        let mut recovered = vec![book.title.as_str(), byline.as_str()];
         recovered.extend(book.copyright.as_deref().unwrap().lines());
         let mut previous_part = None;
         for section in &book.chapters {
@@ -568,7 +619,14 @@ mod tests {
                 .count(),
             43
         );
-        assert!(parse_source(&text.replace("Chapter 33", "Missing 33")).is_err());
+        assert!(
+            parse_source(
+                &text.replace("Chapter 33", "Missing 33"),
+                "mistress-of-the-waves",
+                &manuscript_metadata()
+            )
+            .is_err()
+        );
     }
     #[test]
     fn course_languages_include_dialects() {

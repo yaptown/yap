@@ -1,14 +1,19 @@
-//! Shared source discovery for the book builder and publisher.
+//! Canonical reader sources and manuscript metadata, shared by publishing and corpora.
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, ensure};
-use language_utils::book::Book;
+use language_utils::{
+    BookMetadata, Language,
+    book::{Book, BookChapter, BookParagraph},
+};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-struct BuildOptions {
-    /// Manuscripts are translated; canonical public-domain books retain their original edition.
-    translate: bool,
+pub struct ManuscriptMetadata {
+    pub translate: bool,
+    pub title: String,
+    pub author: String,
+    pub original_language: String,
 }
 
 pub struct Source {
@@ -25,7 +30,7 @@ pub fn discover(root: &Path) -> anyhow::Result<Vec<Source>> {
         let translate = if directory.join("source.json").is_file() {
             false
         } else if options.is_file() {
-            serde_json::from_slice::<BuildOptions>(&std::fs::read(options)?)?.translate
+            serde_json::from_slice::<ManuscriptMetadata>(&std::fs::read(options)?)?.translate
         } else {
             continue;
         };
@@ -54,6 +59,69 @@ impl Source {
         self.directory.join("build")
     }
 
+    pub fn manuscript_metadata(&self) -> anyhow::Result<ManuscriptMetadata> {
+        Ok(serde_json::from_slice(&std::fs::read(
+            self.directory.join("metadata.json"),
+        )?)?)
+    }
+
+    fn read_original(&self) -> anyhow::Result<Book> {
+        let book: Book =
+            serde_json::from_slice(&std::fs::read(self.directory.join("source.json"))?)?;
+        self.validate(&book)?;
+        Ok(book)
+    }
+
+    fn built_languages(&self) -> anyhow::Result<Vec<Language>> {
+        let mut languages = vec![];
+        for entry in std::fs::read_dir(self.build())? {
+            let path = entry?.path();
+            if path.is_dir() {
+                languages.push(
+                    Language::from_code(path.file_name().unwrap().to_str().unwrap())
+                        .context("unknown reader edition directory")?,
+                );
+            }
+        }
+        languages.sort_by_key(|language| language.code());
+        Ok(languages)
+    }
+
+    fn built_chapters(&self, language: Language) -> anyhow::Result<Vec<BookChapter>> {
+        let directory = self.build().join(language.code());
+        if !directory.is_dir() {
+            return Ok(vec![]);
+        }
+        let mut chapters = vec![];
+        for entry in std::fs::read_dir(directory)? {
+            let path = entry?.path();
+            if path
+                .extension()
+                .is_some_and(|extension| extension == "json")
+            {
+                chapters.push(serde_json::from_slice::<BookChapter>(&std::fs::read(
+                    path,
+                )?)?);
+            }
+        }
+        chapters.sort_by_key(|chapter| chapter.position);
+        ensure!(
+            chapters
+                .windows(2)
+                .all(|pair| pair[0].position < pair[1].position),
+            "duplicate reader chapter positions: {}",
+            self.slug
+        );
+        ensure!(
+            chapters
+                .iter()
+                .all(|chapter| chapter.language == language.code()),
+            "reader edition language mismatch: {}",
+            self.slug
+        );
+        Ok(chapters)
+    }
+
     pub fn validate(&self, book: &Book) -> anyhow::Result<()> {
         ensure!(
             book.slug == self.slug,
@@ -73,6 +141,133 @@ impl Source {
         }
         Ok(())
     }
+}
+
+pub struct Edition {
+    pub language: Language,
+    pub metadata: BookMetadata,
+    pub chapters: Vec<BookChapter>,
+}
+
+impl Edition {
+    pub fn slug(&self) -> &str {
+        &self.metadata.id
+    }
+    /// Keep source positions, including skipped scene-break slots.
+    pub fn paragraphs(&self) -> impl Iterator<Item = (usize, usize, &str)> {
+        self.chapters.iter().flat_map(|chapter| {
+            chapter
+                .paragraphs
+                .iter()
+                .enumerate()
+                .filter_map(move |(index, paragraph)| match paragraph {
+                    BookParagraph::Paragraph(text) => {
+                        Some((chapter.position, index, text.as_str()))
+                    }
+                    BookParagraph::SceneBreak => None,
+                })
+        })
+    }
+}
+
+/// Segmentation needs manuscript chapter text. Attribution alone never needs builds.
+pub fn load_editions(root: &Path, only: Option<Language>) -> anyhow::Result<Vec<Edition>> {
+    let mut editions = vec![];
+    for source in discover(root)? {
+        if source.translate {
+            let info = source.manuscript_metadata()?;
+            let languages = if let Some(language) = only {
+                vec![language]
+            } else {
+                source.built_languages()?
+            };
+            for language in languages {
+                let chapters = source.built_chapters(language)?;
+                if !chapters.is_empty() {
+                    editions.push(Edition {
+                        language,
+                        metadata: metadata(
+                            &source.slug,
+                            &info.title,
+                            &info.author,
+                            &info.original_language,
+                            language,
+                        )?,
+                        chapters,
+                    });
+                }
+            }
+        } else {
+            let book = source.read_original()?;
+            let language = Language::from_code(&book.original_language)
+                .context("unknown original book language")?;
+            if only.is_none_or(|only| only == language) {
+                editions.push(Edition {
+                    language,
+                    metadata: metadata(
+                        &source.slug,
+                        &book.title,
+                        &book.author,
+                        &book.original_language,
+                        language,
+                    )?,
+                    chapters: book.chapters,
+                });
+            }
+        }
+    }
+    Ok(editions)
+}
+
+fn metadata(
+    slug: &str,
+    title: &str,
+    author: &str,
+    original_language: &str,
+    edition_language: Language,
+) -> anyhow::Result<BookMetadata> {
+    let original =
+        Language::from_code(original_language).context("unknown original reader language")?;
+    Ok(BookMetadata {
+        id: slug.into(),
+        series: slug.into(),
+        title: title.into(),
+        author: author.into(),
+        original_language: Some(original.iso_639_1().into()),
+        machine_translated: edition_language != original,
+        translator: None,
+        source_url: None,
+    })
+}
+
+/// PD attribution comes only from source.json; manuscript attribution comes only
+/// from metadata.json. Translations are editions in a different language from the original.
+pub fn load_catalog(root: &Path, language: Language) -> anyhow::Result<Vec<BookMetadata>> {
+    let mut catalog = vec![];
+    for source in discover(root)? {
+        if source.translate {
+            let info = source.manuscript_metadata()?;
+            catalog.push(metadata(
+                &source.slug,
+                &info.title,
+                &info.author,
+                &info.original_language,
+                language,
+            )?);
+        } else {
+            let book = source.read_original()?;
+            if book.original_language == language.code() {
+                catalog.push(metadata(
+                    &source.slug,
+                    &book.title,
+                    &book.author,
+                    &book.original_language,
+                    language,
+                )?);
+            }
+        }
+    }
+    Ok(catalog)
 }
 
 #[cfg(test)]
@@ -135,6 +330,23 @@ mod tests {
     }
 
     #[test]
+    fn reader_metadata_loads_without_ignored_builds() {
+        let root = tempfile::tempdir().unwrap();
+        let directory = root.path().join("manuscript");
+        std::fs::create_dir(&directory).unwrap();
+        std::fs::write(directory.join("metadata.json"),r#"{"translate":true,"title":"Original title","author":"Original author","original_language":"eng"}"#).unwrap();
+        let english = load_catalog(root.path(), Language::English).unwrap();
+        let french = load_catalog(root.path(), Language::French).unwrap();
+        assert_eq!(english[0].title, "Original title");
+        assert_eq!(english[0].author, "Original author");
+        assert_eq!(english[0].original_language.as_deref(), Some("en"));
+        assert!(!english[0].machine_translated);
+        assert!(french[0].machine_translated);
+        assert!(!directory.join("build").exists());
+        assert!(english[0].translator.is_none());
+    }
+
+    #[test]
     fn discovers_canonical_books_and_manuscripts() {
         let root = tempfile::tempdir().unwrap();
         let directory = root.path().join("sample");
@@ -162,7 +374,7 @@ mod tests {
         .unwrap();
         let manuscript = root.path().join("translated-manuscript");
         std::fs::create_dir(&manuscript).unwrap();
-        std::fs::write(manuscript.join("metadata.json"), r#"{"translate":true}"#).unwrap();
+        std::fs::write(manuscript.join("metadata.json"), r#"{"translate":true,"title":"Manuscript","author":"Author","original_language":"eng"}"#).unwrap();
         let sources = discover(root.path()).unwrap();
         assert_eq!(sources.len(), 2);
         assert_eq!(sources[0].build(), directory.join("build"));

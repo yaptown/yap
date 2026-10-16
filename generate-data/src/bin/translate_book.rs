@@ -22,7 +22,7 @@ use std::sync::LazyLock;
 
 use anyhow::{Context, bail};
 use futures::StreamExt;
-use generate_data::books::BookSentence;
+use generate_data::books::{BookSentence, segment_chinese};
 use generate_data::cache_remote;
 use lexide::{Language, RemoteClient, RemoteConfig};
 use serde::{Deserialize, Serialize};
@@ -79,42 +79,6 @@ struct Chunk {
 struct ChunkTranslation {
     /// The full translation of the excerpt, preserving paragraph breaks.
     translation: String,
-}
-
-/// Deterministic sentence splitter for Chinese: split after runs of 。！？…
-/// (carrying along any closing quotes/brackets) and at line breaks. Lossless —
-/// the concatenation of the output is the input minus whitespace.
-fn segment_chinese(text: &str) -> Vec<String> {
-    const TERMINALS: [char; 4] = ['。', '！', '？', '…'];
-    const CLOSERS: [char; 5] = ['”', '』', '」', '）', '"'];
-    let mut sentences = Vec::new();
-    let mut current = String::new();
-    let mut flush = |current: &mut String| {
-        let sentence = current.trim();
-        if !sentence.is_empty() {
-            sentences.push(sentence.to_string());
-        }
-        current.clear();
-    };
-    let mut chars = text.chars().peekable();
-    while let Some(c) = chars.next() {
-        if c == '\n' {
-            flush(&mut current);
-            continue;
-        }
-        current.push(c);
-        if TERMINALS.contains(&c) {
-            while chars
-                .peek()
-                .is_some_and(|c| TERMINALS.contains(c) || CLOSERS.contains(c))
-            {
-                current.push(chars.next().unwrap());
-            }
-            flush(&mut current);
-        }
-    }
-    flush(&mut current);
-    sentences
 }
 
 fn arg_value(name: &str) -> Option<String> {

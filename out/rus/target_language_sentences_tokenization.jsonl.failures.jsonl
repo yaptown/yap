@@ -1,10 +1,30 @@
+{"sentence":"\"Да?\".","failure_count":1}
+{"sentence":"\"Держись\" \"Закрой глаза\" \"- Ты мне доверяешь?\"","failure_count":1}
+{"sentence":"\"Еврейский конь!\".","failure_count":1}
+{"sentence":"\"Естественно!\".","failure_count":1}
+{"sentence":"\"Какое Том вам дал?\" - \"То\".","failure_count":1}
+{"sentence":"\"Какое Том тебе дал?\" - \"То\".","failure_count":1}
+{"sentence":"\"Какое ты хочешь?\" - \"То\".","failure_count":1}
+{"sentence":"\"О пожалуйста!\".","failure_count":1}
+{"sentence":"\"Она о тебе спрашивала\". - \"Обо мне?\"","failure_count":1}
+{"sentence":"\"Э, не, что же он хотел сказать этими своими девятью с половиной секундами?\".","failure_count":1}
+{"sentence":"\"Этот адрес?\".","failure_count":1}
+{"sentence":"\"Я раб твой!\".","failure_count":1}
+{"sentence":"«На ней может лежать звёздная скверна», — мрачно сказал Лансесон.","failure_count":1}
+{"sentence":"«Синий», прием!..","failure_count":1}
+{"sentence":"«Черепаха» пригодилась!..","failure_count":1}
+{"sentence":"«Энсон в задней комнате, Аманда», — приветливо сказали мне.","failure_count":1}
+{"sentence":"«Это куда больше, чем нужно, мэм», — ответил он.","failure_count":1}
+{"sentence":"А \"перина\" как?","failure_count":1}
 {"sentence":"А Вы сказали, что умете с ним обращаться.","failure_count":3}
 {"sentence":"А ваше имя?..","failure_count":3}
 {"sentence":"А вот где у тебя что-то подставить под нерв седалищный, я не вижу.","failure_count":3}
 {"sentence":"А вы оптимист!..","failure_count":3}
+{"sentence":"А мне уже \"посчастливилось\" встретится с одной ведьмой и заработать проклятье!","failure_count":1}
 {"sentence":"А может?..","failure_count":3}
 {"sentence":"А твои друзья из ВУза, часто их видишь?","failure_count":3}
 {"sentence":"А ты должен будешь сказать, что пришло тебе в голову, первую ассоциацию.","failure_count":3}
+{"sentence":"А ты ему \"Лего\" не покупал.","failure_count":1}
 {"sentence":"А ты?..","failure_count":3}
 {"sentence":"А что?..","failure_count":3}
 {"sentence":"А, этот?..","failure_count":3}
@@ -33,6 +53,7 @@
 {"sentence":"Больных нельзя переносить!..","failure_count":3}
 {"sentence":"Больше!..","failure_count":3}
 {"sentence":"Бомбят вокзал.","failure_count":3}
+{"sentence":"Бразилия демографически \"молодая\" страна.","failure_count":1}
 {"sentence":"Брат, есть новость!..","failure_count":3}
 {"sentence":"Братцы!..","failure_count":3}
 {"sentence":"Брачный сезон?..","failure_count":3}
@@ -40,13 +61,16 @@
 {"sentence":"Буньоль как раз по пути.","failure_count":3}
 {"sentence":"Бурый мёртв.","failure_count":3}
 {"sentence":"Быстрее!..","failure_count":3}
+{"sentence":"В \"Баране\" опять было жаркое, Зилла.","failure_count":1}
 {"sentence":"В Агромонто они прячут красоту и страстность за решёткой, пардон,..","failure_count":3}
 {"sentence":"В атаку!..","failure_count":3}
 {"sentence":"В гостиной, в левом ящике комода, а сверху положила вощеную бумагу.","failure_count":3}
+{"sentence":"В каком смысле \"влюблён\"?","failure_count":1}
 {"sentence":"В лесу пожар!..","failure_count":3}
 {"sentence":"В машину?..","failure_count":3}
 {"sentence":"В общем, для меня не так важен виноград, сколько желание.","failure_count":3}
 {"sentence":"В следующее воскресень хорошо бы попасть туда.","failure_count":3}
+{"sentence":"В тридцать третьем году она на \"Красную швею\" поступала.","failure_count":1}
 {"sentence":"В этой вьюге мы Тома никогда не найдём.","failure_count":3}
 {"sentence":"В этом смысле, Айртон и Рон Деннис отлично подходили друг другу.","failure_count":3}
 {"sentence":"В этот день Моранджа не было на трехчасовой перекличке.","failure_count":3}
@@ -55,6 +79,7 @@
 {"sentence":"Вася и Яша приходятся друг другу троюродными братьями.","failure_count":3}
 {"sentence":"Ваше Величество, прошу вас!..","failure_count":3}
 {"sentence":"Великой.","failure_count":3}
+{"sentence":"Величайшая из пьес величайшего драматурга всех времён“».","failure_count":1}
 {"sentence":"Венеция формально называлась Светлейшая Республика Венеция.","failure_count":3}
 {"sentence":"Верёвку?..","failure_count":3}
 {"sentence":"Ви-хри вра-жде-бные ве-ют над на-ми, Те-мны-е си-лы нас зло-бно гне-тут.","failure_count":3}
@@ -62,11 +87,13 @@
 {"sentence":"Витя!..","failure_count":3}
 {"sentence":"Владыка!..","failure_count":3}
 {"sentence":"Владыка, ветер переменился!..","failure_count":3}
+{"sentence":"Внешняя гавань Торфлита была не такой широкой и глубокой, как Лор-Уэст.","failure_count":1}
 {"sentence":"Возми его к доктору в конце улицы.","failure_count":3}
 {"sentence":"Возмите мою жену, пожалуйста.","failure_count":3}
 {"sentence":"Возможно мы знали друг друга в другое время, в другой жизни.","failure_count":3}
 {"sentence":"Возможно, твоим родичам не придётся выступать на войну.","failure_count":3}
 {"sentence":"Вот дела!..","failure_count":3}
+{"sentence":"Вот она, эта гайка!..","failure_count":1}
 {"sentence":"Вот, блядь..!","failure_count":3}
 {"sentence":"Вперед!..","failure_count":3}
 {"sentence":"Враги!..","failure_count":3}
@@ -86,6 +113,7 @@
 {"sentence":"Где ««там»»?","failure_count":3}
 {"sentence":"Где?..","failure_count":3}
 {"sentence":"Генерал!..","failure_count":3}
+{"sentence":"Гм!..","failure_count":1}
 {"sentence":"Говинд!!!!!!","failure_count":3}
 {"sentence":"Говорю вам, если группы крови не совпадают,..","failure_count":3}
 {"sentence":"Господин!..","failure_count":3}
@@ -96,6 +124,7 @@
 {"sentence":"Да чем, черт побери?!","failure_count":3}
 {"sentence":"Да!..","failure_count":3}
 {"sentence":"Да, только в марте мог хотя-бы появится хоть разок!","failure_count":3}
+{"sentence":"Даже если всё стадо промычит; \"Отстоо-о-оой!\"","failure_count":1}
 {"sentence":"Дай копьё!..","failure_count":3}
 {"sentence":"Дай мяч!..","failure_count":3}
 {"sentence":"Дайте знать, я стану крестному вашему малышу.","failure_count":3}
@@ -108,6 +137,7 @@
 {"sentence":"Джонни Уэллс, Дабл Ю Хакши, Эс Рап, Джо Эджер и другие.","failure_count":3}
 {"sentence":"Для любителей горячительных напитков предусмотрен бар.","failure_count":3}
 {"sentence":"Докладываю!..","failure_count":3}
+{"sentence":"Долететь топлива нам хватит, но \"Далласа\" там может не оказаться.","failure_count":1}
 {"sentence":"Дорогуша, ну делов-то!..","failure_count":3}
 {"sentence":"Дорожное движение в часы пик — бампер к бамперу.","failure_count":3}
 {"sentence":"Достаточно было, чтобы погибли всего четверо.","failure_count":3}
@@ -123,6 +153,7 @@
 {"sentence":"Если она уперлась, надо было отвезти ее домой забрать шапку.","failure_count":3}
 {"sentence":"Если призрак попался в ловушку, петух прокукарекает три раза.","failure_count":3}
 {"sentence":"Если твой отец заметит!..","failure_count":3}
+{"sentence":"Если точнее, он накренился почти набок — по крайней мере, до прошлой недели.","failure_count":1}
 {"sentence":"Если ты сдашься сейчас, мы не причиним тебе вреда.","failure_count":3}
 {"sentence":"Есть люди, которым гораздо хуже, но они справляются.","failure_count":3}
 {"sentence":"Есть пустыни и Балканы острова и океаны ля-ля-ля-ля-ля-ля-ля.","failure_count":3}
@@ -152,11 +183,13 @@
 {"sentence":"И что ты прикажешь мне делать, чёрт возьми?!","failure_count":3}
 {"sentence":"И, пожалуйста, подумайте над отменой речи у Капитолия.","failure_count":3}
 {"sentence":"И-и взяли!..","failure_count":3}
+{"sentence":"Играю \"инь\" и \"янь\", \"хип\" и \"хоп\",..","failure_count":1}
 {"sentence":"Идииииииииии!","failure_count":3}
 {"sentence":"Иногда история и судьба встречаются в одно и то же время в одном и том же месте.","failure_count":3}
 {"sentence":"Иногда реальность и вымысел трудно различить.","failure_count":3}
 {"sentence":"Итомори?..","failure_count":3}
 {"sentence":"Ищейка?..","failure_count":3}
+{"sentence":"К пятнице мы полностью закончим все прочие перегрузки.","failure_count":1}
 {"sentence":"К счастью, мой клиент теперь работает, по этому мы не видим причин чтобы г-н.","failure_count":3}
 {"sentence":"Как быка можно схватить за рога, так и человека можно поймать на слове.","failure_count":3}
 {"sentence":"Как духи, про которых рассказывает донна Люсия?","failure_count":3}
@@ -170,13 +203,16 @@
 {"sentence":"Картар Сингх.","failure_count":3}
 {"sentence":"Когда он узнал, что его предал Олмэши,..","failure_count":3}
 {"sentence":"Коль!..","failure_count":3}
+{"sentence":"Кому \"им\"?","failure_count":1}
 {"sentence":"Король отдаст свою дочь дракону с девятью головами.","failure_count":3}
+{"sentence":"Короче, они подрались, и ребятам из \"Откровенной камеры\" пришлось разнимать их.","failure_count":1}
 {"sentence":"Который увеличивает сиськи и задницы кассиршам и секретаршам.","failure_count":3}
 {"sentence":"Краны, которые используются при сушке лодки.","failure_count":3}
 {"sentence":"Красный рядом с зеленым.","failure_count":3}
 {"sentence":"Криминалист обнаружил следы пороха на руке жертвы.","failure_count":3}
 {"sentence":"Кто «мы»?..","failure_count":3}
 {"sentence":"Кунг-фу мизинчи-и-и-ик!","failure_count":3}
+{"sentence":"Курс, на перехват \"Энтерпрайза\" готов, сэр.","failure_count":1}
 {"sentence":"Ла-ла-ла!..","failure_count":3}
 {"sentence":"Лагерь!..","failure_count":3}
 {"sentence":"Лучшее умрем в бою, без ячменя нам и так конец.","failure_count":3}
@@ -187,6 +223,7 @@
 {"sentence":"Мама?..","failure_count":3}
 {"sentence":"Мари-и-и-ия-я-я.","failure_count":3}
 {"sentence":"Марчелло?..","failure_count":3}
+{"sentence":"Меня захлестнула волна ликования.","failure_count":1}
 {"sentence":"Мерзский москит.","failure_count":3}
 {"sentence":"Милллости пппросим, мы ожидддали вас!","failure_count":3}
 {"sentence":"Мистер Макгинти, возможно, вы думаете, что я преступник, но я правда невиновен.","failure_count":3}
@@ -197,6 +234,7 @@
 {"sentence":"Мой парень, мой парень, что это за штука со такими цифирками?","failure_count":3}
 {"sentence":"Молчать!..","failure_count":3}
 {"sentence":"Молчи!..","failure_count":3}
+{"sentence":"Мост \"Золотые Ворота\" сделан из железа.","failure_count":1}
 {"sentence":"Моя мачеха нагрубила техничке и нас по-быстрому выпроводили.","failure_count":3}
 {"sentence":"Мы все живем под одним и тем же небом, но у нас не один и тот же горизонт.","failure_count":3}
 {"sentence":"Мы все это знают.","failure_count":3}
@@ -204,6 +242,7 @@
 {"sentence":"Мы замедляем темп для всех любовничков в гнёздышке.","failure_count":3}
 {"sentence":"Мы никогда не сдадимся.","failure_count":3}
 {"sentence":"Мы пойдём в какой нибудь местный ресторан или кабак.","failure_count":3}
+{"sentence":"Мы придем и попробуем вашу \"нормальную\" лапшу.","failure_count":1}
 {"sentence":"Мы устали, но мы не сдадимся.","failure_count":3}
 {"sentence":"На Хэллоуин она приготовила тыквенный суп в чёрном котле.","failure_count":3}
 {"sentence":"На вас?..","failure_count":3}
@@ -219,12 +258,14 @@
 {"sentence":"Назавтра было воскресенье, и мы ездили к побережью.","failure_count":3}
 {"sentence":"Назад!..","failure_count":3}
 {"sentence":"Накинь что-нибудь.","failure_count":3}
+{"sentence":"Нам надо всех облапошить, \"Впарить\" им мозги.","failure_count":1}
 {"sentence":"Наномашины посылают твои нервам болезненные сигналы.","failure_count":3}
 {"sentence":"Народные движения выражают народное недовольство.","failure_count":3}
 {"sentence":"Нарывайся – получишь.","failure_count":3}
 {"sentence":"Начинал работать инженером-электротехником.","failure_count":3}
 {"sentence":"Наша тогдашняя жизнь, возможно, покажется вам бедной.","failure_count":3}
 {"sentence":"Наши соседи перестали парковатся на нашей стоянке, хотя у нас и небыло машины.","failure_count":3}
+{"sentence":"Не \"чёкай\" мне, иди сюда.","failure_count":1}
 {"sentence":"Не будет ли у меня с ними какого нибудь контакта?","failure_count":3}
 {"sentence":"Не было ни проб, ни встречи с Джоном Стёрджесом.","failure_count":3}
 {"sentence":"Не волнуйся о Кеничи.","failure_count":1}
@@ -246,10 +287,14 @@
 {"sentence":"Не, не, не, не надо, нормально все, езжайте!","failure_count":3}
 {"sentence":"Нельзя!..","failure_count":3}
 {"sentence":"Нет!..","failure_count":3}
+{"sentence":"Нет, \"мать\" точнее.","failure_count":1}
+{"sentence":"Нет, «пятнадцать за десять» уже начинало звучать совершенно безумно.","failure_count":1}
 {"sentence":"Нет, нет, нет, нет-нет-нет-нет-нет!!!","failure_count":3}
 {"sentence":"Нет, повелитель!..","failure_count":3}
 {"sentence":"Нет, я ошиблась, вы самый глупый.","failure_count":3}
 {"sentence":"Ни шагу назад!..","failure_count":3}
+{"sentence":"Никак беспорядок, ваше благородие!..","failure_count":1}
+{"sentence":"Никогда еще \"Мисс Франции\" не было с севера.","failure_count":1}
 {"sentence":"Но мы её госпидализируем чтобы убедиться что не порваны связки.","failure_count":3}
 {"sentence":"Но независимо от того, насколько вы восприимчивы гипнозу,..","failure_count":3}
 {"sentence":"Но что потом,..","failure_count":3}
@@ -280,6 +325,7 @@
 {"sentence":"Ой, пришло, пришло, пришло-о-о!","failure_count":3}
 {"sentence":"Ой, это еще что такое!?","failure_count":3}
 {"sentence":"Он взглядом поймал меня, пялящегося на него, и я покраснел.","failure_count":3}
+{"sentence":"Он еще жаловался, что сейчас с этой задачей справляются из рук вон плохо.","failure_count":1}
 {"sentence":"Он ищет его, ищет.","failure_count":3}
 {"sentence":"Он меня выташил, начял всякие вопросы задавать.","failure_count":3}
 {"sentence":"Он может спать под бомбежкой.","failure_count":3}
@@ -289,6 +335,7 @@
 {"sentence":"Он психически неуравновешенный.","failure_count":3}
 {"sentence":"Он, по-видимому, был очень удивлен, когда я рассказал ему об этом.","failure_count":3}
 {"sentence":"Она говорила о Париже так, словно много раз там бывала.","failure_count":3}
+{"sentence":"Она даже \"голубого\" убедит сменить ориентацию.","failure_count":1}
 {"sentence":"Она заботилась о своём двоюродном брате, Яне.","failure_count":3}
 {"sentence":"Она меня лишилась.","failure_count":3}
 {"sentence":"Она не хочет с вами общаться.","failure_count":1}
@@ -297,10 +344,13 @@
 {"sentence":"Они думают, что пожар начался в подъзде.","failure_count":3}
 {"sentence":"Они обидели вас, напугали.","failure_count":3}
 {"sentence":"Они поволнуются несколько дней,..","failure_count":3}
+{"sentence":"Они поставили у каждой деревни по одномачтовику, чтобы не дать нам торговать.","failure_count":1}
+{"sentence":"Они там даже \"Форреста Гампа\" ненавидят.","failure_count":1}
 {"sentence":"Опять будем торчать перед гаражем?","failure_count":3}
 {"sentence":"Опять нету времени хотя бы что-нибудь довести до конца.","failure_count":3}
 {"sentence":"Отец Галилея, Винченцо Галилеи, был известным музыкантом.","failure_count":3}
 {"sentence":"Откуда мне знать, что Господь уготовил нам в будущем?","failure_count":3}
+{"sentence":"Откуда работники фабрики \"Милена\" взяли размеры?","failure_count":1}
 {"sentence":"Отлично!..","failure_count":3}
 {"sentence":"Отогнать крестьян!..","failure_count":3}
 {"sentence":"Отряд «левой руки»!..","failure_count":3}
@@ -352,12 +402,16 @@
 {"sentence":"Пылесос?..","failure_count":3}
 {"sentence":"Рада была повидаться, СУЧЕН..","failure_count":3}
 {"sentence":"Разве я не рассказывал, что изучал огненный стиль буддистких монахов?","failure_count":3}
+{"sentence":"Разные люди по-разному справляются с бедой.","failure_count":1}
 {"sentence":"Робот был так похож на человека, что становилось не по себе.","failure_count":3}
 {"sentence":"Руми-чан, это же ты, разве нет!?","failure_count":3}
+{"sentence":"С \"древним\" Виландом?","failure_count":1}
 {"sentence":"С точки зрения времени и расстояния мой рекорд не побит.","failure_count":3}
+{"sentence":"С цементом покончено, с \"Корсаром\" тоже.","failure_count":1}
 {"sentence":"С чего бы вдруг госпожа захотела отправится в лес?","failure_count":3}
 {"sentence":"С-скажи мне!..","failure_count":3}
 {"sentence":"Саблезубые тигры вымерли во время ледникового периода.","failure_count":3}
+{"sentence":"Сам виноват!..","failure_count":1}
 {"sentence":"Самая большая ошибка, которуя я когда-нибудь делал!","failure_count":3}
 {"sentence":"Сами должен остаться дома и присмотреть за своей младшей сестой Лайлой.","failure_count":3}
 {"sentence":"Санджуро Кувабатаке сгодится.","failure_count":3}
@@ -370,6 +424,7 @@
 {"sentence":"Сидит на диете Дюкана, чтобы не потерять Дадину.","failure_count":3}
 {"sentence":"Скажи, должен ли я буду показать этот отчет также и твоему продюсеру?","failure_count":3}
 {"sentence":"Скажите, куда?..","failure_count":3}
+{"sentence":"Слова «сенат» и «пошлина» были мне незнакомы.","failure_count":1}
 {"sentence":"Слушай, Панчи, если хочешь попробовать закричать громче,..","failure_count":3}
 {"sentence":"Смотри!..","failure_count":3}
 {"sentence":"Смотрите!..","failure_count":3}
@@ -390,11 +445,14 @@
 {"sentence":"Сяо Цяо, держи!..","failure_count":3}
 {"sentence":"Так вот что означает твоё ДМ,..","failure_count":3}
 {"sentence":"Так вот, он заинтересовался Фехнером, погибшем в Океане Соляриса.","failure_count":3}
+{"sentence":"Так это ихняя собачка?","failure_count":1}
 {"sentence":"Так я заставил Джимми и Томми вложится со мной.","failure_count":3}
 {"sentence":"Так, что о-о-о-о?!","failure_count":3}
 {"sentence":"Талант?..","failure_count":3}
 {"sentence":"Тебе что нибудь принести?","failure_count":3}
+{"sentence":"Теперь не подумает, так после подумает!..","failure_count":1}
 {"sentence":"Терпи!..","failure_count":3}
+{"sentence":"Тип с ножом обогнул угол, сделал два шага и начал поднимать руку.","failure_count":1}
 {"sentence":"Тихое укромное место, которое, лучше всего подходило для её плана.","failure_count":3}
 {"sentence":"То же самое и с Черный Бомбеем.","failure_count":3}
 {"sentence":"Товарищи, а вы вообще помните, что там два наших космонавта?","failure_count":3}
@@ -414,6 +472,7 @@
 {"sentence":"Ты думаешь, я не видел, как ты мне две длинных спички сунул?","failure_count":3}
 {"sentence":"Ты знаешь, что тебе насрать на меня,..","failure_count":3}
 {"sentence":"Ты не сходишь проверить, как они справляются, дорогой?","failure_count":3}
+{"sentence":"Ты низкорослое, ускоглазое \"я-не-говорить-американски\",..","failure_count":1}
 {"sentence":"Ты что, Джозуэ?!","failure_count":3}
 {"sentence":"Ты что,..","failure_count":3}
 {"sentence":"Ты!..","failure_count":3}
@@ -421,9 +480,12 @@
 {"sentence":"У Тома большое самомнение.","failure_count":3}
 {"sentence":"У Тома полно времени.","failure_count":1}
 {"sentence":"У Тома полно денег.","failure_count":1}
+{"sentence":"У девочки из \"Реального мира\" была.","failure_count":1}
 {"sentence":"У кого был назначена последняя встреча с Папой?","failure_count":3}
 {"sentence":"У меня платёжная ведомость, которую я хочу обналичить.","failure_count":3}
+{"sentence":"У него была огромная таверна, в нужное время битком набитая посетителями.","failure_count":1}
 {"sentence":"У нее было Конфиденциальная информация о Сьенаге.","failure_count":3}
+{"sentence":"У тебя значительная доля в «Нун Сан».","failure_count":1}
 {"sentence":"У тебя нет какой нибудь рождественской музыки?","failure_count":3}
 {"sentence":"Увы!..","failure_count":3}
 {"sentence":"Умоляем тебя!..","failure_count":3}
@@ -448,6 +510,7 @@
 {"sentence":"Хотите знать, почему..?","failure_count":3}
 {"sentence":"Хоть одно из дурацких имён, что ты придумавыешь каждый вечер?","failure_count":3}
 {"sentence":"Цистерна пуста, и мы не можем злоупотреблять вашей гостеприимностью.","failure_count":3}
+{"sentence":"Чего \"вот\"?","failure_count":1}
 {"sentence":"Чего они ждут, чёрт побери?!","failure_count":3}
 {"sentence":"Чего тут?..","failure_count":3}
 {"sentence":"Чего я сейчас хочу, так это чашку горячего кофе.","failure_count":3}
@@ -460,8 +523,19 @@
 {"sentence":"Чжоу Юй!..","failure_count":3}
 {"sentence":"Чжугэ Лян!..","failure_count":3}
 {"sentence":"Читайте Тургенева, мы скопцы воспитывали скопцов, так по-вашему?","failure_count":3}
+{"sentence":"Что \"все\"?","failure_count":1}
+{"sentence":"Что \"да\"?","failure_count":1}
+{"sentence":"Что \"зачем\"?","failure_count":1}
+{"sentence":"Что \"мостик\" идёт тебе.","failure_count":1}
+{"sentence":"Что \"но\"?","failure_count":1}
+{"sentence":"Что \"угу\"?","failure_count":1}
+{"sentence":"Что \"хотя\"?","failure_count":1}
+{"sentence":"Что \"что\"?","failure_count":1}
+{"sentence":"Что \"это\"?","failure_count":1}
 {"sentence":"Что за-?!","failure_count":3}
 {"sentence":"Что за?..","failure_count":3}
+{"sentence":"Что значит \"принципиально\"?","failure_count":1}
+{"sentence":"Что такое \"нарком\"?","failure_count":1}
 {"sentence":"Что ты?..","failure_count":3}
 {"sentence":"Что это значит что ее сердце не хватало что-то?","failure_count":3}
 {"sentence":"Что!..","failure_count":3}
@@ -495,6 +569,7 @@
 {"sentence":"Этот морфинист всю страну втянул в коррупцию!","failure_count":3}
 {"sentence":"Этот наушник свистит из-за слабой батарейки.","failure_count":3}
 {"sentence":"Этот помешанный ублюдок!..","failure_count":3}
+{"sentence":"Я \"за\"!","failure_count":1}
 {"sentence":"Я беззащитный!..","failure_count":3}
 {"sentence":"Я благодарно Вам за то, что Вы спасли моего Эдди, правда благодарна,..","failure_count":3}
 {"sentence":"Я буду секретаршей в приемной Доктора Милтона Коссвела.","failure_count":3}
@@ -507,6 +582,7 @@
 {"sentence":"Я говорил с секретрём М-р Эдерера.","failure_count":3}
 {"sentence":"Я говорю о Лос Анджелесе, Чикаго, Детройте, Лас Вегасе.","failure_count":3}
 {"sentence":"Я горд пожать руку герою, раненому в сражении при Палермо.","failure_count":3}
+{"sentence":"Я ему покажу Кузькину мать!..","failure_count":1}
 {"sentence":"Я за золотую середину.","failure_count":1}
 {"sentence":"Я знаю, ты меня не слышишь,..","failure_count":3}
 {"sentence":"Я из-за тебя конец фильма пропустил.","failure_count":1}
@@ -523,6 +599,8 @@
 {"sentence":"Я разрешил ему позвонить сюда сегодня.","failure_count":3}
 {"sentence":"Я сделаю это, если ты меня об этом попросишь.","failure_count":3}
 {"sentence":"Я сказал!..","failure_count":3}
+{"sentence":"Я сказал, \"Может на кухню?\".","failure_count":1}
+{"sentence":"Я сказал, \"под\" колеса, а не перед колесами.","failure_count":1}
 {"sentence":"Я только полетаю над вами, пришлю гостинчику.","failure_count":3}
 {"sentence":"Я тут с твоим старым другом Ангельскими Глазками.","failure_count":3}
 {"sentence":"Я увлеклось?..","failure_count":3}

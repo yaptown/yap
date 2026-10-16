@@ -80,6 +80,10 @@ YAP_CACHE_BUCKET= cargo run --release -p generate-data --bin publish_book   # lo
 - Verify each language with the public anon key (in `yap-frontend-rs/src/supabase.rs`): `POST https://eearwzqotpfoderpfrqx.supabase.co/rest/v1/rpc/book_catalog` with `{"requested_language":"fra","native_language":"eng"}`. Each book should come back with a teaser and a cover, and the cover URL on packs.yap.town should return 200.
 - Migrations: `pnpm dlx supabase db push --dry-run`, then `--yes`. It works non-interactively through the keychain login, but the first linked command can take minutes.
 
-## 7. Committing
+## 7. Course corpus
+
+Book sentences also feed the course corpus. `cargo run --release -p generate-data --bin segment_reader_books -- --only <code> --book <slug>` writes `generate-data/data/<code>/sentence-sources/reader-books/<slug>.jsonl` (the local lexide segmenter; Thai goes through luna with an exact-reproduction check, and a paragraph that fails four times is dropped and logged). A course regeneration then picks the file up. Sentences go through the same filter as subtitles, except that dangling edge quotes and an untagged leading dialogue dash are stripped first. In Oct 2026 about 64% of book sentences passed that filter, mostly losing to the length cap, and later stages (rare words, missing definitions) dropped more, especially in Korean, Russian and Hindi.
+
+## 8. Committing
 
 We staged only `books/<slug>/source.json` and `cover.webp` (never `build/`), deleted the proposal and review files and the one-off tools first, and committed yap-icons separately. Model cost was about $0.05–0.10 per batch of 14 books.

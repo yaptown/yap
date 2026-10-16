@@ -103,6 +103,37 @@ pub struct Translator {
     budget_warned: AtomicBool,
 }
 
+/// Billing failures must escape best-effort translation paths; capacity/quality
+/// failures keep their existing recoverable behavior.
+pub fn is_billing_error(error: &(dyn std::error::Error + 'static)) -> bool {
+    let mut current = Some(error);
+    while let Some(error) = current {
+        let message = error.to_string();
+        if [
+            "insufficient_quota",
+            "credit_balance_exhausted",
+            "billing_hard_limit",
+            "billing_not_active",
+        ]
+        .iter()
+        .any(|code| message.contains(code))
+        {
+            return true;
+        }
+        current = error.source();
+    }
+    false
+}
+
+pub fn report_translation_failure(error: anyhow::Error) -> anyhow::Result<()> {
+    if is_billing_error(error.as_ref()) {
+        eprintln!("BILLING_ERROR: {error:#}");
+        return Err(error);
+    }
+    eprintln!("Translation failure: {error:#}");
+    Ok(())
+}
+
 impl Translator {
     pub async fn new(
         source_language: Language,
@@ -426,20 +457,25 @@ impl Translator {
         };
         let system_prompt = self.openai_system_prompt();
 
-        let mut attempt = 0u32;
+        let mut attempt = 0;
         loop {
             self.api_calls.fetch_add(1, Ordering::Relaxed);
-            let result: Result<TranslationResponse, _> =
-                client.chat_with_system_prompt(&system_prompt, text).await;
-
+            let result = client
+                .chat_with_system_prompt::<TranslationResponse>(&system_prompt, text)
+                .await;
             self.record_openai_spend(client, recorded_micro);
-
             match result {
                 Ok(response) => return Ok(response.translation),
-                Err(e) => {
+                Err(error) => {
+                    if is_billing_error(&error) {
+                        eprintln!("BILLING_ERROR: OpenAI translation credit/quota failure");
+                        return Err(error.into());
+                    }
+                    // tysm doesn't retry non-JSON 5xx responses or malformed
+                    // structured output, so keep a bounded retry here.
                     if attempt < MAX_RETRIES {
                         eprintln!(
-                            "{} translation error (attempt {}/{MAX_RETRIES}): {e}; backing off",
+                            "{} translation error (attempt {}/{MAX_RETRIES}): {error}; backing off",
                             client.model,
                             attempt + 1,
                         );
@@ -447,7 +483,7 @@ impl Translator {
                         attempt += 1;
                         continue;
                     }
-                    return Err(e).with_context(|| {
+                    return Err(error).with_context(|| {
                         format!("{} translation failed after retries", client.model)
                     });
                 }
@@ -496,9 +532,9 @@ impl Translator {
     }
 
     /// Best-effort bulk cache warm-up; failed items remain misses for `translate`.
-    pub async fn prime(&self, texts: &[String]) {
+    pub async fn prime(&self, texts: &[String]) -> anyhow::Result<()> {
         if crate::cache_only() {
-            return;
+            return Ok(());
         }
 
         // Unique, still-uncached texts in first-seen order.
@@ -513,7 +549,7 @@ impl Translator {
             }
         }
         if pending.is_empty() {
-            return;
+            return Ok(());
         }
 
         // Warmups for several courses run concurrently, alongside other stages' bars.
@@ -521,10 +557,11 @@ impl Translator {
 
         match &self.backend {
             Backend::Google { .. } => self.prime_google(pending, &pb).await,
-            Backend::OpenAi { .. } => self.prime_openai(pending, &pb).await,
+            Backend::OpenAi { .. } => self.prime_openai(pending, &pb).await?,
         }
 
         pb.finish_and_clear();
+        Ok(())
     }
 
     async fn prime_google(&self, pending: Vec<&str>, pb: &indicatif::ProgressBar) {
@@ -577,7 +614,11 @@ impl Translator {
             .await;
     }
 
-    async fn prime_openai(&self, pending: Vec<&str>, pb: &indicatif::ProgressBar) {
+    async fn prime_openai(
+        &self,
+        pending: Vec<&str>,
+        pb: &indicatif::ProgressBar,
+    ) -> anyhow::Result<()> {
         let Backend::OpenAi {
             client,
             recorded_micro,
@@ -600,7 +641,7 @@ impl Translator {
         let (progress, system_prompt) = (&progress, &system_prompt);
         let jobs = chunks.iter().enumerate().map(|(job, chunk)| async move {
             if self.over_budget() {
-                return;
+                return Ok(());
             }
             self.api_calls
                 .fetch_add(chunk.len() as u64, Ordering::Relaxed);
@@ -621,24 +662,33 @@ impl Translator {
                             // Empty translations stay uncached so the live
                             // pass can retry them.
                             Ok(_) => {}
-                            Err(e) => eprintln!("Batch item failed for '{text}': {e}"),
+                            Err(e) => report_translation_failure(
+                                anyhow::Error::new(e)
+                                    .context(format!("batch item failed for {text:?}")),
+                            )?,
                         }
                     }
                 }
                 Err(e) => {
-                    eprintln!("OpenAI batch translate failed ({} texts): {e}", chunk.len());
+                    report_translation_failure(anyhow::Error::new(e).context(format!(
+                        "OpenAI batch translate failed ({} texts)",
+                        chunk.len()
+                    )))?;
                 }
             }
+            anyhow::Ok(())
         });
-        futures::future::join_all(jobs).await;
+        let outcome = futures::future::try_join_all(jobs).await;
         pb.set_position(pending.len() as u64);
 
         self.record_openai_spend(client, recorded_micro);
+        outcome?;
         pb.set_message(format!(
             "{} Batch API, ~${:.4}",
             client.model,
             self.cost_estimate_usd()
         ));
+        Ok(())
     }
 }
 
@@ -647,6 +697,33 @@ mod tests {
     use super::*;
 
     const SMOKE_MODEL: &str = "gpt-6-luna";
+
+    #[test]
+    fn billing_errors_propagate_through_context_but_flex_does_not() {
+        for (kind, code, fatal) in [
+            ("insufficient_quota", "credit_balance_exhausted", true),
+            ("billing_error", "billing_hard_limit_reached", true),
+            ("resource_unavailable", "flex_unavailable", false),
+            ("rate_limit_error", "rate_limit_exceeded", false),
+        ] {
+            let api = tysm::OpenAiError {
+                r#type: kind.into(),
+                code: Some(code.into()),
+                message: "offline fixture".into(),
+                param: None,
+            };
+            let error = anyhow::Error::new(tysm::chat_completions::ChatError::ApiError(
+                api,
+                "redacted fixture".into(),
+            ))
+            .context("outer translation context");
+            assert_eq!(is_billing_error(error.as_ref()), fatal);
+            assert_eq!(report_translation_failure(error).is_err(), fatal);
+        }
+        assert!(
+            report_translation_failure(anyhow::anyhow!("empty or malformed translation")).is_ok()
+        );
+    }
 
     async fn smoke_translator(cache_dir: &std::path::Path) -> Option<Translator> {
         dotenvy::dotenv().ok();
@@ -808,7 +885,7 @@ mod tests {
         .into_iter()
         .map(String::from)
         .collect();
-        translator.prime(&sentences).await;
+        translator.prime(&sentences).await.unwrap();
 
         // Everything primed must now be served from cache, no live calls.
         let calls_after_prime = translator.api_calls();

@@ -1,3 +1,23 @@
+{"sentence":"\"Darf ich Ihnen eine Frage stellen?\" \"Nur zu!\"","failure_count":1}
+{"sentence":"\"Du, der die Sternschnuppe fing,\" \"Mann ohne Herz, dein Herz wird mir gehören.\"","failure_count":1}
+{"sentence":"\"Hat sie eine Uhr gekauft?\" \"Ja, hat sie.\"","failure_count":1}
+{"sentence":"\"Herr Doktor, alle ignorieren mich.\" \"Der Nächste, bitte.\"","failure_count":1}
+{"sentence":"\"Ich bin Lehrer.\" \"Ich auch.\"","failure_count":1}
+{"sentence":"\"Ich bin Lehrerin.\" \"Ich auch.\"","failure_count":1}
+{"sentence":"\"Ist Tom dein Freund?\" \"Es ist kompliziert.\"","failure_count":1}
+{"sentence":"\"Ist sie jung?\" \"Ja.\"","failure_count":1}
+{"sentence":"\"Kannst du Gitarre spielen?\" \"Ja.\"","failure_count":1}
+{"sentence":"\"Kleiner\" war ich in der Schule, das ist sehr lange her.","failure_count":1}
+{"sentence":"\"Morgen pünktlich\"?","failure_count":1}
+{"sentence":"\"Namenloses Leid der zahllosen Sterblichen.\"","failure_count":1}
+{"sentence":"\"Ob der Regen aufgehört hat?\" \"Das wäre schön.\"","failure_count":1}
+{"sentence":"\"Spielt sie Tennis?\" \"Ja.\"","failure_count":1}
+{"sentence":"\"Ur\" heißt Königin und \"Toelle\" die Wahre.","failure_count":1}
+{"sentence":"\"Warum?\" \"Weil halt.\"","failure_count":1}
+{"sentence":"\"Was soll das?!\" sagt er mit solcher Miene.","failure_count":1}
+{"sentence":"\"Welche Farbe hat der Laster von deinem Papa?\" - \"Blau. Er ist blau.\"","failure_count":1}
+{"sentence":"\"Wenn sie korrekt ist.\" Super.","failure_count":1}
+{"sentence":"\"Woo\" bedeutet Flügel, und \"Sung\" bedeutet Stern.","failure_count":1}
 {"sentence":"Ab und zu kann ich sie ja mal tragen.","failure_count":1}
 {"sentence":"Aber dann hat Rico sie dir gegeben.","failure_count":1}
 {"sentence":"Aber dann wurden sie mit einem Schlag von unserem Helden vernichtet.","failure_count":1}
@@ -12,9 +32,11 @@
 {"sentence":"Aber irgendwie bin ich auch Waise.","failure_count":3}
 {"sentence":"Aber nicht übertreiben,..","failure_count":3}
 {"sentence":"Aber sie muss aufpassen.","failure_count":1}
+{"sentence":"Aber sie war sehr hartnäckig«, antwortete er.","failure_count":1}
 {"sentence":"Aber wenn Sie daran glauben wollen, nehme ich Ihnen die Hoffnung nicht.","failure_count":1}
 {"sentence":"Aber wenn bei dem Zauber etwas schiefgeht, wird Ponyo zu Schaum.","failure_count":1}
 {"sentence":"Aber wenn euch das schon beeindruckt, dann passt jetzt gut auf.","failure_count":1}
+{"sentence":"Ach Gott,« dachte er, »was für einen anstrengenden Beruf habe ich gewählt!","failure_count":2}
 {"sentence":"Ach, die Deppen, wenn die wüssten!","failure_count":1}
 {"sentence":"Ach, leck mich doch am Arsch.","failure_count":1}
 {"sentence":"Achtunddreißig, Vierundfünfzig, Siebenundfünfzig,.","failure_count":1}
@@ -31,6 +53,7 @@
 {"sentence":"Alleine schaffe ich es nicht, aber wir zusammen schon.","failure_count":3}
 {"sentence":"Alleine wär mir vieles entgangen.","failure_count":3}
 {"sentence":"Alleine.","failure_count":3}
+{"sentence":"Alles bis zum Midsommertag«, sagte ich.","failure_count":1}
 {"sentence":"Alles, was er sieht, erregt seine Neugier.","failure_count":1}
 {"sentence":"Alpha Zwei, ich brauche den Wohnort von einem Sergio St.","failure_count":3}
 {"sentence":"Als es ihr besser ging, saß sie draußen und spielte auf der Trompete.","failure_count":3}
@@ -44,6 +67,7 @@
 {"sentence":"Also habe ich ihn mitgenommen und daheim dekantiert.","failure_count":1}
 {"sentence":"Also hat sie doch ein Insekt beschützt.","failure_count":1}
 {"sentence":"Also keine Cabanossi.","failure_count":1}
+{"sentence":"Also was \"relauncht\" ihr?","failure_count":1}
 {"sentence":"Also überleg's dir, bevor du deinen nächsten Mann umbringst.","failure_count":3}
 {"sentence":"Am Anfang hab ich nciht drauf geachtet.","failure_count":1}
 {"sentence":"Am Ball bleiben, Geeta.","failure_count":1}
@@ -89,14 +113,17 @@
 {"sentence":"Bitte das Gelände räumen!","failure_count":1}
 {"sentence":"Bitte, alles, nur das nicht.","failure_count":1}
 {"sentence":"Blindes Drauflosstürmen!","failure_count":3}
+{"sentence":"Bosnien und Herzegowina heißt auf Bosnisch „Bosnia i Hercegovina“.","failure_count":1}
 {"sentence":"Brombeergeschmack.","failure_count":1}
 {"sentence":"Carpe diem.","failure_count":1}
 {"sentence":"Cliff, wir erregen Aufmerksamkeit.","failure_count":1}
+{"sentence":"Clorindas Vater war vor noch nicht einmal sechs Monaten tot umgefallen.","failure_count":2}
 {"sentence":"Da der Wagen gestohlen war, blieb uns nichts anderesd übrig, als zu laufen.","failure_count":1}
 {"sentence":"Da geb ich dir recht, George.","failure_count":1}
 {"sentence":"Da geht es weniger fein zu wie bei euch Offizieren.","failure_count":1}
 {"sentence":"Da hast du dir was eingebrockt.","failure_count":1}
 {"sentence":"Da ist er sicher mehr als anderswo.","failure_count":1}
+{"sentence":"Da sah er auf einmal seinen alten Freund, den Fuchs, an dem Wege sitzen.","failure_count":2}
 {"sentence":"Dachte schon, dass ich sie lange nicht gesehen habe.","failure_count":1}
 {"sentence":"Dafür gebe ich Ihnen MRX.","failure_count":1}
 {"sentence":"Dafür lässt du mich hier raufkommen?","failure_count":1}
@@ -109,6 +136,8 @@
 {"sentence":"Dann gib ihr das.","failure_count":1}
 {"sentence":"Dann hab ich ihn gesehen.","failure_count":1}
 {"sentence":"Dann hab ich ihn wohl im Geiste farbig ergänzt.","failure_count":1}
+{"sentence":"Darfst sich auch \"Mama\" zu ihr sagen.","failure_count":1}
+{"sentence":"Darum habe ich \"cool\" gesagt.","failure_count":1}
 {"sentence":"Darüber was Wong's Sohn blüht?","failure_count":3}
 {"sentence":"Das Dumme ist nur, du hast einen Fehler gemacht.","failure_count":1}
 {"sentence":"Das Freiluftkonzert wurde wegen des Sturms abgesagt.","failure_count":1}
@@ -120,6 +149,7 @@
 {"sentence":"Das Problem liegt in Toms völligem Verhandlungsunwillen.","failure_count":3}
 {"sentence":"Das Restaurant an den Sous-Chef übergeht, Sie also!","failure_count":3}
 {"sentence":"Das bin ich, äh, das ist hier.","failure_count":1}
+{"sentence":"Das französische Wort „eau“ und das deutsche Wort „Au“ sind verwandt.","failure_count":1}
 {"sentence":"Das geb ich dir nicht mehr.","failure_count":1}
 {"sentence":"Das geb ich ja zu.","failure_count":3}
 {"sentence":"Das habe ich befürchtet.","failure_count":1}
@@ -135,11 +165,13 @@
 {"sentence":"Das ist mein Beruf.","failure_count":1}
 {"sentence":"Das japanische Schoßhündchen ist hier!","failure_count":1}
 {"sentence":"Das kriegt man, wenn man einer Rattete vertraut.","failure_count":1}
+{"sentence":"Das sind mindestens drei Schiffe«, erklärte er.","failure_count":1}
 {"sentence":"Das war Megumi's Waffe.","failure_count":3}
 {"sentence":"Das war aber höchste Zeit.","failure_count":1}
 {"sentence":"Das war eine Sondermeldung, wir fahren jetzt mit unserem Musikprogramm fort.","failure_count":1}
 {"sentence":"Das war wirklich komisch.","failure_count":1}
 {"sentence":"Das wird in der nächsten Ausgabe der Konkret erscheinen.","failure_count":3}
+{"sentence":"Dass ich mehr \"Fuck\" sagen soll?","failure_count":1}
 {"sentence":"Dass man Opfer bringen muss, nicht wahr!?","failure_count":3}
 {"sentence":"Dass wir nicht streiten?","failure_count":1}
 {"sentence":"Dein Dekolleté.","failure_count":1}
@@ -165,10 +197,13 @@
 {"sentence":"Der Verband ist ein Nährboden für solche Parasiten.","failure_count":1}
 {"sentence":"Der Verwalter verläßt die Stadt.","failure_count":3}
 {"sentence":"Der Vorteil eines kompletten Outsourcings ist das Angebot der Auftragnehmer.","failure_count":1}
+{"sentence":"Der berechnete Gewinn stand auch dabei.","failure_count":2}
 {"sentence":"Der deutschen Deserteuren hilft!?","failure_count":3}
 {"sentence":"Der hat nämlich gar nichts besonderes, oder?","failure_count":3}
 {"sentence":"Der heisse Ofen.","failure_count":3}
 {"sentence":"Der neue Ausweis ist in Bearbeitung.","failure_count":1}
+{"sentence":"Der richtige Weg, eine \"Battle Royale\" zu kämpfen!","failure_count":1}
+{"sentence":"Der vierte „wer hat von meinem Gemüschen gegessen?“","failure_count":1}
 {"sentence":"Der wäre jetzt sicher auch gern hier.","failure_count":1}
 {"sentence":"Derjeniege der diesen Empfang heute gibt.","failure_count":3}
 {"sentence":"Deshalb bin ich ja gekommen.","failure_count":1}
@@ -196,9 +231,11 @@
 {"sentence":"Die Kräuter sollten ihm helfen.","failure_count":1}
 {"sentence":"Die Kunden bitten um etwas, das Neu ist.","failure_count":1}
 {"sentence":"Die Laktat-Acidose ist der Beweis.","failure_count":1}
+{"sentence":"Die Leute müssen schließlich essen«, sagte ich.","failure_count":1}
 {"sentence":"Die Leute sind aufmerksam geworden.","failure_count":1}
 {"sentence":"Die Leute wären enttäuscht..","failure_count":3}
 {"sentence":"Die Nächste.","failure_count":1}
+{"sentence":"Die PGH Fernsehreparatur \"Adolf Hennecke\" wurde abgewickelt.","failure_count":1}
 {"sentence":"Die Pillen könnten dein Gehirn beeinflusst haben.","failure_count":1}
 {"sentence":"Die Polizei ermittelt, aber hat noch nichts gefunden.","failure_count":1}
 {"sentence":"Die Prinzessin gab ihrem Geliebten einen goldüberzogenen Säbel.","failure_count":1}
@@ -237,6 +274,7 @@
 {"sentence":"Du gibst mir das Gefühl, als sei ich Ebeneezer Scrooge.","failure_count":1}
 {"sentence":"Du hast alle überzeugt, du seist komplizierter, als du es bist.","failure_count":1}
 {"sentence":"Du hast doch gesagt, du wollest nicht darüber sprechen.","failure_count":3}
+{"sentence":"Du hast ihm erzählt, was ein \"snuff\" ist.","failure_count":1}
 {"sentence":"Du hast nicht den natürlichen Schutz ausgenutzt.","failure_count":1}
 {"sentence":"Du hast vor, die Welt zu retten, aber kannst kein Auto finden?","failure_count":1}
 {"sentence":"Du hattest Glück, sonst wärst du auf einer Bahre heimgekommen.","failure_count":1}
@@ -257,6 +295,7 @@
 {"sentence":"Du wickeltest dein Baby.","failure_count":3}
 {"sentence":"Du wirst auf einer Stufe stehen mit Newton, Einstein, Surak!","failure_count":1}
 {"sentence":"Du wirst doch nicht etwa deinen Papa anlügen?","failure_count":1}
+{"sentence":"Du wurdest sicher zur \"Miss Sexy\" gewählt.","failure_count":1}
 {"sentence":"Du übernimmst Mata Hari, ich den Schlumpf.","failure_count":1}
 {"sentence":"Dumme Menschen haben dumme Gedanken.","failure_count":1}
 {"sentence":"Durch Sie habe ich gerade viel Zeit gespart.","failure_count":1}
@@ -277,6 +316,7 @@
 {"sentence":"Eigentlich begreifen Sie und ich noch gar nicht so recht, was geschieht.","failure_count":1}
 {"sentence":"Ein Fisch, der herumzappelt, und ein Fisch, der nicht herumzappelt.","failure_count":1}
 {"sentence":"Ein Mann wird alleine geboren, er lebt allein, und er stirbt alleine.","failure_count":3}
+{"sentence":"Ein Mann, der unter dem Namen \"Morpheus\" bekannt ist.","failure_count":1}
 {"sentence":"Ein Regenbogen bei Nacht?","failure_count":1}
 {"sentence":"Ein Violinist, den ich kenne, sagt, er besitze eine Stradivari.","failure_count":1}
 {"sentence":"Ein ausgewogenes Verhältnis zwischen Berufs- und Privatleben ist wichtig.","failure_count":1}
@@ -286,6 +326,7 @@
 {"sentence":"Eine Art Party im oberen Geschoss hielt mich gestern Abend bis um eins wach.","failure_count":1}
 {"sentence":"Eine Mauer zwischen den Guten und den Bösen.","failure_count":1}
 {"sentence":"Eine Metzgerei, damit es nicht immer Zeitungsläden sind.","failure_count":1}
+{"sentence":"Eine Stunde später hatte der letzte Gefangene seine Skizzen fertig.","failure_count":2}
 {"sentence":"Eine Unterschrift, Julie.","failure_count":1}
 {"sentence":"Eine feine Prinzessin kennt Anstößiges wie Schwitzen nicht.","failure_count":3}
 {"sentence":"Einen Freund auch nicht, falls du es nicht weißt.","failure_count":3}
@@ -293,6 +334,7 @@
 {"sentence":"Einundachtzig,.","failure_count":1}
 {"sentence":"Elektrizität, fortschrittliche Medizin, man konnte sogar fliegen.","failure_count":1}
 {"sentence":"Er erschlägt den Drachen, weil er ihn nicht fürchtet.","failure_count":1}
+{"sentence":"Er hat seinen Bruder wegen Geldes im \"Fleischwolf\" verloren.","failure_count":1}
 {"sentence":"Er hat seinen Zauber selbst abgekriegt.","failure_count":3}
 {"sentence":"Er ist aus einem bestimmten Grund hier.","failure_count":3}
 {"sentence":"Er ist bei ihnen gegen halb sieben weggegangen.","failure_count":1}
@@ -365,6 +407,7 @@
 {"sentence":"Für Woo-Sung wär es auch besser, wenn er nicht weiß, wie ich aussehe.","failure_count":1}
 {"sentence":"Für das, was uns allen zugestoßen ist, gebe ich Tom die Schuld.","failure_count":1}
 {"sentence":"Gangu hatte sich unterm Haus versteckt, fütterst du ihn bitte?","failure_count":1}
+{"sentence":"Ganz unter uns«, antwortete ich.","failure_count":1}
 {"sentence":"Garst'ge Fliege klein, wer hört dein Schrei'n?","failure_count":3}
 {"sentence":"Gebranntes Kind scheut das Feuer.","failure_count":1}
 {"sentence":"Geeta Kumari scheidet schon früh bei der Weltmeisterschaft aus.","failure_count":1}
@@ -403,6 +446,7 @@
 {"sentence":"Hast du schon mal geküsst?","failure_count":1}
 {"sentence":"Hat Ihnen Tom gesagt, wo Sie Ihr Auto parken können?","failure_count":1}
 {"sentence":"Hat Ihnen Tom gesagt, wo Sie Ihr Auto parken sollen?","failure_count":1}
+{"sentence":"Hat der gerade \"Seniorenteller\" gesagt?","failure_count":1}
 {"sentence":"He, du, das ist mein Platz.","failure_count":1}
 {"sentence":"Heldentum.","failure_count":3}
 {"sentence":"Hereinspaziert, hereinspaziert!","failure_count":1}
@@ -448,9 +492,11 @@
 {"sentence":"Holly!","failure_count":1}
 {"sentence":"Holly.","failure_count":1}
 {"sentence":"Holmes’ Kenntnis der Seitenwege von London war außergewöhnlich.","failure_count":1}
+{"sentence":"Hätte aus \"Braveheart\" sein können.","failure_count":1}
 {"sentence":"Hättest lieber Holz hacken sollen, anstatt deine Fresse hinzuhalten..","failure_count":3}
 {"sentence":"Hör mal, ich sag's doch.","failure_count":3}
 {"sentence":"Hör zu, ich fange langsam an, hier ein dummes Gefühl zu kriegen.","failure_count":1}
+{"sentence":"Ich bin auf dem Partmanmeer einen Dreimaster gesegelt«, sagte er.","failure_count":1}
 {"sentence":"Ich bin aus einer anderen Stadt.","failure_count":3}
 {"sentence":"Ich bin dem Herz meines Sohnes gefolgt.","failure_count":1}
 {"sentence":"Ich bin gerade mit dem Kaufen einer Zutaten fertig für das Abendessen geworden.","failure_count":1}
@@ -488,17 +534,22 @@
 {"sentence":"Ich gehe davon aus, du hast um Erlaubnis gebeten, ehe du es getan hast.","failure_count":1}
 {"sentence":"Ich gehe jetzt rein, um zu pinkeln.","failure_count":1}
 {"sentence":"Ich gehe zu Yu's Anwesen und fange sie.","failure_count":3}
+{"sentence":"Ich gehörte nie zu denen, die Begriffe wie \"Sabotage\" leichtfertig verwenden.","failure_count":1}
 {"sentence":"Ich gibt Augusta Terzi's Mörder zu dir.","failure_count":3}
 {"sentence":"Ich glaube, hier stimmt was nicht.","failure_count":3}
+{"sentence":"Ich hab \"Akte X\" gesehen, sogar drei komplette Folgen.","failure_count":1}
 {"sentence":"Ich hab dich damals gebraucht.","failure_count":1}
 {"sentence":"Ich hab gleich gedacht, mit dem stimmt was nicht.","failure_count":3}
 {"sentence":"Ich hab keinen großen Appetit.","failure_count":3}
 {"sentence":"Ich hab keinen großen Hunger.","failure_count":3}
+{"sentence":"Ich hab mal den \"Vatertötungsclub\" erwähnt, weißt du wie es ausging?","failure_count":1}
 {"sentence":"Ich hab noch ein paar Besorgungen zu machen.","failure_count":1}
 {"sentence":"Ich hab noch nie im Leben Tränen vergossen, wie man so schön sagt.","failure_count":1}
+{"sentence":"Ich habe \"Arm\" verstanden.","failure_count":1}
 {"sentence":"Ich habe Mama beim Kochen geholfen.","failure_count":1}
 {"sentence":"Ich habe Tom gesagt, ich hielte es für eine gute Idee.","failure_count":1}
 {"sentence":"Ich habe Tony heute Morgen auf dem Weg zur Schule getroffen.","failure_count":1}
+{"sentence":"Ich habe heute \"Clausewitz\" ausgegeben.","failure_count":1}
 {"sentence":"Ich habe jemand noch Besseren.","failure_count":1}
 {"sentence":"Ich habe keine Zeit, mit dir zu quatschen.","failure_count":3}
 {"sentence":"Ich habe mich bemüht.","failure_count":1}
@@ -531,6 +582,7 @@
 {"sentence":"Ich möchte von der wahren Größe des ehrwürdigen Elijah Muhammad reden.","failure_count":1}
 {"sentence":"Ich möchte wissen, ob euch mein neues Lied gefällt.","failure_count":1}
 {"sentence":"Ich packe euch Dampfbrötchen ein.","failure_count":1}
+{"sentence":"Ich reichte ihm ein Bündel Geldscheine.","failure_count":2}
 {"sentence":"Ich ruf mich an, um deine Nummer zu haben.","failure_count":1}
 {"sentence":"Ich sag's Ihnen, wenn es soweit ist.","failure_count":3}
 {"sentence":"Ich sag's Tom.","failure_count":3}
@@ -557,6 +609,7 @@
 {"sentence":"Ich sag's meinem Mann, dann schreibt er mir gleich.","failure_count":3}
 {"sentence":"Ich sage nichts!","failure_count":1}
 {"sentence":"Ich sagte doch wegen der Mama-Scheiße.","failure_count":1}
+{"sentence":"Ich sagte, wir \"könnten\" vor Gericht ziehen.","failure_count":1}
 {"sentence":"Ich sag’s dir nicht noch mal.","failure_count":3}
 {"sentence":"Ich sag’s dir, wenn ich wieder da bin.","failure_count":3}
 {"sentence":"Ich sah Tränen in seinen Augen.","failure_count":1}
@@ -569,6 +622,7 @@
 {"sentence":"Ich versuch's nachher noch mal, ja?","failure_count":3}
 {"sentence":"Ich war die Geliebte von Jean Saporta.","failure_count":1}
 {"sentence":"Ich war in Saudi, wissen Sie?","failure_count":1}
+{"sentence":"Ich weiß ich nicht, ob rechtlich \"Affenvergewaltigung\" existiert.","failure_count":1}
 {"sentence":"Ich weiß nicht, ob du das weißt.","failure_count":3}
 {"sentence":"Ich weiß nicht, wer du bist, aber du bist nicht meine Frau.","failure_count":1}
 {"sentence":"Ich weiß, dass Sie den Brief bekommen haben.","failure_count":1}
@@ -627,6 +681,7 @@
 {"sentence":"Ja, viel besser als die Statisten.","failure_count":1}
 {"sentence":"Ja, was ich immer sage.","failure_count":1}
 {"sentence":"Jagt Karotten.","failure_count":3}
+{"sentence":"Jeder Haushalt muss Eisen in die \"Hinterhof-Hochöfen\" liefern.","failure_count":1}
 {"sentence":"Jeder leidet ab und zu mal an Schlaflosigkeit.","failure_count":1}
 {"sentence":"Jeder transportiert ein bisschen davon, passend zu eurer Verkleidung.","failure_count":1}
 {"sentence":"Jener haarige Außerirdische spricht kein Englisch, sondern versteht es nur.","failure_count":3}
@@ -648,6 +703,7 @@
 {"sentence":"Kenjee.","failure_count":3}
 {"sentence":"Kennte ich ihn besser, so würde ich ihm die Wahrheit sagen.","failure_count":3}
 {"sentence":"Kennte ich ihren Namen und ihre Adresse, so könnte ich ihr schreiben.","failure_count":3}
+{"sentence":"Khan«, sagte ich, »du wohnst direkt am Wasser, zwei Blocks vor der Rosehip Way.","failure_count":2}
 {"sentence":"Klatschers Mutter macht's nicht mehr lang.","failure_count":3}
 {"sentence":"Knallen wir mit dem Baby mal über die Bahn!","failure_count":3}
 {"sentence":"Kneife mich bitte,..","failure_count":3}
@@ -689,6 +745,7 @@
 {"sentence":"Lacht nur.","failure_count":1}
 {"sentence":"Langweilt dich das nicht selbst irgendwann?","failure_count":1}
 {"sentence":"Lass uns Mama dieses Jahr Rosen schenken!","failure_count":1}
+{"sentence":"Lass uns jeden eine \"Säure\" nehmen.","failure_count":1}
 {"sentence":"Lasse alle Abstand von mir halten wie von einem Aussätzigen!","failure_count":1}
 {"sentence":"Lasst es mich mit Hilfe eines Schaubilds erklären.","failure_count":1}
 {"sentence":"Leben ist ist eine interessante Sache, die die Materie manchmal so macht.","failure_count":1}
@@ -697,6 +754,7 @@
 {"sentence":"Liebende sehen sich schmachtend an.","failure_count":1}
 {"sentence":"Liefer die Bestellung aus.","failure_count":3}
 {"sentence":"Liefer es schnell.","failure_count":3}
+{"sentence":"Limburger wird oft als „Stinkekäse“ abgelehnt.","failure_count":1}
 {"sentence":"Lindere seinen Schmerz.","failure_count":1}
 {"sentence":"Lobenswert?","failure_count":1}
 {"sentence":"Los gehts!","failure_count":1}
@@ -718,6 +776,8 @@
 {"sentence":"Maria weinte, bis ihre Tränen versiegten.","failure_count":1}
 {"sentence":"Maria wischte sich die Tränen ab und kämpfte gegen neue an.","failure_count":1}
 {"sentence":"Mary hat sich selbst korregiert.","failure_count":1}
+{"sentence":"Mary nahm die „Pille danach‟.","failure_count":1}
+{"sentence":"Mehr habe ich nicht«, antwortete ich.","failure_count":1}
 {"sentence":"Mein Deutsch ist, denke ich, äußerst schlecht.","failure_count":1}
 {"sentence":"Mein Papa hat meine Mama lieb.","failure_count":1}
 {"sentence":"Meine Brüder.","failure_count":1}
@@ -727,9 +787,11 @@
 {"sentence":"Meine Pläne misslangen einer nach dem anderen.","failure_count":1}
 {"sentence":"Meine Wohnung ist sauber, ich sag's euch.","failure_count":3}
 {"sentence":"Meister Liu.","failure_count":1}
+{"sentence":"Mich interessieren Probleme, die Toys\"R\"Us angehen.","failure_count":1}
 {"sentence":"Misch du dich da nicht ein.","failure_count":1}
 {"sentence":"Mit Ruby Rhod, Korben Dallas und dem Hotel-Direktor.","failure_count":1}
 {"sentence":"Mit deiner Erfahrung würde dich jede Firma auf der Stelle einstellen.","failure_count":1}
+{"sentence":"Mit dem Reillyson-Eastport-Bindfaden Nummer vier ist alles in Ordnung.","failure_count":2}
 {"sentence":"Morgen lesen wir in der Zeitung, wer tot ist und wer überlebt hat.","failure_count":1}
 {"sentence":"Morgen werden wir den Zug an einer anderen Stelle anhalten.","failure_count":3}
 {"sentence":"Mr Overstreet, ich warne Sie, setzen Sie sich.","failure_count":1}
@@ -764,10 +826,12 @@
 {"sentence":"Nun habe ich Sie doch erkannt.","failure_count":1}
 {"sentence":"Nun weiß ich dass es sehr nützlich ist.","failure_count":1}
 {"sentence":"Nun, als Vorsitzender der AEK kenne ich Ihre Sicherheitsakte.","failure_count":1}
+{"sentence":"Nur \"gut\"?","failure_count":1}
 {"sentence":"Nur Künstler und Kinder sehen das Leben wie es ist.","failure_count":1}
 {"sentence":"Nur Wolkenkratzer und Hotels.","failure_count":3}
 {"sentence":"Nur eine Nacht, schenk mir nur eine Nacht.","failure_count":1}
 {"sentence":"Nur eine kleine Verliebtheit.","failure_count":1}
+{"sentence":"Nur ihr \"Willkommen!\" hat Schwung.","failure_count":1}
 {"sentence":"Nur, dass es die Exfrau des früheren Schlachthofbesitzers ist.","failure_count":1}
 {"sentence":"Nänänänänänä!","failure_count":1}
 {"sentence":"Ob bei Ihnen ein Herr Beckert wohnt!","failure_count":1}
@@ -779,6 +843,7 @@
 {"sentence":"Oh, klar, das sollen Zeitfresser sein.","failure_count":1}
 {"sentence":"Oh, nein, das wäre zu einfach, viel zu einfach.","failure_count":1}
 {"sentence":"Ohne dich sind wir am Arsch.","failure_count":1}
+{"sentence":"Okay, wenn das ein \"Nein\" ist, kommen wir zu Frage zwei.","failure_count":1}
 {"sentence":"Okay, wie versprochen, Paul wäre drüben.","failure_count":1}
 {"sentence":"Okraschoten und Brotfrüchte bekommst du beim Krämer an der Ecke.","failure_count":1}
 {"sentence":"Ok‚ sieh mich an.","failure_count":1}
@@ -786,6 +851,7 @@
 {"sentence":"Paddel weiter!","failure_count":1}
 {"sentence":"Papa, Ben, kommt schnell her!","failure_count":1}
 {"sentence":"Papa, gib mir Mama.","failure_count":1}
+{"sentence":"Paris \"fucking\" Hilton.","failure_count":1}
 {"sentence":"Pass auf die Stufe auf.","failure_count":1}
 {"sentence":"Petrificus Totalus.","failure_count":1}
 {"sentence":"Petrificus totalus.","failure_count":1}
@@ -845,6 +911,7 @@
 {"sentence":"Seien Sie so liebenswürdig, die Nummer ihres Planeten.","failure_count":3}
 {"sentence":"Seine Erfinding ist bemerkenswert.","failure_count":3}
 {"sentence":"Seine Tränen haben mich bewegt.","failure_count":1}
+{"sentence":"Selbstverständlich erklärten wir ihnen auch diesen Teil ihrer Vernehmung.","failure_count":2}
 {"sentence":"Señoras y señores.","failure_count":1}
 {"sentence":"Sichtlich bewegt klappt er den Helm hoch und wischt sich die Tränen weg.","failure_count":1}
 {"sentence":"Sie Ist jung, sie wird reich sein, sie wird glücklich sein.","failure_count":1}
@@ -853,9 +920,11 @@
 {"sentence":"Sie drehte den Kopf weg, damit er nicht ihre Tränen sehen konnte.","failure_count":1}
 {"sentence":"Sie existiert, das ist eine Tatsache und keine Frage des Stolzes mehr.","failure_count":1}
 {"sentence":"Sie finden Linguini's Suppe gut.","failure_count":3}
+{"sentence":"Sie haben das \"Qingluo-Bucht\"-Projekt und ich die stärkste Immobilienmarke.","failure_count":1}
 {"sentence":"Sie haben ihn gefasst, und er ist entwischt?","failure_count":1}
 {"sentence":"Sie haben sogar Säulen getötet, die wiederum viele Dämonen getötet haben.","failure_count":1}
 {"sentence":"Sie hat dich fertiggemacht.","failure_count":1}
+{"sentence":"Sie hat einen \"Niemand\" geheiratet.","failure_count":1}
 {"sentence":"Sie hat mich total bezirzt, sagte, ich sei sehr schön, was jeder weiß.","failure_count":3}
 {"sentence":"Sie hatten doch schon zwei.","failure_count":1}
 {"sentence":"Sie ist bei weitem schicker gekleidet als ich.","failure_count":1}
@@ -866,6 +935,7 @@
 {"sentence":"Sie muss nachher zum Tierarzt.","failure_count":1}
 {"sentence":"Sie musste so lachen, dass ihr die Tränen liefen.","failure_count":1}
 {"sentence":"Sie müssen genau vor ihm stehen.","failure_count":1}
+{"sentence":"Sie saß aber beständig und nähete an den Hemden, und achtete auf nichts anderes.","failure_count":2}
 {"sentence":"Sie schaute mich an, als Tränen ihr die Wangen herunterliefen.","failure_count":1}
 {"sentence":"Sie schien ihre Tränen zu unterdrücken.","failure_count":1}
 {"sentence":"Sie sind für ihn zum Problem geworden.","failure_count":1}
@@ -892,6 +962,7 @@
 {"sentence":"Silhouette und Stofflichkeit, das geht.","failure_count":1}
 {"sentence":"Sind es die Schriftstücke, die du bei den Ärzten unterschrieben hast?","failure_count":1}
 {"sentence":"Sir, wenn ich Sie beide bezahle, mache ich Pleite.","failure_count":1}
+{"sentence":"Slytherin selbst wurde \"Schlangenzunge\" genannt.","failure_count":1}
 {"sentence":"Small's Frankie.","failure_count":3}
 {"sentence":"So dringend ist es nicht.","failure_count":1}
 {"sentence":"So habe ich unsere Tochter genannt, Sean.","failure_count":1}
@@ -904,6 +975,8 @@
 {"sentence":"Soldbuch werden Sie noch öfter zeigen müssen.","failure_count":1}
 {"sentence":"Soll das ein Pferd sein?","failure_count":1}
 {"sentence":"Soll ich den Fernseher anschalten?","failure_count":1}
+{"sentence":"Soll ich wieder \"Jingle Bells\" spielen?","failure_count":1}
+{"sentence":"Sollen wir \"Dienstmädchen\" spielen, so wie früher?","failure_count":1}
 {"sentence":"Sollten Sie das wirklich essen?","failure_count":1}
 {"sentence":"Sollten Sie nicht da drüben sein?","failure_count":1}
 {"sentence":"Sollten Sie.","failure_count":1}
@@ -1008,6 +1081,7 @@
 {"sentence":"Und dir liefen die Tränen runter.","failure_count":1}
 {"sentence":"Und du kennst mich nicht, verdammt nochmal?","failure_count":1}
 {"sentence":"Und ihre Tränen haben Heilkräfte.","failure_count":1}
+{"sentence":"Und in Raditsiobello ebenfalls nicht«, sagte ich.","failure_count":1}
 {"sentence":"Und mit anderen korrupten Polizisten arbeiten.","failure_count":1}
 {"sentence":"Und so spielt jeder Bürger eines unverzichtbare Rolle.","failure_count":1}
 {"sentence":"Und was hast du getan?","failure_count":1}
@@ -1050,13 +1124,16 @@
 {"sentence":"Waren Sie die Geliebte meines Mannes?","failure_count":1}
 {"sentence":"Warnte ich Sie nicht, niemandem zu vertrauen, Dr. Jones?","failure_count":3}
 {"sentence":"Warst das du mit Souta?","failure_count":1}
+{"sentence":"Warum \"auch\"?","failure_count":1}
 {"sentence":"Warum kann Fengxia nicht sprechen?","failure_count":1}
 {"sentence":"Warum machst du nichts?","failure_count":1}
 {"sentence":"Warum nur haben Sie ihn gehei..?","failure_count":3}
 {"sentence":"Warum verarschst du sie?","failure_count":1}
 {"sentence":"Warum wird mein Name In den Schmutz gezogen?","failure_count":1}
+{"sentence":"Was \"senkrecht\"?","failure_count":1}
 {"sentence":"Was fällt dir ein, so mit mir zu reden, du verdammter Schwachkopf!","failure_count":1}
 {"sentence":"Was für eine egoistische Frau!","failure_count":1}
+{"sentence":"Was garantiert mir, dass ich \"ich\" bleiben kann?","failure_count":1}
 {"sentence":"Was glaubst ihr, wie lange ihr dafür brauchen werdet?","failure_count":3}
 {"sentence":"Was guckst du den immer so an, so angesext.","failure_count":1}
 {"sentence":"Was haben Sie zu verlieren?","failure_count":1}
@@ -1068,6 +1145,7 @@
 {"sentence":"Was müssen Sie so dringend mit ihm besprechen?","failure_count":1}
 {"sentence":"Was plappert ihr da so rum?","failure_count":1}
 {"sentence":"Was sage ich jetzt zu ihm?","failure_count":1}
+{"sentence":"Was soll \"aha\" heißen?","failure_count":1}
 {"sentence":"Was sollte sie Ihrer Meinung nach tun?","failure_count":1}
 {"sentence":"Was sollte sie deiner Meinung nach tun?","failure_count":1}
 {"sentence":"Was sollte sie eurer Meinung nach tun?","failure_count":1}
@@ -1083,9 +1161,11 @@
 {"sentence":"Wenn Ihr von Zagreb aus nach Norden reist, erreicht ihr Slowenien.","failure_count":3}
 {"sentence":"Wenn Sie Zweifel haben, zerstreuen sie diese, indem sie wählen.","failure_count":3}
 {"sentence":"Wenn da abgesperrt ist, hat das sicher einen Grund.","failure_count":1}
+{"sentence":"Wenn das Wörtchen „wenn“ nicht wär, wär mein Vater Millionär.","failure_count":1}
 {"sentence":"Wenn du andere nicht magst, werden sie dich auch nicht mögen.","failure_count":1}
 {"sentence":"Wenn du was tun willst, dann bete für einen schnellen Tod.","failure_count":1}
 {"sentence":"Wenn ich das nicht ausbügele, bin ich wieder Verkehrspolizist.","failure_count":1}
+{"sentence":"Wenn ich nicht zu Hause bin, mache ich das auch«, antwortete ich.","failure_count":1}
 {"sentence":"Wenn ich ohne dich gehe, nehmen sie sie dir doch sowieso weg.","failure_count":1}
 {"sentence":"Wenn ihr Geld braucht, sag's mir.","failure_count":3}
 {"sentence":"Wenn ihr auf Englisch mühelos alles lesen könntet, was würdest ihr dann lesen?","failure_count":3}
@@ -1093,11 +1173,15 @@
 {"sentence":"Wenn sie Linguini's Essen wollen.","failure_count":3}
 {"sentence":"Wenn sie ein Herz hätte, das würde es ihr brechen.","failure_count":1}
 {"sentence":"Wenn uns eine Bombe um die Ohren fliegt?","failure_count":1}
+{"sentence":"Wer \"ich\"?","failure_count":1}
+{"sentence":"Wer \"ihnen\"?","failure_count":1}
+{"sentence":"Wer \"sie\"?","failure_count":1}
 {"sentence":"Wer ist der gitarrespielende, hochgewachsene, dunkelhaarige Mann?","failure_count":1}
 {"sentence":"Wer schwache Nerven hat, sollte besser wegsehen..","failure_count":3}
 {"sentence":"Wer weiß, was sie dem Anwalt erzählt hat.","failure_count":1}
 {"sentence":"Why didn't you come with us?","failure_count":3}
 {"sentence":"Wichtig oder dringend, das ist hier die Frage.","failure_count":1}
+{"sentence":"Wie \"warum\"?","failure_count":1}
 {"sentence":"Wie Sie sehen, hat der Täter diesmal nur Dinge verwendet, die ihr gehörten.","failure_count":1}
 {"sentence":"Wie bist du den Flammen entkommen?","failure_count":1}
 {"sentence":"Wie erschwindelten Sie das Anwaltspatent?","failure_count":1}
@@ -1134,7 +1218,9 @@
 {"sentence":"Wir neigen dazu wahrzunehmen, was wir wahrzunehmen erwarten.","failure_count":1}
 {"sentence":"Wir räumen nur ein bisschen auf.","failure_count":1}
 {"sentence":"Wir schütteln unsere Haare.","failure_count":1}
+{"sentence":"Wir sind endlich im \"Herzen Amerikas\" angelangt.","failure_count":1}
 {"sentence":"Wir sind in Sicherheit.","failure_count":1}
+{"sentence":"Wir sollten Ibsens \"Nora\" aufführen.","failure_count":1}
 {"sentence":"Wir wussten, dass wir Ärger bekommen würden, das stimmt schon.","failure_count":1}
 {"sentence":"Wird Mama zu dem Ladengeschäft gehen?","failure_count":1}
 {"sentence":"Wird ihre Rivalität je In den Vordergrund rücken?","failure_count":1}
@@ -1168,7 +1254,26 @@
 {"sentence":"Zwei Drittel der Angestellten in dieser Firma sind Ingenieure.","failure_count":1}
 {"sentence":"Zwei Tränen rannen ihre Wangen hinab.","failure_count":1}
 {"sentence":"Zwei Tränen rollten über seine Wangen.","failure_count":1}
+{"sentence":"»Da drin ist etwas gefallen,« sagte der Prokurist im Nebenzimmer links.","failure_count":1}
+{"sentence":"»Fünf Glasen!«, rief ich.","failure_count":1}
+{"sentence":"»Nun,« sagte Herr Samsa, »jetzt können wir Gott danken.«","failure_count":1}
+{"sentence":"»O bitte,« rief der Vater, als sei er der Violinspieler.","failure_count":1}
+{"sentence":"»Sie hat tausendmal recht,« sagte der Vater für sich.","failure_count":1}
+{"sentence":"»Wie befohlen.« Wieder eine Stimme aus der Luft.","failure_count":1}
 {"sentence":"Ärgerst du dich, dass ich hier bin?","failure_count":3}
 {"sentence":"Übergib mir die Gefangenen!","failure_count":1}
 {"sentence":"Übernächstes Jahr geht Tom in Rente.","failure_count":1}
 {"sentence":"Übernächstes Jahr geht Tom in den Ruhestand.","failure_count":1}
+{"sentence":"„Abgesehen wovon?“ Jetzt war er sehr interessiert.","failure_count":1}
+{"sentence":"„Dem Ding will ich einen Riegel vorschieben,“ sagte das Schneiderlein.","failure_count":1}
+{"sentence":"„Doctor Who“ ist die am längsten laufende Science-fiction-Fernsehserie der Welt.","failure_count":1}
+{"sentence":"„Du schreist einem durch Mark und Bein,“ sprach der Esel, „was hast du vor?“","failure_count":1}
+{"sentence":"„Du träumst,“ sagte der andere, „ich schlage dich nicht.“","failure_count":1}
+{"sentence":"„Genau das habe ich gesagt.“ Ich schnitt ein weiteres Stück Artischocke ab.","failure_count":1}
+{"sentence":"„Hänsel, was stehst du und guckst dich um,“ sagte der Vater, „geh deiner Wege.“","failure_count":1}
+{"sentence":"„Ich heiße Sneewittchen,“ antwortete es.","failure_count":1}
+{"sentence":"„Michael“ ist ein Jungenname, aber „Michaela“ ein Mädchenname.","failure_count":1}
+{"sentence":"„Schreiber!“ Während alldem wurden unsere Ereignisse ins Logbuch eingetragen.","failure_count":1}
+{"sentence":"„Spar nur dein Geblärre,“ sagte die Alte, „es hilft dir alles nichts.“","failure_count":1}
+{"sentence":"„Und noch eine.“ Jetzt hatten wir ordentlich Abstand zum Dock.","failure_count":1}
+{"sentence":"„Unser Bestatter.“ Er legte die Hände zusammen.","failure_count":1}

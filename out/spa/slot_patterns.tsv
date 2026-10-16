@@ -1,24 +1,25 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-dar algo	filled	7185	8	12	0.67	yes	Dense prisa ahora, y traigan a las mujeres para que ayuden.	Dense … prisa
-ser alguien	filled	3701	11	12	0.92	yes	El amor lo es todo.	lo … es
-dar algo	clitic	341	11	12	0.92	yes	A él le da lo mismo lo que otros digan.	da … lo
-necesito su ayuda	clitic	84	12	12	1.00	yes		
-su gracia	filled	38	3	12	0.25	no	Al contrario, muchas gracias a usted.	gracias … usted
-a sus pies	clitic	22	10	12	0.83	yes	Estos zapatos no se ajustan a mi pie.	a … mi … pie
-necesito su ayuda	filled	20	12	12	1.00	yes		
-en su punto	filled	15	0	12	0.00	no	Bob está todo el rato en el punto de mira de la policía.	en … punto … mira
-su gracia	clitic	14	7	12	0.58	no	Bendíceme con tu gracia.	tu … gracia
-cuál es su nombre	clitic	13	12	12	1.00	yes		
+dar algo	filled	8300	12	12	1.00	yes		
+ser alguien	filled	4986	0	12	0.00	no	"El paraíso es esto."	es … esto
+dar algo	clitic	383	12	12	1.00	yes		
+necesito su ayuda	clitic	89	12	12	1.00	yes		
+su gracia	filled	48	4	12	0.33	no	Al contrario, muchas gracias a usted.	gracias … usted
+a sus pies	clitic	25	11	12	0.92	yes	Agárrate a mi pie y dame la mano Yo te ayudaré.	a … mi … pie
+necesito su ayuda	filled	21	12	12	1.00	yes		
+su gracia	clitic	20	6	12	0.50	no	Me gusta la forma en la que ella ríe mis gracias.	mis … gracias
+en su punto	filled	14	0	12	0.00	no	Bob está todo el rato en el punto de mira de la policía.	en … punto … mira
+cuál es su nombre	clitic	12	12	12	1.00	yes		
 a sus pies	filled	11	9	11	0.82	yes	A seis pies bajo tierra.	A … pies … tierra
-sudor de su frente	filled	10	2	10	0.20	no	A sudor de pies y pelo grasiento.	sudor … de … pies
-en su punto	clitic	8	5	8	0.62	yes	Atacaremos a MRX en su punto más débil ¡Su orgullo!	en … su … punto
-por su cuenta	filled	4	4	4	1.00	yes		
-buscarle las cosquillas a alguien	clitic	3	3	3	1.00	yes		
-en sus cabales	clitic	3	3	3	1.00	yes		
+en su punto	clitic	11	8	11	0.73	yes	Atacaremos a MRX en su punto más débil ¡Su orgullo!	en … su … punto
+sudor de su frente	filled	10	1	10	0.10	no	A sudor de pies y pelo grasiento.	sudor … de … pies
+por su cuenta	filled	5	5	5	1.00	yes		
+buscarle las cosquillas a alguien	clitic	4	4	4	1.00	yes		
+en sus cabales	clitic	4	4	4	1.00	yes		
 sudor de su frente	clitic	3	1	3	0.33	no	Incluso lo puedes oler en su sudor.	su … sudor
 niña de sus ojos	clitic	2	2	2	1.00	yes		
 poner alguien en su sitio	filled	2	1	2	0.50	no	Ponga eso en su sitio.	Ponga … eso … en … su … sitio
+tocar los huevos a alguien	clitic	2	2	2	1.00	yes		
 niña de sus ojos	filled	1	1	1	1.00	yes		
 poner alguien en su sitio	clitic	1	1	1	1.00	yes		
-tocar los huevos a alguien	clitic	1	1	1	1.00	yes		
+sacar de sus casillas	filled	1	0	1	0.00	no	¡Parece algo sacado de la Vieja Sociedad!	sacado … de … Vieja Sociedad
 volar con sus propias alas	clitic	1	1	1	1.00	yes		

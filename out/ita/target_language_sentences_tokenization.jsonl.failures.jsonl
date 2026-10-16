@@ -1,4 +1,33 @@
+{"sentence":"\"A me piace giocare a carte.\" \"Anche a me.\"","failure_count":1}
+{"sentence":"\"Ciao, se sei Bo Kang,\" \"smettila di chiamarmi.\"","failure_count":1}
+{"sentence":"\"Conosce Tom?\" \"Lo conosco.\"","failure_count":1}
+{"sentence":"\"Dannazione! Ho dimenticato l'ombrello sul treno.\" \"Sbadata!\"","failure_count":1}
+{"sentence":"\"Di chi sono questi CD?\" \"Sono di Samir.\"","failure_count":1}
+{"sentence":"\"Ecco il tuo ordine di \"Doenjang\".\" .","failure_count":1}
+{"sentence":"\"Era il maggio odoroso e tu solevi così menare il giorno.\"","failure_count":1}
+{"sentence":"\"Era\" cosa?","failure_count":1}
+{"sentence":"\"Grazie.\" \"Per cosa?\" \"Per tutto.\"","failure_count":1}
+{"sentence":"\"I signori di Gondor sono tornati!\".","failure_count":1}
+{"sentence":"\"Incontrate la gente che lavora, che pensa al futuro dei figli!\".","failure_count":1}
+{"sentence":"\"La colpirò fortissimo.\"","failure_count":1}
+{"sentence":"\"Lei non è il signor Ogawa?\" \"Sì, lo sono. Posso aiutarvi?\"","failure_count":1}
+{"sentence":"\"Lo eterea\".","failure_count":1}
+{"sentence":"\"Mi piace giocare a carte.\" \"Anche a me.\"","failure_count":1}
+{"sentence":"\"Moglie?\" \"Ex.\" \"Figli?\" \"Quattro.\"","failure_count":1}
+{"sentence":"\"Pensavo stessi dormendo.\" \"Anche io.\"","failure_count":1}
+{"sentence":"\"Per piacere, vada lì adesso.\" \"Lì dove?\"","failure_count":1}
+{"sentence":"\"Per piacere, vai lì adesso.\" \"Lì dove?\"","failure_count":1}
+{"sentence":"\"Perché?\".","failure_count":1}
+{"sentence":"\"Poi una mattina, dormiva ancora, quatto quatto le tagliò la gola.\"","failure_count":1}
+{"sentence":"\"Questo è cinese o giapponese?\" \"È coreano.\"","failure_count":1}
+{"sentence":"\"Se non farà punti, s'innervosirà e avrai la tua occasione.\"","failure_count":1}
+{"sentence":"\"Sento puzza di ebreo.\"","failure_count":1}
+{"sentence":"\"Shut up\", Barbara.","failure_count":1}
+{"sentence":"\"Svenire?\".","failure_count":1}
+{"sentence":"\"Zero gradi Celsius! Ho la febbre alta!\" \"Povero signor Uomo-di-neve.\"","failure_count":1}
+{"sentence":"\"Zuccapelata fa le scorregge, e su di noi non detterà legge!\"","failure_count":1}
 {"sentence":"A meno che il film non sia un grande successo.","failure_count":1}
+{"sentence":"A otto anni, \"babbu\" ci dormiva sopra, all'aperto, con le bestie al pascolo!","failure_count":1}
 {"sentence":"A te piace camminare?","failure_count":1}
 {"sentence":"A, credo che le persone debbano ricordarti.","failure_count":1}
 {"sentence":"Abbassa questo ponte!","failure_count":1}
@@ -6,7 +35,9 @@
 {"sentence":"Abbraccia gli alberi.","failure_count":1}
 {"sentence":"Abel,se vedrò ancora Varlam dissepolto, perderò il controllo.","failure_count":1}
 {"sentence":"Accesi le candele.","failure_count":1}
+{"sentence":"Accidenti a questa \"solaristica\"!","failure_count":1}
 {"sentence":"Accidenti a te e alle noci di cocco.","failure_count":3}
+{"sentence":"Accidenti del verbo!","failure_count":1}
 {"sentence":"Accidenti è già tempo di andare?!","failure_count":3}
 {"sentence":"Accidenti, Andreia, non possono.","failure_count":3}
 {"sentence":"Accidenti, Cleo.","failure_count":3}
@@ -29,11 +60,13 @@
 {"sentence":"Ah ah!..","failure_count":3}
 {"sentence":"Al contrario del mito dell'immortale onnisciente e iper-saggio.","failure_count":3}
 {"sentence":"Alla maggior parte dei ragazzi piacciono i giochi per computer.","failure_count":1}
+{"sentence":"Altri mesi passarono, nessuna notizia.","failure_count":1}
 {"sentence":"Ama quell'intingolo.","failure_count":3}
 {"sentence":"Ammucchiavamo il fieno nel granaio.","failure_count":3}
 {"sentence":"Anche se Piton stava mormorando il suo controincantesimo.","failure_count":3}
 {"sentence":"Ancora non lo sai!?","failure_count":3}
 {"sentence":"Andrew, non sei tu.","failure_count":1}
+{"sentence":"Applauditeli calorosamente, dunque.","failure_count":1}
 {"sentence":"Asciugamani.","failure_count":3}
 {"sentence":"Aspettami, Sofi.","failure_count":1}
 {"sentence":"Assume la cattedra di studi orientali alla London University..","failure_count":3}
@@ -76,6 +109,7 @@
 {"sentence":"Cinque giorni!","failure_count":1}
 {"sentence":"Circa trent'anni, elegante, ben vestito.","failure_count":3}
 {"sentence":"Clovis, aiutalo.","failure_count":3}
+{"sentence":"Come \"perché\"?","failure_count":1}
 {"sentence":"Come TaiYin ZhenRen!","failure_count":3}
 {"sentence":"Come ha fatto Alistair?","failure_count":1}
 {"sentence":"Come puoi affermare che Nihad di Maggio è il figlio di Nawal Marwan ?","failure_count":1}
@@ -88,13 +122,19 @@
 {"sentence":"Cooper?..","failure_count":3}
 {"sentence":"Cos'è in confronto alla nostra bandiera candida col giglio d'oro?","failure_count":3}
 {"sentence":"Cos'è quello?!?!","failure_count":3}
+{"sentence":"Cosa \"Ssh\"?","failure_count":1}
+{"sentence":"Cosa \"esatto\"?","failure_count":1}
+{"sentence":"Cosa \"sì\"?","failure_count":1}
 {"sentence":"Cosa c'è, maledizione?!?","failure_count":3}
+{"sentence":"Cosa significa il nome \"Gal\"?","failure_count":1}
 {"sentence":"Cosa?!?","failure_count":3}
+{"sentence":"Così risparmiammo qualcosa.","failure_count":1}
 {"sentence":"Cris, non posso da solo prenditi cura di Clayton.","failure_count":3}
 {"sentence":"Curiosamente, al mattino, mi sveglio con le orecchie dure.","failure_count":3}
 {"sentence":"D'accordo, io non chiedo a te e tu non chiedi a me.","failure_count":3}
 {"sentence":"Dai, Jones, sai bene come si fa..!","failure_count":3}
 {"sentence":"Dallo a me, Clarice, da brava.","failure_count":1}
+{"sentence":"Dando luogo ad una consapevolezza che io chiamo \"me.\"","failure_count":1}
 {"sentence":"Daphne Kluger.","failure_count":1}
 {"sentence":"Darà le dimissioni.","failure_count":3}
 {"sentence":"Darò quell'anello a mia madre e glielo metterò sul suo dito ossuto!","failure_count":3}
@@ -108,6 +148,7 @@
 {"sentence":"Devrei andare.","failure_count":3}
 {"sentence":"Di certo, esaminarono le loro possibilità ed esitarono sul da farsi.","failure_count":3}
 {"sentence":"Di goccie ben radunate.","failure_count":3}
+{"sentence":"Di lei per ora ho solo \"fuffa\" impubblicabile.","failure_count":1}
 {"sentence":"Difendi il Re.","failure_count":1}
 {"sentence":"Difettosi, una volta marcati, andate nelle vostre stanze per il rancio.","failure_count":1}
 {"sentence":"Dimmi Mitsuha, stavolta ci ricoderemo l'uno dell'altro al risveglio?","failure_count":3}
@@ -130,6 +171,8 @@
 {"sentence":"Dovremo riparlare dell'accordo.","failure_count":3}
 {"sentence":"Dovreste scrivervela, questa.","failure_count":3}
 {"sentence":"Doyle?..","failure_count":3}
+{"sentence":"E addio “tigre bianca“ e “baco da seta.“.","failure_count":1}
+{"sentence":"E appena appena a Papà.","failure_count":1}
 {"sentence":"E così voi siete stati trasferiti, siete agenti di Kitano, vero!?","failure_count":3}
 {"sentence":"E credi che lascerò che ti portino via?","failure_count":1}
 {"sentence":"E gli esempi vengono dati, figliola, non dimenticati.","failure_count":3}
@@ -151,11 +194,17 @@
 {"sentence":"Eccola, più fotogenica di una diva!","failure_count":3}
 {"sentence":"Eccola, si chiama Paula.","failure_count":3}
 {"sentence":"Efisio, invece, l'umile pastore che non parla una parola d'italiano, vince.","failure_count":3}
+{"sentence":"Egli ruminava già nella cappadoccia la lezione di domani mattina.","failure_count":1}
+{"sentence":"Ehi, amico, volevo chiederti, \"Rank\", è l'abbreviazione di, tipo, \"Ranklin\"?","failure_count":1}
 {"sentence":"Ehi, ehi, ehi, ehi, ehi, ehi, ehi, ehi!","failure_count":3}
 {"sentence":"Ehi, ragazzi, un secondo.","failure_count":1}
 {"sentence":"Eliminati.","failure_count":3}
+{"sentence":"Emerge \"lo eterea\", \"il\" impalpabile, \"lo\" fantasma.","failure_count":1}
+{"sentence":"Equipaggi di prua e di poppa!","failure_count":1}
 {"sentence":"Equipaggio Titane rosso al completo.","failure_count":3}
 {"sentence":"Equipaggio dell'Effroyable Blu conto su di voi.","failure_count":3}
+{"sentence":"Equipaggio, preparatevi a regolare le vele.","failure_count":1}
+{"sentence":"Equipaggio, tendete le balestre, ma non caricatele.","failure_count":1}
 {"sentence":"Eroina, cocaina, amfetamine.","failure_count":3}
 {"sentence":"Faccia tacere la gatta.","failure_count":1}
 {"sentence":"Fermi, ho detto!","failure_count":1}
@@ -174,8 +223,10 @@
 {"sentence":"Giusto, ora ricordo, me lo avevi già detto la settimana scorsa.","failure_count":1}
 {"sentence":"Gli credete?","failure_count":1}
 {"sentence":"Gli diedi una scelta.","failure_count":1}
+{"sentence":"Gli occhi gli si chiusero, e la coda gli smesse di fumare.","failure_count":1}
 {"sentence":"Goccia per goccia, è la sostanza più preziosa conosciuta dall'uomo.","failure_count":3}
 {"sentence":"Grazie per avermi aspettato. — Prego, non c'è problema, avevo tempo comunque.","failure_count":1}
+{"sentence":"Grazie, \"Bambi\", giusto?","failure_count":1}
 {"sentence":"Grazie, il pranzo era squisito, complimenti allo chef!","failure_count":1}
 {"sentence":"Guadagna in media dieci sterline la settimana.","failure_count":1}
 {"sentence":"Guadagnerò soldi.","failure_count":3}
@@ -186,6 +237,7 @@
 {"sentence":"Ha sbagliato le dosi della ricetta e la torta è venuta troppo dolce.","failure_count":1}
 {"sentence":"Hai il mio cordoglio e la mia benedizione.","failure_count":1}
 {"sentence":"Hai la febbre, dovresti restare a letto oggi.","failure_count":1}
+{"sentence":"Hai visto \"Il cacciatore?\".","failure_count":1}
 {"sentence":"Hai visto..?","failure_count":3}
 {"sentence":"Hanno subito una sconfita.","failure_count":3}
 {"sentence":"Hey Coop..?","failure_count":3}
@@ -205,17 +257,20 @@
 {"sentence":"Ii piombino era tutt'ora incastrato nella mano sinistra di chas.","failure_count":3}
 {"sentence":"Ii settimo non serve più.","failure_count":3}
 {"sentence":"Ii tuo biglietto d'uscita.","failure_count":3}
+{"sentence":"Il Kirghizistan si chiama \"Kirgiziya\" in russo.","failure_count":1}
 {"sentence":"Il blu notte è la tonalità che preferisco per i vestiti eleganti da sera.","failure_count":1}
 {"sentence":"Il braccio di Saruman si sara'allungato molto se crede di raggiungerci qui.","failure_count":3}
 {"sentence":"Il caffè è troppo caldo.","failure_count":1}
 {"sentence":"Il cancro se l'è portato via.","failure_count":3}
 {"sentence":"Il confine francese dista solo trenta chilometri da Ventimiglia in Liguria.","failure_count":1}
+{"sentence":"Il cupo ronzio di due balestre navali rimbombò sul ponte.","failure_count":1}
 {"sentence":"Il fatto risale a due anni fa ma le conseguenze si sentono ancora oggi.","failure_count":1}
 {"sentence":"Il marito, che era scomparso un anno fa, è il principale sospettato.","failure_count":1}
 {"sentence":"Il piccoletto ci sta a cuore.","failure_count":3}
 {"sentence":"Il ristorante sta a due passi dalla stazione.","failure_count":1}
 {"sentence":"Il rumore bianco della televisione mi ricorda le notti d'infanzia a casa dei nonni.","failure_count":1}
 {"sentence":"Il suo appetito era completamente rovinato dall'influenza.","failure_count":3}
+{"sentence":"Il suo cappello è \"disgusticoso\".","failure_count":1}
 {"sentence":"Il suo corpo nerboruto e tonico mantiene un'eretta postura.","failure_count":3}
 {"sentence":"Il tuo re ha bisogno di te.","failure_count":1}
 {"sentence":"Il tuo senso di superiorità sta danneggianto la nostra relazione.","failure_count":3}
@@ -228,6 +283,7 @@
 {"sentence":"Io attaco le figure qui.","failure_count":3}
 {"sentence":"Io e gli altri andiamo al cinema dopo la scuola e mangeremo ciambelle..","failure_count":3}
 {"sentence":"Io ho questa pallina, Beatrice se l'è messa in bocca.","failure_count":3}
+{"sentence":"Io m'alzai, domandandogli che cos'aveva.","failure_count":1}
 {"sentence":"Io mi siedo dicendo sciocche impertinenze, maledetto scimmione!","failure_count":1}
 {"sentence":"Io penso che sia vero.","failure_count":1}
 {"sentence":"Io sono un dormiglione.","failure_count":3}
@@ -237,6 +293,7 @@
 {"sentence":"Junebug ha un grande senso dell'umorismo, solo un dei suoi molti doni genetici.","failure_count":3}
 {"sentence":"Karikala Kattappa Nadaar.","failure_count":3}
 {"sentence":"Kaspar dice di sì, Kate di no.","failure_count":3}
+{"sentence":"L'Azerbaijan si chiama \"Azərbaycan\" in azero.","failure_count":1}
 {"sentence":"L'Imperatore è tenuto prigioniero nel suo palazzo dal giorno..","failure_count":3}
 {"sentence":"L'ambasciatore svizzero, Giovanni Bucher,.","failure_count":3}
 {"sentence":"L'anziano era duro di orecchie.","failure_count":3}
@@ -303,12 +360,14 @@
 {"sentence":"Ma so che come agiamo ora e con chi parliamo, conta.","failure_count":1}
 {"sentence":"Ma sì,..","failure_count":3}
 {"sentence":"Malgrado le loro colpe, non possono essere privati del diritto..","failure_count":3}
+{"sentence":"Mandatele una lettera di scuse.","failure_count":1}
 {"sentence":"Mangi carne.","failure_count":1}
 {"sentence":"Mangiate e bevete a volontà, ve lo siete meritato!","failure_count":3}
 {"sentence":"Marie aveva l'appetito di un uccello.","failure_count":3}
 {"sentence":"Marta pianta una pianta carnivora nel terrario.","failure_count":1}
 {"sentence":"Mentre noi li teniamo occupati qui, porta tutti al riparo verso il Mare Acido!","failure_count":1}
 {"sentence":"Mi cambierò.","failure_count":3}
+{"sentence":"Mi chiamavano \"Ghetto Pat,\" \"Rocket Man,\" cose del genere.","failure_count":1}
 {"sentence":"Mi mancate ragazzi.","failure_count":1}
 {"sentence":"Mi piace metterli,..","failure_count":3}
 {"sentence":"Mi scusino, signore,..","failure_count":3}
@@ -331,6 +390,7 @@
 {"sentence":"Nemmeno Tom è divertente.","failure_count":3}
 {"sentence":"Nemmeno Tom è impegnato.","failure_count":3}
 {"sentence":"Nemmeno Tom è occupato.","failure_count":3}
+{"sentence":"Nemmeno così la posso bere.","failure_count":1}
 {"sentence":"Nemmeno di te stesso.","failure_count":3}
 {"sentence":"Nemmeno il cellulare.","failure_count":3}
 {"sentence":"Nemmeno il più saggio può dirlo.","failure_count":3}
@@ -340,6 +400,7 @@
 {"sentence":"Nemmeno io posso credere che sia io.","failure_count":3}
 {"sentence":"Nemmeno io riesco a farlo.","failure_count":3}
 {"sentence":"Nemmeno io, e non c'è tempo per procurarseli.","failure_count":3}
+{"sentence":"Nemmeno le scintillanti macchine di Martina erano di legno.","failure_count":1}
 {"sentence":"Nemmeno loro ne sanno niente.","failure_count":3}
 {"sentence":"Nemmeno mi conosce.","failure_count":3}
 {"sentence":"Nemmeno mi fossi messo d'accordo con l'orchestra.","failure_count":3}
@@ -349,6 +410,7 @@
 {"sentence":"Nemmeno noi ce l'abbiamo!","failure_count":3}
 {"sentence":"Nemmeno per idea, Gabriel.","failure_count":3}
 {"sentence":"Nemmeno per tenerlo al sicuro.","failure_count":3}
+{"sentence":"Nemmeno quando i vicini cercano di spiegarglielo.","failure_count":1}
 {"sentence":"Nemmeno quando si ubriaca e mi picchia.","failure_count":3}
 {"sentence":"Nemmeno quell'altra.","failure_count":3}
 {"sentence":"Nemmeno sul percorso di autobus e taxi.","failure_count":3}
@@ -356,15 +418,19 @@
 {"sentence":"Nemmeno tu mi domandi mai dei miei affari.","failure_count":3}
 {"sentence":"Nemmeno un alito.","failure_count":3}
 {"sentence":"Nemmeno un cannone potrebbe abbatare quello stronzo!","failure_count":3}
+{"sentence":"Nemmeno un poco di lume da studiare senza rovinarsi gli occhi.","failure_count":1}
 {"sentence":"Nemmeno una stagione.","failure_count":3}
 {"sentence":"Nemmeno una volta!","failure_count":3}
 {"sentence":"Nemmeno una volta.","failure_count":3}
+{"sentence":"Nemmeno uno.","failure_count":1}
 {"sentence":"Neppure io berrei un vino come quello.","failure_count":3}
+{"sentence":"Nessun altro sembrava avere appetito.","failure_count":1}
 {"sentence":"No, Agente Ford, non lo vedo.","failure_count":1}
 {"sentence":"No, no!!!!!!!","failure_count":3}
 {"sentence":"No, no, no, no, no, no, no, no, no.","failure_count":3}
 {"sentence":"No, non è quello che intendevo.","failure_count":3}
 {"sentence":"Noi siamo le vostre nemiche?","failure_count":1}
+{"sentence":"Noi tornammo a batter le mani, e allora egli guardò nella strada.","failure_count":1}
 {"sentence":"Noi..?","failure_count":3}
 {"sentence":"Non avete abbastanza fede in voi stesse.","failure_count":3}
 {"sentence":"Non c'è niente di sbagliato nel chiedere aiuto quando ne hai bisogno davvero.","failure_count":1}
@@ -374,6 +440,7 @@
 {"sentence":"Non dategliele.","failure_count":3}
 {"sentence":"Non dovranno farlo loro stesse.","failure_count":3}
 {"sentence":"Non funziona così bene perché la batteria è quasi scarica.","failure_count":3}
+{"sentence":"Non hanno bisogno che li mandiate sul lastrico.","failure_count":1}
 {"sentence":"Non ho niente da mangiare da offrirvi, tutto ciò che ho è una pensione..","failure_count":3}
 {"sentence":"Non l'ho ancora vendicato.","failure_count":3}
 {"sentence":"Non la studiavo nella maniera giusta.","failure_count":3}
@@ -402,6 +469,7 @@
 {"sentence":"O Frank's.","failure_count":3}
 {"sentence":"Odiavo vivere da solo.","failure_count":1}
 {"sentence":"Odio posti come Boston, Chicago, ecc..","failure_count":3}
+{"sentence":"Oggi la \"star\" è Woo-sung.","failure_count":1}
 {"sentence":"Oggi non ho molto appetito.","failure_count":3}
 {"sentence":"Oh merda..!","failure_count":3}
 {"sentence":"Oh, accidenti..!","failure_count":3}
@@ -416,6 +484,10 @@
 {"sentence":"Ovviamente non gliel'ho detto.","failure_count":3}
 {"sentence":"Pagano una sterlina e dieci cents all'ora.","failure_count":3}
 {"sentence":"Papà..?","failure_count":3}
+{"sentence":"Parecchi altri le diedero sonoramente ragione.","failure_count":1}
+{"sentence":"Parecchi gemevano, come bambini.","failure_count":1}
+{"sentence":"Parecchi sono vestiti da marinai.","failure_count":1}
+{"sentence":"Parecchi stavano inginocchiati intorno al prete.","failure_count":1}
 {"sentence":"Parecchio.","failure_count":3}
 {"sentence":"Parla come un libro stampato quel professore.","failure_count":1}
 {"sentence":"Partecipi a ogni Seder.","failure_count":3}
@@ -430,6 +502,7 @@
 {"sentence":"Per prima cosa, ti colpirò ripetutamente la testa.","failure_count":3}
 {"sentence":"Per una serena dipartita della defunta, comincerò ora il rito della deposizione.","failure_count":3}
 {"sentence":"Perchè dovresti aver paura..?","failure_count":3}
+{"sentence":"Perché \"anche\"?","failure_count":1}
 {"sentence":"Perché cazzo dobbiamo scomodarci tanto per salvarli?","failure_count":3}
 {"sentence":"Perché non ci abbiamo pensato prima?","failure_count":3}
 {"sentence":"Perché non ci pensate?","failure_count":3}
@@ -446,6 +519,7 @@
 {"sentence":"Perché non le chiamate?","failure_count":3}
 {"sentence":"Perché non le ha avvertite?","failure_count":3}
 {"sentence":"Perché non le ha messe?","failure_count":3}
+{"sentence":"Perché non vi chiamano \"agentesse\"?","failure_count":1}
 {"sentence":"Perché non vi scuserete?","failure_count":3}
 {"sentence":"Perché non vi siete risposati?","failure_count":3}
 {"sentence":"Perché non vi siete sposate in Germania?","failure_count":3}
@@ -462,15 +536,19 @@
 {"sentence":"Pigia il pedale.","failure_count":3}
 {"sentence":"Pigia quel piede.","failure_count":3}
 {"sentence":"Pigri, stupidi.","failure_count":3}
+{"sentence":"Pinocchio dette un'altra occhiata alla brocca, e non rispose né sì né no.","failure_count":1}
 {"sentence":"Più si aspetta, più si rischia di non trovarla.","failure_count":3}
 {"sentence":"Poi all'improvviso..!","failure_count":3}
+{"sentence":"Poi allagai il gavone e lo svuotai con la pompa.","failure_count":1}
 {"sentence":"Poi magari l'accompagnamo a casa.","failure_count":3}
 {"sentence":"Porterà dei guai alla sua famiglia.","failure_count":1}
 {"sentence":"Posso vederli per un po?","failure_count":3}
 {"sentence":"Potete stare certi che onoreremo onorare le tradizioni di do Yellowstone.","failure_count":1}
 {"sentence":"Potrebbe per favore passarmelo di nuovo?","failure_count":3}
 {"sentence":"Predimamoci il rischio.","failure_count":3}
+{"sentence":"Probabilmente non è \"la\" Giustizia, ma \"una\" giustizia.","failure_count":1}
 {"sentence":"Prometto che non ti ucciderò finché non arriverai qui sopra.","failure_count":3}
+{"sentence":"Provvederò a pagare le fatture arretrate, di cui vi lamentate a buon diritto.","failure_count":1}
 {"sentence":"Pulirò, sistemerò le scatole, Pulirò i bagni.","failure_count":3}
 {"sentence":"Pulirò, sistemerò le scatole, pulirò i bagni.","failure_count":3}
 {"sentence":"Pure mio marito amava le smancerie.","failure_count":3}
@@ -479,6 +557,7 @@
 {"sentence":"Quando avete fatto, scambiatela di nuovo con un'altra persona.","failure_count":3}
 {"sentence":"Quando ce Ii dai i nostri soldi?","failure_count":1}
 {"sentence":"Quando copia una copia, rispetta il copyright.","failure_count":1}
+{"sentence":"Quando era piccola la chiamavano \"L\"isola Dove si e Infranto L\"Arco baleno\".","failure_count":1}
 {"sentence":"Quando il sole sale, il sale sul marciapiede brilla.","failure_count":1}
 {"sentence":"Quando sono contento, non ho appetito.","failure_count":3}
 {"sentence":"Quando verrà fuori il sole uscirò dal letto.","failure_count":3}
@@ -488,6 +567,8 @@
 {"sentence":"Quel bastardo mi ha fatto perdere l'appetito.","failure_count":3}
 {"sentence":"Quel giocatore è sposato e ha una villa enorme fuori città in collina.","failure_count":1}
 {"sentence":"Quel ragazzo pensa solo con il cazzo invece che con la testa.","failure_count":1}
+{"sentence":"Quell'odorino mi ha stuzzicato l'appetito, e io gli sono andato dietro.","failure_count":1}
+{"sentence":"Quella \"era\" tua nonna.","failure_count":1}
 {"sentence":"Quella che mi ha fatto fare il provino.","failure_count":3}
 {"sentence":"Quello non mi sembrava il tipo e così passata un'ora me ne andai.","failure_count":3}
 {"sentence":"Questi pensieri, è ovvio,.","failure_count":3}
@@ -500,8 +581,12 @@
 {"sentence":"Ridatemela.","failure_count":3}
 {"sentence":"Ridatemi la corrente.","failure_count":3}
 {"sentence":"Riempii il secchio d'acqua.","failure_count":3}
+{"sentence":"Riflettei alla velocità con cui stavamo gestendo gli altri carichi.","failure_count":1}
+{"sentence":"Riflettei su quello che diceva.","failure_count":1}
 {"sentence":"Riguardo..?","failure_count":3}
 {"sentence":"Riparliamone quando non lo sarà più.","failure_count":3}
+{"sentence":"Ripetei quella conversazione.","failure_count":1}
+{"sentence":"Ripetei quello che aveva detto.","failure_count":1}
 {"sentence":"Riposate in tranquillità.","failure_count":3}
 {"sentence":"Riposate.","failure_count":3}
 {"sentence":"Riposatevi.","failure_count":3}
@@ -516,6 +601,7 @@
 {"sentence":"Sai scrivere al computer?","failure_count":1}
 {"sentence":"Saketa ha uccido le guardie e rubato i nostri segreti militari.","failure_count":3}
 {"sentence":"Salah-al Din vuole che usciate allo scoperto.","failure_count":1}
+{"sentence":"Saltai giù dal letto.","failure_count":1}
 {"sentence":"Salvaguarda gli indifesi e non fare torti.","failure_count":1}
 {"sentence":"Sarebbe stato meglio aspettare un altro po' prima di decidere.","failure_count":1}
 {"sentence":"Sareste dovute rimanere con lei.","failure_count":3}
@@ -528,8 +614,11 @@
 {"sentence":"Sciacquati, Armà.","failure_count":3}
 {"sentence":"Scoppiava di rabbia.","failure_count":3}
 {"sentence":"Scoppierà l'inferno.","failure_count":3}
+{"sentence":"Se devo \"regolare\" di nuovo anche con te mi farete chiudere!","failure_count":1}
 {"sentence":"Se fossi stato ubriaco, ti avrei dovuto arrestare..","failure_count":3}
 {"sentence":"Se ho sbagliato dimmelo in faccia e non parlare alle mie spalle.","failure_count":1}
+{"sentence":"Se le cose cominciano a \"scottare\" sarà lei a bruciarsi.","failure_count":1}
+{"sentence":"Se no la \"bambola\" farà solo show di accesso in TV.","failure_count":1}
 {"sentence":"Se non è stato un lupo, chi lo voleva, se l'è già preso.","failure_count":3}
 {"sentence":"Se pianta la pianta troppo vicina, competono per l'acqua.","failure_count":1}
 {"sentence":"Se puoi anticipare la consegna te ne sarei grato.","failure_count":1}
@@ -539,6 +628,8 @@
 {"sentence":"Sei lì di fronte a uno, e vorresti solo dargliele.","failure_count":3}
 {"sentence":"Sembra sposato da sempre tanto sono affiatati come coppia in ogni situazione.","failure_count":1}
 {"sentence":"Servono almeno sei volontari per l'evento.","failure_count":1}
+{"sentence":"Si lanciò da una scogliera e si ruppe il collo.","failure_count":1}
+{"sentence":"Si sa che \"tutto bene\" vuol dire \"aiutatemi!\"","failure_count":1}
 {"sentence":"Si sta bene qui da voi!","failure_count":1}
 {"sentence":"Si!..","failure_count":3}
 {"sentence":"Si..?","failure_count":3}
@@ -556,6 +647,7 @@
 {"sentence":"Sophie!..","failure_count":3}
 {"sentence":"Sophieeeeeeeeee!!!","failure_count":3}
 {"sentence":"Sopravvivere..?","failure_count":3}
+{"sentence":"Sorrise.","failure_count":1}
 {"sentence":"Souta, sono finite le scorte oggi!?","failure_count":3}
 {"sentence":"Spaventosa, vero..?","failure_count":3}
 {"sentence":"Speriamo che uno dei suoi genitori non lo fosse.","failure_count":1}
@@ -582,12 +674,14 @@
 {"sentence":"Subito..?","failure_count":3}
 {"sentence":"Sugli attenti !","failure_count":2}
 {"sentence":"Sull'impero incombe un pericolo.","failure_count":3}
+{"sentence":"Sulle teste degli ammiragli dello Zar, un tuonante \"hurrah\" si levò al cielo.","failure_count":1}
 {"sentence":"Suzume, dove eri finita!?","failure_count":3}
 {"sentence":"Sì, lo so, avrei dovuto dirtelo prima ma non ho trovato il coraggio.","failure_count":1}
 {"sentence":"Sì, ma ha un così bel sorriso e dei capelli proprio buffi.","failure_count":1}
 {"sentence":"Sì, sì,, ho commesso degli errori.","failure_count":3}
 {"sentence":"Tagliatele i capelli, presto!","failure_count":3}
 {"sentence":"Tanto non riusciresti a prenderla.","failure_count":1}
+{"sentence":"Tesi le orecchie.","failure_count":1}
 {"sentence":"Ti ho chiesto troppo, forse!?","failure_count":3}
 {"sentence":"Ti manca l'appetito?","failure_count":3}
 {"sentence":"Ti pensavo senza paura.","failure_count":1}
@@ -614,6 +708,7 @@
 {"sentence":"Trovi la pagina del Codice Rosso.","failure_count":1}
 {"sentence":"Tu prenditi cura degli altri.","failure_count":3}
 {"sentence":"Tu, per farle godere, ti affidi alle banane?","failure_count":1}
+{"sentence":"Tutti gli altri professori riescono a \"pronuncificare\" il mio nome.","failure_count":1}
 {"sentence":"Tutti qui sanno che non mangiate carne di maiale.","failure_count":3}
 {"sentence":"Un altro paio d'anni e ti metterà al tappeto.","failure_count":3}
 {"sentence":"Un amico di famiglia.","failure_count":1}
@@ -626,9 +721,11 @@
 {"sentence":"Una sigaretta imbevuta in acido.","failure_count":3}
 {"sentence":"Uscire dall'acqua e sentirsi il costume appiccicato addosso.","failure_count":3}
 {"sentence":"Uuuuuaaaaaaaaahhhhhhhhhhh!!!","failure_count":3}
+{"sentence":"Vai a suonare tra i tuoi nazi, tanto saranno \"trombati\" prima o poi!","failure_count":1}
 {"sentence":"Vai, vai, vai, vai, vai, vai, vai, vai, vai, vai.","failure_count":3}
 {"sentence":"Vederti sorridere così mi ricorda quanta tristezza c'è in te, Tommy.","failure_count":3}
 {"sentence":"Vedi, sono pazzi per te.","failure_count":1}
+{"sentence":"Venderei anche questi cenci che ho addosso, per poterla aiutare!","failure_count":1}
 {"sentence":"Vendo oro!","failure_count":1}
 {"sentence":"Vennero con i loro genitori.","failure_count":3}
 {"sentence":"Vennero con le loro amiche.","failure_count":3}
@@ -670,11 +767,15 @@
 {"sentence":"Và dal tuo amico, è solo soletto.","failure_count":3}
 {"sentence":"Và pure.","failure_count":3}
 {"sentence":"Yanni ha iniziato ad imparare l'alfabeto berbero.","failure_count":3}
+{"sentence":"«Che cosa significa “testate su carta”?» chiesi.","failure_count":1}
+{"sentence":"«Polly’s la conosco molto meglio».","failure_count":1}
+{"sentence":"¿Te importa que vada yo?","failure_count":1}
 {"sentence":"È I'OM che preferisco.","failure_count":3}
 {"sentence":"È arrivata l'ora di dire la verità su quello che è successo.","failure_count":1}
 {"sentence":"È così timido a scuola.","failure_count":1}
 {"sentence":"È da molto che ammiriamo il tuo lavoro.","failure_count":1}
 {"sentence":"È giovane, bello e ha un sano appetito sessuale.","failure_count":3}
+{"sentence":"È il \"quasi\" il problema.","failure_count":1}
 {"sentence":"È necessario che faccia le analisi del sangue prima della visita medica.","failure_count":1}
 {"sentence":"È stato stupido che tu ti sia provata ad uccidere quand'eri anche ferita!","failure_count":3}
 {"sentence":"È una buona idea per noi giocare a shogi dopo cena.","failure_count":1}
