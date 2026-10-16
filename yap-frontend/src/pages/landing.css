@@ -131,6 +131,15 @@
   background: color-mix(in oklab, var(--primary) 90%, transparent);
   color: var(--primary-foreground);
 }
+.landing .landing-btn-outline,
+.landing .landing-btn-outline:hover {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--rule-strong);
+  color: var(--fg);
+}
+.landing .landing-btn-outline:hover {
+  background: color-mix(in oklab, var(--fg) 8%, transparent);
+}
 
 /* Each language in the headline fades in as it takes its turn. */
 .landing-word {

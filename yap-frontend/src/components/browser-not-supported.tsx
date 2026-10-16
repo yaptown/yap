@@ -1,7 +1,7 @@
 import { rich } from "@/lib/i18n-react";
 import { t } from "@/lib/i18n";
-import { Button } from "@/components/ui/button";
-import { APP_STORE_URL, IS_IOS } from "@/lib/ios-app";
+import { AppStoreButton } from "@/components/AppStoreButton";
+import { IS_IOS } from "@/lib/ios-app";
 
 export function BrowserNotSupported() {
   // Detect if user is on Safari
@@ -41,14 +41,7 @@ export function BrowserNotSupported() {
                 </div>
 
                 {IS_IOS ? (
-                  <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                    <p className="text-sm">
-                      {t("browser-not-supported-the-ios-app-runs-on-ios-18")}
-                    </p>
-                    <Button asChild>
-                      <a href={APP_STORE_URL}>{t("ios-app-download")}</a>
-                    </Button>
-                  </div>
+                  <AppStoreButton />
                 ) : (
                   <>
                     {isSafari && (

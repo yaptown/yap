@@ -6,7 +6,8 @@ import type { AnkiExportView } from "../../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { APP_STORE_URL, IS_IOS } from "@/lib/ios-app";
+import { AppStoreButton } from "@/components/AppStoreButton";
+import { IS_IOS } from "@/lib/ios-app";
 import { saveFile } from "./save-file";
 
 /**
@@ -46,9 +47,7 @@ export function ExportResult({
         </Body>
       </div>
       {signedIn && IS_IOS ? (
-        <Button asChild size="lg" className="h-11 self-start text-base">
-          <a href={APP_STORE_URL}>{t("ios-app-download")}</a>
-        </Button>
+        <AppStoreButton size="lg" className="h-11 self-start text-base" />
       ) : (
         <Button
           type="button"

@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Bell, Sparkles } from "lucide-react";
 import { useOneSignalNotifications } from "@/hooks/use-onesignal-notifications";
 import { useIsInstalled } from "@/hooks/use-is-installed";
-import { InstallAppButton } from "@/components/InstallAppButton";
+import { InstallPwaButton } from "@/components/InstallPwaButton";
+import { AppStoreButton } from "@/components/AppStoreButton";
 import { Card } from "@/components/ui/card";
 import { LANGUAGES } from "@/lib/languages";
 import { IS_IOS } from "@/lib/ios-app";
@@ -97,11 +98,19 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
       <div className="flex flex-col gap-3 sm:grid sm:grid-cols-[auto_1fr]">
         {shouldShowAddToHomeScreen && (
           <>
-            <InstallAppButton
-              variant="outline"
-              size="sm"
-              className="justify-start"
-            />
+            {IS_IOS ? (
+              <AppStoreButton
+                variant="outline"
+                size="sm"
+                className="justify-start"
+              />
+            ) : (
+              <InstallPwaButton
+                variant="outline"
+                size="sm"
+                className="justify-start"
+              />
+            )}
             <p className="text-xs text-muted-foreground self-center">
               {window.navigator.userAgent.match(/mobile/i)
                 ? t(

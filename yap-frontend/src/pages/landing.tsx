@@ -94,16 +94,16 @@ function CallToAction({ className }: { className?: string }) {
     );
   }
   return (
-    <div className={cn("flex flex-col items-start gap-3", className)}>
+    <div className={cn("grid w-fit gap-3 sm:grid-flow-col", className)}>
       <a href={APP_STORE_URL} className="landing-btn">
         {t("ios-app-download")}
       </a>
       <Link
         to="/select-language"
         viewTransition
-        className="text-[15px] text-(--fg-soft) underline underline-offset-4"
+        className="landing-btn landing-btn-outline"
       >
-        {t("ios-app-or-continue-in-browser")}
+        {t("ios-app-get-started-in-browser")}
       </Link>
     </div>
   );

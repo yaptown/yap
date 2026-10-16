@@ -2,7 +2,8 @@ import { rich } from "@/lib/i18n-react";
 import { t } from "@/lib/i18n";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { InstallAppButton } from "@/components/InstallAppButton";
+import { InstallPwaButton } from "@/components/InstallPwaButton";
+import { AppStoreButton } from "@/components/AppStoreButton";
 
 export function AboutPage() {
   return (
@@ -51,13 +52,14 @@ export function AboutPage() {
         </Card>
         <Card className="max-w-2xl w-full p-8 gap-2 text-muted-foreground">
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            {t("about-offline-first-pwa")}
+            {t("about-offline-first-pwa-and-ios-app")}
           </h2>
           <div className="px-2 space-y-2">
             <p>{t("about-yap-town-works-fully-offline-this-means-you-can")}</p>
-            <p>{t("about-to-make-use-of-this-you-should-install-yap")}</p>
-            <div className="pt-2">
-              <InstallAppButton />
+            <p>{t("about-to-make-use-of-this-install-the-ios-app-or")}</p>
+            <div className="pt-2 flex flex-wrap gap-2">
+              <AppStoreButton variant="outline" size="sm" />
+              <InstallPwaButton />
             </div>
           </div>
         </Card>
