@@ -725,6 +725,27 @@ mod tests {
         );
     }
 
+    #[test]
+    fn live_batch_billing_errors_propagate_through_the_source_chain() {
+        use tysm::chat_completions::{ChatError, IndividualChatError, SharedChatError};
+
+        let api = tysm::OpenAiError {
+            r#type: "billing_error".into(),
+            code: Some("credit_balance_exhausted".into()),
+            message: "offline fixture".into(),
+            param: None,
+        };
+        let error = IndividualChatError::from(SharedChatError(Arc::new(ChatError::ApiError(
+            api,
+            "redacted fixture".into(),
+        ))));
+        // The billing code is only in the source, not the outer display text.
+        assert!(!error.to_string().contains("credit_balance_exhausted"));
+        let error = anyhow::Error::new(error).context("outer translation context");
+        assert!(is_billing_error(error.as_ref()));
+        assert!(report_translation_failure(error).is_err());
+    }
+
     async fn smoke_translator(cache_dir: &std::path::Path) -> Option<Translator> {
         dotenvy::dotenv().ok();
         if std::env::var("OPENAI_API_KEY").is_err() {
