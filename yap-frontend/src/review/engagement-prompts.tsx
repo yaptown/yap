@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Bell, Sparkles } from "lucide-react";
 import { useOneSignalNotifications } from "@/hooks/use-onesignal-notifications";
 import { useIsInstalled } from "@/hooks/use-is-installed";
-import { InstallPwaButton } from "@/components/InstallPwaButton";
+import { InstallAppButton } from "@/components/InstallAppButton";
 import { Card } from "@/components/ui/card";
 import { LANGUAGES } from "@/lib/languages";
+import { IS_IOS } from "@/lib/ios-app";
 import type { Language } from "../../../yap-frontend-rs/pkg";
 
 interface EngagementPromptsProps {
@@ -65,7 +66,9 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
     }
   };
 
-  const shouldShowAddToHomeScreen = !isInstalledLoading && !isInstalled;
+  // An installed PWA on iOS still gets nudged toward the native app.
+  const shouldShowAddToHomeScreen =
+    IS_IOS || (!isInstalledLoading && !isInstalled);
   const shouldShowNotifications = isInitialized && isSupported && !isSubscribed;
   const shouldShowAnything =
     (shouldShowAddToHomeScreen || shouldShowNotifications) && !promptsDismissed;
@@ -94,7 +97,7 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
       <div className="flex flex-col gap-3 sm:grid sm:grid-cols-[auto_1fr]">
         {shouldShowAddToHomeScreen && (
           <>
-            <InstallPwaButton
+            <InstallAppButton
               variant="outline"
               size="sm"
               className="justify-start"

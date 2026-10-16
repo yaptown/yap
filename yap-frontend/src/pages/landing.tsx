@@ -21,6 +21,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Moon, MoreVertical, Volume2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { APP_STORE_URL, IS_IOS } from "@/lib/ios-app";
 import { mountFx, type OrbitGeometry } from "@/lib/landing-fx";
 import type { AppContextType } from "@/app/context";
 import { useDeckSelection } from "@/core/useDeck";
@@ -78,22 +79,33 @@ function Wordmark({ className }: { className?: string }) {
 }
 
 /** The call to action crossfades into the app: the browser keeps a snapshot
- *  of this page and landing.css blurs and fades it out over the next one. */
-function LampButton({
-  className,
-  children = t("idle-start-learning"),
-}: {
-  className?: string;
-  children?: ReactNode;
-}) {
+ *  of this page and landing.css blurs and fades it out over the next one. On
+ *  iOS the App Store comes first, with the browser as a quiet fallback. */
+function CallToAction({ className }: { className?: string }) {
+  if (!IS_IOS) {
+    return (
+      <Link
+        to="/select-language"
+        viewTransition
+        className={cn("landing-btn", className)}
+      >
+        {t("idle-start-learning")}
+      </Link>
+    );
+  }
   return (
-    <Link
-      to="/select-language"
-      viewTransition
-      className={cn("landing-btn", className)}
-    >
-      {children}
-    </Link>
+    <div className={cn("flex flex-col items-start gap-3", className)}>
+      <a href={APP_STORE_URL} className="landing-btn">
+        {t("ios-app-download")}
+      </a>
+      <Link
+        to="/select-language"
+        viewTransition
+        className="text-[15px] text-(--fg-soft) underline underline-offset-4"
+      >
+        {t("ios-app-or-continue-in-browser")}
+      </Link>
+    </div>
   );
 }
 
@@ -219,7 +231,7 @@ function Hero({ corpus }: { corpus: Corpus }) {
         >
           {t("landing-yap-teaches-words-in-real-contexts-every-sentence-comes")}
         </p>
-        <LampButton />
+        <CallToAction />
       </div>
     </div>
   );
@@ -262,7 +274,7 @@ function Product() {
         >
           {t("landing-hear-it-translate-it-speak-it-yap-analyzes-your")}
         </p>
-        <LampButton className="mt-8 self-start" />
+        <CallToAction className="mt-8 self-start" />
         <div className="mt-16 flex flex-col items-center gap-4 lg:gap-0 lg:pb-40">
           <MockFlashcard />
           <Pin anchor="--sentence" area="left">
@@ -476,7 +488,9 @@ function Showcase({ corpus }: { corpus: Corpus }) {
           <TabsList className="h-auto flex-wrap gap-1">
             {corpus.courses.map((c, i) => (
               <TabsTrigger key={c.targetLanguage} value={String(i)}>
-                {t("language-name.title-full", { language: LANGUAGES[c.targetLanguage].isoCode })}
+                {t("language-name.title-full", {
+                  language: LANGUAGES[c.targetLanguage].isoCode,
+                })}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -737,7 +751,7 @@ function Coda() {
             <div className="landing-tag max-w-[560px] text-(--fg-dim)">
               {t("landing-recall-of-one-word-over-forty-days-each-dot")}
             </div>
-            <LampButton className="shrink-0 self-start sm:self-auto" />
+            <CallToAction className="shrink-0 self-start sm:self-auto" />
           </div>
         </div>
         <Footer />

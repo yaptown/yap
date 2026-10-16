@@ -1,25 +1,39 @@
 import { t } from "@/lib/i18n";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Home } from "lucide-react";
+import { Home, Smartphone } from "lucide-react";
 import { AddToHomeScreenModal } from "@/components/add-to-home-screen-modal";
+import { APP_STORE_URL, IS_IOS } from "@/lib/ios-app";
 
 const hasInstallElement =
   typeof window !== "undefined" && "HTMLInstallElement" in window;
 
-interface InstallPwaButtonProps {
+interface InstallAppButtonProps {
   variant?:
     "default" | "outline" | "ghost" | "link" | "destructive" | "secondary";
   size?: "default" | "sm" | "lg" | "icon";
   className?: string;
 }
 
-export function InstallPwaButton({
+/** On iOS the native app beats the PWA, so this links to the App Store;
+ *  elsewhere it installs the PWA. */
+export function InstallAppButton({
   variant = "outline",
   size = "sm",
   className,
-}: InstallPwaButtonProps) {
+}: InstallAppButtonProps) {
   const [showModal, setShowModal] = useState(false);
+
+  if (IS_IOS) {
+    return (
+      <Button asChild variant={variant} size={size} className={className}>
+        <a href={APP_STORE_URL}>
+          <Smartphone className="mr-2 h-4 w-4" />
+          {t("ios-app-download")}
+        </a>
+      </Button>
+    );
+  }
 
   if (hasInstallElement) {
     return <install className={className} />;

@@ -2,7 +2,7 @@ import { rich } from "@/lib/i18n-react";
 import { t } from "@/lib/i18n";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { InstallPwaButton } from "@/components/InstallPwaButton";
+import { InstallAppButton } from "@/components/InstallAppButton";
 
 export function AboutPage() {
   return (
@@ -57,7 +57,7 @@ export function AboutPage() {
             <p>{t("about-yap-town-works-fully-offline-this-means-you-can")}</p>
             <p>{t("about-to-make-use-of-this-you-should-install-yap")}</p>
             <div className="pt-2">
-              <InstallPwaButton />
+              <InstallAppButton />
             </div>
           </div>
         </Card>

@@ -1,5 +1,8 @@
 import { rich } from "@/lib/i18n-react";
 import { t } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
+import { APP_STORE_URL, IS_IOS } from "@/lib/ios-app";
+
 export function BrowserNotSupported() {
   // Detect if user is on Safari
   const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -37,77 +40,96 @@ export function BrowserNotSupported() {
                   </p>
                 </div>
 
-                {isSafari && (
-                  <div className="bg-caution-surface border border-caution-border rounded-lg p-4 text-left space-y-2">
-                    <p className="text-sm font-semibold text-caution-foreground mb-1">
-                      {t("browser-not-supported-apple-users-update-required")}
-                    </p>
+                {IS_IOS ? (
+                  <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                     <p className="text-sm">
-                      {t(
-                        "browser-not-supported-for-iphone-ipad-users-yap-town-requires-ios-26",
-                      )}
+                      {t("browser-not-supported-the-ios-app-runs-on-ios-18")}
                     </p>
-                    <p className="text-sm ">
-                      {t(
-                        "browser-not-supported-if-you-re-on-a-desktop-platform-you-can",
-                      )}
-                    </p>
+                    <Button asChild>
+                      <a href={APP_STORE_URL}>{t("ios-app-download")}</a>
+                    </Button>
                   </div>
-                )}
-
-                <div className="bg-muted/50 rounded-lg p-4 text-left space-y-3">
-                  <p className="text-sm font-medium">
-                    {t(
-                      "browser-not-supported-please-use-one-of-these-browsers",
-                    )}
-                  </p>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2">
-                      <span className="text-positive">✓</span>
-                      <span>
-                        {t("browser-not-supported-google-chrome-version-86")}
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-positive">✓</span>
-                      <span>
-                        {t("browser-not-supported-microsoft-edge-version-86")}
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-positive">✓</span>
-                      <span>
-                        {t(
-                          "browser-not-supported-safari-version-26-0-requires-ios-macos-18-currently",
-                        )}
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-positive">✓</span>
-                      <span>
-                        {t("browser-not-supported-firefox-version-111")}
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="text-xs text-muted-foreground">
-                  <p>
-                    {rich("browser-storage-support", {
-                      implementation: (
-                        <a
-                          href="https://developer.mozilla.org/en-US/docs/Web/API/FileSystemWritableFileStream"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
+                ) : (
+                  <>
+                    {isSafari && (
+                      <div className="bg-caution-surface border border-caution-border rounded-lg p-4 text-left space-y-2">
+                        <p className="text-sm font-semibold text-caution-foreground mb-1">
                           {t(
-                            "browser-not-supported-only-recently-been-implemented-in-safari",
+                            "browser-not-supported-apple-users-update-required",
                           )}
-                        </a>
-                      ),
-                    })}
-                  </p>
-                </div>
+                        </p>
+                        <p className="text-sm">
+                          {t(
+                            "browser-not-supported-for-iphone-ipad-users-yap-town-requires-ios-26",
+                          )}
+                        </p>
+                        <p className="text-sm ">
+                          {t(
+                            "browser-not-supported-if-you-re-on-a-desktop-platform-you-can",
+                          )}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="bg-muted/50 rounded-lg p-4 text-left space-y-3">
+                      <p className="text-sm font-medium">
+                        {t(
+                          "browser-not-supported-please-use-one-of-these-browsers",
+                        )}
+                      </p>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-center gap-2">
+                          <span className="text-positive">✓</span>
+                          <span>
+                            {t(
+                              "browser-not-supported-google-chrome-version-86",
+                            )}
+                          </span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-positive">✓</span>
+                          <span>
+                            {t(
+                              "browser-not-supported-microsoft-edge-version-86",
+                            )}
+                          </span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-positive">✓</span>
+                          <span>
+                            {t(
+                              "browser-not-supported-safari-version-26-0-requires-ios-macos-18-currently",
+                            )}
+                          </span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-positive">✓</span>
+                          <span>
+                            {t("browser-not-supported-firefox-version-111")}
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="text-xs text-muted-foreground">
+                      <p>
+                        {rich("browser-storage-support", {
+                          implementation: (
+                            <a
+                              href="https://developer.mozilla.org/en-US/docs/Web/API/FileSystemWritableFileStream"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {t(
+                                "browser-not-supported-only-recently-been-implemented-in-safari",
+                              )}
+                            </a>
+                          ),
+                        })}
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
