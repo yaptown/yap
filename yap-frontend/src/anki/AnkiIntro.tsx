@@ -8,7 +8,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import type { AppContextType } from "@/app/context";
 import { TargetLanguageText } from "@/components/TargetLanguageText";
@@ -115,20 +115,7 @@ function CardFan() {
   const still = "aspect-[2/1] w-full object-cover";
   return (
     <div className="group relative mt-6 mb-14 aspect-[16/9] w-full max-w-[16rem] sm:max-w-sm">
-      {/* A projector beam from the top of the page: haze in the air that
-          fades as it reaches the cards, where Lit takes over. */}
-      <div
-        aria-hidden
-        className="projector-beam pointer-events-none absolute bottom-[45%] left-1/2 z-10 h-[34rem] w-[140%] -translate-x-1/2 mix-blend-screen blur-[12px]"
-        style={{
-          clipPath: "polygon(48% 0, 52% 0, 100% 100%, 0 100%)",
-          background:
-            "radial-gradient(ellipse 45% 100% at 50% 0, #fff4dc40, #fff4dc14 70%, transparent)",
-          maskImage: "linear-gradient(black 55%, transparent)",
-        }}
-      >
-        <div className="absolute inset-0 bg-[url(/noise.webp)] bg-cover opacity-50 mix-blend-overlay" />
-      </div>
+      <ProjectorBeam video={video} />
       <div
         className={`${card} -rotate-[10deg] -translate-x-[30%] translate-y-[2%] scale-90 group-hover:-rotate-[13deg] group-hover:-translate-x-[36%]`}
       >
@@ -183,6 +170,99 @@ function CardFan() {
           {t("anki-intro-sample-translation")}
         </p>
       </div>
+    </div>
+  );
+}
+
+// A projector beam from the top of the page, cast by the clip itself: each
+// frame is shrunk to a strip of columns, and each column throws a ray from
+// the lamp down to the same spot on the front card, so bright, warm parts of
+// the scene light the haze above them. Screen-blended and faded out before
+// the card, where Lit takes over.
+const BEAM_COLUMNS = 24;
+
+function ProjectorBeam({
+  video,
+}: {
+  video: RefObject<HTMLVideoElement | null>;
+}) {
+  const canvas = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const element = video.current!;
+    const context = canvas.current!.getContext("2d")!;
+    const sample = document
+      .createElement("canvas")
+      .getContext("2d", { willReadFrequently: true })!;
+    sample.canvas.width = BEAM_COLUMNS;
+    sample.canvas.height = 6;
+    // Eased toward each frame's levels so a cut doesn't strobe.
+    const levels = new Float32Array(BEAM_COLUMNS * 3);
+    const paint = (ease: number) => {
+      sample.drawImage(element, 0, 0, BEAM_COLUMNS, 6);
+      const { data } = sample.getImageData(0, 0, BEAM_COLUMNS, 6);
+      const { width, height } = context.canvas;
+      context.clearRect(0, 0, width, height);
+      context.globalCompositeOperation = "lighter";
+      const column = width / BEAM_COLUMNS;
+      for (let x = 0; x < BEAM_COLUMNS; x++) {
+        const color = [0, 0, 0];
+        for (let y = 0; y < 6; y++)
+          for (let c = 0; c < 3; c++)
+            color[c] += data[(y * BEAM_COLUMNS + x) * 4 + c] / (6 * 255);
+        for (let c = 0; c < 3; c++)
+          levels[x * 3 + c] += (color[c] - levels[x * 3 + c]) * ease;
+        const [r, g, b] = levels.subarray(x * 3, x * 3 + 3);
+        const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        const alpha = 0.03 + 1.2 * Math.max(0, luminance - 0.12);
+        // The frame's hue at full brightness, warmed toward the lamp.
+        const peak = Math.max(r, g, b, 0.01);
+        const tint = [r, g, b]
+          .map((v, c) => Math.round(127 * (v / peak) + [128, 122, 110][c]))
+          .join(",");
+        const gradient = context.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, `rgba(${tint},${alpha * 0.35})`);
+        gradient.addColorStop(1, `rgba(${tint},${alpha})`);
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.moveTo(width / 2, 0);
+        context.lineTo(x * column, height);
+        context.lineTo((x + 1) * column, height);
+        context.fill();
+      }
+    };
+    // The first frame lights the beam even if autoplay is blocked (say, in
+    // Low Power Mode); after that it follows playback.
+    const first = () => paint(1);
+    if (element.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) first();
+    element.addEventListener("loadeddata", first);
+    let handle = 0;
+    const loop = () => {
+      paint(0.3);
+      handle = element.requestVideoFrameCallback(loop);
+    };
+    // Firefox before 132 lacks frame callbacks and keeps the first frame's
+    // beam.
+    if ("requestVideoFrameCallback" in element) {
+      // Scheduling a frame callback reads the video; it doesn't mutate it.
+      // eslint-disable-next-line react-hooks/immutability
+      handle = element.requestVideoFrameCallback(loop);
+    }
+    return () => {
+      element.removeEventListener("loadeddata", first);
+      if (handle) element.cancelVideoFrameCallback(handle);
+    };
+  }, [video]);
+  return (
+    <div
+      aria-hidden
+      className="projector-beam pointer-events-none absolute bottom-[45%] left-1/2 z-10 h-[34rem] w-[140%] -translate-x-1/2 mix-blend-screen blur-[6px]"
+      style={{
+        clipPath: "polygon(48% 0, 52% 0, 100% 100%, 0 100%)",
+        maskImage: "linear-gradient(black 72%, transparent)",
+      }}
+    >
+      <canvas ref={canvas} width={420} height={544} className="size-full" />
+      <div className="absolute inset-0 bg-[url(/noise.webp)] bg-cover opacity-50 mix-blend-overlay" />
     </div>
   );
 }
