@@ -30,17 +30,24 @@
 
         console.log(`OneSignal initializing in ${isDevelopment ? 'development' : 'production'} mode`);
 
-        await OneSignal.init({
-          ...config,
-          notifyButton: {
-            enable: false, // Disable the default notification button
-          },
-          welcomeNotification: {
-            disable: true  // This disables the welcome notification
-          },
-          serviceWorkerParam: { scope: "/push/onesignal/" },
-          serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js"
-        });
+        try {
+          await OneSignal.init({
+            ...config,
+            notifyButton: {
+              enable: false, // Disable the default notification button
+            },
+            welcomeNotification: {
+              disable: true  // This disables the welcome notification
+            },
+            serviceWorkerParam: { scope: "/push/onesignal/" },
+            serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js"
+          });
+        } catch (e) {
+          // OneSignal refuses to init off its configured origin (e.g. the
+          // *.pages.dev beta channel). Push is simply unavailable there, so
+          // warn rather than report an error.
+          console.warn("OneSignal init failed:", e);
+        }
       });
     </script>
 
