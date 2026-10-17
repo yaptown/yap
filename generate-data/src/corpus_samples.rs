@@ -64,12 +64,12 @@ impl<'a> CorpusIndex<'a> {
 /// A persistent choice of up to five corpus sentences per key. The sentences
 /// are part of each prompt and so of its cache key: a key keeps its sentences
 /// until one of them leaves the corpus, so regenerating doesn't reshuffle them.
-pub struct SampleCache<K> {
+pub struct SampleSelections<K> {
     path: PathBuf,
     samples: BTreeMap<K, Vec<String>>,
 }
 
-impl<K: Ord + Clone + Serialize + DeserializeOwned> SampleCache<K> {
+impl<K: Ord + Clone + Serialize + DeserializeOwned> SampleSelections<K> {
     pub fn load(path: PathBuf) -> anyhow::Result<Self> {
         let samples = if path.exists() {
             BufReader::new(File::open(&path)?)

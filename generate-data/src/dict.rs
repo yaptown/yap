@@ -1,4 +1,4 @@
-use crate::corpus_samples::{CorpusIndex, SampleCache};
+use crate::corpus_samples::{CorpusIndex, SampleSelections};
 use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{
     Atom, Course, DictionaryDefinition, Gram, GramFrequencyEntry, Heteronym,
@@ -101,7 +101,7 @@ fn normalize_phrase(entry: &mut PhrasebookDefinitionEntry, native: language_util
 async fn generate_dictionary_group(
     client: &ChatClient,
     entries: &[(Heteronym<String>, u32)],
-    samples: &SampleCache<Heteronym<String>>,
+    samples: &SampleSelections<Heteronym<String>>,
     system_prompt: &str,
     policy: DictionaryPolicy,
     progress: &ProgressBar,
@@ -180,7 +180,7 @@ pub async fn create_gram_dictionary(
     course: Course,
     gram_frequencies: &[GramFrequencyEntry<String>],
     corpus: &CorpusIndex<'_>,
-    heteronym_sentences: &mut SampleCache<Heteronym<String>>,
+    heteronym_sentences: &mut SampleSelections<Heteronym<String>>,
 ) -> anyhow::Result<BTreeMap<Heteronym<String>, DictionaryDefinition>> {
     let target_language_heteronyms = extract_single_atom_heteronyms(gram_frequencies);
     let Course {
@@ -314,7 +314,7 @@ pub async fn create_gram_phrasebook(
     course: Course,
     gram_frequencies: &[GramFrequencyEntry<String>],
     corpus: &CorpusIndex<'_>,
-    gram_sentences: &mut SampleCache<Gram<String>>,
+    gram_sentences: &mut SampleSelections<Gram<String>>,
 ) -> anyhow::Result<Vec<(Gram<String>, PhrasebookDefinitionEntry)>> {
     let Course {
         native_language,
