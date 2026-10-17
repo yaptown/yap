@@ -22,8 +22,11 @@ import { ErrorMessage } from "../components/ui/error-message";
 export function DeckPage({
   children,
   prefetchAudio = true,
+  noLanguage,
 }: {
   prefetchAudio?: boolean;
+  /** Shown instead of sending a visitor with no course to the picker. */
+  noLanguage?: ReactNode;
   children: (
     props: AppContextType & { deck: Deck; targetLanguage: Language },
   ) => ReactNode;
@@ -35,7 +38,7 @@ export function DeckPage({
   // A deep link (say, /anki shared on a forum) should ask for a course and
   // come back here, not bounce to the landing page.
   if (state.view.phase.type === "NoLanguageSelected")
-    return (
+    return noLanguage ?? (
       <Navigate
         to={`/select-language?next=${encodeURIComponent(location.pathname + location.search)}`}
         replace

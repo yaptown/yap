@@ -209,6 +209,25 @@ ol {
   .poster-strip-track { animation: none; }
 }
 
+/* The uneven shimmer of a film projector's lamp. */
+@keyframes projector-flicker {
+  0%, 100% { opacity: 1; }
+  7% { opacity: 0.86; }
+  9% { opacity: 1; }
+  48% { opacity: 0.94; }
+  52% { opacity: 1; }
+  81% { opacity: 0.9; }
+  83% { opacity: 1; }
+}
+
+.projector-beam {
+  animation: projector-flicker 3.2s steps(1, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projector-beam { animation: none; }
+}
+
 .animate-slide-in-from-right {
   animation: slide-in-from-right 0.25s ease-out;
 }

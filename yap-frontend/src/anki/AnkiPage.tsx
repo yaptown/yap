@@ -34,6 +34,7 @@ import { Progress } from "@/components/ui/progress";
 import { useDeckSelection } from "@/core/useDeck";
 import { useWeapon } from "@/core/weapon";
 import { PlacementTest } from "@/review/ladder/PlacementTest";
+import { AnkiIntro } from "./AnkiIntro";
 import { Backstory } from "./Backstory";
 import { ExportResult } from "./ExportResult";
 import { saveFile } from "./save-file";
@@ -83,7 +84,7 @@ async function uploadPackage(
 
 export function AnkiPage() {
   return (
-    <DeckPage prefetchAudio={false}>
+    <DeckPage prefetchAudio={false} noLanguage={<AnkiIntro />}>
       {(props) => <AnkiScreen key={props.targetLanguage} {...props} />}
     </DeckPage>
   );
