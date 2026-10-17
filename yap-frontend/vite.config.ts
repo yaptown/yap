@@ -1,7 +1,7 @@
 import { FluentBundle, FluentResource } from "@fluent/bundle";
 import fs from "fs";
 import path from "path";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, type Plugin, type Rollup } from "vite";
 import react from "@vitejs/plugin-react";
 import wasm from "vite-plugin-wasm";
 import tailwindcss from "@tailwindcss/vite";
@@ -264,6 +264,48 @@ function localBackendGuardPlugin() {
   };
 }
 
+// Boot is a chain: bootstrap → main → WASM → App. Without hints the browser
+// only discovers each file once the previous one has run, so the WASM and the
+// App chunk download one after the other. Preloading fetches both up front
+// without evaluating them (App must not run before the UI locale is set).
+function bootPreloadPlugin(): Plugin {
+  return {
+    name: "boot-preload",
+    apply: "build",
+    transformIndexHtml: {
+      order: "post",
+      handler(_html, { bundle }) {
+        const files = Object.values(bundle!);
+        const wasm = files.find((f) =>
+          /yap_frontend_rs_bg-.*\.wasm$/.test(f.fileName),
+        )!;
+        const app = files.find(
+          (f) =>
+            f.type === "chunk" &&
+            f.moduleIds.some((id) => id.endsWith("/src/app/App.tsx")),
+        ) as Rollup.OutputChunk;
+        return [
+          {
+            tag: "link",
+            attrs: {
+              rel: "preload",
+              as: "fetch",
+              crossorigin: "",
+              href: `/${wasm.fileName}`,
+            },
+            injectTo: "head",
+          },
+          ...[app.fileName, ...app.imports].map((file) => ({
+            tag: "link",
+            attrs: { rel: "modulepreload", crossorigin: "", href: `/${file}` },
+            injectTo: "head" as const,
+          })),
+        ];
+      },
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   worker: { format: "es" },
@@ -279,6 +321,7 @@ export default defineConfig({
     uiFallbackPlugin(),
     localizedManifestsPlugin(),
     localBackendGuardPlugin(),
+    bootPreloadPlugin(),
     staticSitePlugin(),
     screenFixturesPlugin(),
     VitePWA({

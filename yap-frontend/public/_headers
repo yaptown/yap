@@ -8,3 +8,8 @@
 # _headers does not apply to Worker-routed paths like /d/*.
 /grams/*
   Cache-Control: public, max-age=3600, s-maxage=604800, stale-while-revalidate=86400
+
+# Vite content-hashes everything under /assets/, so a URL never changes
+# meaning and the browser can skip revalidating it.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

@@ -1,6 +1,6 @@
 // The main thread gets both bands and static fallback from the shared core.
 // Workers only receive this data via messages; they never load WASM.
-import { background_palette, type BackgroundPalette } from "yap-frontend-rs";
+import { background_palette, type BackgroundPalette } from "../../../yap-frontend-rs/pkg";
 
 export type ShaderTheme = "dark" | "light" | "oled";
 

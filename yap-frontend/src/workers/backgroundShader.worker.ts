@@ -1,7 +1,7 @@
 // Background shader worker - handles all canvas rendering off the main thread
 
 import type { ShaderTheme } from "../lib/shader-colors";
-import type { BackgroundPalette } from "yap-frontend-rs";
+import type { BackgroundPalette } from "../../../yap-frontend-rs/pkg";
 import fragmentShaderSrc from "./background.generated.frag?raw";
 
 interface WorkerMessage {
