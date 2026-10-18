@@ -13,8 +13,12 @@ pnpm --dir scripts/app-store-screenshots generate
 
 The normal command builds the iOS app first. Pass `--no-build` to reuse an
 existing simulator build, or `--simulator UUID` to choose another simulator.
-Use an iPhone portrait simulator; the default is the parity runner's iPhone.
-All existing parity prerequisites and its throwaway test account apply.
+`--device ipad` captures on the iPad Pro 13-inch simulator instead and lays the
+same slides out at the 13-inch iPad size (the App Store requires one once the
+app runs on iPad); the default is the parity runner's iPhone. All existing
+parity prerequisites and its throwaway test account apply. The captures use
+the test account's live course on that simulator, so make sure it is French
+there (film titles follow the course language).
 
 To change only the layout or copy without recapturing:
 
@@ -22,8 +26,9 @@ To change only the layout or copy without recapturing:
 pnpm --dir scripts/app-store-screenshots generate --render-only
 ```
 
-Edit the `slides` list and SVG layout in `generate.cjs`. Output is gitignored
-under `.cache/app-store/screenshots/`: four numbered 1284 × 2778 opaque PNGs
-for upload, editable SVGs, a combined `preview.png`, and `copy.json`.
+Edit the `slides` list and the per-device layouts in `generate.cjs`. Output is
+gitignored under `.cache/app-store/screenshots/<device>/`: four numbered opaque
+PNGs for upload (1284 × 2778 on iPhone, 2064 × 2752 on iPad), editable SVGs, a
+combined `preview.png`, and `copy.json`.
 Upload only the four numbered PNGs. Review the screenshots against the build
 being submitted, particularly any film content and completed content audit.
