@@ -10,7 +10,7 @@ type Labels = BTreeMap<(String, usize), Value>;
 pub async fn run(sample: Sample, languages: &BTreeSet<String>) -> Result<()> {
     use anyhow::Context;
     let cache_only = crate::cache_only();
-    let root = std::path::Path::new("/data/coding/yap-tmp/readings-sample");
+    let root = std::path::Path::new("target/readings-sample");
     std::fs::create_dir_all(root)?;
     for course in language_utils::COURSES
         .iter()
@@ -88,7 +88,8 @@ pub struct Sample {
 impl Sample {
     pub fn new(percent: f64) -> Result<Self> {
         let mut sample = Self::with_pins(percent, BTreeSet::new())?;
-        sample.pins = std::fs::read_to_string("/data/coding/yap-tmp/readings-sample-pinned.txt")?
+        // Sentences that are always in the sample, so audits can compare runs.
+        sample.pins = include_str!("../../data/readings-sample-pinned.txt")
             .lines()
             .map(str::to_owned)
             .collect();
@@ -158,8 +159,7 @@ impl Sample {
         groups: &Groups,
         language: Language,
     ) -> Result<()> {
-        let directory =
-            std::path::PathBuf::from("/data/coding/yap-tmp/readings-sample").join(language.code());
+        let directory = std::path::PathBuf::from("target/readings-sample").join(language.code());
         std::fs::create_dir_all(&directory)?;
         let final_labels = labels(data, groups);
         let mut hierarchies =
