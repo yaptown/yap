@@ -21,11 +21,14 @@ CREATE INDEX ix_revlog_cid ON revlog (cid);
 CREATE INDEX ix_notes_csum ON notes (csum);
 `;
 
-// Keep TargetWord/TargetGloss fields populated to preserve imported note-type schema on re-import.
+// Field order is the note type's schema; everything else refers to fields by name.
 const sentenceFields = [
-  "Sentence", "Translation", "TargetWord", "TargetGloss", "Glosses", "Source",
+  "Sentence", "Translation", "Glosses", "Source",
   "ClipUrl", "TtsBundled", "IncludeReading", "IncludeListening", "Subtitles", "MaskedSubtitles", "ClipWebmUrl",
-];
+] as const;
+const wordFields = ["Word", "Definition", "AudioBundled", "Source", "ClipUrl", "Subtitles", "ClipWebmUrl"] as const;
+type SentenceFields = Record<(typeof sentenceFields)[number], string>;
+type WordFields = Record<(typeof wordFields)[number], string>;
 const css = `
 .card { font-family: sans-serif; text-align: center; line-height: 1.5; padding: 20px; }
 .sentence { font-size: 28px; }
@@ -50,8 +53,15 @@ video { display: block; width: 100%; max-width: 480px; margin: 16px auto 0; back
 // MP4 (a bare video/mp4 type answers "maybe" there) and take the WebM.
 const videoSources = `<source src="{{ClipUrl}}" type='video/mp4; codecs="avc1.64001F, mp4a.40.2"'><source src="{{ClipWebmUrl}}" type='video/webm; codecs="vp9, opus"'>`;
 
-function templates(lang: string): { name: string; ord: number; qfmt: string; afmt: string }[] {
-  const sentence = `<div class="sentence"><span lang="${lang}">{{Sentence}}</span></div>`;
+// With readings, the target-language fields hold Anki's furigana markup:
+// `{{kanji:…}}` strips the readings on the front, `{{furigana:…}}` shows them
+// as ruby on the back.
+function filtered(field: string, furigana: boolean, back: boolean): string {
+  return furigana ? `{{${back ? "furigana" : "kanji"}:${field}}}` : `{{${field}}}`;
+}
+
+function templates(lang: string, furigana: boolean): { name: string; ord: number; qfmt: string; afmt: string }[] {
+  const sentence = (back: boolean) => `<div class="sentence"><span lang="${lang}">${filtered("Sentence", furigana, back)}</span></div>`;
   const answer = `<div class="translation">{{Translation}}</div>
 <ul class="glosses">{{Glosses}}</ul>`;
   // The clip never autoplays: clips don't reliably start on or cut exactly to
@@ -61,9 +71,9 @@ function templates(lang: string): { name: string; ord: number; qfmt: string; afm
   const side = (name: "Reading" | "Listening", back: boolean) => `
 <div class="eyebrow">${name === "Reading" ? "Translate" : "Listening"}</div>
 {{TtsBundled}}
-${name === "Reading" ? sentence : ""}
+${name === "Reading" ? sentence(back) : ""}
 <hr id="answer">
-${back ? (name === "Listening" ? sentence : "") + answer : '<p class="hint">Tap to reveal the answer</p>'}
+${back ? (name === "Listening" ? sentence(back) : "") + answer : '<p class="hint">Tap to reveal the answer</p>'}
 <video controls preload="metadata" playsinline>${videoSources}${track(name === "Listening" && !back ? "MaskedSubtitles" : "Subtitles")}</video>
 <div class="source">{{Source}}</div>`;
   return (["Reading", "Listening"] as const).map((name, ord) => ({
@@ -94,24 +104,27 @@ function sourceFor(note: AnkiNote): string {
     + escapeHtml(note.source.title) + (note.source.year ? ` (${note.source.year})` : "") : "";
 }
 
-function fieldsFor(note: AnkiNote, bundled: (filename: string | undefined) => string, lang: string): string[] {
+function fieldsFor(note: AnkiNote, bundled: (filename: string | undefined) => string, lang: string): SentenceFields | WordFields {
   const audio = (filename: string) => { const file = bundled(filename); return file ? `[sound:${file}]` : ""; };
   if (note.type === "Word") {
-    const media = audio(note.audio);
-    return [escapeHtml(note.word), escapeHtml(note.definition), media, sourceFor(note), escapeHtml(note.clip?.mp4 ?? ""), escapeHtml(bundled(note.subtitles ?? undefined)), escapeHtml(note.clip?.webm ?? "")];
+    return {
+      Word: escapeHtml(note.word_furigana), Definition: escapeHtml(note.definition), AudioBundled: audio(note.audio),
+      Source: sourceFor(note), ClipUrl: escapeHtml(note.clip?.mp4 ?? ""),
+      Subtitles: escapeHtml(bundled(note.subtitles ?? undefined)), ClipWebmUrl: escapeHtml(note.clip?.webm ?? ""),
+    };
   }
   const media = audio(note.tts);
   const glosses = note.glosses.map(({ text, gloss, url }) => {
     const word = `<span lang="${lang}">${escapeHtml(text)}</span>`;
     return `<li>${url ? `<a href="${escapeHtml(url)}">${word}</a>` : word}${gloss ? ` — ${escapeHtml(gloss)}` : ""}</li>`;
   }).join("");
-  const source = sourceFor(note);
-  return [
-    escapeHtml(note.sentence), escapeHtml(note.translation), escapeHtml(note.target_word),
-    escapeHtml(note.target_gloss), glosses, source, escapeHtml(note.clip.mp4), media,
-    note.include_reading ? "1" : "", note.include_listening && media ? "1" : "",
-    escapeHtml(bundled(note.subtitles)), escapeHtml(bundled(note.masked_subtitles ?? undefined)), escapeHtml(note.clip.webm),
-  ];
+  return {
+    Sentence: escapeHtml(note.sentence_furigana), Translation: escapeHtml(note.translation), Glosses: glosses,
+    Source: sourceFor(note), ClipUrl: escapeHtml(note.clip.mp4), TtsBundled: media,
+    IncludeReading: note.include_reading ? "1" : "", IncludeListening: note.include_listening && media ? "1" : "",
+    Subtitles: escapeHtml(bundled(note.subtitles)), MaskedSubtitles: escapeHtml(bundled(note.masked_subtitles ?? undefined)),
+    ClipWebmUrl: escapeHtml(note.clip.webm),
+  };
 }
 
 /** Worker-side package assembly; no learner state or sentence selection lives here. */
@@ -145,7 +158,7 @@ export async function buildApkg(
   const lang = escapeHtml(languageToLangAttr(plan.language));
   const sentenceId = Number(plan.sentence_model_id);
   const wordId = Number(plan.word_model_id);
-  const model = (id: number, name: string, fields: string[], tmpls: ReturnType<typeof templates>, req: [number, string, number[]][]) => ({
+  const model = (id: number, name: string, fields: readonly string[], tmpls: ReturnType<typeof templates>, req: [number, string, number[]][]) => ({
     id, name, type: 0, mod: modified, usn: -1, sortf: 0, did: deckId, css,
     flds: fields.map((name, ord) => ({ name, ord, sticky: false, rtl: false, font: "Arial", size: 20 })),
     tmpls: tmpls.map((template) => ({ ...template, did: null, bqfmt: "", bafmt: "" })),
@@ -153,18 +166,20 @@ export async function buildApkg(
   });
   const wordClip = `{{#ClipUrl}}<video controls preload="metadata" playsinline>${videoSources}{{#Subtitles}}<track kind="subtitles" src="{{Subtitles}}" default>{{/Subtitles}}</video>{{#Source}}<div class="source">{{Source}}</div>{{/Source}}{{/ClipUrl}}`;
   const models = {
-    [sentenceId]: model(sentenceId, `Yap ${plan.course_code} sentences`, sentenceFields, templates(lang), [[0, "all", [8]], [1, "all", [9]]]),
-    [wordId]: model(wordId, `Yap ${plan.course_code} words`, ["Word", "Definition", "AudioBundled", "Source", "ClipUrl", "Subtitles", "ClipWebmUrl"], [{
+    [sentenceId]: model(sentenceId, `Yap ${plan.course_code} sentences`, sentenceFields, templates(lang, plan.furigana), [
+      [0, "all", [sentenceFields.indexOf("IncludeReading")]], [1, "all", [sentenceFields.indexOf("IncludeListening")]],
+    ]),
+    [wordId]: model(wordId, `Yap ${plan.course_code} words`, wordFields, [{
       name: "Word", ord: 0,
       // Same shape as the sentence cards: the recording plays on both sides.
       qfmt: `<div class="eyebrow">Word</div>
 {{AudioBundled}}
-<div class="sentence" lang="${lang}">{{Word}}</div>
+<div class="sentence" lang="${lang}">${filtered("Word", plan.furigana, false)}</div>
 <hr id="answer">
 <p class="hint">Tap to reveal the answer</p>${wordClip}`,
       afmt: `<div class="eyebrow">Word</div>
 {{AudioBundled}}
-<div class="sentence" lang="${lang}">{{Word}}</div>
+<div class="sentence" lang="${lang}">${filtered("Word", plan.furigana, true)}</div>
 <hr id="answer">
 <div class="translation">{{Definition}}</div>${wordClip}`,
     }], [[0, "all", [0]]]),
@@ -191,15 +206,16 @@ export async function buildApkg(
     db.run("BEGIN");
     for (const [index, note] of plan.notes.entries()) {
       const fields = fieldsFor(note, bundled, lang);
+      const values = "Word" in fields ? wordFields.map((name) => fields[name]) : sentenceFields.map((name) => fields[name]);
       const text = note.type === "Word" ? note.word : note.sentence;
       const hash = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(text));
       const checksum = new DataView(hash).getUint32(0);
       db.run("INSERT INTO notes VALUES (?, ?, ?, ?, -1, ?, ?, ?, ?, 0, '')", [
         Number(note.note_id), note.guid, note.type === "Word" ? wordId : sentenceId, modified,
-        ` ${note.tags.join(" ")} `, fields.join("\x1f"), text, checksum,
+        ` ${note.tags.join(" ")} `, values.join("\x1f"), text, checksum,
       ]);
-      const ordinals = note.type === "Word" ? [0]
-        : [fields[8] ? 0 : undefined, fields[9] ? 1 : undefined].filter((ord) => ord !== undefined);
+      const ordinals = "Word" in fields ? [0]
+        : [fields.IncludeReading ? 0 : undefined, fields.IncludeListening ? 1 : undefined].filter((ord) => ord !== undefined);
       for (const ordinal of ordinals) {
         db.run("INSERT INTO cards VALUES (?, ?, ?, ?, ?, -1, 0, 0, ?, 0, 0, 0, 0, 0, 0, 0, 0, '')", [
           Number(note.card_id) + ordinal, Number(note.note_id), deckId, ordinal, modified, index + 1,

@@ -55,6 +55,9 @@ pub struct AnkiDeckPlan {
     pub deck_id: i64,
     pub sentence_model_id: i64,
     pub word_model_id: i64,
+    /// Whether the notes' furigana fields carry readings, so the templates
+    /// should show them (on the back only) instead of the plain text.
+    pub furigana: bool,
     pub notes: Vec<AnkiNote>,
     pub bundled: Vec<AnkiBundledMedia>,
     /// How much of everyday language (the Essential bar's measure) the
@@ -81,9 +84,10 @@ pub enum AnkiNote {
         note_id: i64,
         card_id: i64,
         sentence: String,
+        /// `sentence` in Anki's furigana markup; see [`furigana`].
+        sentence_furigana: String,
         translation: String,
         target_word: String,
-        target_gloss: String,
         glosses: Vec<AnkiGloss>,
         source: Option<AnkiSource>,
         clip: AnkiClip,
@@ -99,6 +103,8 @@ pub enum AnkiNote {
         note_id: i64,
         card_id: i64,
         word: String,
+        /// `word` in Anki's furigana markup; see [`furigana`].
+        word_furigana: String,
         definition: String,
         audio: String,
         source: Option<AnkiSource>,
@@ -390,6 +396,11 @@ fn word_note(
         note_id: id(course, "word-note", word),
         card_id: id(course, "word-card", word),
         word: word.to_owned(),
+        word_furigana: furigana(
+            word,
+            pack.readings_for_sense(gram).next(),
+            course.target_language,
+        ),
         definition,
         audio,
         source: None,
@@ -482,6 +493,49 @@ fn sentence_glosses(
         gloss.text = gloss.text.trim_end().to_owned();
     }
     glosses
+}
+
+/// Anki's furigana markup, ` 漢字[かんじ]`: `{{furigana:…}}` renders it as
+/// ruby and `{{kanji:…}}` strips the readings. Both filters consume the space
+/// before a base, which stops the base from swallowing the text before it.
+fn furigana(text: &str, reading: Option<&str>, language: Language) -> String {
+    let Some(reading) = reading else {
+        return text.to_owned();
+    };
+    language_utils::readings::ruby_segments(text, reading, language)
+        .into_iter()
+        .map(|segment| match segment.ruby {
+            Some(ruby) => format!(" {}[{ruby}]", segment.base),
+            None => segment.base,
+        })
+        .collect()
+}
+
+/// The sentence as the challenge's literals spell it, each gram annotated with
+/// the reading it has in this sentence.
+fn sentence_furigana(
+    pack: &LanguagePack,
+    language: Language,
+    sentence: Spur,
+    literals: &[Literal<String>],
+    indices: &[usize],
+) -> String {
+    let grams = &pack.encoded_sentences[&sentence].grams;
+    let pairs: Vec<_> = literals.iter().zip(indices).collect();
+    pairs
+        .chunk_by(|a, b| a.1 == b.1)
+        .map(|group| {
+            let (SentenceGram::Learnable(gram) | SentenceGram::Obvious(gram)) = &grams[*group[0].1];
+            let mut text: String = group
+                .iter()
+                .flat_map(|(literal, _)| [literal.word.text.as_str(), literal.whitespace.as_str()])
+                .collect();
+            let trailing = group.last().unwrap().0.whitespace.as_str();
+            text.truncate(text.len() - trailing.len());
+            let reading = gram.reading.map(|s| pack.string_rodeo.resolve(&s));
+            furigana(&text, reading, language) + trailing
+        })
+        .collect()
 }
 
 fn human_filename(course: Course, text: &str) -> String {
@@ -1073,11 +1127,6 @@ impl PlannerState {
             still_pending.push_back(gram);
             return;
         };
-        let target_gloss = pack
-            .gram_definitions
-            .get(&gram)
-            .map(definition)
-            .unwrap_or_default();
         // Word notes come before the sentence: the target word, plus
         // every other word the learner did not know at export time
         // that the deck has not presented yet (whether the simulator
@@ -1228,10 +1277,16 @@ impl PlannerState {
             guid: guid(course, "sentence", &text),
             note_id: id(course, "sentence-note", &text),
             card_id: id(course, "sentence-card", &text),
+            sentence_furigana: sentence_furigana(
+                pack,
+                language,
+                sentence,
+                &challenge.target_language_literals,
+                &challenge.literal_gram_indices,
+            ),
             sentence: text,
             translation: challenge.native_translations.join(" / "),
             target_word: word.clone(),
-            target_gloss,
             glosses,
             source,
             clip,
@@ -1303,6 +1358,7 @@ impl PlannerState {
             deck_id: id(course, "deck", ""),
             sentence_model_id: id(course, "sentence-model", ""),
             word_model_id: id(course, "word-model", ""),
+            furigana: language_utils::readings::supports_readings(language),
             notes: self.notes.clone(),
             bundled: self.bundled.clone(),
             finish_message,

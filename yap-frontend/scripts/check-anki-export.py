@@ -79,10 +79,13 @@ def check_sql(package, plan, directory):
         assert "1" in json.loads(col["dconf"])
         assert json.loads(col["conf"])["nextPos"] > len(plan["notes"])
         model = json.loads(col["models"])[str(plan["sentence_model_id"])]
-        assert len(model["flds"]) == 13
-        assert [field["name"] for field in model["flds"]][2:4] == ["TargetWord", "TargetGloss"]
         word_model = json.loads(col["models"])[str(plan["word_model_id"])]
-        assert len(word_model["flds"]) == 7
+        names = {
+            plan["sentence_model_id"]: [field["name"] for field in model["flds"]],
+            plan["word_model_id"]: [field["name"] for field in word_model["flds"]],
+        }
+        for flds in names.values():
+            assert len(set(flds)) == len(flds), flds
         for model_type in (model, word_model):
             assert model_type["flds"][-1]["name"] == "ClipWebmUrl"
             for template in model_type["tmpls"]:
@@ -120,8 +123,6 @@ def check_sql(package, plan, directory):
                 assert '<hr id="answer">' in markup
             assert "Tap to reveal the answer" in template["qfmt"]
             assert "Tap to reveal the answer" not in template["afmt"]
-            assert "{{TargetWord}}" not in template["afmt"]
-            assert "{{TargetGloss}}" not in template["afmt"]
             assert "{{Translation}}" in template["afmt"]
             assert "{{Glosses}}" in template["afmt"]
         for index, note in enumerate(plan["notes"]):
@@ -132,26 +133,28 @@ def check_sql(package, plan, directory):
             assert row["sfld"] == raw
             assert row["csum"] == int(hashlib.sha1(raw.encode()).hexdigest()[:8], 16)
             assert row["tags"].split() == note["tags"]
-            fields = row["flds"].split("\x1f")
+            values = row["flds"].split("\x1f")
+            assert len(values) == len(names[row["mid"]])
+            fields = dict(zip(names[row["mid"]], values))
             clip = note.get("clip") or {"mp4": "", "webm": ""}
-            assert html.unescape(fields[4 if note["type"] == "Word" else 6]) == clip["mp4"]
-            assert html.unescape(fields[-1]) == clip["webm"]
+            assert html.unescape(fields["ClipUrl"]) == clip["mp4"]
+            assert html.unescape(fields["ClipWebmUrl"]) == clip["webm"]
             assert_safe(row["flds"])
-            assert html.unescape(fields[0]) == raw
             if note["type"] == "Word":
-                assert html.unescape(fields[1]) == note["definition"]
-                assert fields[5] == ("_yap-subs-clip.vtt" if index == 0 else "")
+                assert html.unescape(fields["Word"]) == note["word_furigana"]
+                assert html.unescape(fields["Definition"]) == note["definition"]
+                assert fields["Subtitles"] == ("_yap-subs-clip.vtt" if index == 0 else "")
                 wanted_ordinals = [0]
             else:
-                for field, key in [(1, "translation"), (2, "target_word"), (3, "target_gloss")]:
-                    assert html.unescape(fields[field]) == note[key]
-                assert "<img src=x" not in fields[4]
+                assert html.unescape(fields["Sentence"]) == note["sentence_furigana"]
+                assert html.unescape(fields["Translation"]) == note["translation"]
+                assert "<img src=x" not in fields["Glosses"]
                 if index == 2:
-                    assert fields[7] == "[sound:tts.wav]"
+                    assert fields["TtsBundled"] == "[sound:tts.wav]"
                 if index == 4:
-                    assert fields[7] == "" and fields[9] == ""
-                assert fields[10] == ("" if index == 4 else "_yap-subs-clip.vtt")
-                assert fields[11] == "_yap-subs-clip-masked.vtt"
+                    assert fields["TtsBundled"] == "" and fields["IncludeListening"] == ""
+                assert fields["Subtitles"] == ("" if index == 4 else "_yap-subs-clip.vtt")
+                assert fields["MaskedSubtitles"] == "_yap-subs-clip-masked.vtt"
                 wanted_ordinals = ([0] if note["include_reading"] else []) + (
                     [1] if note["include_listening"] and index != 4 else []
                 )
@@ -214,6 +217,19 @@ def check_variant(root, variant):
                 assert autoplay_sources(render, "answer") == int(bundled)
                 assert len(render.question_av_tags) == int(bundled)
                 assert len(render.answer_av_tags) == int(bundled)
+                # With readings, the front strips them and the back shows them as ruby.
+                # (The Listening front omits the sentence; word fixture 1 has no reading.)
+                text = html.escape(note["word"] if is_word else note["sentence"])
+                if "仕事" in text:
+                    sentence = re.compile(r'<div class="sentence".*?</div>', re.S)
+                    question = sentence.findall(render.question_text)
+                    answer = sentence.findall(render.answer_text)
+                    shown = is_word or card.ord == 0
+                    assert len(question) == int(shown) and len(answer) == 1, (question, answer)
+                    assert all(text in markup and "[" not in markup for markup in question), question
+                    ruby = "<ruby><rb>仕事</rb><rt>しごと</rt></ruby>"
+                    expected = text.replace("仕事", ruby) if plan["furigana"] else text
+                    assert expected in answer[0] and "[" not in answer[0], (expected, answer)
                 for back, markup in enumerate((render.question_text, render.answer_text)):
                     videos = [attrs for tag, attrs in Tags(markup).tags if tag == "video"]
                     assert len(videos) == int(bool(note.get("clip")))
@@ -244,7 +260,7 @@ def check_reexport(root, always):
                 import_package(collection, root / f"{variant}.apkg", always)
                 assert counts(collection) == (5, 5 if variant == "reading" else 7)
                 flags = [
-                    collection.get_note(note_id).fields[8:10]
+                    [collection.get_note(note_id)[name] for name in ("IncludeReading", "IncludeListening")]
                     for note_id in collection.find_notes('note:"Yap fra-eng sentences"')
                 ]
                 expected = {
@@ -271,7 +287,7 @@ def check_reexport(root, always):
 
 def main():
     root = Path(sys.argv[1]).resolve()
-    for variant in ("reading", "listening", "both"):
+    for variant in ("reading", "listening", "both", "readings"):
         check_variant(root, variant)
     for always in (False, True):
         check_reexport(root, always)

@@ -137,10 +137,10 @@ async function writeFixtures(buildApkg, output) {
   const sentence = (index, tts) => ({
     type: "Sentence",
     ...identity(index),
-    sentence: `Phrase ${index} ${hostileText}`,
+    sentence: `Phrase ${index} 仕事 ${hostileText}`,
+    sentence_furigana: `Phrase ${index} 仕事 ${hostileText}`,
     translation: hostileText,
     target_word: `hidden-target ${hostileText}`,
-    target_gloss: `hidden-gloss ${hostileText}`,
     glosses: [
       {
         text: hostileText,
@@ -174,11 +174,13 @@ async function writeFixtures(buildApkg, output) {
     deck_id: 9007199254740988,
     sentence_model_id: 9007199254740984,
     word_model_id: 9007199254740980,
+    furigana: false,
     notes: [
       {
         type: "Word",
         ...identity(0),
-        word: `Mot ${hostileText}`,
+        word: `Mot 仕事 ${hostileText}`,
+        word_furigana: `Mot 仕事 ${hostileText}`,
         definition: hostileText,
         source: sentence(2, "").source,
         clip: sentence(2, "").clip,
@@ -196,6 +198,7 @@ async function writeFixtures(buildApkg, output) {
         type: "Word",
         ...identity(1),
         word: `Autre ${hostileText}`,
+        word_furigana: `Autre ${hostileText}`,
         definition: hostileText,
         audio: "word.mp3",
         tags: [
@@ -260,15 +263,22 @@ async function writeFixtures(buildApkg, output) {
   };
   const realNow = Date.now;
   try {
-    for (const [variant, reading, listening] of [
-      ["reading", true, false],
-      ["both", true, true],
-      ["listening", false, true],
+    for (const [variant, reading, listening, furigana] of [
+      ["reading", true, false, false],
+      ["both", true, true, false],
+      ["listening", false, true, false],
+      ["readings", true, true, true],
     ]) {
       // Even exports in the same second must update Anki’s conditional fields.
       Date.now = () => 1790167000000;
       const plan = structuredClone(base);
+      plan.furigana = furigana;
       for (const note of plan.notes) {
+        // Furigana markup as Rust writes it: a space, the base, the reading.
+        if (furigana) {
+          for (const key of ["sentence_furigana", "word_furigana"])
+            if (key in note) note[key] = note[key].replace("仕事", " 仕事[しごと]");
+        }
         if (note.type === "Sentence") {
           note.include_reading = reading;
           note.include_listening = listening;
