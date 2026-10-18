@@ -574,11 +574,15 @@ pub async fn subtitle_sentences(
 /// otherwise run a film-sized batch for each — and a batch can take a day
 /// to come back. Films in a rule-segmented language cost nothing here, and
 /// so does a queue the `segment` step has already warmed.
-pub async fn warm_segmentation(out: &Path, films: &[Movie]) -> Result<()> {
+pub async fn warm_segmentation(
+    out: &Path,
+    films: &[Movie],
+) -> Result<std::collections::HashSet<String>> {
     use movie_subtitles::llm_segment;
     let tracks = llm_tracks(out, films)?;
+    let mut failed = std::collections::HashSet::new();
     if tracks.is_empty() {
-        return Ok(());
+        return Ok(failed);
     }
     let cues: usize = tracks.iter().map(|(_, _, lines)| lines.len()).sum();
     println!(
@@ -590,13 +594,23 @@ pub async fn warm_segmentation(out: &Path, films: &[Movie]) -> Result<()> {
         .map(|(_, language, lines)| (lines.as_slice(), *language))
         .collect();
     let client = llm_segment::client()?;
-    let (_, report) =
+    let (splits, report) =
         llm_segment::split_tracks(&client, &borrowed, llm_segment::print_progress()).await?;
+    for ((index, _, _), result) in tracks.iter().zip(splits) {
+        if let Err(error) = result {
+            let film = &films[*index];
+            eprintln!(
+                "segmentation {} ({}): {error:#}; skipped",
+                film.title, film.imdb_id
+            );
+            failed.insert(film.imdb_id.clone());
+        }
+    }
     println!(
         "  {} cues put to the model, {} fell back to per-cue",
         report.asked, report.fallbacks
     );
-    Ok(())
+    Ok(failed)
 }
 
 /// The subtitle of every film in `films` whose language the model segments,
@@ -1609,7 +1623,9 @@ pub async fn clips_all(
         })
         .cloned()
         .collect();
-    warm_segmentation(&out, &redo).await?;
+    let failed = warm_segmentation(&out, &redo).await?;
+    queue.retain(|movie| !failed.contains(&movie.imdb_id));
+    let total = queue.len();
 
     let store = osmo::Store::open("./.cache");
     let http = reqwest::Client::builder()
@@ -1667,7 +1683,7 @@ pub async fn clips_all(
     .await;
 
     let mut done = Vec::new();
-    let mut failed = std::collections::HashSet::new();
+    let mut failed = failed;
     for (n, (index, outcome)) in films.into_iter().enumerate() {
         let n = n + 1;
         let movie = &queue[index];

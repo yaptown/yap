@@ -1,9 +1,8 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use clap::Parser;
 use language_utils::Language;
 use movie_metadata::{OmdbClient, TmdbClient};
-use movie_subtitles::SubtitleLine;
-use opensubtitles_downloader::{rank_by_quality, OpenSubtitlesClient};
+use opensubtitles_downloader::{download::process_movie, OpenSubtitlesClient};
 use std::fs;
 use std::path::PathBuf;
 
@@ -434,187 +433,6 @@ const EXCLUDED_MOVIES: &[&str] = &[
     "tt0017136", // Metropolis (1927): silent — intertitles, no speech to clip
 ];
 
-/// Check if subtitle lines pass the language sanity check.
-fn passes_language_sanity_check(lines: &[SubtitleLine], language: Language) -> bool {
-    match language.check_subtitle_sanity(lines.iter().map(|l| l.sentence.as_str()), &[]) {
-        Ok(()) => true,
-        Err(reason) => {
-            eprintln!("  Sanity check failed: {reason}");
-            false
-        }
-    }
-}
-
-/// Check cleanliness and the course's language/script using the shared gate.
-async fn passes_llm_quality_check(lines: &[SubtitleLine], language: Language) -> bool {
-    match opensubtitles_downloader::quality::check(lines, language).await {
-        Ok(response) => {
-            if !response.clean {
-                println!("  ✗ LLM quality check failed: {}", response.reason);
-            }
-            response.clean
-        }
-        Err(e) => {
-            println!("  ⚠ LLM quality check error (allowing): {e}");
-            true // Don't block on LLM errors
-        }
-    }
-}
-
-/// Download subtitles for a single movie.
-async fn download_movie_subtitles(
-    opensub_client: &OpenSubtitlesClient,
-    imdb_id: u64,
-    imdb_id_str: &str,
-    language_iso639_1: &str,
-    movies_dir: &std::path::Path,
-    language: Language,
-) -> Result<Option<Vec<SubtitleLine>>> {
-    let subtitle_path = &movie_subtitles::derived_jsonl_path(movies_dir, imdb_id_str);
-
-    // Search for subtitles
-    let mut subtitle_results = opensub_client
-        .search_subtitles_for_movie(imdb_id, language_iso639_1)
-        .await?;
-
-    if subtitle_results.is_empty() {
-        return Ok(None);
-    }
-
-    // Filter and sort by quality
-    subtitle_results.retain(|s| !s.attributes.ai_translated && !s.attributes.machine_translated);
-    if subtitle_results.is_empty() {
-        println!("  ✗ No human-translated subtitles available");
-        return Ok(None);
-    }
-
-    rank_by_quality(&mut subtitle_results);
-
-    println!("  Found {} subtitle options", subtitle_results.len());
-
-    // Try each subtitle in order until one succeeds
-    for subtitle_result in subtitle_results {
-        println!(
-            "  Trying subtitle: {} downloads, trusted: {}, rating: {:.1}",
-            subtitle_result.attributes.download_count.unwrap_or(0),
-            subtitle_result.attributes.from_trusted.unwrap_or(false),
-            subtitle_result.attributes.ratings.unwrap_or(0.0)
-        );
-
-        let Some(file_id) = subtitle_result.attributes.files.first().map(|f| f.file_id) else {
-            println!("  ✗ No files found for this subtitle, trying next...");
-            continue;
-        };
-
-        println!("  Downloading subtitle (file_id: {file_id})...");
-        let srt_content = match opensub_client.download_subtitle(file_id).await {
-            Ok(content) => content,
-            Err(e) => {
-                println!("  ✗ Download failed: {e}, trying next...");
-                continue;
-            }
-        };
-
-        println!("  Parsing SRT...");
-        let subtitle_lines = match movie_subtitles::parse_srt(&srt_content) {
-            Ok(lines) => lines,
-            Err(e) => {
-                println!("  ✗ Parse failed: {e}, trying next...");
-                continue;
-            }
-        };
-
-        if subtitle_lines.is_empty() {
-            continue;
-        }
-
-        // Sanity check: verify subtitles are actually in the target language
-        if !passes_language_sanity_check(&subtitle_lines, language) {
-            println!(
-                "  ✗ Subtitles failed language sanity check (wrong language?), trying next..."
-            );
-            continue;
-        }
-
-        // LLM quality check: sample blocks and verify they look clean
-        if !passes_llm_quality_check(&subtitle_lines, language).await {
-            println!("  ✗ Subtitles failed LLM quality check, trying next...");
-            continue;
-        }
-
-        println!("  Extracted {} dialogue lines", subtitle_lines.len());
-
-        // The SRT exactly as OpenSubtitles served it, written *first* and never
-        // rewritten. Cleaning is lossy and the download quota is finite, so the
-        // original is what has to survive; the JSONL below is only a derived
-        // cache of it.
-        if let Err(e) = movie_subtitles::write_raw_srt(movies_dir, imdb_id_str, &srt_content) {
-            println!("  ✗ Failed to save raw SRT: {e}, trying next...");
-            continue;
-        }
-
-        if let Err(e) = movie_subtitles::write_derived_jsonl(subtitle_path, &subtitle_lines) {
-            println!("  ✗ Failed to write subtitles: {e}, trying next...");
-            continue;
-        }
-
-        println!("  ✓ Saved to {}", subtitle_path.display());
-
-        return Ok(Some(subtitle_lines));
-    }
-
-    Ok(None)
-}
-
-/// Make sure a movie's subtitles are on disk, downloading them if needed.
-/// Returns whether this was a new download. Metadata and posters are filled
-/// in afterwards by `movie_metadata::refresh`.
-async fn process_movie(
-    imdb_id_str: &str,
-    opensub_client: &OpenSubtitlesClient,
-    language_iso639_1: &str,
-    output_dir: &std::path::Path,
-    language: Language,
-) -> Result<bool> {
-    let subtitle_path = movie_subtitles::derived_jsonl_path(output_dir, imdb_id_str);
-    let raw_path = movie_subtitles::raw_srt_path(output_dir, imdb_id_str);
-    let imdb_id = imdb_id_str.strip_prefix("tt").unwrap().parse::<u64>()?;
-
-    // A movie we already hold the raw SRT for never needs the network again,
-    // even if the derived cache is missing or was deleted to force a re-clean.
-    if raw_path.exists() && !subtitle_path.exists() {
-        println!("  ↻ Re-deriving dialogue from the stored SRT");
-        let srt = fs::read_to_string(&raw_path)?;
-        let lines = movie_subtitles::parse_srt(&srt)?;
-        movie_subtitles::write_derived_jsonl(&subtitle_path, &lines)?;
-    }
-
-    if subtitle_path.exists() {
-        println!("  ✓ Subtitle already downloaded");
-        return Ok(false);
-    }
-    println!("  Searching for subtitles...");
-    match download_movie_subtitles(
-        opensub_client,
-        imdb_id,
-        imdb_id_str,
-        language_iso639_1,
-        output_dir,
-        language,
-    )
-    .await?
-    {
-        Some(_) => {
-            println!("  ✓ Downloaded successfully");
-            Ok(true)
-        }
-        None => {
-            println!("  ✗ Failed to download subtitles");
-            Err(anyhow!("No subtitles available"))
-        }
-    }
-}
-
 /// Parse a Language from an ISO 639-3 code for clap
 fn parse_language(s: &str) -> Result<Language, String> {
     Language::from_code(s).ok_or_else(|| {
@@ -744,9 +562,11 @@ async fn main() -> Result<()> {
             match process_movie(
                 &imdb_id_str,
                 &opensub_client,
-                language_iso639_1,
                 &output_dir,
                 language,
+                &output_dir
+                    .join("fetch-failures")
+                    .join(format!("{imdb_id_str}.json")),
             )
             .await
             {
@@ -771,9 +591,11 @@ async fn main() -> Result<()> {
             if let Err(e) = process_movie(
                 imdb_id_str,
                 &opensub_client,
-                language_iso639_1,
                 &output_dir,
                 language,
+                &output_dir
+                    .join("fetch-failures")
+                    .join(format!("{imdb_id_str}.json")),
             )
             .await
             {

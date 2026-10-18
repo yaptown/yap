@@ -8,6 +8,60 @@ use tysm::chat_completions::ChatClient;
 static CHAT_CLIENT: LazyLock<ChatClient> =
     LazyLock::new(|| crate::migrating_chat_client("gpt-6-luna"));
 
+/// Pure inputs to pronunciation selection, shared by production and measurement.
+/// Manual entries never go to the model, and preserve their file order.
+pub struct PronunciationCandidates {
+    pub automatic: HashMap<String, BTreeSet<String>>,
+    pub manual: std::collections::BTreeMap<String, Pronunciations>,
+}
+
+pub fn load_candidates(
+    source: &std::path::Path,
+    frequent_words: &std::collections::HashSet<String>,
+) -> anyhow::Result<PronunciationCandidates> {
+    use anyhow::Context;
+    use std::io::BufRead;
+    let read = |name: &str| -> anyhow::Result<Vec<(String, String)>> {
+        std::io::BufReader::new(std::fs::File::open(source.join(name))?)
+            .lines()
+            .filter_map(|line| match line {
+                Ok(line) if line.trim().is_empty() => None,
+                Ok(line) => Some((|| {
+                    let (word, ipa) = line
+                        .split_once('\t')
+                        .context("invalid pronunciation TSV row")?;
+                    Ok((word.trim().to_lowercase(), ipa.trim().to_owned()))
+                })()),
+                Err(error) => Some(Err(error.into())),
+            })
+            .filter(|row| match row {
+                Ok((word, _)) => frequent_words.contains(word),
+                Err(_) => true,
+            })
+            .collect()
+    };
+    let mut automatic = HashMap::<String, BTreeSet<String>>::new();
+    for (word, ipa) in read("pronunciations.tsv")? {
+        automatic.entry(word).or_default().insert(ipa);
+    }
+    let mut extra = std::collections::BTreeMap::<String, Vec<String>>::new();
+    for (word, ipa) in read("extra_pronunciations.tsv")? {
+        extra.entry(word).or_default().push(ipa);
+    }
+    let mut manual = std::collections::BTreeMap::new();
+    for (word, values) in extra {
+        let mut values = values.into_iter();
+        let main = values.next().expect("nonempty manual pronunciations");
+        let mut seen = std::collections::HashSet::new();
+        let others = values
+            .chain(automatic.remove(&word).into_iter().flatten())
+            .filter(|ipa| ipa != &main && seen.insert(ipa.clone()))
+            .collect();
+        manual.insert(word, Pronunciations { main, others });
+    }
+    Ok(PronunciationCandidates { automatic, manual })
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 struct PronunciationResponse {
     #[serde(rename = "1. thoughts")]
@@ -118,4 +172,34 @@ Output format:
     pb.set_position(count as u64);
     pb.finish_with_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
     Ok(selected)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn candidate_inputs_need_no_dictionary_and_preserve_manual_precedence() {
+        let directory = tempfile::tempdir().unwrap();
+        std::fs::write(
+            directory.path().join("pronunciations.tsv"),
+            " Mot\twiki\nmot\tpreferred\nmot\twiki\nambiguous\tb\nambiguous\ta\nexcluded\tx\n",
+        )
+        .unwrap();
+        std::fs::write(
+            directory.path().join("extra_pronunciations.tsv"),
+            "Mot\tpreferred\nmot\tother\nmot\tpreferred\n",
+        )
+        .unwrap();
+        let words = std::collections::HashSet::from(["mot".into(), "ambiguous".into()]);
+        let candidates = load_candidates(directory.path(), &words).unwrap();
+        assert_eq!(candidates.automatic.len(), 1);
+        assert_eq!(
+            candidates.automatic["ambiguous"],
+            BTreeSet::from(["a".into(), "b".into()])
+        );
+        assert_eq!(candidates.manual["mot"].main, "preferred");
+        assert_eq!(candidates.manual["mot"].others, ["other", "wiki"]);
+        assert!(!directory.path().join("gram_dictionary.jsonl").exists());
+    }
 }

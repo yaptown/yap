@@ -131,13 +131,17 @@ pub fn decode_record(record: &[u8]) -> Option<Vec<SpanVector>> {
 }
 
 /// Read the cached vectors for `spans` of a sentence. `None` if the record is
-/// missing, malformed, or lacks any requested span.
+/// missing, malformed, or lacks any requested span, and for no spans at all,
+/// so `Some` always holds at least one vector to average.
 pub async fn read_word_vectors(
     store: &osmo::Store,
     language: Language,
     sentence_text: &str,
     spans: &[(u32, u32)],
 ) -> Option<Vec<Vec<f32>>> {
+    if spans.is_empty() {
+        return None;
+    }
     let record = store.read(&cache_key(language, sentence_text)).await?;
     let decoded = decode_record(&record)?;
     let by_span: std::collections::HashMap<(u32, u32), Vec<f32>> = decoded.into_iter().collect();
@@ -216,7 +220,16 @@ pub async fn ensure_token_embeddings<'a>(
         );
         return Ok(());
     }
-    if crate::cache_only() {
+    if crate::cache_only() && !crate::measurement::modal_allowed() {
+        if tysm::measurement::enabled() {
+            return Err(crate::measurement::DependencyBarrier {
+                component: "token-embedding",
+                pending: misses.len(),
+                exhausted: 0,
+                input: None,
+            }
+            .into());
+        }
         log::warn!(
             "token-embed[{}]: {} cache misses skipped (cache-only mode)",
             language.code(),

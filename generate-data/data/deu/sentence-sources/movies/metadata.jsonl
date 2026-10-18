@@ -144,7 +144,7 @@
 {"id":"tt0013442","title":"Nosferatu, eine Symphonie des Grauens","year":1922,"original_language":"de","rotten_tomatoes_score":97}
 {"id":"tt2987732","title":"Fack ju Göhte","year":2013,"original_language":"de","rotten_tomatoes_score":null}
 {"id":"tt3042408","title":"Who Am I – Kein System ist sicher","year":2014,"original_language":"de","rotten_tomatoes_score":null}
-{"id":"tt0093191","title":"Der Himmel über Berlin","year":1987,"original_language":"de","rotten_tomatoes_score":95}
+{"id":"tt0093191","title":"Der Himmel über Berlin","year":1987,"original_language":"de","rotten_tomatoes_score":95,"variety":"deu"}
 {"id":"tt4226388","title":"Victoria","year":2015,"original_language":"de","rotten_tomatoes_score":82}
 {"id":"tt0068182","title":"Aguirre, der Zorn Gottes","year":1972,"original_language":"de","rotten_tomatoes_score":96}
 {"id":"tt4048272","title":"Toni Erdmann","year":2016,"original_language":"de","rotten_tomatoes_score":93}
@@ -366,3 +366,17 @@
 {"id":"tt0816692","title":"Interstellar","year":2014,"original_language":"en","rotten_tomatoes_score":73}
 {"id":"tt0241527","title":"Harry Potter und der Stein der Weisen","year":2001,"original_language":"en","rotten_tomatoes_score":80}
 {"id":"tt0083946","title":"Fitzcarraldo","year":1982,"original_language":"de","rotten_tomatoes_score":null,"variety":"deu"}
+{"id":"tt0071141","title":"Ali: Fear Eats the Soul","poster_path":null,"localizations":{},"year":1974,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}
+{"id":"tt5311542","title":"Never Look Away","poster_path":null,"localizations":{},"year":2018,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}
+{"id":"tt0880502","title":"The Edge of Heaven","poster_path":null,"localizations":{},"year":2007,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}
+{"id":"tt0082176","title":"Christiane F.","poster_path":null,"localizations":{},"year":1981,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}
+{"id":"tt0119472","title":"Knockin' on Heaven's Door","poster_path":null,"localizations":{},"year":1997,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}
+{"id":"tt26612950","title":"The Teachers' Lounge","poster_path":null,"localizations":{},"year":2023,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}
+{"id":"tt2764784","title":"Phoenix","poster_path":null,"localizations":{},"year":2014,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}
+{"id":"tt0161860","title":"Nowhere in Africa","poster_path":null,"localizations":{},"year":2001,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}
+{"id":"tt0248408","title":"Manitou's Shoe","poster_path":null,"localizations":{},"year":2001,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}
+{"id":"tt1244668","title":"Soul Kitchen","poster_path":null,"localizations":{},"year":2009,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}
+{"id":"tt0020697","title":"The Blue Angel","poster_path":null,"localizations":{},"year":1930,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}
+{"id":"tt0102629","title":"Pappa ante Portas","poster_path":null,"localizations":{},"year":1991,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}
+{"id":"tt0052654","title":"The Bridge","poster_path":null,"localizations":{},"year":1959,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}
+{"id":"tt0426578","title":"Sophie Scholl: The Final Days","poster_path":null,"localizations":{},"year":2005,"original_language":"de","variety":"deu","rotten_tomatoes_score":null}

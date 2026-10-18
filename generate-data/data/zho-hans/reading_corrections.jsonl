@@ -1,0 +1,6 @@
+{"gram": [{"Tok": {"text": "当年", "word_type": {"type": "Heteronym", "word": "当年", "lemma": "当年", "pos": "NOUN"}}}], "action": "replace_reading", "from": "dàng nián", "to": "dāng nián"}
+{"gram": [{"Tok": {"text": "恶心", "word_type": {"type": "Heteronym", "word": "恶心", "lemma": "恶心", "pos": "ADJ"}}}], "action": "replace_reading", "from": "è xīn", "to": "ě xīn"}
+{"gram": [{"Tok": {"text": "在", "word_type": {"type": "Heteronym", "word": "在", "lemma": "在", "pos": "VERB"}}}, {"Tok": {"text": "那", "word_type": {"type": "Heteronym", "word": "那", "lemma": "那", "pos": "PRON"}}}], "action": "drop_sense", "readings": ["zài nǎ"]}
+{"gram": [{"Tok": {"text": "得了", "word_type": {"type": "Heteronym", "word": "得了", "lemma": "得了", "pos": "PART"}}}], "action": "replace_reading", "from": "dé liǎo", "to": "de liǎo"}
+{"gram": [{"Tok": {"text": "看紧点", "word_type": {"type": "Heteronym", "word": "看紧点", "lemma": "看紧点", "pos": "VERB"}}}], "action": "replace_reading", "from": "kàn jǐn diǎn", "to": "kān jǐn diǎn"}
+{"gram": [{"Tok": {"text": "红磨坊", "word_type": {"type": "Other", "other_tag": "PROPN"}}}], "action": "replace_reading", "from": "hóng mó fāng", "to": "hóng mò fáng"}

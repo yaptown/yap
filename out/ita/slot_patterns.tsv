@@ -1,9 +1,9 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
 tirare fuori qualcosa	filled	154	12	12	1.00	yes		
-capitare a qualcuno	clitic	89	12	12	1.00	yes		
+capitare a qualcuno	clitic	91	12	12	1.00	yes		
 capitare a qualcuno	filled	68	10	12	0.83	yes	Forse questo capita solamente a Boston.	capita … a … Boston
 sangue del proprio sangue	clitic	57	1	12	0.08	no	"Vuole il mio sangue!"	mio … sangue
-dalla propria parte	clitic	56	11	12	0.92	yes	Che vengano fuori dalla tua parte!	dalla … tua … parte
+dalla propria parte	clitic	56	12	12	1.00	yes		
 fare del proprio meglio	clitic	54	12	12	1.00	yes		
 tirare fuori qualcosa	clitic	30	12	12	1.00	yes		
 per il bene di qualcuno	clitic	28	12	12	1.00	yes		

@@ -207,6 +207,7 @@ pub async fn create_gram_dictionary(
         pool.dedup();
         heteronym_sentences.refresh(heteronym, &pool);
     }
+    heteronym_sentences.save()?;
 
     let count = target_language_heteronyms.len();
 
@@ -336,6 +337,7 @@ pub async fn create_gram_phrasebook(
     for gram in multi_atom_grams.keys() {
         gram_sentences.refresh(gram, corpus.witnesses(gram));
     }
+    gram_sentences.save()?;
 
     struct Term<'a> {
         gram: &'a Gram<String>,
@@ -546,6 +548,21 @@ Of course, their native language is {native_language}, so you should write the m
     Ok(phrasebook)
 }
 
+fn refresh_sense_examples(
+    samples: &mut SampleCache<language_utils::TaggedGram<Gram<String>>>,
+    gram: &language_utils::TaggedGram<Gram<String>>,
+    anchors: &[String],
+    witnesses: &[&str],
+) {
+    let mut pool: Vec<_> = witnesses.iter().map(|s| (*s).to_owned()).collect();
+    // Anchors can witness forms absent from the encoded stream. Union by
+    // maximum multiplicity, not addition, and preserve the old first picks.
+    pool.extend(crate::corpus_samples::remaining_items(anchors, &pool));
+    samples.refresh_with(gram, &pool, |survivors, _| {
+        crate::corpus_samples::select_first(survivors, anchors, 5)
+    });
+}
+
 /// Generate only the inventoried sense; the existing untagged prompts and
 /// cache keys remain unchanged.
 pub async fn create_sense_definitions(
@@ -564,6 +581,11 @@ pub async fn create_sense_definitions(
         course.native_language.prompt_name(),
         policy.example_guidance(),
     );
+    let mut samples = SampleCache::load(
+        crate::pipeline::course_dirs(&course)?
+            .native_specific_dir
+            .join("sense_sentences.jsonl"),
+    )?;
     let prompts: Vec<(&GramFrequencyEntry<String>, String)> = frequencies
         .iter()
         .filter(|entry| entry.gram.sense.is_some())
@@ -578,10 +600,12 @@ pub async fn create_sense_definitions(
                 .filter(|anchor| corpus.contains(&anchor.sentence))
                 .collect();
             anchors.sort_by_key(|anchor| !anchor.gold);
-            let examples = anchors
+            let preferred: Vec<_> = anchors.iter().map(|a| a.sentence.clone()).collect();
+            refresh_sense_examples(&mut samples, gram, &preferred, corpus.sense_witnesses(gram));
+            let examples = samples
+                .get(gram)
                 .iter()
-                .take(5)
-                .map(|anchor| anchor.sentence.as_str())
+                .map(String::as_str)
                 .collect::<Vec<_>>()
                 .join("\n");
             let identity = if let Some(h) = gram.gram.heteronym() {
@@ -599,6 +623,7 @@ pub async fn create_sense_definitions(
             (entry, prompt)
         })
         .collect();
+    samples.save()?;
     // One Batch API job per (client, schema), all in flight at once.
     let is_terra = |(entry, _): &&(&GramFrequencyEntry<String>, String)| {
         let threshold = if entry.gram.gram.len() == 1 { 500 } else { 250 };
@@ -672,6 +697,60 @@ pub async fn create_sense_definitions(
 mod tests {
     use super::*;
     use language_utils::Language;
+
+    #[test]
+    fn sense_examples_validate_against_full_membership_not_truncated_anchors() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut samples = SampleCache::load(dir.path().join("senses.jsonl")).unwrap();
+        let gram = language_utils::TaggedGram {
+            gram: Gram(Vec::new()),
+            sense: std::num::NonZeroU32::new(1),
+        };
+        let original: Vec<_> = ["b", "b", "a", "c", "d", "e"].map(String::from).into();
+        refresh_sense_examples(
+            &mut samples,
+            &gram,
+            &original,
+            &["a", "b", "b", "c", "d", "e"],
+        );
+        assert_eq!(samples.get(&gram), ["b", "b", "a", "c", "d"]);
+        let changed: Vec<_> = ["c", "d", "e", "f", "g"].map(String::from).into();
+        refresh_sense_examples(
+            &mut samples,
+            &gram,
+            &changed,
+            &["a", "b", "b", "c", "d", "e", "f", "g"],
+        );
+        assert_eq!(
+            samples.get(&gram),
+            ["b", "b", "a", "c", "d"],
+            "still-live witnesses survive leaving the anchor subset"
+        );
+        // Both b occurrences really leave this sense, not merely its anchors.
+        refresh_sense_examples(
+            &mut samples,
+            &gram,
+            &changed,
+            &["a", "c", "d", "e", "f", "g"],
+        );
+        assert_eq!(samples.get(&gram), ["a", "c", "d", "e", "f"]);
+        // Current anchors can witness a form absent from encoded membership.
+        let other = language_utils::TaggedGram {
+            gram: gram.gram.clone(),
+            sense: std::num::NonZeroU32::new(2),
+        };
+        refresh_sense_examples(&mut samples, &other, &original, &[]);
+        assert_eq!(samples.get(&other), ["b", "b", "a", "c", "d"]);
+        let empty = language_utils::TaggedGram {
+            gram: gram.gram,
+            sense: std::num::NonZeroU32::new(3),
+        };
+        refresh_sense_examples(&mut samples, &empty, &[], &["a", "b"]);
+        assert!(
+            samples.get(&empty).is_empty(),
+            "first population still uses only original anchors"
+        );
+    }
 
     #[test]
     fn prompt_revision_is_scoped_and_legacy_requests_are_unchanged() {

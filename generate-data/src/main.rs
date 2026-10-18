@@ -42,6 +42,10 @@ async fn main() -> anyhow::Result<()> {
 
     // Parse CLI args. Supported forms:
     //   generate-data [--cache-only] [--pronunciation-audio-only] [<lang>...]
+    //   generate-data --measure-cache DIR [--measure-cache-from PRIOR_PREPARATION]
+    //       [--measure-allow-modal] <lang>
+    // Measurement never submits tysm inference. The explicit Modal opt-in only
+    // permits the Lexide/token-embedding prerequisites; without it all inference is blocked.
     // Naming one or more target languages restricts the run to the courses
     // teaching them; naming none runs every course. A language teaching more
     // than one native audience (por has por_for_eng and por_for_fra) runs all
@@ -54,14 +58,53 @@ async fn main() -> anyhow::Result<()> {
         cache_only,
         sync_cache_only,
         pronunciation_audio_only,
+        readings_sample,
+        measure_cache,
+        measure_allow_modal,
+        measure_cache_from,
     } = Args::parse(std::env::args().skip(1))?;
+    let ledger_language = if lang_filter.is_empty() {
+        "all".to_owned()
+    } else {
+        lang_filter.iter().cloned().collect::<Vec<_>>().join("-")
+    };
+    let _spend_ledger =
+        tysm::spend::start_ledger(Path::new("target/spend-ledger"), &ledger_language)?;
+    #[cfg(unix)]
+    {
+        use tokio::signal::unix::{SignalKind, signal};
+        let mut terminate = signal(SignalKind::terminate())?;
+        let mut interrupt = signal(SignalKind::interrupt())?;
+        tokio::spawn(async move {
+            let code = tokio::select! {
+                _ = terminate.recv() => 143,
+                _ = interrupt.recv() => 130,
+            };
+            tysm::spend::snapshot_label(if code == 143 { "SIGTERM" } else { "SIGINT" })
+                .expect("persist spend on signal");
+            std::process::exit(code);
+        });
+    }
     if !lang_filter.is_empty() {
         println!(
             "restricting run to: {}",
             lang_filter.iter().cloned().collect::<Vec<_>>().join(", ")
         );
     }
+    if let Some(directory) = measure_cache {
+        return generate_data::measurement::run(
+            &directory,
+            &lang_filter,
+            measure_allow_modal,
+            measure_cache_from.as_deref(),
+        )
+        .await;
+    }
     generate_data::set_cache_only(cache_only);
+    // Branch before metadata refresh, translation warmup, or any out/ writes.
+    if let Some(sample) = readings_sample {
+        return generate_data::readings::sample_run::run(sample, &lang_filter).await;
+    }
     if pronunciation_audio_only {
         if cache_only {
             println!(
@@ -189,8 +232,10 @@ async fn main() -> anyhow::Result<()> {
         );
         println!("================================================");
 
-        let (sentence_corpus, translator) = loaded.await.context("Course warmup task failed")??;
+        let (mut sentence_corpus, translator) =
+            loaded.await.context("Course warmup task failed")??;
         let generate_data::pipeline::SegmentedCorpus {
+            measurement: _,
             mut nlp_sentences,
             mut restricted_nlp_sentences,
             gram_vocabulary,
@@ -203,30 +248,53 @@ async fn main() -> anyhow::Result<()> {
                     citations,
                 },
             encoder,
-        } = generate_data::pipeline::segment_corpus(course, &sentence_corpus).await?;
+        } = generate_data::pipeline::segment_corpus(course, &sentence_corpus, None).await?;
+        let embedding_store = generate_data::cache_remote::store();
         generate_data::token_embeddings::ensure_token_embeddings(
             course.target_language,
             nlp_sentences.iter().chain(restricted_nlp_sentences.iter()),
             &interners,
-            &generate_data::cache_remote::store(),
+            &embedding_store,
         )
         .await
         .context("Failed to ensure token embeddings")?;
-        let inventories = generate_data::usage_discovery::assign_senses(
+        let readings = generate_data::readings::CorpusReadings::generate(
             course.target_language,
-            &mut nlp_sentences,
-            &mut restricted_nlp_sentences,
+            &nlp_sentences,
+            &restricted_nlp_sentences,
             &interners,
-            &generate_data::cache_remote::store(),
+            &embedding_store,
+            None,
         )
         .await?;
-        let translator = translator
-            .await
-            .context("Translation cache warmup task failed")??;
-        let translations_map =
-            generate_data::pipeline::translate_sentences(course, &sentence_corpus, translator)
-                .await
-                .context("Failed to translate sentences")?;
+        readings.retain_corpus(
+            &mut sentence_corpus,
+            &mut nlp_sentences,
+            &mut restricted_nlp_sentences,
+        );
+        // Retention is the last mutation of the translation input. Sense
+        // assignment mutates only the NLP maps, so these branches are disjoint.
+        let (inventories, translations_map) = tokio::try_join!(
+            generate_data::StageTimer::run(
+                "sense assignment",
+                generate_data::usage_discovery::assign_senses(
+                    course.target_language,
+                    &mut nlp_sentences,
+                    &mut restricted_nlp_sentences,
+                    &interners,
+                    &embedding_store,
+                    &readings,
+                )
+            ),
+            generate_data::StageTimer::run("translations", async {
+                let translator = translator
+                    .await
+                    .context("Translation cache warmup task failed")??;
+                generate_data::pipeline::translate_sentences(course, &sentence_corpus, translator)
+                    .await
+                    .context("Failed to translate sentences")
+            }),
+        )?;
         let generate_data::pipeline::CourseDirs {
             corpus_dir,
             target_language_dir,
@@ -259,65 +327,12 @@ async fn main() -> anyhow::Result<()> {
             )
             .collect();
 
-        // Helper closure: convert encoded sentences to SentenceGrams using gram vocabulary + NLP data
-        let convert_to_grams = |sentences: &[(String, EncodedSentence)],
-                                nlp: &BTreeMap<String, language_utils::SentenceInfo>|
-         -> Vec<(String, SentenceGrams<TaggedGram<Gram<String>>>)> {
-            sentences
-                .iter()
-                .map(|(text, encoded)| {
-                    let grams: Vec<SentenceGram<TaggedGram<Gram<String>>>> = encoded
-                        .tokens
-                        .iter()
-                        .filter_map(|&token_key| {
-                            use lasso::Key;
-                            gram_vocabulary
-                                .get(token_key.gram.into_usize())
-                                .map(|entry| {
-                                    SentenceGram::from(entry.atoms.clone()).map(|gram| TaggedGram {
-                                        gram,
-                                        sense: token_key.sense,
-                                    })
-                                })
-                        })
-                        .collect();
-                    let sentence_gram_set: std::collections::HashSet<&Gram<String>> = grams
-                        .iter()
-                        .map(|sg| match sg {
-                            SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => &g.gram,
-                        })
-                        .collect();
-                    let (multiword_terms, low_confidence_multiword_terms) = nlp
-                        .get(text)
-                        .map(|info| {
-                            (
-                                info.multiword_terms
-                                    .high_confidence
-                                    .iter()
-                                    .filter(|m| !sentence_gram_set.contains(&m.gram.gram))
-                                    .cloned()
-                                    .collect(),
-                                info.multiword_terms
-                                    .low_confidence
-                                    .iter()
-                                    .filter(|m| !sentence_gram_set.contains(&m.gram.gram))
-                                    .cloned()
-                                    .collect(),
-                            )
-                        })
-                        .unwrap_or_default();
-                    (
-                        text.clone(),
-                        SentenceGrams {
-                            grams,
-                            capitalize_first: encoded.capitalize_first,
-                            multiword_terms,
-                            low_confidence_multiword_terms,
-                        },
-                    )
-                })
-                .collect()
-        };
+        // Shared with cache measurement so both paths build identical prompts.
+        let convert_to_grams =
+            |sentences: &[(String, EncodedSentence)],
+             nlp: &BTreeMap<String, language_utils::SentenceInfo>| {
+                generate_data::pipeline::sentence_grams(sentences, nlp, &gram_vocabulary)
+            };
 
         // Convert app-only encoded sentences to grams
         let encoded_sentences_with_grams: Vec<(String, SentenceGrams<TaggedGram<Gram<String>>>)> =
@@ -390,72 +405,84 @@ async fn main() -> anyhow::Result<()> {
 
         // Create gram phrasebook (for multi-atom grams), excluding grams that already
         // have MWE phrasebook entries
-        let gram_phrasebook_file = native_specific_dir.join("gram_phrasebook.jsonl");
         let corpus = generate_data::corpus_samples::CorpusIndex::new(&encoded_sentences_with_grams);
-        let mut gram_sentences = generate_data::corpus_samples::SampleCache::<Gram<String>>::load(
-            native_specific_dir.join("gram_sentences.jsonl"),
-        )?;
-        let mut gram_phrasebook = generate_data::dict::create_gram_phrasebook(
-            *course,
-            &filtered_gram_frequencies,
-            &corpus,
-            &mut gram_sentences,
-        )
-        .await
-        .context("Failed to create gram phrasebook")?;
-        generate_data::custom_phrasebook::apply(source_data_path, *course, &mut gram_phrasebook)?;
-        gram_sentences.save()?;
-        {
-            let mut file = File::create(&gram_phrasebook_file)
-                .context("Failed to create gram phrasebook file")?;
-            for (gram, entry) in &gram_phrasebook {
-                // Convert gram to display string for serialization
-                let gram_text = gram.to_display_string(course.target_language);
-                let json = serde_json::to_string(&(gram_text, entry))
-                    .context("Failed to serialize gram phrasebook entry")?;
-                writeln!(file, "{json}")
-                    .context("Failed to write gram phrasebook entry to file")?;
-            }
-            println!(
-                "Wrote {} gram phrasebook entries to {:?}",
-                gram_phrasebook.len(),
-                gram_phrasebook_file
-            );
-        }
-
-        // Build phrasebook from gram phrasebook entries
-        let mut phrasebook: BTreeMap<
-            TaggedGram<Gram<String>>,
-            language_utils::PhrasebookDefinitionEntry,
-        > = gram_phrasebook
-            .into_iter()
-            .map(|(gram, entry)| (TaggedGram { gram, sense: None }, entry))
-            .collect();
-
-        // Generate proper noun definitions
-        let proper_noun_definitions_file =
-            native_specific_dir.join("proper_noun_definitions.jsonl");
-        let proper_noun_definitions: BTreeMap<String, language_utils::ProperNounDefinition> = {
-            let definitions =
-                generate_data::proper_noun_definitions::generate_proper_noun_definitions(
-                    *course,
-                    &nlp_sentences,
-                    &interners,
-                )
-                .await
-                .context("Failed to generate proper noun definitions")?;
-
-            // Write the proper noun definitions to a jsonl file
-            let mut file = File::create(proper_noun_definitions_file)
-                .context("Failed to create proper noun definitions file")?;
-            for entry in &definitions {
-                let json = serde_json::to_string(&entry)
-                    .context("Failed to serialize proper noun definition")?;
-                writeln!(file, "{json}")
-                    .context("Failed to write proper noun definition to file")?;
+        // Each branch owns its outputs and borrows the same frozen corpus. No
+        // interning, filtering, or completion-order merging occurs in this fork.
+        let phrasebook_stage = async {
+            let gram_phrasebook_file = native_specific_dir.join("gram_phrasebook.jsonl");
+            let mut gram_sentences =
+                generate_data::corpus_samples::SampleCache::<Gram<String>>::load(
+                    native_specific_dir.join("gram_sentences.jsonl"),
+                )?;
+            let mut gram_phrasebook = generate_data::dict::create_gram_phrasebook(
+                *course,
+                &filtered_gram_frequencies,
+                &corpus,
+                &mut gram_sentences,
+            )
+            .await
+            .context("Failed to create gram phrasebook")?;
+            generate_data::custom_phrasebook::apply(
+                source_data_path,
+                *course,
+                &mut gram_phrasebook,
+            )?;
+            {
+                let mut file = File::create(&gram_phrasebook_file)
+                    .context("Failed to create gram phrasebook file")?;
+                for (gram, entry) in &gram_phrasebook {
+                    // Convert gram to display string for serialization
+                    let gram_text = gram.to_display_string(course.target_language);
+                    let json = serde_json::to_string(&(gram_text, entry))
+                        .context("Failed to serialize gram phrasebook entry")?;
+                    writeln!(file, "{json}")
+                        .context("Failed to write gram phrasebook entry to file")?;
+                }
+                println!(
+                    "Wrote {} gram phrasebook entries to {:?}",
+                    gram_phrasebook.len(),
+                    gram_phrasebook_file
+                );
             }
 
-            definitions
+            // Build phrasebook from gram phrasebook entries
+            let phrasebook: BTreeMap<
+                TaggedGram<Gram<String>>,
+                language_utils::PhrasebookDefinitionEntry,
+            > = gram_phrasebook
+                .into_iter()
+                .map(|(gram, entry)| (TaggedGram { gram, sense: None }, entry))
+                .collect();
+            anyhow::Ok((phrasebook, gram_sentences))
+        };
+
+        let proper_nouns_stage = async {
+            // Generate proper noun definitions
+            let proper_noun_definitions_file =
+                native_specific_dir.join("proper_noun_definitions.jsonl");
+            let proper_noun_definitions: BTreeMap<String, language_utils::ProperNounDefinition> = {
+                let definitions =
+                    generate_data::proper_noun_definitions::generate_proper_noun_definitions(
+                        *course,
+                        &nlp_sentences,
+                        &interners,
+                    )
+                    .await
+                    .context("Failed to generate proper noun definitions")?;
+
+                // Write the proper noun definitions to a jsonl file
+                let mut file = File::create(proper_noun_definitions_file)
+                    .context("Failed to create proper noun definitions file")?;
+                for entry in &definitions {
+                    let json = serde_json::to_string(&entry)
+                        .context("Failed to serialize proper noun definition")?;
+                    writeln!(file, "{json}")
+                        .context("Failed to write proper noun definition to file")?;
+                }
+
+                definitions
+            };
+            anyhow::Ok(proper_noun_definitions)
         };
 
         // Build set of frequent words from gram_frequencies for pronunciation filtering
@@ -489,156 +516,218 @@ async fn main() -> anyhow::Result<()> {
                 .context("Failed to parse custom definitions")?
         };
 
-        // Compute morphology up-front so etymology can see what grammatical
-        // readings each word actually has (disambiguates syncretic tags like
-        // French -e = 1sg AND 3sg). This is the same morphology pass used later
-        // by gram_dictionary, so no duplicated LLM calls.
-        let morphology: BTreeMap<
-            language_utils::Heteronym<String>,
-            Vec<language_utils::features::Morphology>,
-        > = morphology_analysis::create_morphology(
-            course.target_language,
-            &filtered_gram_frequencies,
-        )
-        .await
-        .context("Failed to create morphology")?;
-
-        // Collapse to per-word Leipzig-style summary:
-        //   `VERB rester [1.SG.PRS.IND / 3.SG.PRS.IND]; NOUN reste`
-        let word_morphology: BTreeMap<String, String> = {
-            let mut per_word: BTreeMap<String, Vec<String>> = BTreeMap::new();
-            for (het, morphs) in &morphology {
-                let readings = language_utils::features::Morphology::leipzig_many(morphs);
-                let summary = if readings.is_empty() {
-                    format!("{:?} {}", het.pos, het.lemma)
-                } else {
-                    format!("{:?} {} [{}]", het.pos, het.lemma, readings)
-                };
-                per_word.entry(het.word.clone()).or_default().push(summary);
-            }
-            per_word
-                .into_iter()
-                .map(|(word, summaries)| (word, summaries.join("; ")))
-                .collect()
-        };
-
-        // Build etymology segmentations from the golden JSONL seed plus LLM
-        // fills for anything uncovered.
-        let golden_morphemes_path = PathBuf::from(format!(
-            "generate-data/data/{}/golden_morphemes.jsonl",
-            course.target_language.corpus_code()
-        ));
-        let etymology_segmentations = if golden_morphemes_path.exists() {
-            // Extract learnable single-word grams as the word list (sorted by
-            // frequency, since filtered_gram_frequencies is already sorted desc).
-            let learnable_words: Vec<String> = filtered_gram_frequencies
-                .iter()
-                .filter_map(|entry| {
-                    if entry.gram.gram.0.len() != 1 {
-                        return None;
-                    }
-                    match &entry.gram.gram.0[0] {
-                        Atom::Tok(word) if word.heteronym().is_some() => Some(word.text.clone()),
-                        _ => None,
-                    }
-                })
-                .collect();
-            println!(
-                "Building etymology segmentations for {} ({} learnable words)...",
+        let morphology_stage = async {
+            // Compute morphology up-front so etymology can see what grammatical
+            // readings each word actually has (disambiguates syncretic tags like
+            // French -e = 1sg AND 3sg). This is the same morphology pass used later
+            // by gram_dictionary, so no duplicated LLM calls.
+            let morphology: BTreeMap<
+                language_utils::Heteronym<String>,
+                Vec<language_utils::features::Morphology>,
+            > = morphology_analysis::create_morphology(
                 course.target_language,
-                learnable_words.len()
-            );
-
-            generate_data::etymology::build_etymology_segmentations_with_llm(
-                *course,
-                &golden_morphemes_path,
-                &learnable_words,
-                &word_morphology,
+                &filtered_gram_frequencies,
             )
-            .await?
-        } else {
-            std::collections::BTreeMap::new()
-        };
-        println!(
-            "Etymology segmentations: {} words",
-            etymology_segmentations.len()
-        );
+            .await
+            .context("Failed to create morphology")?;
 
-        // Write etymology segmentations to file
-        {
-            let segmentations_file = corpus_dir.join("etymology_segmentations.jsonl");
-            let mut file = File::create(&segmentations_file)
-                .context("Failed to create etymology segmentations file")?;
-            for (word, segments) in &etymology_segmentations {
-                let json = serde_json::to_string(&(word, segments))
-                    .context("Failed to serialize etymology segmentation")?;
-                writeln!(file, "{json}").context("Failed to write etymology segmentation")?;
-            }
-            println!(
-                "Wrote {} etymology segmentations to {:?}",
-                etymology_segmentations.len(),
-                segmentations_file
-            );
-        }
+            // Collapse to per-word Leipzig-style summary:
+            //   `VERB rester [1.SG.PRS.IND / 3.SG.PRS.IND]; NOUN reste`
+            let word_morphology: BTreeMap<String, String> = {
+                let mut per_word: BTreeMap<String, Vec<String>> = BTreeMap::new();
+                for (het, morphs) in &morphology {
+                    let readings = language_utils::features::Morphology::leipzig_many(morphs);
+                    let summary = if readings.is_empty() {
+                        format!("{:?} {}", het.pos, het.lemma)
+                    } else {
+                        format!("{:?} {} [{}]", het.pos, het.lemma, readings)
+                    };
+                    per_word.entry(het.word.clone()).or_default().push(summary);
+                }
+                per_word
+                    .into_iter()
+                    .map(|(word, summaries)| (word, summaries.join("; ")))
+                    .collect()
+            };
 
-        // Classify and define every morpheme that shows up in the segmentations.
-        let morphemes: BTreeMap<
-            language_utils::MorphemeSegment<String>,
-            language_utils::MorphemeInfo<String>,
-        > = if etymology_segmentations.is_empty() {
-            BTreeMap::new()
-        } else {
-            let morpheme_to_words =
-                generate_data::morpheme_info::invert_segmentations(&etymology_segmentations);
-
-            // Build a word → (lemma, POS) map for trie-style prefix lookup.
-            // Used when resolving Free morphemes back to dictionary entries.
-            let word_info: BTreeMap<String, (String, language_utils::PartOfSpeech)> =
-                filtered_gram_frequencies
+            // Build etymology segmentations from the golden JSONL seed plus LLM
+            // fills for anything uncovered.
+            let golden_morphemes_path = PathBuf::from(format!(
+                "generate-data/data/{}/golden_morphemes.jsonl",
+                course.target_language.corpus_code()
+            ));
+            let etymology_segmentations = if golden_morphemes_path.exists() {
+                // Extract learnable single-word grams as the word list (sorted by
+                // frequency, since filtered_gram_frequencies is already sorted desc).
+                let learnable_words: Vec<String> = filtered_gram_frequencies
                     .iter()
                     .filter_map(|entry| {
                         if entry.gram.gram.0.len() != 1 {
                             return None;
                         }
                         match &entry.gram.gram.0[0] {
-                            Atom::Tok(word) => {
-                                let het = word.heteronym()?;
-                                Some((word.text.clone(), (het.lemma.clone(), het.pos)))
+                            Atom::Tok(word) if word.heteronym().is_some() => {
+                                Some(word.text.clone())
                             }
                             _ => None,
                         }
                     })
                     .collect();
+                println!(
+                    "Building etymology segmentations for {} ({} learnable words)...",
+                    course.target_language,
+                    learnable_words.len()
+                );
 
+                generate_data::etymology::build_etymology_segmentations_with_llm(
+                    *course,
+                    &golden_morphemes_path,
+                    &learnable_words,
+                    &word_morphology,
+                )
+                .await?
+            } else {
+                std::collections::BTreeMap::new()
+            };
             println!(
-                "Analyzing {} unique morphemes for {} ({} dictionary words for prefix lookup)...",
-                morpheme_to_words.len(),
-                course.target_language,
-                word_info.len(),
+                "Etymology segmentations: {} words",
+                etymology_segmentations.len()
             );
-            let analyses = generate_data::morpheme_info::analyze_morphemes(
-                *course,
-                &morpheme_to_words,
-                &word_info,
-            )
-            .await;
 
-            let morpheme_info_file = corpus_dir.join("morpheme_info.jsonl");
-            let mut file =
-                File::create(&morpheme_info_file).context("Failed to create morpheme info file")?;
-            for analysis in &analyses {
-                let json =
-                    serde_json::to_string(analysis).context("Failed to serialize morpheme info")?;
-                writeln!(file, "{json}").context("Failed to write morpheme info")?;
+            // Write etymology segmentations to file
+            {
+                let segmentations_file = corpus_dir.join("etymology_segmentations.jsonl");
+                let mut file = File::create(&segmentations_file)
+                    .context("Failed to create etymology segmentations file")?;
+                for (word, segments) in &etymology_segmentations {
+                    let json = serde_json::to_string(&(word, segments))
+                        .context("Failed to serialize etymology segmentation")?;
+                    writeln!(file, "{json}").context("Failed to write etymology segmentation")?;
+                }
+                println!(
+                    "Wrote {} etymology segmentations to {:?}",
+                    etymology_segmentations.len(),
+                    segmentations_file
+                );
             }
-            println!(
-                "Wrote {} morpheme info entries to {:?}",
-                analyses.len(),
-                morpheme_info_file,
-            );
 
-            analyses.into_iter().map(|a| (a.segment, a.kind)).collect()
+            // Classify and define every morpheme that shows up in the segmentations.
+            let morphemes: BTreeMap<
+                language_utils::MorphemeSegment<String>,
+                language_utils::MorphemeInfo<String>,
+            > = if etymology_segmentations.is_empty() {
+                BTreeMap::new()
+            } else {
+                let morpheme_to_words =
+                    generate_data::morpheme_info::invert_segmentations(&etymology_segmentations);
+
+                // Build a word → (lemma, POS) map for trie-style prefix lookup.
+                // Used when resolving Free morphemes back to dictionary entries.
+                let word_info: BTreeMap<String, (String, language_utils::PartOfSpeech)> =
+                    filtered_gram_frequencies
+                        .iter()
+                        .filter_map(|entry| {
+                            if entry.gram.gram.0.len() != 1 {
+                                return None;
+                            }
+                            match &entry.gram.gram.0[0] {
+                                Atom::Tok(word) => {
+                                    let het = word.heteronym()?;
+                                    Some((word.text.clone(), (het.lemma.clone(), het.pos)))
+                                }
+                                _ => None,
+                            }
+                        })
+                        .collect();
+
+                println!(
+                    "Analyzing {} unique morphemes for {} ({} dictionary words for prefix lookup)...",
+                    morpheme_to_words.len(),
+                    course.target_language,
+                    word_info.len(),
+                );
+                let analyses = generate_data::morpheme_info::analyze_morphemes(
+                    *course,
+                    &morpheme_to_words,
+                    &word_info,
+                )
+                .await;
+
+                let morpheme_info_file = corpus_dir.join("morpheme_info.jsonl");
+                let mut file = File::create(&morpheme_info_file)
+                    .context("Failed to create morpheme info file")?;
+                for analysis in &analyses {
+                    let json = serde_json::to_string(analysis)
+                        .context("Failed to serialize morpheme info")?;
+                    writeln!(file, "{json}").context("Failed to write morpheme info")?;
+                }
+                println!(
+                    "Wrote {} morpheme info entries to {:?}",
+                    analyses.len(),
+                    morpheme_info_file,
+                );
+
+                analyses.into_iter().map(|a| (a.segment, a.kind)).collect()
+            };
+
+            anyhow::Ok((morphology, etymology_segmentations, morphemes))
         };
+        let dictionary_stage = async {
+            let mut samples = generate_data::corpus_samples::SampleCache::<
+                language_utils::Heteronym<String>,
+            >::load(
+                native_specific_dir.join("heteronym_sentences.jsonl")
+            )?;
+            generate_data::dict::create_gram_dictionary(
+                *course,
+                &filtered_gram_frequencies,
+                &corpus,
+                &mut samples,
+            )
+            .await
+            .context("Failed to create gram dictionary")
+        };
+        let pronunciation_stage = async {
+            let generate_data::pronunciations::PronunciationCandidates { automatic, manual } =
+                generate_data::pronunciations::load_candidates(
+                    source_data_path,
+                    &frequent_heteronym_words,
+                )
+                .context("Failed to load pronunciation candidates")?;
+            let mut pronunciations =
+                generate_data::pronunciations::select_common_pronunciations(*course, automatic)
+                    .await
+                    .context("Failed to select common pronunciations")?
+                    .into_iter()
+                    .collect::<BTreeMap<_, _>>();
+            pronunciations.extend(manual);
+            anyhow::Ok(pronunciations)
+        };
+        let (
+            (mut phrasebook, gram_sentences),
+            proper_noun_definitions,
+            (morphology, etymology_segmentations, morphemes),
+            raw_dictionary,
+            (sense_definitions, sense_phrases),
+            selected_pronunciations,
+            (sounds, guides),
+        ) = tokio::try_join!(
+            generate_data::StageTimer::run("phrasebook", phrasebook_stage),
+            generate_data::StageTimer::run("proper nouns", proper_nouns_stage),
+            generate_data::StageTimer::run("morphology + etymology + morphemes", morphology_stage),
+            generate_data::StageTimer::run("dictionary", dictionary_stage),
+            generate_data::StageTimer::run(
+                "sense definitions",
+                generate_data::dict::create_sense_definitions(
+                    *course,
+                    &filtered_gram_frequencies,
+                    &inventories,
+                    &corpus,
+                )
+            ),
+            generate_data::StageTimer::run("pronunciation selection", pronunciation_stage),
+            generate_data::StageTimer::run("sounds + guides", pronunciation_guides(*course)),
+        )?;
 
         // Create gram dictionary (for single-atom grams)
         // Merge morphology data and custom definitions, producing DictionaryEntry values
@@ -647,20 +736,6 @@ async fn main() -> anyhow::Result<()> {
             language_utils::Heteronym<String>,
             language_utils::DictionaryEntry,
         > = {
-            let mut heteronym_sentences = generate_data::corpus_samples::SampleCache::<
-                language_utils::Heteronym<String>,
-            >::load(
-                native_specific_dir.join("heteronym_sentences.jsonl")
-            )?;
-            let raw_dictionary = generate_data::dict::create_gram_dictionary(
-                *course,
-                &filtered_gram_frequencies,
-                &corpus,
-                &mut heteronym_sentences,
-            )
-            .await
-            .context("Failed to create gram dictionary")?;
-            heteronym_sentences.save()?;
             // Reuse the morphology we computed earlier (before etymology).
             raw_dictionary
                 .into_iter()
@@ -730,13 +805,6 @@ async fn main() -> anyhow::Result<()> {
         }
 
         // Build set of grams that have definitions
-        let (sense_definitions, sense_phrases) = generate_data::dict::create_sense_definitions(
-            *course,
-            &filtered_gram_frequencies,
-            &inventories,
-            &corpus,
-        )
-        .await?;
         let sense_dictionary: BTreeMap<_, _> = sense_definitions
             .into_iter()
             .filter_map(|(gram, definition)| {
@@ -811,25 +879,28 @@ async fn main() -> anyhow::Result<()> {
         };
 
         gram_keyed_dictionary.extend(sense_dictionary);
-        let redundant_senses = generate_data::sense_redundancy::find_redundant_senses(
-            *course,
-            &gram_keyed_dictionary,
-            &phrasebook,
-            &inventories,
-            &gram_frequencies,
-        )
-        .await?;
-        let mut redundancy_file = BufWriter::new(std::fs::File::create(
-            native_specific_dir.join("redundant_senses.jsonl"),
-        )?);
-        for (text, sets) in &redundant_senses {
-            serde_json::to_writer(
-                &mut redundancy_file,
-                &serde_json::json!({"text": text, "sets": sets}),
-            )?;
-            writeln!(redundancy_file)?;
-        }
-        redundancy_file.flush()?;
+        let redundancy_stage = async {
+            let redundant_senses = generate_data::sense_redundancy::find_redundant_senses(
+                *course,
+                &gram_keyed_dictionary,
+                &phrasebook,
+                &inventories,
+                &gram_frequencies,
+            )
+            .await?;
+            let mut redundancy_file = BufWriter::new(std::fs::File::create(
+                native_specific_dir.join("redundant_senses.jsonl"),
+            )?);
+            for (text, sets) in &redundant_senses {
+                serde_json::to_writer(
+                    &mut redundancy_file,
+                    &serde_json::json!({"text": text, "sets": sets}),
+                )?;
+                writeln!(redundancy_file)?;
+            }
+            redundancy_file.flush()?;
+            anyhow::Ok(redundant_senses)
+        };
 
         // Filter gram_vocabulary to remove learnable grams without definitions
         let defined_gram_set: std::collections::HashSet<TaggedGram<Gram<String>>> =
@@ -936,82 +1007,10 @@ async fn main() -> anyhow::Result<()> {
             println!("Wrote {} top grams to {:?}", lines.len(), top_grams_file);
         }
 
-        let wikipron_path = source_data_path
-            .join("pronunciations.tsv")
-            .canonicalize()
-            .context("Failed to canonicalize wikipron path")?;
-        let extra_pronunciations_path = source_data_path
-            .join("extra_pronunciations.tsv")
-            .canonicalize()
-            .context("Failed to canonicalize extra pronunciations path")?;
         let word_to_pronunciation_file = target_language_dir.join("word_to_pronunciation.jsonl");
         let pronunciation_to_word_file = target_language_dir.join("pronunciation_to_words.jsonl");
         {
-            // Create a set of words that appear in our frequency list for quick lookup
-            let frequent_words = &frequent_heteronym_words;
-
-            let parse_pronunciation_lines = |file: File| {
-                BufReader::new(file)
-                    .lines()
-                    .filter_map(|line| {
-                        let line = line.unwrap();
-                        if line.trim().is_empty() {
-                            return None;
-                        }
-                        let (word, ipa) = line.split_once('\t').unwrap();
-                        Some((word.trim().to_lowercase(), ipa.trim().to_string()))
-                    })
-                    .filter(|(word, _)| frequent_words.contains(word))
-                    .collect::<Vec<_>>()
-            };
-            let wikipron_lines = parse_pronunciation_lines(
-                File::open(wikipron_path).context("Failed to open wikipron pronunciations file")?,
-            );
-            let extra_lines = parse_pronunciation_lines(
-                File::open(extra_pronunciations_path)
-                    .context("Failed to open extra pronunciations file")?,
-            );
-
-            let mut word_to_pronunciations: HashMap<String, BTreeSet<String>> = wikipron_lines
-                .into_iter()
-                .into_group_map()
-                .into_iter()
-                .map(|(word, pronunciations)| (word, pronunciations.into_iter().collect()))
-                .collect();
-
-            // Hand-curated entries always win: a word listed in
-            // extra_pronunciations.tsv takes its first listed entry as the main
-            // pronunciation (WikiPron entries are demoted to alternates) and
-            // skips LLM selection entirely.
-            let mut extra_by_word: BTreeMap<String, Vec<String>> = BTreeMap::new();
-            for (word, ipa) in extra_lines {
-                extra_by_word.entry(word).or_default().push(ipa);
-            }
-            let manual_pronunciations: BTreeMap<String, language_utils::Pronunciations> =
-                extra_by_word
-                    .into_iter()
-                    .map(|(word, pronunciations)| {
-                        let mut pronunciations = pronunciations.into_iter();
-                        let main = pronunciations.next().expect("at least one pronunciation");
-                        let others = pronunciations
-                            .chain(word_to_pronunciations.remove(&word).into_iter().flatten())
-                            .filter(|p| *p != main)
-                            .unique()
-                            .collect();
-                        (word, language_utils::Pronunciations { main, others })
-                    })
-                    .collect();
-
-            let mut word_to_pronunciation =
-                generate_data::pronunciations::select_common_pronunciations(
-                    *course,
-                    word_to_pronunciations,
-                )
-                .await
-                .context("Failed to select common pronunciations")?
-                .into_iter()
-                .collect::<BTreeMap<_, _>>();
-            word_to_pronunciation.extend(manual_pronunciations);
+            let word_to_pronunciation = selected_pronunciations;
 
             // Build word -> max frequency map for sorting
             let word_max_freq: std::collections::HashMap<&str, u32> = gram_frequencies
@@ -1091,112 +1090,124 @@ async fn main() -> anyhow::Result<()> {
         .context("Failed to generate homophones")?;
 
         // Generate homophone practice sentences
-        let homophone_practice: BTreeMap<
-            language_utils::HomophoneWordPair<String>,
-            language_utils::HomophonePractice<String>,
-        > = {
-            let practice = generate_data::disambiguation_practice::generate_homophone_practice(
-                *course,
-                &homophones,
-                &target_language_dir,
-            )
-            .await
-            .context("Failed to generate homophone practice")?;
+        let homophone_stage = async {
+            let homophone_practice: BTreeMap<
+                language_utils::HomophoneWordPair<String>,
+                language_utils::HomophonePractice<String>,
+            > = {
+                let practice = generate_data::disambiguation_practice::generate_homophone_practice(
+                    *course,
+                    &homophones,
+                    &target_language_dir,
+                )
+                .await
+                .context("Failed to generate homophone practice")?;
 
-            let sentences = practice
-                .values()
-                .flat_map(|p| {
-                    p.sentence_pairs
-                        .iter()
-                        .flat_map(|s| [s.sentence1.clone(), s.sentence2.clone()])
-                })
-                .collect();
+                let sentences = practice
+                    .values()
+                    .flat_map(|p| {
+                        p.sentence_pairs
+                            .iter()
+                            .flat_map(|s| [s.sentence1.clone(), s.sentence2.clone()])
+                    })
+                    .filter(|sentence| {
+                        readings.includes_sentence(sentence)
+                            && !course.target_language.contains_wrong_han_script(sentence)
+                    })
+                    .collect();
 
-            let tokenizations = generate_data::nlp::process_sentences(
-                sentences,
-                &corpus_dir.join("target_language_sentences_tokenization.jsonl"),
-                course.target_language,
-            )
-            .await
-            .context("Failed to process homophone practice sentences tokenization")?;
+                let tokenizations = generate_data::nlp::process_sentences(
+                    sentences,
+                    &corpus_dir.join("target_language_sentences_tokenization.jsonl"),
+                    course.target_language,
+                )
+                .await
+                .context("Failed to process homophone practice sentences tokenization")?;
 
-            let homophone_literals = generate_data::nlp::convert_tokens_to_literals(
-                &tokenizations,
-                course.target_language,
-            );
-
-            let mut homophone_matches = generate_data::nlp::generate_nlp_sentences(
-                &homophone_literals,
-                &tokenizations,
-                &contiguous_lemma_patterns,
-                &discontinuous_lemma_patterns,
-                &tree_patterns,
-            )
-            .await
-            .context("Failed to generate NLP for homophone practice sentences")?;
-            // Same rewrite the corpus matches got: a variant that fires here
-            // records the phrase, not the instantiation.
-            generate_data::pipeline::apply_citations(&citations, &mut homophone_matches);
-
-            // Homophone practice sentences are minted after unigram training,
-            // so encode them with the trained encoder; a sentence containing
-            // an atom the corpus never saw can't be expressed in the gram
-            // system and is dropped (its practice pair falls away below).
-            let mut unencodable = 0usize;
-            for (text, words) in &homophone_literals {
-                if nlp_sentences.contains_key(text) {
-                    continue;
-                }
-                let Some(sentence) = encoder.encode(words, course.target_language, &interners)
-                else {
-                    unencodable += 1;
-                    continue;
-                };
-                nlp_sentences.insert(
-                    text.clone(),
-                    language_utils::SentenceInfo {
-                        sentence,
-                        multiword_terms: homophone_matches
-                            .remove(text)
-                            .unwrap_or(language_utils::MultiwordTerms {
-                                high_confidence: Vec::new(),
-                                low_confidence: Vec::new(),
-                            })
-                            .map(|term| {
-                                term.map(|gram| TaggedGram {
-                                    gram: gram.clone(),
-                                    sense: None,
-                                })
-                            }),
-                    },
+                let homophone_literals = generate_data::nlp::convert_tokens_to_literals(
+                    &tokenizations,
+                    course.target_language,
                 );
-            }
-            if unencodable > 0 {
-                println!(
-                    "Dropped {unencodable} homophone practice sentences that could not be encoded"
-                );
-            }
 
-            practice
-                .into_iter()
-                .map(|(pair, practice)| {
-                    (
-                        pair,
-                        HomophonePractice {
-                            sentence_pairs: practice
-                                .sentence_pairs
-                                .into_iter()
-                                .filter(|p| {
-                                    nlp_sentences.contains_key(&p.sentence1)
-                                        && nlp_sentences.contains_key(&p.sentence2)
+                let mut homophone_matches = generate_data::nlp::generate_nlp_sentences(
+                    &homophone_literals,
+                    &tokenizations,
+                    &contiguous_lemma_patterns,
+                    &discontinuous_lemma_patterns,
+                    &tree_patterns,
+                )
+                .await
+                .context("Failed to generate NLP for homophone practice sentences")?;
+                // Same rewrite the corpus matches got: a variant that fires here
+                // records the phrase, not the instantiation.
+                generate_data::pipeline::apply_citations(&citations, &mut homophone_matches);
+
+                // Homophone practice sentences are minted after unigram training,
+                // so encode them with the trained encoder; a sentence containing
+                // an atom the corpus never saw can't be expressed in the gram
+                // system and is dropped (its practice pair falls away below).
+                let mut unencodable = 0usize;
+                for (text, words) in &homophone_literals {
+                    if nlp_sentences.contains_key(text) {
+                        continue;
+                    }
+                    let Some(sentence) = encoder.encode(words, course.target_language, &interners)
+                    else {
+                        unencodable += 1;
+                        continue;
+                    };
+                    nlp_sentences.insert(
+                        text.clone(),
+                        language_utils::SentenceInfo {
+                            sentence,
+                            multiword_terms: homophone_matches
+                                .remove(text)
+                                .unwrap_or(language_utils::MultiwordTerms {
+                                    high_confidence: Vec::new(),
+                                    low_confidence: Vec::new(),
                                 })
-                                .collect(),
+                                .map(|term| {
+                                    term.map(|gram| TaggedGram {
+                                        gram: gram.clone(),
+                                        sense: None,
+                                    })
+                                }),
                         },
-                    )
-                })
-                .filter(|(_, practice)| !practice.sentence_pairs.is_empty())
-                .collect()
+                    );
+                }
+                if unencodable > 0 {
+                    println!(
+                        "Dropped {unencodable} homophone practice sentences that could not be encoded"
+                    );
+                }
+
+                practice
+                    .into_iter()
+                    .map(|(pair, practice)| {
+                        (
+                            pair,
+                            HomophonePractice {
+                                sentence_pairs: practice
+                                    .sentence_pairs
+                                    .into_iter()
+                                    .filter(|p| {
+                                        nlp_sentences.contains_key(&p.sentence1)
+                                            && nlp_sentences.contains_key(&p.sentence2)
+                                    })
+                                    .collect(),
+                            },
+                        )
+                    })
+                    .filter(|(_, practice)| !practice.sentence_pairs.is_empty())
+                    .collect()
+            };
+
+            anyhow::Ok(homophone_practice)
         };
+        let (redundant_senses, homophone_practice) = tokio::try_join!(
+            generate_data::StageTimer::run("sense redundancy", redundancy_stage),
+            generate_data::StageTimer::run("homophone practice + NLP", homophone_stage),
+        )?;
 
         // Write all NLP sentences to file (now that we have both main and homophone sentences)
         let target_language_nlp_file = corpus_dir.join("target_language_sentences_nlp.jsonl");
@@ -1216,56 +1227,25 @@ async fn main() -> anyhow::Result<()> {
         let sounds_file = target_language_dir.join("pronunciation_sounds.jsonl");
         let guides_file = native_specific_dir.join("pronunciation_guides.jsonl");
 
-        // Generate or load language sounds. A language whose writing is not
-        // phonographic has no spelling-to-sound guides to give: its sound
-        // inventory would be pinyin letters nobody reads, so it gets none.
-        let sounds = {
-            let sounds = if course.target_language.is_phonographic() {
-                generate_data::pronunciation_patterns::generate_language_sounds(
-                    course.target_language,
-                )
-                .await
-                .context("Failed to generate language sounds")?
-            } else {
-                println!(
-                    "Skipping pronunciation guides for {:?}: its writing is not phonographic",
-                    course.target_language
-                );
-                Vec::new()
-            };
-
+        {
             // Save to file
             let mut file =
                 File::create(&sounds_file).context("Failed to create pronunciation sounds file")?;
             let json = serde_json::to_string(&sounds).context("Failed to serialize sounds")?;
             writeln!(file, "{json}").context("Failed to write sounds to file")?;
+        }
 
-            sounds
-        };
-
-        // Generate or load pronunciation guides
-        let guides = {
-            let guides_with_thoughts = if sounds.is_empty() {
-                Vec::new()
-            } else {
-                generate_data::pronunciation_patterns::generate_pronunciation_guides(
-                    *course, &sounds,
-                )
-                .await
-                .context("Failed to generate pronunciation guides")?
-            };
-
+        {
+            let guides_with_thoughts = &guides;
             // Save to file
             let mut file =
                 File::create(&guides_file).context("Failed to create pronunciation guides file")?;
-            for (sound, guide_thoughts) in &guides_with_thoughts {
+            for (sound, guide_thoughts) in guides_with_thoughts {
                 let json = serde_json::to_string(&(sound, guide_thoughts))
                     .context("Failed to serialize pronunciation guide")?;
                 writeln!(file, "{json}").context("Failed to write pronunciation guide to file")?;
             }
-
-            guides_with_thoughts
-        };
+        }
 
         // We'll calculate pattern frequencies after loading word_to_pronunciation data later
 
@@ -1715,32 +1695,29 @@ async fn main() -> anyhow::Result<()> {
         let http_client = reqwest::Client::new();
         let pronunciation_audio_log =
             target_language_dir.join("pronunciation_audio_verification.jsonl");
-        let pronunciation_audio = generate_data::pronunciation_audio::generate_pronunciation_audio(
-            &mut pronunciation_data,
-            &word_to_pronunciation,
-            *course,
-            &http_client,
-            &pronunciation_audio_log,
-        )
-        .await
-        .with_context(|| format!("Failed to generate pronunciation audio for {course:?}"))?;
-        let human_audio = generate_data::human_audio::load_human_audio(
-            &source_data_path,
-            &word_to_pronunciation,
-            &audio_failures_log,
-            &audio_all_results_log,
-            course.target_language,
-            &http_client,
-        )
-        .await
-        .with_context(|| format!("Failed to load human audio for {course:?}"))?;
-        if !human_audio.is_empty() {
-            let total_clips: usize = human_audio.values().map(|clips| clips.len()).sum();
-            println!(
-                "Loaded {total_clips} human audio clips from {} voice actor(s)",
-                human_audio.len()
-            );
-        }
+        let pronunciation_audio_stage = async {
+            generate_data::pronunciation_audio::generate_pronunciation_audio(
+                &mut pronunciation_data,
+                &word_to_pronunciation,
+                *course,
+                &http_client,
+                &pronunciation_audio_log,
+            )
+            .await
+            .with_context(|| format!("Failed to generate pronunciation audio for {course:?}"))
+        };
+        let human_audio_stage = async {
+            generate_data::human_audio::load_human_audio(
+                &source_data_path,
+                &word_to_pronunciation,
+                &audio_failures_log,
+                &audio_all_results_log,
+                course.target_language,
+                &http_client,
+            )
+            .await
+            .with_context(|| format!("Failed to load human audio for {course:?}"))
+        };
 
         // Include the final sentence set and dictionary/vocabulary display text, not
         // the larger pre-filtering corpus. Headwords can contain units absent from sentences.
@@ -1753,21 +1730,35 @@ async fn main() -> anyhow::Result<()> {
                     .map(|gram| gram.gram.to_display_string(lang)),
             )
             .collect::<Vec<_>>();
-        let strokes = generate_data::strokes::table(
-            course.target_language,
-            target_language_sentences
-                .iter()
-                .map(String::as_str)
-                .chain(stroke_words.iter().map(String::as_str))
-                .chain(
-                    gram_keyed_dictionary
-                        .values()
-                        .map(|entry| entry.target_language_word.as_str()),
-                ),
-            &cache_remote::store(),
-        )
-        .await
-        .with_context(|| format!("Failed to build strokes for {course:?}"))?;
+        let strokes_stage = async {
+            generate_data::strokes::table(
+                course.target_language,
+                target_language_sentences
+                    .iter()
+                    .map(String::as_str)
+                    .chain(stroke_words.iter().map(String::as_str))
+                    .chain(
+                        gram_keyed_dictionary
+                            .values()
+                            .map(|entry| entry.target_language_word.as_str()),
+                    ),
+                &cache_remote::store(),
+            )
+            .await
+            .with_context(|| format!("Failed to build strokes for {course:?}"))
+        };
+        let (pronunciation_audio, human_audio, strokes) = tokio::try_join!(
+            generate_data::StageTimer::run("pronunciation audio", pronunciation_audio_stage),
+            generate_data::StageTimer::run("human audio", human_audio_stage),
+            generate_data::StageTimer::run("strokes", strokes_stage),
+        )?;
+        if !human_audio.is_empty() {
+            let total_clips: usize = human_audio.values().map(|clips| clips.len()).sum();
+            println!(
+                "Loaded {total_clips} human audio clips from {} voice actor(s)",
+                human_audio.len()
+            );
+        }
         let forms = strokes.values().flatten().count();
         let points: usize = strokes
             .values()
@@ -1780,6 +1771,9 @@ async fn main() -> anyhow::Result<()> {
             course.target_language.code(),
             strokes.len()
         );
+
+        let encoded_sentences_with_grams =
+            readings.pack(encoded_sentences_with_grams, course.target_language);
 
         // Create consolidated data structure
         let consolidated_data = language_utils::ConsolidatedLanguageData {
@@ -1826,6 +1820,35 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Sound inventory must precede guides, but neither depends on the corpus or
+/// dictionary. Keep request construction inside the existing stage functions.
+async fn pronunciation_guides(
+    course: Course,
+) -> anyhow::Result<(
+    Vec<(String, language_utils::PatternPosition)>,
+    Vec<(String, language_utils::PronunciationGuideThoughts)>,
+)> {
+    let sounds = if course.target_language.is_phonographic() {
+        generate_data::pronunciation_patterns::generate_language_sounds(course.target_language)
+            .await
+            .context("Failed to generate language sounds")?
+    } else {
+        println!(
+            "Skipping pronunciation guides for {:?}: its writing is not phonographic",
+            course.target_language
+        );
+        Vec::new()
+    };
+    let guides = if sounds.is_empty() {
+        Vec::new()
+    } else {
+        generate_data::pronunciation_patterns::generate_pronunciation_guides(course, &sounds)
+            .await
+            .context("Failed to generate pronunciation guides")?
+    };
+    Ok((sounds, guides))
+}
+
 /// The main binary intentionally uses a small manual parser, not clap.
 #[derive(Debug, Default)]
 struct Args {
@@ -1833,13 +1856,51 @@ struct Args {
     cache_only: bool,
     sync_cache_only: bool,
     pronunciation_audio_only: bool,
+    readings_sample: Option<generate_data::readings::sample_run::Sample>,
+    measure_cache: Option<PathBuf>,
+    measure_allow_modal: bool,
+    measure_cache_from: Option<PathBuf>,
 }
 
 impl Args {
     fn parse(args: impl IntoIterator<Item = String>) -> anyhow::Result<Self> {
         let mut parsed = Self::default();
-        for arg in args {
+        let mut args = args.into_iter();
+        while let Some(arg) = args.next() {
             match arg.as_str() {
+                "--readings-sample" => {
+                    anyhow::ensure!(
+                        parsed.readings_sample.is_none(),
+                        "duplicate --readings-sample"
+                    );
+                    let percent = args
+                        .next()
+                        .context("--readings-sample requires a percent")?
+                        .parse::<f64>()
+                        .context("--readings-sample requires a numeric percent")?;
+                    parsed.readings_sample =
+                        Some(generate_data::readings::sample_run::Sample::new(percent)?);
+                }
+                "--measure-cache-from" => {
+                    anyhow::ensure!(
+                        parsed.measure_cache_from.is_none(),
+                        "duplicate --measure-cache-from"
+                    );
+                    parsed.measure_cache_from = Some(
+                        args.next()
+                            .context("--measure-cache-from requires a prior preparation directory")?
+                            .into(),
+                    );
+                }
+                "--measure-allow-modal" => parsed.measure_allow_modal = true,
+                "--measure-cache" => {
+                    anyhow::ensure!(parsed.measure_cache.is_none(), "duplicate --measure-cache");
+                    parsed.measure_cache = Some(
+                        args.next()
+                            .context("--measure-cache requires an output directory")?
+                            .into(),
+                    );
+                }
                 "--cache-only" => parsed.cache_only = true,
                 "--sync-cache" => parsed.sync_cache_only = true,
                 "--pronunciation-audio-only" => parsed.pronunciation_audio_only = true,
@@ -1853,6 +1914,38 @@ impl Args {
             !(parsed.pronunciation_audio_only && parsed.sync_cache_only),
             "--pronunciation-audio-only conflicts with --sync-cache"
         );
+        anyhow::ensure!(
+            parsed.measure_cache_from.is_none()
+                || (parsed.measure_cache.is_some() && parsed.lang_filter.len() == 1),
+            "--measure-cache-from requires --measure-cache and exactly one target language"
+        );
+        anyhow::ensure!(
+            !parsed.measure_allow_modal || parsed.measure_cache.is_some(),
+            "--measure-allow-modal requires --measure-cache; it permits only Lexide and token-embedding inference"
+        );
+        if parsed.measure_cache.is_some() {
+            anyhow::ensure!(
+                !parsed.lang_filter.is_empty()
+                    && !parsed.sync_cache_only
+                    && !parsed.pronunciation_audio_only
+                    && parsed.readings_sample.is_none(),
+                "--measure-cache requires explicit languages and conflicts with sync/audio/sample modes"
+            );
+        }
+        if parsed.readings_sample.is_some() {
+            anyhow::ensure!(
+                !parsed.sync_cache_only && !parsed.pronunciation_audio_only,
+                "--readings-sample conflicts with --sync-cache and --pronunciation-audio-only"
+            );
+            anyhow::ensure!(
+                !parsed.lang_filter.is_empty()
+                    && parsed
+                        .lang_filter
+                        .iter()
+                        .all(|code| matches!(code.as_str(), "jpn" | "zho-hans")),
+                "--readings-sample requires explicit jpn and/or zho-hans language codes"
+            );
+        }
         let known: BTreeSet<&str> = COURSES.iter().map(|c| c.target_language.code()).collect();
         let unknown: Vec<&str> = parsed
             .lang_filter
@@ -1874,8 +1967,94 @@ impl Args {
 mod args_tests {
     use super::*;
 
+    #[test]
+    fn measurement_is_explicit() {
+        let parsed = parse(&["--measure-cache", "scratch", "zho-hans"]).unwrap();
+        assert_eq!(parsed.measure_cache, Some(PathBuf::from("scratch")));
+        assert!(!parsed.measure_allow_modal);
+        assert!(parse(&["--measure-allow-modal", "jpn"]).is_err());
+        assert!(
+            parse(&["--measure-cache", "scratch", "--measure-allow-modal", "jpn"])
+                .unwrap()
+                .measure_allow_modal
+        );
+        assert!(parse(&["--measure-cache-from", "prior", "jpn"]).is_err());
+        assert_eq!(
+            parse(&[
+                "--measure-cache",
+                "scratch",
+                "--measure-cache-from",
+                "prior",
+                "jpn"
+            ])
+            .unwrap()
+            .measure_cache_from,
+            Some(PathBuf::from("prior"))
+        );
+        assert!(
+            parse(&[
+                "--measure-cache",
+                "scratch",
+                "--measure-cache-from",
+                "prior",
+                "jpn",
+                "zho-hans"
+            ])
+            .is_err()
+        );
+        for args in [
+            vec!["--measure-cache"],
+            vec!["--measure-cache", "scratch"],
+            vec!["--measure-cache", "scratch", "--sync-cache", "jpn"],
+            vec![
+                "--measure-cache",
+                "scratch",
+                "--pronunciation-audio-only",
+                "jpn",
+            ],
+        ] {
+            assert!(parse(&args).is_err());
+        }
+    }
+
     fn parse(args: &[&str]) -> anyhow::Result<Args> {
         Args::parse(args.iter().map(|arg| (*arg).to_owned()))
+    }
+
+    #[test]
+    fn readings_sample_validates_percent_languages_and_conflicts() {
+        assert!(
+            parse(&[
+                "--readings-sample",
+                "2.5",
+                "jpn",
+                "zho-hans",
+                "--cache-only"
+            ])
+            .unwrap()
+            .readings_sample
+            .is_some()
+        );
+        for args in [
+            vec!["--readings-sample"],
+            vec!["--readings-sample", "NaN", "jpn"],
+            vec!["--readings-sample", "0", "jpn"],
+            vec!["--readings-sample", "101", "jpn"],
+            vec!["--readings-sample", "-1", "jpn"],
+            vec!["--readings-sample", "inf", "jpn"],
+            vec!["--readings-sample", "5"],
+            vec!["--readings-sample", "5", "fra"],
+            vec!["--readings-sample", "5", "jpn", "--sync-cache"],
+            vec![
+                "--readings-sample",
+                "5",
+                "jpn",
+                "--pronunciation-audio-only",
+            ],
+            vec!["--readings-sample", "5", "jpn", "--readings-sample", "5"],
+        ] {
+            assert!(parse(&args).is_err(), "accepted {args:?}");
+        }
     }
 
     #[test]

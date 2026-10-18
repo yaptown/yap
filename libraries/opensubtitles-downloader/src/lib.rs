@@ -1,5 +1,6 @@
 //! Shared OpenSubtitles API access for the downloader and subtitle corpus.
 
+pub mod download;
 pub mod quality;
 
 use std::collections::HashMap;
@@ -271,7 +272,10 @@ impl OpenSubtitlesClient {
         let download_response: DownloadResponse = response.json().await?;
 
         let srt_response = self.client.get(&download_response.link).send().await?;
-        let srt_content = srt_response.text().await?;
+        if let Some(throttled) = throttle_reason(srt_response.status()) {
+            return Err(throttled.into());
+        }
+        let srt_content = srt_response.error_for_status()?.text().await?;
 
         // Rate limiting: wait 500ms between requests
         tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;

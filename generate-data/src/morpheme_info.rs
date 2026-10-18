@@ -188,6 +188,16 @@ pub fn invert_segmentations(
     out
 }
 
+fn select_example_words(survivors: &[String], pool: &[String]) -> Vec<String> {
+    let mut selected = survivors.to_vec();
+    let remaining = crate::corpus_samples::remaining_items(pool, survivors);
+    selected.extend(pick_example_words(
+        &remaining,
+        10usize.saturating_sub(selected.len()),
+    ));
+    selected
+}
+
 /// Pick a stable sample of up to `n` words from `words`.
 fn pick_example_words(words: &[String], n: usize) -> Vec<String> {
     if words.len() <= n {
@@ -479,10 +489,18 @@ You'll receive a morpheme plus a small sample of words it appears in. Pick the s
     );
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
+    let mut samples = crate::corpus_samples::SampleCache::load(
+        crate::pipeline::course_dirs(&course)
+            .unwrap()
+            .native_specific_dir
+            .join("morpheme_words.jsonl"),
+    )
+    .unwrap();
     let prompts = morpheme_to_words
             .iter()
             .map(|(segment, words)| {
-                let examples = pick_example_words(words, 10);
+                samples.refresh_with(segment, words, select_example_words);
+                let examples = samples.get(segment).to_vec();
                 let tag_line = segment
                     .tag
                     .as_ref()
@@ -497,6 +515,7 @@ You'll receive a morpheme plus a small sample of words it appears in. Pick the s
                 (segment.clone(), examples, user)
             })
             .collect::<Vec<_>>();
+    samples.save().unwrap();
     let classified: Vec<(MorphemeSegment<String>, MorphemeCategory, Vec<String>)> = classify_client
         .batch_chat_with_system_prompt_fn::<_, _, ClassifyResponse>(
             &classify_prompt,
@@ -611,4 +630,33 @@ You'll receive a morpheme plus a small sample of words it appears in. Pick the s
     pb.finish_with_message(format!("{:.2}", define_client.cost().unwrap_or(0.0)));
     results.sort_by(|a, b| a.segment.cmp(&b.segment));
     results
+}
+
+#[cfg(test)]
+mod example_tests {
+    use super::*;
+
+    #[test]
+    fn persisted_first_words_match_original_and_refill_keeps_order() {
+        for size in [0, 1, 10, 11, 100] {
+            let pool: Vec<_> = (0..size).rev().map(|i| format!("word {i}")).collect();
+            let mut expected = if pool.len() <= 10 {
+                pool.clone()
+            } else {
+                sample_to_target(pool.clone(), 20, |w| w.clone())
+            };
+            expected.sort();
+            expected.truncate(10);
+            assert_eq!(select_example_words(&[], &pool), expected);
+        }
+        assert_eq!(
+            select_example_words(&["a".into()], &["a".into(), "a".into()]),
+            ["a", "a"]
+        );
+        let survivors = vec!["z".into(), "a".into()];
+        assert_eq!(
+            select_example_words(&survivors, &["a".into(), "b".into(), "z".into()]),
+            ["z", "a", "b"]
+        );
+    }
 }

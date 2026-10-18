@@ -231,13 +231,36 @@ pub async fn process_sentences(
         &mut already_processed,
     )?;
 
+    // The measurement barrier must use the same retry-budget filter as the
+    // live path: exhausted inputs are deliberately excluded, not dependencies.
+    let failure_file = get_failure_file_path(output_file);
+    let mut failures = load_failures(&failure_file)?;
+    let sentences_to_process = pending_sentences(&sentences, &already_processed, &failures);
+
     // In cache-only mode, skip the Modal server entirely and return only
     // sentences already present in the output file.
-    if crate::cache_only() {
-        let missing = sentences
+    if crate::cache_only() && !crate::measurement::modal_allowed() {
+        let absent = sentences
             .iter()
             .filter(|s| !already_processed.contains_key(*s))
-            .count();
+            .collect::<HashSet<_>>()
+            .len();
+        let missing = sentences_to_process.len();
+        let exhausted = absent - missing;
+        if tysm::measurement::enabled() && missing > 0 {
+            return Err(crate::measurement::DependencyBarrier {
+                component: "tokenization",
+                pending: missing,
+                exhausted,
+                input: Some(output_file.to_owned()),
+            }
+            .into());
+        }
+        if exhausted > 0 {
+            log::info!(
+                "tokenization[{language}]: {exhausted} exhausted inputs excluded by the production retry policy"
+            );
+        }
         if missing > 0 {
             eprintln!(
                 "cache-only: skipping {missing} untokenized sentence(s) for {language} (output: {})",
@@ -251,19 +274,8 @@ pub async fn process_sentences(
         return Ok(result);
     }
 
-    // Initialize lexide
-    let lexide = Lexide::from_server("https://anchpop--lexide-gemma-4-31b-vllm-serve.modal.run")
-        .context("Failed to initialize lexide")?;
-
-    // Load failure tracking
-    let failure_file = get_failure_file_path(output_file);
-    let mut failures = load_failures(&failure_file)?;
-
-    // Filter out already-processed sentences, and sentences that have burned
-    // through their retry budget. A sentence that failed a previous run is
-    // retried: treating one failure as permanent silently drops the sentence
-    // from the corpus forever, which is how ~17k sentences went missing.
-    let sentences_to_process = pending_sentences(&sentences, &already_processed, &failures);
+    // A sentence that failed a previous run is retried unless its own retry
+    // budget is exhausted; the pending set above is shared with measurement.
 
     if sentences_to_process.is_empty() {
         // Return only the sentences that were requested
@@ -273,6 +285,9 @@ pub async fn process_sentences(
             .collect();
         return Ok(result);
     }
+
+    let lexide = Lexide::from_server("https://anchpop--lexide-gemma-4-31b-vllm-serve.modal.run")
+        .context("Failed to initialize lexide")?;
 
     // Open output file in append mode
     let output_file_handle = std::fs::OpenOptions::new()
@@ -579,6 +594,23 @@ pub async fn generate_nlp_sentences(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn measurement_pending_set_is_the_production_retry_budget() {
+        let sentences = vec![
+            "pending".to_owned(),
+            "exhausted".to_owned(),
+            "pending".to_owned(),
+        ];
+        let failures = BTreeMap::from([
+            ("pending".into(), MAX_TOKENIZATION_ATTEMPTS - 1),
+            ("exhausted".into(), MAX_TOKENIZATION_ATTEMPTS),
+        ]);
+        assert_eq!(
+            pending_sentences(&sentences, &BTreeMap::new(), &failures),
+            HashSet::from(["pending".to_owned()])
+        );
+    }
 
     fn tok(text: &str, pos: lexide::pos::PartOfSpeech, head: i32) -> lexide::Token {
         lexide::Token {

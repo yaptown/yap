@@ -1,12 +1,12 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-dar algo	filled	8300	12	12	1.00	yes		
-ser alguien	filled	4986	0	12	0.00	no	"El paraíso es esto."	es … esto
-dar algo	clitic	383	12	12	1.00	yes		
-necesito su ayuda	clitic	89	12	12	1.00	yes		
-su gracia	filled	48	4	12	0.33	no	Al contrario, muchas gracias a usted.	gracias … usted
+dar algo	filled	8734	8	12	0.67	yes	"A ti y a mí nos da tristeza".	da … tristeza
+ser alguien	filled	5192	0	12	0.00	no	"El paraíso es esto."	es … esto
+dar algo	clitic	409	10	12	0.83	yes	Lo que me dé la gana.	Lo … dé
+necesito su ayuda	clitic	90	12	12	1.00	yes		
+su gracia	filled	49	3	12	0.25	no	Al contrario, muchas gracias a usted.	gracias … usted
 a sus pies	clitic	25	11	12	0.92	yes	Agárrate a mi pie y dame la mano Yo te ayudaré.	a … mi … pie
-necesito su ayuda	filled	21	12	12	1.00	yes		
-su gracia	clitic	20	6	12	0.50	no	Me gusta la forma en la que ella ríe mis gracias.	mis … gracias
+necesito su ayuda	filled	22	12	12	1.00	yes		
+su gracia	clitic	20	5	12	0.42	no	Me gusta la forma en la que ella ríe mis gracias.	mis … gracias
 en su punto	filled	14	0	12	0.00	no	Bob está todo el rato en el punto de mira de la policía.	en … punto … mira
 cuál es su nombre	clitic	12	12	12	1.00	yes		
 a sus pies	filled	11	9	11	0.82	yes	A seis pies bajo tierra.	A … pies … tierra
@@ -18,8 +18,8 @@ en sus cabales	clitic	4	4	4	1.00	yes
 sudor de su frente	clitic	3	1	3	0.33	no	Incluso lo puedes oler en su sudor.	su … sudor
 niña de sus ojos	clitic	2	2	2	1.00	yes		
 poner alguien en su sitio	filled	2	1	2	0.50	no	Ponga eso en su sitio.	Ponga … eso … en … su … sitio
-tocar los huevos a alguien	clitic	2	2	2	1.00	yes		
 niña de sus ojos	filled	1	1	1	1.00	yes		
 poner alguien en su sitio	clitic	1	1	1	1.00	yes		
 sacar de sus casillas	filled	1	0	1	0.00	no	¡Parece algo sacado de la Vieja Sociedad!	sacado … de … Vieja Sociedad
+tocar los huevos a alguien	clitic	1	1	1	1.00	yes		
 volar con sus propias alas	clitic	1	1	1	1.00	yes		

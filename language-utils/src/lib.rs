@@ -1,4 +1,6 @@
 pub mod book;
+mod han_script_tables;
+use han_script_tables::{SIMPLIFIED_ONLY, TRADITIONAL_ONLY};
 pub mod clip_content_ratings;
 pub mod features;
 pub mod word_prefix;
@@ -10,7 +12,9 @@ pub mod minimal_pairs;
 pub mod morphology_label;
 pub mod profile;
 pub mod pronunciation_pattern;
+pub mod readings;
 pub mod strokes;
+pub use readings::{ReadingTaggedGram, RubySegment};
 pub mod text_cleanup;
 pub use strokes::{Stroke, StrokeGlyph, StrokeStandard, StrokeTable};
 
@@ -676,6 +680,71 @@ pub struct SentenceGrams<G> {
     pub low_confidence_multiword_terms: Vec<MultiwordTermMatch<G>>,
 }
 
+impl<G> SentenceGrams<G> {
+    /// Every occurrence: segmentation followed by both phrase-match lists.
+    pub fn all_grams(&self) -> impl Iterator<Item = &G> {
+        self.grams
+            .iter()
+            .map(|gram| match gram {
+                SentenceGram::Learnable(gram) | SentenceGram::Obvious(gram) => gram,
+            })
+            .chain(self.multiword_terms.iter().map(|term| &term.gram))
+            .chain(
+                self.low_confidence_multiword_terms
+                    .iter()
+                    .map(|term| &term.gram),
+            )
+    }
+
+    pub fn map<H>(self, mut f: impl FnMut(G) -> H) -> SentenceGrams<H> {
+        SentenceGrams {
+            grams: self.grams.into_iter().map(|g| g.map(&mut f)).collect(),
+            capitalize_first: self.capitalize_first,
+            multiword_terms: self
+                .multiword_terms
+                .into_iter()
+                .map(|m| MultiwordTermMatch {
+                    gram: f(m.gram),
+                    matched_word_indices: m.matched_word_indices,
+                })
+                .collect(),
+            low_confidence_multiword_terms: self
+                .low_confidence_multiword_terms
+                .into_iter()
+                .map(|m| MultiwordTermMatch {
+                    gram: f(m.gram),
+                    matched_word_indices: m.matched_word_indices,
+                })
+                .collect(),
+        }
+    }
+}
+
+impl<G, S> SentenceGrams<ReadingTaggedGram<G, S>> {
+    pub fn without_readings(self) -> SentenceGrams<TaggedGram<G>> {
+        self.map(|g| g.sense)
+    }
+}
+
+impl SentenceGrams<ReadingTaggedGram<SpurGram, lasso::Spur>> {
+    pub fn resolve(
+        &self,
+        rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>,
+    ) -> SentenceGrams<ReadingTaggedGram<Gram<lasso::Spur>, lasso::Spur>> {
+        self.clone().map(|g| g.resolve(rodeo))
+    }
+}
+impl SentenceGrams<ReadingTaggedGram<Gram<lasso::Spur>, lasso::Spur>> {
+    pub fn resolve(
+        &self,
+        rodeo: &lasso::RodeoReader,
+    ) -> SentenceGrams<ReadingTaggedGram<Gram<String>, String>> {
+        self.clone().map(|g| g.resolve(rodeo))
+    }
+}
+
+pub type ReadingSentence<G, S> = SentenceGrams<ReadingTaggedGram<G, S>>;
+
 pub type GramLiterals<G> = SentenceGram<(G, Vec<Literal<String>>)>;
 
 impl SentenceGrams<TaggedGram<SpurGram>> {
@@ -815,7 +884,7 @@ impl SentenceGrams<TaggedGram<Gram<lasso::Spur>>> {
 impl<S> SentenceGram<S> {
     pub fn map<T, F>(self, f: F) -> SentenceGram<T>
     where
-        F: Fn(S) -> T,
+        F: FnOnce(S) -> T,
     {
         match self {
             SentenceGram::Learnable(s) => SentenceGram::Learnable(f(s)),
@@ -2651,7 +2720,7 @@ pub struct ConsolidatedLanguageData {
     /// Gram frequencies for learnable grams
     pub gram_frequencies: GramFrequencyList,
     /// Encoded sentences: sentence text -> grams with learnability and capitalize_first
-    pub encoded_sentences: Vec<(String, SentenceGrams<TaggedGram<Gram<String>>>)>,
+    pub encoded_sentences: Vec<(String, ReadingSentence<Gram<String>, String>)>,
     /// Gram dictionary: definitions for grams (keyed by Gram for correct surface-form matching)
     pub gram_dictionary: BTreeMap<TaggedGram<Gram<String>>, DictionaryEntry>,
     /// Morpheme classification + info, keyed by (surface, canonical) pair.
@@ -2822,22 +2891,11 @@ impl ConsolidatedLanguageData {
         // intern encoded sentence keys, atoms, and multiword term grams
         for (sentence, encoded) in &self.encoded_sentences {
             rodeo.get_or_intern(sentence);
-            for gram in &encoded.grams {
-                match gram {
-                    SentenceGram::Learnable(atoms) | SentenceGram::Obvious(atoms) => {
-                        for atom in &atoms.gram {
-                            atom.get_or_intern(rodeo);
-                        }
-                    }
+            for entry in encoded.all_grams() {
+                if let Some(reading) = &entry.reading {
+                    rodeo.get_or_intern(reading);
                 }
-            }
-            for term in &encoded.multiword_terms {
-                for atom in term.gram.gram.iter() {
-                    atom.get_or_intern(rodeo);
-                }
-            }
-            for term in &encoded.low_confidence_multiword_terms {
-                for atom in term.gram.gram.iter() {
+                for atom in &entry.sense.gram {
                     atom.get_or_intern(rodeo);
                 }
             }
@@ -3272,11 +3330,6 @@ impl WritingSystem {
         }
     }
 }
-
-/// Characters used ONLY in simplified or ONLY in traditional Chinese text.
-/// Forms valid in both (里/后/云/台/只/干/面/…) are deliberately absent.
-const SIMPLIFIED_ONLY: &str = "国会这说对时们来学见还没电车门问间东儿点开关认让话语读写听号妈谁么几个长张马鸟鱼龙风华为乐现买卖医难题双观欢击级红纪经给绝统继续绿网罗办变边币标产称迟处传单当党动断队发刚归龟汉护记举剧亲轻确热伤审圣书树术岁孙态万习县响择泽针诊争证织职执质钟种众专转庄状准务议译异样养药钥远运杂灾脏则贼赠纸骂";
-const TRADITIONAL_ONLY: &str = "國會這說對時們來學見還沒電車門問間東兒點開關認讓話語讀寫聽號媽誰麼幾個長張馬鳥魚龍風華為樂現買賣醫難題雙觀歡擊級紅紀經給絕統繼續綠網羅辦變邊幣標產稱遲處傳單當黨動斷隊發剛歸龜漢護記舉劇親輕確熱傷審聖書樹術歲孫態萬習縣響擇澤針診爭證織職執質鐘種眾專轉莊狀準務議譯異樣養藥鑰遠運雜災臟則賊贈紙罵";
 
 /// The one G2P source a language's phoneme labels may come from.
 ///
@@ -3962,7 +4015,6 @@ impl Language {
         }
     }
 
-    /// OpenSubtitles API language code (usually ISO 639-1, but pt-br for Portuguese)
     /// The OpenSubtitles `languages=` query for this language: every code a
     /// subtitle in it may be filed under, comma-separated as the API takes
     /// them. A query names its codes and silently returns nothing for the
@@ -3972,7 +4024,7 @@ impl Language {
     /// ojos: one file, under "sp").
     pub fn opensubtitles_languages(&self) -> &'static str {
         match self {
-            Language::PortugueseBrazilian | Language::PortugueseEuropean => "pt-br",
+            Language::PortugueseBrazilian | Language::PortugueseEuropean => "pt-br,pt-pt",
             Language::ChineseSimplified => "zh-cn",
             Language::ChineseTraditional => "zh-tw",
             Language::SpanishLatinAmerican | Language::SpanishPeninsular => "es,sp,ea",

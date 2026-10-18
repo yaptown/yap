@@ -290,7 +290,7 @@
 {"id":"tt2190367","title":"Il suono intorno","year":2012,"original_language":"pt","rotten_tomatoes_score":91}
 {"id":"tt1702014","title":"The Way He Looks","year":2014,"original_language":"pt","rotten_tomatoes_score":93}
 {"id":"tt0870090","title":"Cidade dos Homens","year":2007,"original_language":"pt","rotten_tomatoes_score":74}
-{"id":"tt0095765","title":"Nuovo Cinema Paradiso","year":1988,"original_language":"it","rotten_tomatoes_score":90}
+{"id":"tt0095765","title":"Nuovo Cinema Paradiso","year":1988,"original_language":"it","rotten_tomatoes_score":90,"variety":"ita"}
 {"id":"tt0076085","title":"Una giornata particolare","year":1977,"original_language":"it","rotten_tomatoes_score":100}
 {"id":"tt0118799","title":"La vita è bella","year":1997,"original_language":"it","rotten_tomatoes_score":80,"variety":"ita"}
 {"id":"tt0060196","title":"Il buono, il brutto, il cattivo","year":1966,"original_language":"it","rotten_tomatoes_score":97}
@@ -301,10 +301,10 @@
 {"id":"tt0076786","title":"Suspiria","year":1977,"original_language":"it","rotten_tomatoes_score":94,"variety":"ita"}
 {"id":"tt0040522","title":"Ladri di biciclette","year":1948,"original_language":"it","rotten_tomatoes_score":99}
 {"id":"tt0056801","title":"8½","year":1963,"original_language":"it","rotten_tomatoes_score":97}
-{"id":"tt0213847","title":"Malèna","year":2000,"original_language":"it","rotten_tomatoes_score":54}
+{"id":"tt0213847","title":"Malèna","year":2000,"original_language":"it","rotten_tomatoes_score":54,"variety":"ita"}
 {"id":"tt0120731","title":"La leggenda del pianista sull'oceano","year":1998,"original_language":"it","rotten_tomatoes_score":58,"variety":"ita"}
 {"id":"tt0053779","title":"La dolce vita","year":1960,"original_language":"it","rotten_tomatoes_score":95,"variety":"ita"}
-{"id":"tt0038890","title":"Roma città aperta","year":1945,"original_language":"it","rotten_tomatoes_score":100}
+{"id":"tt0038890","title":"Roma città aperta","year":1945,"original_language":"it","rotten_tomatoes_score":100,"variety":"ita"}
 {"id":"tt0110877","title":"Il postino","year":1994,"original_language":"it","rotten_tomatoes_score":92}
 {"id":"tt12680684","title":"È stata la mano di Dio","year":2021,"original_language":"it","rotten_tomatoes_score":83,"variety":"ita"}
 {"id":"tt0057091","title":"Il gattopardo","year":1963,"original_language":"it","rotten_tomatoes_score":100}
@@ -388,3 +388,6 @@
 {"id":"tt4633694","title":"Spider-Man - Un nuovo universo","year":2018,"original_language":"en","rotten_tomatoes_score":97}
 {"id":"tt0241527","title":"Harry Potter e la pietra filosofale","year":2001,"original_language":"en","rotten_tomatoes_score":80}
 {"id":"tt6752992","title":"Happy as Lazzaro","year":2018,"original_language":"it","rotten_tomatoes_score":null,"variety":"ita"}
+{"id":"tt0110570","title":"The Monster","poster_path":null,"localizations":{},"year":1994,"original_language":"it","variety":"ita","rotten_tomatoes_score":null}
+{"id":"tt0047528","title":"La Strada","poster_path":null,"localizations":{},"year":1954,"original_language":"it","variety":"ita","rotten_tomatoes_score":null}
+{"id":"tt0067140","title":"Duck, You Sucker","poster_path":null,"localizations":{},"year":1971,"original_language":"it","variety":"ita","rotten_tomatoes_score":null}

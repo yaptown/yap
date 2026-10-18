@@ -41,7 +41,7 @@ async fn main() -> anyhow::Result<()> {
     )?;
     println!("{} terms, {} sentences", terms.len(), sentences.len());
 
-    let slot_specs = slot_analysis::analyze_slots(&course, &terms).await?;
+    let slot_specs = slot_analysis::analyze_slots(&course, &terms, &out_dir).await?;
     println!("{} terms with argument slots", slot_specs.len());
 
     let mut patterns = Vec::new();
@@ -61,14 +61,16 @@ async fn main() -> anyhow::Result<()> {
     );
 
     // Grade everything in one batch, same as the pipeline does.
+    let mut samples = slot_analysis::MatchSamples::load(out_dir.join("slot_match_samples.jsonl"))?;
     let requests: Vec<slot_analysis::GradeRequest> = patterns
         .iter()
         .zip(&matches)
         .filter(|(_, matched)| !matched.is_empty())
         .map(|((term, realization, _), matched)| {
-            slot_analysis::GradeRequest::new(term.clone(), *realization, matched)
+            slot_analysis::GradeRequest::new(term.clone(), *realization, matched, &mut samples)
         })
         .collect();
+    samples.save()?;
     let graded = slot_analysis::grade_patterns(&requests).await?;
 
     let summary_path = out_dir.join("slot_patterns.tsv");

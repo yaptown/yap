@@ -80,7 +80,7 @@ async fn main() -> anyhow::Result<()> {
             .await
             .context("Failed to get target sentences")?;
         timer.lap("sentence loading");
-        let segmented = generate_data::pipeline::segment_corpus(course, &sentence_corpus)
+        let segmented = generate_data::pipeline::segment_corpus(course, &sentence_corpus, None)
             .await
             .context("Failed to segment corpus")?;
         timer.lap("segment_corpus (see stage laps above)");

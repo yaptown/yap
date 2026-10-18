@@ -1,20 +1,12 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 4250409
-Total errors: 5216
-Accuracy: 99.88%
+Total predictions: 4400126
+Total errors: 5601
+Accuracy: 99.87%
 
 ## Error Patterns (sorted by frequency)
 
-### """ + """ (368 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "A Tom le gusta María." "Sí, lo sé."
-  - "A decir verdad, tengo vértigo." "¡Eres un cobarde!"
-  - "A ella le gusta la música." "A mí también."
-
-### "ver" + "te" (367 occurrences)
+### "ver" + "te" (374 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
@@ -22,7 +14,15 @@ Accuracy: 99.88%
   - A Tom no le apetecerá verte.
   - A Tom no le gustará verte.
 
-### "," + """ (202 occurrences)
+### """ + """ (369 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "A Tom le gusta María." "Sí, lo sé."
+  - "A decir verdad, tengo vértigo." "¡Eres un cobarde!"
+  - "A ella le gusta la música." "A mí también."
+
+### "," + """ (214 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -30,7 +30,7 @@ Accuracy: 99.88%
   - "Cautivos del Rayo Cósmico", "La Gran Helada" y otros.
   - "Criterio" viene del latín, "criterium."
 
-### "de" + """ (127 occurrences)
+### "de" + """ (131 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -46,7 +46,7 @@ Accuracy: 99.88%
   - «Amanda está embarazada.» «¿Va a ser niño o niña?»
   - «Es un problema.» «No es ningún problema.»
 
-### "es" + """ (89 occurrences)
+### "es" + """ (94 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -54,7 +54,23 @@ Accuracy: 99.88%
   - A pesar de que para ella es "música de negros".
   - Así que esto es "Bacarau".
 
-### """ + "es" (73 occurrences)
+### "el" + """ (87 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A aquel tipo le obsesionaba el "snuff".
+  - Ahora los pibes se matan de risa con el "compromiso" ¿Quién se compromete ahora?
+  - Algo sobre el "Academic".
+
+### """ + "en" (75 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Basajaun" quiere decir "el señor del bosque" en euskera.
+  - "Beautiful" en un tipo de letra clásico y potente.
+  - "Göttlich verflucht" en alemán.
+
+### """ + "es" (74 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -62,7 +78,7 @@ Accuracy: 99.88%
   - "Ah" es una interjección.
   - "Alguien voló sobre el nido del cuco" es una de mis novelas favoritas.
 
-### "con" + """ (72 occurrences)
+### "con" + """ (73 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -70,31 +86,31 @@ Accuracy: 99.88%
   - "Pyar hota hai" y Paro, se escriben con "p".
   - A qué te refieres con "felicidad"?
 
-### """ + "en" (71 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Göttlich verflucht" en alemán.
-  - "Miau" significa "guau" en gato.
-  - "Tatoeba" significa "por ejemplo" en japonés.
-
-### "el" + """ (70 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Algo sobre el "Academic".
-  - Allí está el "jardín de las setas", como él lo llamaba.
-  - André, el "Che Guevara" entró sin chaleco.
-
-### "un" + """ (68 occurrences)
+### "un" + """ (73 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Ahora él tiene un "Moskóvich", y enloqueció la comadre.
+  - Aquel chico la utilizó para hacer un "snuff".
   - Aquí tenemos un "fugado", el caso habitual.
-  - Chicó a propuesto un "truelo".
 
-### "dice" + """ (56 occurrences)
+### "¿" + "Qué" (68 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Qué andas haciendo?
+  - ¿ Qué beneficio le sacas?
+  - ¿ Qué beneficio le saco?
+
+### "decir" + """ (57 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Argi Beltz" quiere decir "luz negra".
+  - "Basajaun" quiere decir "el señor del bosque" en euskera.
+  - "Menéame" resulta querer decir "menéame".
+
+### "dice" + """ (57 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -102,15 +118,7 @@ Accuracy: 99.88%
   - Alguien me dice "No esté allí parado."
   - Allá abajo, donde dice "firme".
 
-### "decir" + """ (54 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Menéame" resulta querer decir "menéame".
-  - A decir "papá".
-  - Alguien podría apretarse y decir "Por favor, ajustémonos".
-
-### """ + "y" (52 occurrences)
+### """ + "y" (55 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -118,7 +126,7 @@ Accuracy: 99.88%
   - "Cautivos del Rayo Cósmico", "La Gran Helada" y otros.
   - "Centro" y "Friedrich's Grove".
 
-### "llama" + """ (49 occurrences)
+### "llama" + """ (50 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -134,7 +142,7 @@ Accuracy: 99.88%
   - Además-- ¿Qué otra cosa puedes hacer?
   - Cinco-- ¿listo?
 
-### "haber" + "te" (45 occurrences)
+### "haber" + "te" (48 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
@@ -142,13 +150,21 @@ Accuracy: 99.88%
   - Debe haberte costado mucho.
   - Debería de haberte dejado una nota.
 
-### "significa" + """ (45 occurrences)
+### "significa" + """ (47 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "El príncipe de las tinieblas" significa "Satanás".
   - "Miau" significa "guau" en gato.
   - "No" significa "no".
+
+### "la" + """ (45 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Horror en Abbittyville", la "Abbster".
+  - Aquí está la "medicina especial".
+  - Charlie, ¿qué es la "pintura de guerra"?
 
 ### "en" + """ (43 occurrences)
 - Predicted: None
@@ -158,7 +174,7 @@ Accuracy: 99.88%
   - Acompáñennos en "Mientras usted duerme".
   - Aparentemente, no está muy contento aquí, en "Shangri-La".
 
-### "que" + """ (40 occurrences)
+### "que" + """ (39 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -166,23 +182,15 @@ Accuracy: 99.88%
   - Como todos sabemos, "Bufón" es alguien que "blufea".
   - Creo que "Fever Dog" es un gran paso adelante.
 
-### "¿" + "Qué" (38 occurrences)
-- Predicted: None
-- Actual: Space
+### "," + "¿" (38 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - ¿ Qué beneficio le sacas?
-  - ¿ Qué beneficio le saco?
-  - ¿ Qué buscáis?
+  - A ver dime,¿cómo carajos voy a moler?
+  - A ver,¿por qué no jugaste el juego éste?
+  - Ah,¿no te dan permiso?
 
-### "la" + """ (36 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Horror en Abbittyville", la "Abbster".
-  - Aquí está la "medicina especial".
-  - Charlie, ¿qué es la "pintura de guerra"?
-
-### "--" + "¡" (35 occurrences)
+### "--" + "¡" (37 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -190,7 +198,7 @@ Accuracy: 99.88%
   - Cualquier chico que mire tu figura y se enamore-- ¡Debe ser ciego!
   - Cuando oigan-- ¡Eso es!
 
-### """ + "de" (34 occurrences)
+### """ + "de" (36 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -198,15 +206,7 @@ Accuracy: 99.88%
   - "Ministro" de mierda.
   - "Sharp Dressed Man" de ZZ Top.
 
-### "—" + "dijo" (33 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - A Zenna —dijo Rudolph—.
-  - Amanda —dijo Jerry—, saltó desde lo alto del palo mayor.
-  - Así no se me agarrotan los dedos —dijo.
-
-### """ + "¿" (32 occurrences)
+### """ + "¿" (34 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -214,15 +214,15 @@ Accuracy: 99.88%
   - "Baaton mein hai pada bekar ki" ¿Qué le estará pasando?
   - "Bowwow" ¿sabe?
 
-### "hacer" + "te" (32 occurrences)
+### "—" + "dijo" (34 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Así que voy a hacerte una oferta.
-  - Comprar una televisión nueva no va a hacerte feliz.
-  - Estaba a punto de hacerte la misma pregunta.
+  - A Zenna —dijo Rudolph—.
+  - Amanda —dijo Jerry—, saltó desde lo alto del palo mayor.
+  - Así no se me agarrotan los dedos —dijo.
 
-### """ + "o" (29 occurrences)
+### """ + "o" (32 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -230,7 +230,23 @@ Accuracy: 99.88%
   - "Midwest Living" o "Country".
   - "Polca Yamahoozie" o "Bésame Polca"?
 
-### "palabra" + """ (28 occurrences)
+### "hacer" + "te" (31 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Así que voy a hacerte una oferta.
+  - Comprar una televisión nueva no va a hacerte feliz.
+  - Estaba a punto de hacerte la misma pregunta.
+
+### "a" + """ (30 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A Snowflake le dieron el número de Finkle y le enseñaron a "patear".
+  - Bienvenidos a "Adivine quién es el más capullo que conozco."
+  - Dijo que volvería después de ver a "mi Paro".
+
+### "palabra" + """ (29 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -238,13 +254,29 @@ Accuracy: 99.88%
   - Aun así, la palabra "Pene" está ahí.
   - Comía barro y palos, y sólo conocía la palabra "biblia".
 
-### "y" + """ (28 occurrences)
+### "y" + """ (29 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "Castillo", "volante" y "tren" son polisémicos.
   - "Centro" y "Friedrich's Grove".
-  - "Cielo" y "corazón" son palabras de cariño en español.
+  - "Chile, la felicidad está llegando" y "hola" después.
+
+### """ + "a" (28 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Decirle "sí" al futuro significaba decirle "adiós" a mi papá, para siempre.
+  - Dije "buenas noches" a mis padres y me fui a dormir.
+  - Diles "adiós" a tus amigos.
+
+### "dijo" + """ (27 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Cuando fracasé, él dijo "bien te lo mereces".
+  - El doctor me dijo "no comas demasiado".
+  - El primero que dijo "guerra" fue severamente cuestionado.
 
 ### "—" + "dije" (27 occurrences)
 - Predicted: Space
@@ -262,21 +294,21 @@ Accuracy: 99.88%
   - "Aquel día fue la primera vez que sentí miedo" "¿Cómo viviría si me olvidabas?"
   - "Así no es cómo el mundo funciona." "¿Y por qué no puede ser así?"
 
-### """ + "a" (26 occurrences)
+### "los" + """ (26 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Decirle "sí" al futuro significaba decirle "adiós" a mi papá, para siempre.
-  - Dije "buenas noches" a mis padres y me fui a dormir.
-  - Diles "adiós" a tus amigos.
+  - Además, estoy en todas las reuniones, en los "emails", vengo todas las semanas.
+  - Compañía Sampantong Rickshaw Escondite de los "Cuerpos Heroicos".
+  - Cuando los "carabinieri" la mataron estaba apretujada contra Antonio Canepa.
 
-### "a" + """ (26 occurrences)
+### "llaman" + """ (25 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A Snowflake le dieron el número de Finkle y le enseñaron a "patear".
-  - Bienvenidos a "Adivine quién es el más capullo que conozco."
-  - Dijo que volvería después de ver a "mi Paro".
+  - A él lo llaman "toruk makto".
+  - Algunas personas también le llaman "la hora dorada".
+  - Bueno, los llaman "Los Chaquetas de Cuero", me imaginé un rudo cazador.
 
 ### """ + "no" (24 occurrences)
 - Predicted: None
@@ -286,45 +318,37 @@ Accuracy: 99.88%
   - "Atrás" no es mi jurisdicción.
   - "Bien" no existe en tu vocabulario.
 
-### "dijo" + """ (24 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Cuando ella dijo "te extrañé" empezó a llorar.
-  - Cuando fracasé, él dijo "bien te lo mereces".
-  - El doctor me dijo "no comas demasiado".
-
-### "El" + """ (23 occurrences)
+### "El" + """ (24 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - El "Barbas" no lo aprobará, ¿verdad?
+  - El "Cien Pies".
   - El "Deux Moulins", ya lo sé.
-  - El "Diario de Singapur".
 
-### "llaman" + """ (23 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A él lo llaman "toruk makto".
-  - Algunas personas también le llaman "la hora dorada".
-  - Bueno, los llaman "Los Chaquetas de Cuero", me imaginé un rudo cazador.
-
-### "los" + """ (23 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Compañía Sampantong Rickshaw Escondite de los "Cuerpos Heroicos".
-  - Creo que he encontrado el plan de financiamiento de los "Cuerpos Heroicos".
-  - Cuando los "carabinieri" la mataron estaba apretujada contra Antonio Canepa.
-
-### "o" + """ (23 occurrences)
+### "o" + """ (24 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "El trío de la lucha contra el crimen violento" o "Sonrisas de los imparables."
   - "Midwest Living" o "Country".
   - "Polca Yamahoozie" o "Bésame Polca"?
+
+### "una" + """ (24 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Así, aun cuando yo tuviera una "Pola", no sacaría tu foto.
+  - El suplente que tienes es una "manteca".
+  - En el ejército le pusieron una "X" en su mano izquierda.
+
+### "haber" + "me" (23 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Deberías haberme dicho antes.
+  - Ella me pidió perdón por haberme pisado el pie.
+  - Ella se volvió loca conmigo por haberme salido del camino.
 
 ### "como" + """ (22 occurrences)
 - Predicted: None
@@ -334,31 +358,15 @@ Accuracy: 99.88%
   - Empezó a llorar y a quejarse, diciendo cosas como "¡No es justo!"
   - En Inglaterra al metro no se lo conoce como "subway", sino como "underground".
 
-### "haber" + "me" (22 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Deberías haberme dicho antes.
-  - Ella me pidió perdón por haberme pisado el pie.
-  - Ella se volvió loca conmigo por haberme salido del camino.
-
-### "una" + """ (21 occurrences)
+### "dicho" + """ (21 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - En el ejército le pusieron una "X" en su mano izquierda.
-  - En francés es una "tomografía por emisión de positrones".
-  - Es una "A".
-
-### "dicho" + """ (19 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
+  - Antes has dicho "buma".
   - Creo que ha dicho "júdete".
   - Ha dicho "Shino".
-  - Ha dicho "un montón".
 
-### """ + "significa" (17 occurrences)
+### """ + "significa" (19 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -366,7 +374,15 @@ Accuracy: 99.88%
   - "Arnaud Ripper" significa algo para usted.
   - "El príncipe de las tinieblas" significa "Satanás".
 
-### "del" + """ (16 occurrences)
+### "¿" + "Y" (19 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Y Chachita?
+  - ¿ Y a ti?
+  - ¿ Y a usted qué le importa?
+
+### "del" + """ (18 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -390,13 +406,21 @@ Accuracy: 99.88%
   - Es "El almuerzo de los remeros" de Renoir.
   - Es "El camino de la esperanza".
 
-### "tu" + """ (14 occurrences)
+### "tu" + """ (15 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - A la mierda con tu "hola".
   - Cállate y come tu "paratha".
   - Es hora de enseñarle a tu "madre" lo que eres realmente, Howl.
+
+### """ + "que" (14 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Así que, ¡yo merezco mucho de "aquellos" por muchos "estos" que he dado!
+  - El mejor "calavera" que la gente tiene.
+  - Eso es el "Akira" que querías encontrar.
 
 ### """ + "dijo" (13 occurrences)
 - Predicted: None
@@ -406,13 +430,29 @@ Accuracy: 99.88%
   - "Dios es nuestra salvación," dijo el sacerdote.
   - "En mi vida he leído un libro" dijo Tom.
 
-### """ + "que" (13 occurrences)
+### "al" + """ (13 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Así que, ¡yo merezco mucho de "aquellos" por muchos "estos" que he dado!
-  - El mejor "calavera" que la gente tiene.
-  - Eso es el "Akira" que querías encontrar.
+  - Ahora vamos al "Comando Tercero".
+  - Carajo, ¿esto no era para apoyar al "calavera"?
+  - Casi olvido al "Vengador."
+
+### "dije" + """ (13 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Dijiste papá te llamó, así que dije "huh".
+  - Le dije "buenas noches".
+  - Me levanté y le dije "Excelente, ya se ha divertido." y quise marcharme.
+
+### "era" + """ (13 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Así que ella era "La India", y mi padre era "El Guapo".
+  - Así que ella era "La India", y mi padre era "El Guapo".
+  - Aunque creí que en esta ciudad, el sistema era "uno tú, uno yo".
 
 ### "llamado" + """ (13 occurrences)
 - Predicted: None
@@ -422,29 +462,61 @@ Accuracy: 99.88%
   - Así que lo he llamado "Heathcliff", como mi hermano fallecido.
   - Chatur era llamado "Silenciador".
 
-### "al" + """ (12 occurrences)
+### "para" + """ (13 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Ahora vamos al "Comando Tercero".
-  - Carajo, ¿esto no era para apoyar al "calavera"?
-  - Casi olvido al "Vengador."
+  - Bueno, utilicé parte del caso para "Los intrusos de la cloaca".
+  - Dos veces para "no".
+  - El pedido es para "Ready Demolitions" en Tucson, Arizona.
 
-### "dije" + """ (12 occurrences)
+### "¿" + "Cómo" (13 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Dijiste papá te llamó, así que dije "huh".
-  - Le dije "buenas noches".
-  - Me levanté y le dije "Excelente, ya se ha divertido." y quise marcharme.
+  - ¿ Cómo la distinguirás?
+  - ¿ Cómo lo sabes?
+  - ¿ Cómo pretende hacerlo?
 
-### "era" + """ (12 occurrences)
+### "digas" + """ (12 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Así que ella era "La India", y mi padre era "El Guapo".
-  - Así que ella era "La India", y mi padre era "El Guapo".
-  - Aunque creí que en esta ciudad, el sistema era "uno tú, uno yo".
+  - Me entristece que digas "eres un principiante y siempre lo serás".
+  - No digas "debe estar esperando".
+  - No digas "odio".
+
+### """ + "para" (11 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Cabo" para ti no, Vince.
+  - "Shondesh" para Devdas.
+  - Doble "lagaan" para toda la provincia.
+
+### """ + "por" (11 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Así que, ¡yo merezco mucho de "aquellos" por muchos "estos" que he dado!
+  - Es inaceptable lo que sienten los niños "queer" por culpa de los reaccionarios.
+  - Lo llaman "el poeta del pueblo" por algo.
+
+### """ + "se" (11 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Chatarra" se queda corto.
+  - "Memsahib" se llama Elizabeth.
+  - A menudo a la palabra "teoría" se le da un mal uso.
+
+### "," + ""¿" (11 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Con la más profunda ternura dijo ella, "¿Estás bien?"
+  - Debes preguntarte a ti mismo, "¿Por qué creo lo que yo creo?"
+  - Dices, "¿perritos calientes?"
 
 ### "Joe" + """ (11 occurrences)
 - Predicted: None
@@ -454,21 +526,29 @@ Accuracy: 99.88%
   - Excepto a Joe "Descalzo".
   - Joe "Descalzo" Jackson regresará a jugar.
 
-### "digas" + """ (11 occurrences)
+### "Y" + """ (11 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Me entristece que digas "eres un principiante y siempre lo serás".
-  - No digas "debe estar esperando".
-  - No digas "odio".
+  - Y "Mamá Rosa"?
+  - Y "Negrita" en algo juvenil, más juguetón.
+  - Y "buma".
 
-### "para" + """ (11 occurrences)
+### "decía" + """ (11 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Dos veces para "no".
-  - El pedido es para "Ready Demolitions" en Tucson, Arizona.
-  - Es hora de un día para "yo".
+  - Ella casi decía "no sé".
+  - Entonces no se decía "joderla".
+  - Había un cartel que decía "No pisar el césped".
+
+### "¿" + "verdad" (11 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Hay epidemia, ¿ verdad?
+  - Las rosas son las que más le gustaban, ¿ verdad?
+  - No eres camionero, ¿ verdad?
 
 ### "—" + "respondió" (11 occurrences)
 - Predicted: Space
@@ -478,21 +558,21 @@ Accuracy: 99.88%
   - El Orangerie está junto a Polly’s —respondió—.
   - Es mucho más de lo que Dracosson os pagaría —respondió.
 
-### """ + "por" (10 occurrences)
+### """ + "está" (10 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Así que, ¡yo merezco mucho de "aquellos" por muchos "estos" que he dado!
-  - Es inaceptable lo que sienten los niños "queer" por culpa de los reaccionarios.
-  - Lo llaman "el poeta del pueblo" por algo.
+  - "Chef" está diseñado para hacer lucir a los programas como recetas de cocina.
+  - "Nosotros" está bien, "comer" ¿cuál es el pretérito perfecto?
+  - "Peligroso" está exagerando, Sr. Müller.
 
-### """ + "se" (10 occurrences)
+### """ + "me" (10 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Chatarra" se queda corto.
-  - "Memsahib" se llama Elizabeth.
-  - A menudo a la palabra "teoría" se le da un mal uso.
+  - "Alfa" me lo gané porque fui la mejor de mi promoción.
+  - "Isabel" me llama.
+  - "Tal cual" me la imaginaba.
 
 ### """ + "¡" (10 occurrences)
 - Predicted: None
@@ -502,14 +582,6 @@ Accuracy: 99.88%
   - "El terror en nuestra ciudad se ha cobrado una nueva víctima" ¡Hable más alto!
   - "Invitación para la boda de Niu y Wei" ¡Lograste casarte!
 
-### "," + ""¿" (10 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Con la más profunda ternura dijo ella, "¿Estás bien?"
-  - Debes preguntarte a ti mismo, "¿Por qué creo lo que yo creo?"
-  - Dices, "¿perritos calientes?"
-
 ### "La" + """ (10 occurrences)
 - Predicted: None
 - Actual: Space
@@ -517,6 +589,14 @@ Accuracy: 99.88%
   - La "Doncella del Clima" era como una chamán, ¿verdad?
   - La "Mona Lisa" tiene una hermana.
   - La "Pierna Peluda" que salta, ¡Sería un éxito en Luanda!
+
+### "llamaba" + """ (10 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Attiliuccio, con conocimiento de causa, lo llamaba "el superchocho".
+  - Clara lo llamaba "la cárcel".
+  - Cuando yo tenía tu edad, la televisión se llamaba "libros".
 
 ### """ + "-" (9 occurrences)
 - Predicted: None
@@ -526,13 +606,13 @@ Accuracy: 99.88%
   - "Te amo" - Nunca podría decir algo así.
   - "¡¡Tu ejército es impotente frente al mío!!" -rió él.
 
-### """ + "para" (9 occurrences)
+### """ + "con" (9 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Cabo" para ti no, Vince.
-  - "Shondesh" para Devdas.
-  - Doble "lagaan" para toda la provincia.
+  - Esa gente diría "Te quiero" con un ligero tartamudeo.
+  - Está bien, si no tiene miedo, vamos a "chazar" con mi "chupín".
+  - La persona saludó a Bill, mientras éste mezcló "Qué tal" con "Cómo va".
 
 ### "-" + "¿" (9 occurrences)
 - Predicted: None
@@ -541,6 +621,14 @@ Accuracy: 99.88%
   - Eran Sara y Je- ¿Estaban Sara y Jessica allí?
   - Espera, ¿está- ¿Lo eres?
   - Fui el otro día, ellos tienen unos tomates cherry - ¿Los Sargentos Jones?
+
+### "Pepe" + """ (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Oye, es Pepe "El Toro".
+  - Pepe "El Toro" es inocente.
+  - Pepe "El Toro" está perdido, hay demasiadas pruebas en su contra.
 
 ### "conocer" + "te" (9 occurrences)
 - Predicted: Space
@@ -566,14 +654,6 @@ Accuracy: 99.88%
   - Debes meses y ni siquiera dices "buenos días".
   - Les gusta cuando dices "Alá el akbar" y todo eso.
 
-### "llamaba" + """ (9 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Attiliuccio, con conocimiento de causa, lo llamaba "el superchocho".
-  - Cuando yo tenía tu edad, la televisión se llamaba "libros".
-  - El periódico se llamaba "Pif el Perro", y no "Hercule el Gato".
-
 ### "llamaban" + """ (9 occurrences)
 - Predicted: None
 - Actual: Space
@@ -598,6 +678,14 @@ Accuracy: 99.88%
   - Debes dejar el nombre "Bolsón" atrás.
   - Ha dicho el nombre "de ella".
 
+### "qué" + """ (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Entonces, ¿de qué "tipo" parezco?
+  - Por qué "mi"?
+  - ¡Ah qué "Torito"!
+
 ### "su" + """ (9 occurrences)
 - Predicted: None
 - Actual: Space
@@ -606,29 +694,13 @@ Accuracy: 99.88%
   - Haga un análisis de sangre a su "esposa".
   - Sé de tu Sergey y de su "situación".
 
-### "¿" + "Cómo" (9 occurrences)
+### """ + "al" (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - ¿ Cómo la distinguirás?
-  - ¿ Cómo lo sabes?
-  - ¿ Cómo pretende hacerlo?
-
-### """ + "con" (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Esa gente diría "Te quiero" con un ligero tartamudeo.
-  - Está bien, si no tiene miedo, vamos a "chazar" con mi "chupín".
-  - La persona saludó a Bill, mientras éste mezcló "Qué tal" con "Cómo va".
-
-### """ + "está" (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Nosotros" está bien, "comer" ¿cuál es el pretérito perfecto?
-  - "Peligroso" está exagerando, Sr. Müller.
-  - "V" está bien.
+  - Con "r" al final.
+  - Decirle "sí" al futuro significaba decirle "adiós" a mi papá, para siempre.
+  - El "hombre" al que viste es en realidad una mujer.
 
 ### """ + "fue" (8 occurrences)
 - Predicted: None
@@ -638,14 +710,6 @@ Accuracy: 99.88%
   - "Helga" fue uno.
   - "Hoess" fue el otro.
 
-### """ + "me" (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Alfa" me lo gané porque fui la mejor de mi promoción.
-  - "El País" me encargó un reportaje sobre usted para el dominical en color.
-  - "Tal cual" me la imaginaba.
-
 ### "," + "'" (8 occurrences)
 - Predicted: None
 - Actual: Space
@@ -654,21 +718,13 @@ Accuracy: 99.88%
   - Le dije, 'Has buscado abajo del respaldo del sofá?'
   - Le he dado el nombre de Génesis, 'Nacimiento'.
 
-### "Y" + """ (8 occurrences)
+### "Dijo" + """ (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Y "Mamá Rosa"?
-  - Y "gracias a Dios", como se suele decir.
-  - Y "las once"?
-
-### "decía" + """ (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ella casi decía "no sé".
-  - Entonces no se decía "joderla".
-  - Había un cartel que decía "No pisar el césped".
+  - Dijo "Pa".
+  - Dijo "culata"?
+  - Dijo "mamá".
 
 ### "digo" + """ (8 occurrences)
 - Predicted: None
@@ -686,6 +742,14 @@ Accuracy: 99.88%
   - Dijo que podría cancelar el "lagaan" tres años.
   - Entonces, ¿tu abuela pagará el "lagaan"?
 
+### "ese" + """ (8 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Eh, Rubio, ¿no es ese "Ojos de Ángel"?
+  - Ese pacto, vienes una y otra vez con ese "pacto".
+  - Fue ese "por favor" el que recuerdo.
+
 ### "llamamos" + """ (8 occurrences)
 - Predicted: None
 - Actual: Space
@@ -693,6 +757,14 @@ Accuracy: 99.88%
   - A John, el chico más alto de nuestra clase, le llamamos "Don Alto".
   - En los barcos, lo llamamos "mal de ojo".
   - Las llamamos "the nails".
+
+### "lo" + """ (8 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ah, excepto por lo "verdadero", el resto está bien.
+  - Desde mañana no lo "haremos" en ninguna parte.
+  - En Estados Unidos, cuando alguien es despedido, se dice que lo "decapitaron".
 
 ### "no" + """ (8 occurrences)
 - Predicted: None
@@ -702,21 +774,29 @@ Accuracy: 99.88%
   - Bueno, en realidad no "dice" nada.
   - El periódico se llamaba "Pif el Perro", y no "Hercule el Gato".
 
-### "qué" + """ (8 occurrences)
+### "por" + """ (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Entonces, ¿de qué "tipo" parezco?
-  - Por qué "mi"?
-  - ¿Por qué "difícilmente"?
+  - Dejando de lado lo extrasensorial, ¿qué entiende por "vibraciones"?
+  - Doctor qué se hace por "la paralítica".
+  - El nombre empezaba por "A".
 
 ### "ser" + """ (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
+  - El ser "play" acaba en donde empieza la intolerancia.
   - En realidad siempre quise ser "Tereza Victória".
   - Podría ser "Pixan."
-  - Quiero ser "limpiadora".
+
+### "¿" + "Quién" (8 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Quién apuesta por mí?
+  - ¿ Quién es esa cualquiera?
+  - ¿ Quién es ese hombre?
 
 ### """ + "Jackson" (7 occurrences)
 - Predicted: None
@@ -726,13 +806,13 @@ Accuracy: 99.88%
   - Joe "Descalzo" Jackson regresará a jugar.
   - Joe "Descalzo" Jackson, los White Sox, todos.
 
-### """ + "al" (7 occurrences)
+### """ + "del" (7 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Decirle "sí" al futuro significaba decirle "adiós" a mi papá, para siempre.
-  - El "hombre" al que viste es en realidad una mujer.
-  - En español se usa "tú" al hablar con Dios.
+  - Bienvenidos al crucero "Bosque" del Yangtze.
+  - El "y" del cuatro.
+  - El "y" del dos.
 
 ### """ + "era" (7 occurrences)
 - Predicted: None
@@ -741,14 +821,6 @@ Accuracy: 99.88%
   - "Christie Love" era una serie de Pam Grier, pero sin Pam Grier.
   - Cuando era niño, era tan pobre que pensaba que "No se vende" era una marca.
   - De todas formas "la fecha de caducidad" era de hace dos meses.
-
-### """ + "son" (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Castillo", "volante" y "tren" son polisémicos.
-  - "Cielo" y "corazón" son palabras de cariño en español.
-  - "Oso", "ojo", "ala", "Ana", "Oto" y "anilina" son palíndromos.
 
 ### """ + "tiene" (7 occurrences)
 - Predicted: None
@@ -782,6 +854,14 @@ Accuracy: 99.88%
   - Epa, hijo de- ¡ouch!
   - Llámalo un abismo - ¡Qué profundo que es!
 
+### "Con" + """ (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Con "La divina comedia".
+  - Con "M" mayúscula, y una enorme tilde para marcar bien el acento.
+  - Con "Y".
+
 ### "Dije" + """ (7 occurrences)
 - Predicted: None
 - Actual: Space
@@ -789,14 +869,6 @@ Accuracy: 99.88%
   - Dije "buenas noches" a mis padres y me fui a dormir.
   - Dije "como un hijo".
   - Dije "error", pero fue casi un crimen.
-
-### "Dijo" + """ (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Dijo "Pa".
-  - Dijo "culata"?
-  - ¿Dijo "Ah", "Oh", o fue simplemente un gemido?
 
 ### "Significa" + """ (7 occurrences)
 - Predicted: None
@@ -806,6 +878,14 @@ Accuracy: 99.88%
   - Significa "Sinceridad".
   - Significa "cómo estás".
 
+### "Un" + """ (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Un "arma-pedos".
+  - Un "calavera", carajo.
+  - Un "edificio fantasma"?
+
 ### "diga" + """ (7 occurrences)
 - Predicted: None
 - Actual: Space
@@ -814,13 +894,21 @@ Accuracy: 99.88%
   - Entonces diga "ah".
   - Esto es lo que tienes que hacer cuando te diga "acaba con un hijo de perra".
 
-### "ese" + """ (7 occurrences)
+### "dijo" + "—" (7 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Creo que deberíamos abordar esto con cierta delicadeza —dijo—.
+  - Es más fácil guardar un secreto cuando sabes exactamente cuál es —dijo—.
+  - Navegué en un barco de tres mástiles por el mar de Partman —dijo—.
+
+### "esa" + """ (7 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Eh, Rubio, ¿no es ese "Ojos de Ángel"?
-  - Ese pacto, vienes una y otra vez con ese "pacto".
-  - Fue ese "por favor" el que recuerdo.
+  - Amigo, dame esa "polla".
+  - Canta country, rock, clásico, como esa "Ave María".
+  - No sé de qué se trata esa "memoria visual".
 
 ### "las" + """ (7 occurrences)
 - Predicted: None
@@ -838,13 +926,13 @@ Accuracy: 99.88%
   - Dando origen a una conciencia que puedo llamar "yo".
   - Me iban a llamar "Brush" Carter.
 
-### "por" + """ (7 occurrences)
+### "más" + """ (7 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Dejando de lado lo extrasensorial, ¿qué entiende por "vibraciones"?
-  - El nombre empezaba por "A".
-  - Me pasaré por "Starts" y luego veré a Yoshikawa esta noche.
+  - Me gusta más "Indiana".
+  - Nos gusta más "Aquarius".
+  - Prefiero más "Bobbi", señor Euclides.
 
 ### "se" + "pa" (7 occurrences)
 - Predicted: Space
@@ -870,6 +958,14 @@ Accuracy: 99.88%
   - Estuvo exquisita —respondí—.
   - Lo hago cuando no estoy en casa —respondí.
 
+### """ + "como" (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Hoy el maestro escogió "la cultura china" como tema.
+  - Hágale preguntas que requieran "sí" o "no" como respuesta.
+  - No debería haber usado la palabra "contraseña" como contraseña.
+
 ### """ + "pero" (6 occurrences)
 - Predicted: None
 - Actual: Space
@@ -878,13 +974,21 @@ Accuracy: 99.88%
   - Hay una palabra con una "a" pero no se pronuncia.
   - Nuestro amor no era "seguro" pero no era algo tonto.
 
-### "Con" + """ (6 occurrences)
+### """ + "son" (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Con "La divina comedia".
-  - Con "M" mayúscula, y una enorme tilde para marcar bien el acento.
-  - Con "Y".
+  - "Castillo", "volante" y "tren" son polisémicos.
+  - "Cielo" y "corazón" son palabras de cariño en español.
+  - "Oso", "ojo", "ala", "Ana", "Oto" y "anilina" son palíndromos.
+
+### "Cómo" + """ (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Cómo "tomizado"?
+  - ¿Cómo "Jacú" se hizo rico?
+  - ¿Cómo "Terry-Torio"?
 
 ### "Di" + """ (6 occurrences)
 - Predicted: None
@@ -902,29 +1006,13 @@ Accuracy: 99.88%
   - Dice "depósito de agua".
   - Dice "hola" y él dispara.
 
-### "Un" + """ (6 occurrences)
+### "dicen" + """ (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Un "calavera", carajo.
-  - Un "edificio fantasma"?
-  - Un "heil" pequeñito.
-
-### "dijo" + "—" (6 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Creo que deberíamos abordar esto con cierta delicadeza —dijo—.
-  - Es más fácil guardar un secreto cuando sabes exactamente cuál es —dijo—.
-  - Navegué en un barco de tres mástiles por el mar de Partman —dijo—.
-
-### "esa" + """ (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Amigo, dame esa "polla".
-  - Canta country, rock, clásico, como esa "Ave María".
-  - No sé de qué se trata esa "memoria visual".
+  - Es por eso que le dicen "Pájaro".
+  - Los budistas nos dicen "la vida es un mar de amargura".
+  - Me dicen "Derek".
 
 ### "llamarme" + """ (6 occurrences)
 - Predicted: None
@@ -942,21 +1030,21 @@ Accuracy: 99.88%
   - No me llames "Paul".
   - No me llames "cariño".
 
-### "llamo" + """ (6 occurrences)
+### "son" + """ (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - El grupito, los llamo "el grupito".
-  - En el último mes desarrolló un fraude al que llamo "el flotador".
-  - La llamo "A a la Z" porque todo empezó y terminó con ella.
+  - Benitez, ¿quiénes son "ustedes"?
+  - No son "tarjetas".
+  - No son "únicos".
 
-### """ + "como" (5 occurrences)
+### """ + "aquí" (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Hoy el maestro escogió "la cultura china" como tema.
-  - Hágale preguntas que requieran "sí" o "no" como respuesta.
-  - No debería haber usado la palabra "contraseña" como contraseña.
+  - Agrega "Judío" aquí.
+  - Busca "Radio venceremos" aquí.
+  - Hay muchas "A" aquí.
 
 ### """ + "cuando" (5 occurrences)
 - Predicted: None
@@ -965,14 +1053,6 @@ Accuracy: 99.88%
   - No uses "descubrir" cuando quieres decir "inventar".
   - Solía llamarte "gitlee" cuando éramos niños.
   - ¿Por qué se dice "Buenos días" cuando el día no es bueno?
-
-### """ + "del" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Bienvenidos al crucero "Bosque" del Yangtze.
-  - El "y" del cuatro.
-  - El "y" del dos.
 
 ### """ + "lo" (5 occurrences)
 - Predicted: None
@@ -1006,13 +1086,13 @@ Accuracy: 99.88%
   - "Criterio" viene del latín, "criterium."
   - "Occident" viene del verbo latino "occido", que significa "mato".
 
-### """ + "ya" (5 occurrences)
+### "Decir" + """ (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Qué Grosero, Viejo" ya no existe?
-  - Diciendo "lo siento" ya está solucionado, ¿no?
-  - El show "Qué Grosero, Viejo" ya no existe.
+  - Decir "no podemos tomar esa ruta", aunque supiera que habría que tomarla.
+  - Decir "no" es lo único que no puedo decir.
+  - Decir "siempre" o "nunca" desinfla las afirmaciones.
 
 ### "Dijiste" + """ (5 occurrences)
 - Predicted: None
@@ -1021,6 +1101,14 @@ Accuracy: 99.88%
   - Dijiste "Mala suerte".
   - ¿Dijiste "Aquarius"?
   - ¿Dijiste "etiqueta de tren en el asa"?
+
+### "Ese" + """ (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ese "buen tipo" hizo una gran cosa hoy.
+  - Ese "tío" va a por mí.
+  - Ese "usted" me hundió hasta el quinto círculo del infierno.
 
 ### "Isar" + """ (5 occurrences)
 - Predicted: None
@@ -1037,6 +1125,14 @@ Accuracy: 99.88%
   - Son "Imperiales".
   - Son "camioneros".
   - Son "dados", cariño.
+
+### "Tu" + """ (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tu "chorreada".
+  - Tu "tadka daal" favorito, "aloo ki sabzi" y "kheer".
+  - ¡Tu "pico", Antillano, es lo que el cartero vio!
 
 ### "Una" + """ (5 occurrences)
 - Predicted: None
@@ -1062,13 +1158,13 @@ Accuracy: 99.88%
   - La mayoría de estas ideas ni se me habrían ocurrido —contesté—.
   - Siempre podemos cambiar la fecha de una reunión concreta —contesté—.
 
-### "dicen" + """ (5 occurrences)
+### "dijiste" + """ (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Es por eso que le dicen "Pájaro".
-  - Los budistas nos dicen "la vida es un mar de amargura".
-  - No, esa broma se la haces a mi vecino, le dicen "Chalado".
+  - Me dijiste "gallito".
+  - ¿ A quién le dijiste "rata"?
+  - ¿En serio dijiste "fulminar"?
 
 ### "escribe" + """ (5 occurrences)
 - Predicted: None
@@ -1077,6 +1173,14 @@ Accuracy: 99.88%
   - "Lón", ¿cómo se escribe "lón"?
   - No se escribe "desgraciado" porque sí.
   - ¿Cómo se escribe "Rubita"?
+
+### "está" + """ (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ahí está "la tísica", ve a correrla tú.
+  - Entonces, ¿dónde diablos está "seguro"?
+  - Hasta entonces, aquí está "Roobaroo".
 
 ### "gritó" + """ (5 occurrences)
 - Predicted: None
@@ -1118,21 +1222,21 @@ Accuracy: 99.88%
   - Estar en una banda que se llame "Buzzcocks".
   - Nadie quiere ir a un club que se llame "Brocheta de Pollo".
 
-### "lo" + """ (5 occurrences)
+### "llamo" + """ (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Ah, excepto por lo "verdadero", el resto está bien.
-  - Desde mañana no lo "haremos" en ninguna parte.
-  - En Estados Unidos, cuando alguien es despedido, se dice que lo "decapitaron".
+  - En el último mes desarrolló un fraude al que llamo "el flotador".
+  - La llamo "A a la Z" porque todo empezó y terminó con ella.
+  - No me llamo "chicos".
 
-### "más" + """ (5 occurrences)
+### "llamó" + """ (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Me gusta más "Indiana".
-  - Nos gusta más "Aquarius".
-  - Prefiero más "Bobbi", señor Euclides.
+  - Pero creo que lo llamó "Emperador" o algo así.
+  - Se llamó "Tienen Cuatro Pulgares".
+  - Te llamó "Excelencia", desobedeciendo las órdenes de Garibaldi.
 
 ### "palabras" + """ (5 occurrences)
 - Predicted: None
@@ -1150,6 +1254,22 @@ Accuracy: 99.88%
   - Debo haber dicho sus "cuartos traseros".
   - Eran sus "Perritas de Diamante".
 
+### "ver" + """ (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Acabo de ver "Sol del desierto".
+  - Fernando tiene muchas ganas de ver "Tiburón".
+  - Fuimos a ver "Náufrago".
+
+### "¿" + "Cuál" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Cuál "amor"?
+  - ¿ Cuál banda?
+  - ¿ Cuál tocayo?
+
 ### "¿" + "Quieres" (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1157,14 +1277,6 @@ Accuracy: 99.88%
   - ¿ Quieres echarle un pulso a Jugovich?
   - ¿ Quieres oír un tren?
   - ¿ Quieres quedarte solo?
-
-### "¿" + "Y" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ¿ Y el camionero?
-  - ¿ Y en el mejor?
-  - ¿ Y si dejas de sobarme y te comportas como un caballero, al igual que tu amigo?
 
 ### """ + "Ray" (4 occurrences)
 - Predicted: None
@@ -1174,13 +1286,21 @@ Accuracy: 99.88%
   - No quedaban buenos apodos y se quedó con "Sólo" Ray.
   - Todos le llamaban "Sólo" Ray, pero Val le llamaba "el calderilla".
 
-### """ + "aquí" (4 occurrences)
+### """ + "dice" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Agrega "Judío" aquí.
-  - Hay muchas "A" aquí.
-  - ¿Está la "memsahib" aquí?
+  - "Fumar mata" dice.
+  - "Memsahib" dice que os ayudará a entender el juego.
+  - "Sí, zumo de naranja por favor," dice Mike.
+
+### """ + "la" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Cuando los "carabinieri" la mataron estaba apretujada contra Antonio Canepa.
+  - Los periódicos a menudo "adaptan" la verdad.
+  - Que Rosario escribiera "Tarttalo" la conecta con el inductor de los otros casos.
 
 ### """ + "preguntó" (4 occurrences)
 - Predicted: None
@@ -1190,6 +1310,22 @@ Accuracy: 99.88%
   - "¿El vive con una princesa?" preguntó Gerda.
   - "¿Por qué?" preguntó la hija, un poquitín irritada.
 
+### """ + "todo" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Bambino" todo el día puesto y unas tapas para morirte.
+  - Puedes "verlo" todo escuchando.
+  - Y ya deja de decir "está bien" todo el tiempo.
+
+### """ + "ya" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Diciendo "lo siento" ya está solucionado, ¿no?
+  - El show "Qué Grosero, Viejo" ya no existe.
+  - Pero desde "Papa Don't Preach" ya no.
+
 ### "," + "«" (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1197,14 +1333,6 @@ Accuracy: 99.88%
   - Ah, «Family Feud».
   - Como dice el adagio, «aquello en lo que te enfocas crece».
   - Keith», dije durante la travesía de vuelta a vela, «hay algo que no entiendo.
-
-### "," + "¿" (4 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Así que,¿de veras eres una realizadora de cine?
-  - Os salisteis bien,¿no?
-  - Papá,¿qué estás haciendo?
 
 ### "." + """ (4 occurrences)
 - Predicted: None
@@ -1230,21 +1358,13 @@ Accuracy: 99.88%
   - Se quedó prendada de Bhuvan "Bhaiyya."
   - ¡Allí está, Bhuvan "Bhaiyya"!
 
-### "Cómo" + """ (4 occurrences)
+### "Busca" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Cómo "tomizado"?
-  - ¿Cómo "Terry-Torio"?
-  - ¿Cómo "más"?
-
-### "Decir" + """ (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Decir "no podemos tomar esa ruta", aunque supiera que habría que tomarla.
-  - Decir "no" es lo único que no puedo decir.
-  - ¡Decir "lo siento" no es suficiente!
+  - Busca "Cherry Cherry".
+  - Busca "Radio venceremos" aquí.
+  - Busca "idiota" en Wikipedia, y adivina qué.
 
 ### "En" + """ (4 occurrences)
 - Predicted: None
@@ -1262,6 +1382,14 @@ Accuracy: 99.88%
   - Justo encima de las puertas principales —dijo Keith—.
   - Querida Amanda —respondió Keith—, un ladrón habría atacado en la calle.
 
+### "Pero" + """ (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Pero "amar", solo una vez.
+  - Pero "lleganos", lo "prometinos" y lo "cumplinos."
+  - Pero "tú" carece de sentido ahora.
+
 ### "decirle" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1278,14 +1406,6 @@ Accuracy: 99.88%
   - La gente no va por la calle diciendo "¡Hoy voy a tener relaciones sexuales!".
   - ¿Está diciendo "violación"?
 
-### "dijiste" + """ (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Me dijiste "gallito".
-  - ¿En serio dijiste "fulminar"?
-  - ¿No dijiste "ríe, sonríe, vive"?
-
 ### "diría" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1293,6 +1413,14 @@ Accuracy: 99.88%
   - Bueno, yo no diría "y esas cosas".
   - Esa gente diría "Te quiero" con un ligero tartamudeo.
   - ¡Qué diría "lo siento, cariño"!
+
+### "eres" + """ (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Estás diciendo que eres "Totoro", ¿verdad?
+  - Se creerán cada palabra porque eres "guay".
+  - Te creí bajo y ruin, pero eres "pior" que eso.
 
 ### "escribir" + """ (4 occurrences)
 - Predicted: None
@@ -1310,14 +1438,6 @@ Accuracy: 99.88%
   - Darwin escribió "El origen de las especies".
   - ¿Quién escribió "El Príncipe"?
 
-### "está" + """ (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Entonces, ¿dónde diablos está "seguro"?
-  - Hasta entonces, aquí está "Roobaroo".
-  - No está "raído".
-
 ### "grupo" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1325,14 +1445,6 @@ Accuracy: 99.88%
   - "Las alas", del grupo "Nautilos".
   - El grupo "Nautilos" canta.
   - Es un estúpido, sólo escucha al grupo "Nautilos".
-
-### "llamó" + """ (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Se llamó "Tienen Cuatro Pulgares".
-  - Te llamó "Excelencia", desobedeciendo las órdenes de Garibaldi.
-  - Variety me llamó "el Mark Twain obrero".
 
 ### "película" + """ (4 occurrences)
 - Predicted: None
@@ -1350,14 +1462,6 @@ Accuracy: 99.88%
   - No te metas en esto y piérdete.
   - Vale, Carlo, piérdete.
 
-### "son" + """ (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - No son "tarjetas".
-  - No son "únicos".
-  - Todas estas piedras son "nilosa", vienen del Nilo, especialmente.
-
 ### "soy" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1374,21 +1478,13 @@ Accuracy: 99.88%
   - ¿Qué tal "CLAY"?
   - ¿Qué tal "las colinas reviven entonando el contrapunto"?
 
-### "ver" + """ (4 occurrences)
+### "¿" + "Que" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Acabo de ver "Sol del desierto".
-  - Fernando tiene muchas ganas de ver "Tiburón".
-  - Mientras reflexionaba sobre ese tipo de cosas, volví a ver "Sopa de Ganso".
-
-### "¿" + "Quién" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ¿ Quién apuesta por mí?
-  - ¿ Quién es ese hombre?
-  - ¿ Quién te ha preguntado?
+  - ¿ Que es tu tipo Pepe "El Toro"?
+  - ¿ Que está enferma, Chachita?
+  - ¿ Que los pobres no somos también sus hijos?
 
 ### """ + "." (3 occurrences)
 - Predicted: None
@@ -1406,14 +1502,6 @@ Accuracy: 99.88%
   - Significa que vamos a Minnesota a buscar a "Moonlight" Graham.
   - ¿Es usted "Moonlight" Graham?
 
-### """ + "dice" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Memsahib" dice que os ayudará a entender el juego.
-  - "Sí, zumo de naranja por favor," dice Mike.
-  - "¡Cinco!" dice Álex.
-
 ### """ + "estaba" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1422,14 +1510,6 @@ Accuracy: 99.88%
   - Cada "Comando" estaba en un ala aislada.
   - El "kheer" estaba realmente rico.
 
-### """ + "la" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Cuando los "carabinieri" la mataron estaba apretujada contra Antonio Canepa.
-  - Los periódicos a menudo "adaptan" la verdad.
-  - ¿Cómo te atreves a llamar "miserable" la boda de tu primo?
-
 ### """ + "porque" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1437,6 +1517,22 @@ Accuracy: 99.88%
   - Como "Clowns Laughing At You" porque todo es por diversión.
   - La llamo "A a la Z" porque todo empezó y terminó con ella.
   - No se escribe "desgraciado" porque sí.
+
+### """ + "quiere" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Argi Beltz" quiere decir "luz negra".
+  - "Basajaun" quiere decir "el señor del bosque" en euskera.
+  - ¿"Tumor" quiere decir lo mismo que "cáncer"?
+
+### """ + "qué" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Y estos "analfabetos" qué van a saber de ley, hombre.
+  - ¿"Sí" qué?
+  - ¿La "J" qué significa?
 
 ### """ + "será" (3 occurrences)
 - Predicted: None
@@ -1462,14 +1558,6 @@ Accuracy: 99.88%
   - Las "Dagas Voladoras" tienen muchos jefes.
   - Los "mondoshawan" tienen en su posesión el única arma para vencer el mal.
 
-### """ + "todo" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Puedes "verlo" todo escuchando.
-  - Y ya deja de decir "está bien" todo el tiempo.
-  - ÉI lo "escriba" todo.
-
 ### """ + "una" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1494,6 +1582,14 @@ Accuracy: 99.88%
   - Eso va a ser-- No.
   - Molesto -- No.
 
+### "Al" + """ (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Al "Grand Hotel".
+  - Al "teaaatro"?
+  - ¿Al "pantión"?
+
 ### "Amanda" + "»" (3 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1510,13 +1606,21 @@ Accuracy: 99.88%
   - Babinot, se acabaron las vacaciones.
   - Babinot, ¿qué haces?
 
-### "Busca" + """ (3 occurrences)
+### "Como" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Busca "Cherry Cherry".
-  - Busca "idiota" en Wikipedia, y adivina qué.
-  - Busca "llamadas recientes".
+  - Como "Clowns Laughing At You" porque todo es por diversión.
+  - Como "Gracias por haber nacido".
+  - Como "We Are The World".
+
+### "Era" + """ (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Era "El tercer hombre."
+  - Era "Los Tres Reyes Magos".
+  - Era "Mont" algo.
 
 ### "Hombre" + """ (3 occurrences)
 - Predicted: None
@@ -1550,14 +1654,6 @@ Accuracy: 99.88%
   - Los "amigos de la infancia" me dan miedo.
   - Los "mondoshawan" tienen en su posesión el única arma para vencer el mal.
 
-### "Pero" + """ (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Pero "amar", solo una vez.
-  - Pero "tú" carece de sentido ahora.
-  - Pero "yo" no sé bailar.
-
 ### "Piérde" + "te" (3 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1581,14 +1677,6 @@ Accuracy: 99.88%
   - Algo como «El Sol de Spencerport» o «El Sol y las Estrellas de Spencerport».
   - Algo como «El Sol de Spencerport» o «El Sol y las Estrellas de Spencerport».
   - «Spencerport» no aparecía por ninguna parte.
-
-### "Tu" + """ (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Tu "tadka daal" favorito, "aloo ki sabzi" y "kheer".
-  - ¡Tu "pico", Antillano, es lo que el cartero vio!
-  - ¿Tu "tesoro"?
 
 ### "algo" + """ (3 occurrences)
 - Predicted: None
@@ -1622,6 +1710,14 @@ Accuracy: 99.88%
   - Su esposa dirá "Estoy orgullosa que sea mi marido."
   - Su hijo dirá "Estoy orgulloso que sea mi padre."
 
+### "dirán" + """ (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Al oír su nombre, dirán "presente" y abordarán.
+  - De hoy en adelante, dirán "don Pedro", ¿eh?
+  - ¿Por qué les dirán "Esenciales del jazz"?
+
 ### "dos" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1630,13 +1726,13 @@ Accuracy: 99.88%
   - Se supone que es con dos "S".
   - ¿Bien, aquí están las dos "madres"?
 
-### "eres" + """ (3 occurrences)
+### "escribiste" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Estás diciendo que eres "Totoro", ¿verdad?
-  - Se creerán cada palabra porque eres "guay".
-  - ¿Acaso eres "entrega-rápida"?
+  - Espera, escribiste "Morris" mal.
+  - ¿Por qué escribiste "virga" en la pared de mi casa?
+  - ¿Tú escribiste "Bienvenido"?
 
 ### "esto" + """ (3 occurrences)
 - Predicted: None
@@ -1645,6 +1741,14 @@ Accuracy: 99.88%
   - Y esto "Una selección de diez años. "
   - Yo soy el que perdí el dinero, ¡y usted llama a esto "justicia"!
   - ¿Crees que mamá y papá llamarían a esto "casa"?
+
+### "estos" + """ (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Pero estos "gauchos" siguen protestando.
+  - Todos estos "trabajos" existen para paralizar la conciencia humana.
+  - Y estos "analfabetos" qué van a saber de ley, hombre.
 
 ### "frase" + """ (3 occurrences)
 - Predicted: None
@@ -1694,6 +1798,14 @@ Accuracy: 99.88%
   - Luego se paró el motor y alguien dijo 'hola'.
   - Oye un tiro, y antes de eso, 'hola'.
 
+### "llamarla" + """ (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tal vez sea mejor llamarla "Doctora".
+  - También podría llamarla "El ojo" o "La escafandra".
+  - ¿Los demás tenemos que llamarla "jefa"?
+
 ### "llamen" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1734,14 +1846,6 @@ Accuracy: 99.88%
   - Es todo muy "serpentino".
   - Puedes estar muy "glücklich".
 
-### "pone" + """ (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - En éste pone "Boda de Peter y Juliet".
-  - Solo hay un sobre y pone "clips".
-  - Y en éste pone "corral".
-
 ### "puso" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1758,6 +1862,22 @@ Accuracy: 99.88%
   - Más importante que 'qué' es 'cuándo' .
   - Pues no saben dónde van, ni por qué'.
 
+### "show" + """ (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - El show "Qué Grosero, Viejo" ya no existe.
+  - El show "¡Qué Grosero, Viejo!" confirmó todo lo que oí.
+  - Pondré a Hitler en el show "¡Qué Grosero, Viejo!"
+
+### "sobre" + """ (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Algo sobre "Darby".
+  - Escribe un ensayo sobre "La amistad".
+  - Haberla hecho sobre "Mickey Mouse".
+
 ### "tipo" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1765,14 +1885,6 @@ Accuracy: 99.88%
   - Algo tipo "aloha".
   - ¡Y el tipo "cuidadoso" es como su esposa bien vestida!
   - Él es del tipo "haz lo que digo, no lo que hago".
-
-### "tus" + """ (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Conozco tus "segundos".
-  - Yo llevaré a tus "niños" a casa.
-  - ¡Y tus "shondesh" son famosos!
 
 ### "visto" + """ (3 occurrences)
 - Predicted: None
@@ -1782,13 +1894,13 @@ Accuracy: 99.88%
   - ¿Has visto "El planeta de los simios"?
   - ¿Qué puedo hacer, Sweetu, si no he visto "Dil Chahta Hai"?
 
-### "¿" + "verdad" (3 occurrences)
+### "¿" + "Cuánto" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - No eres camionero, ¿ verdad?
-  - Nos obligarás a volver al trabajo con las manos vacías, ¿ verdad?
-  - Todo va viento en popa, ¿ verdad?
+  - ¿ Cuánto quiere por ella?
+  - ¿ Cuánto valdrá?
+  - ¿ Cuánto?
 
 ### "—" + "contestó" (3 occurrences)
 - Predicted: Space
@@ -1805,6 +1917,13 @@ Accuracy: 99.88%
   - " No, no tengo hambre."
   - Los enanos no "recuperan fuerzas" No le preste atención, joven hobbit.
 
+### """ + "antes" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - No, "aterrizamos" antes a la señora.
+  - Sé que oí el nombre "Snakes" antes.
+
 ### """ + "así" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1818,6 +1937,20 @@ Accuracy: 99.88%
 - Examples:
   - "¡Quiquiriquí!" canta el gallo por la mañana.
   - El grupo "Nautilos" canta.
+
+### """ + "después" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Chile, la felicidad está llegando" y "hola" después.
+  - Me encanta un poco de "poesía" después de la cena.
+
+### """ + "digital" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Creo que es un "zoom" digital.
+  - ¡Ha hecho un "zoom" digital!
 
 ### """ + "e" (2 occurrences)
 - Predicted: None
@@ -1846,6 +1979,20 @@ Accuracy: 99.88%
 - Examples:
   - Qué "calorazo" hace.
   - Vi "La guerra de las galaxias" hace unos meses.
+
+### """ + "hasta" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Nunca digas eres miembro de los "Cuerpos Heroicos" hasta morir.
+  - Unas "Kolombias" del Perú y unas "Kolombias" hasta de Argentina.
+
+### """ + "le" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "¡No me conduzcas a la tentación!" le dijo la rana a la mosca.
+  - No sé si la palabra "auto" le hace justicia.
 
 ### """ + "los" (2 occurrences)
 - Predicted: None
@@ -1896,13 +2043,6 @@ Accuracy: 99.88%
   - "No estoy seguro que me gusten esos profiteroles" pensó solemnemente.
   - "Ya está" pensó él.
 
-### """ + "qué" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ¿"Sí" qué?
-  - ¿La "J" qué significa?
-
 ### """ + "respondió" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1931,6 +2071,13 @@ Accuracy: 99.88%
   - Cantará "Suspicious Minds" sobre mi cadáver.
   - Dice "micrófono" sobre el botón.
 
+### """ + "sólo" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Nube inmensa" sólo es un mote que ayuda a sobrevivir.
+  - Me pregunto por qué se pone esos "ajustadores" sólo para los nuevos huéspedes.
+
 ### """ + "tres" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1944,6 +2091,13 @@ Accuracy: 99.88%
 - Examples:
   - "Qué mierda es esto" un carajo.
   - Existe una droga llamada "Timing" un supresor del sueño.
+
+### """ + "ése" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Conservaremos el tiempo" ése es nuestro lema.
+  - ¿ Qué le habrá visto tu mamá al "grifo" ése?
 
 ### "'" + "." (2 occurrences)
 - Predicted: None
@@ -2008,13 +2162,6 @@ Accuracy: 99.88%
   - Es un buen hombre —dijo Agatha—.
   - Las fracturas de las piernas son limpias —anunció Agatha—.
 
-### "Al" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Al "Grand Hotel".
-  - Al "teaaatro"?
-
 ### "Antonio" + "—" (2 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2043,19 +2190,26 @@ Accuracy: 99.88%
   - Con los jefes de las 'Cinco Familias'.
   - Una de las 'Cinco Familias', quizá todas.
 
-### "Como" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Como "Clowns Laughing At You" porque todo es por diversión.
-  - Como "Gracias por haber nacido".
-
 ### "Conoces" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - ¿Conoces "La Macarena"?
   - ¿Conoces "Soolaimon"?
+
+### "Cuál" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Cuál "amor"?
+  - ¿Cuál "todo"?
+
+### "De" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - De "laca".
+  - ¿De "Deux Moulins"?
 
 ### "Desert" + "‑" (2 occurrences)
 - Predicted: Space
@@ -2071,13 +2225,6 @@ Accuracy: 99.88%
   - Dime "heil", jovencito.
   - Dime "heil".
 
-### "Era" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Era "Los Tres Reyes Magos".
-  - Era "Mont" algo.
-
 ### "Esa" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2091,13 +2238,6 @@ Accuracy: 99.88%
 - Examples:
   - Escribió "saludos" al final de la carta y luego firmó su nombre.
   - ¿Escribió "señor"?
-
-### "Ese" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ese "buen tipo" hizo una gran cosa hoy.
-  - Ese "usted" me hundió hasta el quinto círculo del infierno.
 
 ### "Family Feud" + "»" (2 occurrences)
 - Predicted: Space
@@ -2246,6 +2386,13 @@ Accuracy: 99.88%
   - Chicos —anuncié—, no vamos a volver a casa remando con el remo de popa.
   - Me gustaría conocerla —anuncié—.
 
+### "apodan" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Me apodan "La Sombra".
+  - ¿Crees que el Piamontés a quien apodan "El Caballero" será mejor?
+
 ### "aquí" + "»" (2 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2302,6 +2449,13 @@ Accuracy: 99.88%
   - ¿Qué cosa ""sí""?
   - ¿Qué cosa ""vea""?
 
+### "decirme" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - La escuché perfectamente decirme "mamá".
+  - ¿No vas a decirme "heil"?
+
 ### "decían" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2344,13 +2498,6 @@ Accuracy: 99.88%
   - Llévenlo a prisión y luego digan "se ha ido".
   - Y no digan "muy triste".
 
-### "dirán" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Al oír su nombre, dirán "presente" y abordarán.
-  - ¿Por qué les dirán "Esenciales del jazz"?
-
 ### "dirías" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2372,12 +2519,19 @@ Accuracy: 99.88%
   - No esperaba encontrarte en un lugar como éste.
   - ¡Vaya, no esperaba encontrarte aquí a estas horas de la noche!
 
-### "escribiste" + """ (2 occurrences)
+### "entiendo" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Espera, escribiste "Morris" mal.
-  - ¿Tú escribiste "Bienvenido"?
+  - Sí, entiendo "libres".
+  - Sí, entiendo "pum".
+
+### "esos" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Fíjate en todos esos "camineros" borrachos.
+  - Me pregunto por qué se pone esos "ajustadores" sólo para los nuevos huéspedes.
 
 ### "estas" + """ (2 occurrences)
 - Predicted: None
@@ -2442,6 +2596,13 @@ Accuracy: 99.88%
   - Es inútil que grites "auxilio".
   - No importa cuánto grites "¡auuuu!", no te vas a transformar en un lobo.
 
+### "gusta" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Cuando dijiste que te gusta "Fever Dog".
+  - Me gusta "para ti".
+
 ### "libro" + "»" (2 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2463,19 +2624,19 @@ Accuracy: 99.88%
   - O también llamados "conejillos de Indias".
   - Y un grupo de rufianes llamados "Los Payasos" los atacaron.
 
-### "llamarla" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Tal vez sea mejor llamarla "Doctora".
-  - También podría llamarla "El ojo" o "La escafandra".
-
 ### "llamaron" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Los llamaron "autoasesinatos".
   - Siempre te llamaron "Jug".
+
+### "llamábamos" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Antes lo llamábamos "plus".
+  - La llamábamos "Lady E".
 
 ### "llamé" + """ (2 occurrences)
 - Predicted: None
@@ -2490,6 +2651,13 @@ Accuracy: 99.88%
 - Examples:
   - Luego toqué la «m».
   - Se oyó un clic casi imperceptible y apareció una «m» después de la «a».
+
+### "me" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Cuando yo pido una cosa no me "contrasdisgas".
+  - Pero no se me "ancina".
 
 ### "menudo" + """ (2 occurrences)
 - Predicted: None
@@ -2526,6 +2694,13 @@ Accuracy: 99.88%
   - A Kat se le formó una pequeña «o» con la boca—.
   - A Sparhawk se le hizo una pequeña «o» con la boca.
 
+### "pero" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Michael" es un nombre de hombre pero "Michelle" es un nombre de mujer.
+  - Vino pero "no está aquí".
+
 ### "perro" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2539,6 +2714,13 @@ Accuracy: 99.88%
 - Examples:
   - La seguridad, el seguro, es un poco "cheesy" ¿no?
   - ¿Es un poco "suave"?
+
+### "pone" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - En éste pone "Boda de Peter y Juliet".
+  - Y en éste pone "corral".
 
 ### "prometo" + "'" (2 occurrences)
 - Predicted: Space
@@ -2560,6 +2742,13 @@ Accuracy: 99.88%
 - Examples:
   - Le puse "Menú del día".
   - ¡Ya me puse "loco como una cabra"!
+
+### "quiere" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - La nena quiere "marcha", ¿eh?
+  - No quiere "congee".
 
 ### "respondí" + "—" (2 occurrences)
 - Predicted: Space
@@ -2589,19 +2778,19 @@ Accuracy: 99.88%
   - Ejecutaré una ruta "de gancho" en súper cámara lenta.
   - Tengo una ruta "sin pasaporte".
 
+### "se" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Cómo que se "suponía"?
+  - Llore hasta que se "desogue".
+
 ### "señora" + "»" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - «Es mucho más que eso, señora», respondió.
   - «Sí, señora».
-
-### "show" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - El show "Qué Grosero, Viejo" ya no existe.
-  - El show "¡Qué Grosero, Viejo!" confirmó todo lo que oí.
 
 ### "si" + "'" (2 occurrences)
 - Predicted: Space
@@ -2624,13 +2813,6 @@ Accuracy: 99.88%
   - Todos la llamaban "La India", simplemente "La India".
   - ¡Diga simplemente "hello"!
 
-### "sobre" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Algo sobre "Darby".
-  - Escribe un ensayo sobre "La amistad".
-
 ### "somos" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2651,6 +2833,13 @@ Accuracy: 99.88%
 - Examples:
   - Puedes decir también "Prost".
   - ¿No soy también "encantadora"?
+
+### "tan" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Es tan "verde".
+  - Tampoco es tan "despierto" como para hacer él solo algo tan currado.
 
 ### "tanto" + """ (2 occurrences)
 - Predicted: None
@@ -2680,6 +2869,20 @@ Accuracy: 99.88%
   - A mi venida estaban tocando "The Night The Lights Went Out In Georgia".
   - Es Sonic Youth tocando "Superstar" de los Carpenters.
 
+### "tus" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Conozco tus "segundos".
+  - Yo llevaré a tus "niños" a casa.
+
+### "término" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - El viejo se ha apoderado del término "democracia".
+  - Prefiero el término "capitalista aventurero".
+
 ### "viejo" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2707,6 +2910,13 @@ Accuracy: 99.88%
 - Examples:
   - «Oye, ¿hace mucho tiempo que viste a Tom?» - «Pues sí, ¿por qué?»
   - «¿Me amas?» - «Yo no sé.»
+
+### "¿" + "Con" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Con el mismo martillo?
+  - ¿ Con quién hablo?
 
 ### "¿" + "Os" (2 occurrences)
 - Predicted: None
@@ -2742,6 +2952,20 @@ Accuracy: 99.88%
 - Examples:
   - ¿ Un coche?
   - ¿ Un trato?
+
+### "¿" + "Verdad" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Verdad que no oyes?
+  - ¿ Verdad?
+
+### "¿" + "Ya" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Ya patrón?
+  - ¿ Ya trajeron mi madera?
 
 ### "¿" + "cómo" (2 occurrences)
 - Predicted: None
@@ -2875,6 +3099,12 @@ Accuracy: 99.88%
 - Examples:
   - "Señor" Collignon?
 
+### """ + "Eddie" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¡El único e incomparable Clifton "Fou Fou" Eddie en batería!
+
 ### """ + "El" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2935,6 +3165,12 @@ Accuracy: 99.88%
 - Examples:
   - O su sorbete de "Frambuesa" Real.
 
+### """ + "Roldán" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Oye,¿tienes el teléfono de la "Gringa" Roldán?
+
 ### """ + "Si" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2947,11 +3183,23 @@ Accuracy: 99.88%
 - Examples:
   - ¿Sabe lo que dijo la "pobre" Sookee acerca de usted?
 
+### """ + "Verduzco" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - De Tato el "Cursi" Verduzco.
+
 ### """ + "Y" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "No se te vaya a ir, Sam Gamyl" Y no lo permitiré.
+
+### """ + "acaba" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - El ser "play" acaba en donde empieza la intolerancia.
 
 ### """ + "ahora" (1 occurrences)
 - Predicted: None
@@ -2983,11 +3231,17 @@ Accuracy: 99.88%
 - Examples:
   - El "Escarabajo" amarillo.
 
-### """ + "antes" (1 occurrences)
+### """ + "anuncio" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Sé que oí el nombre "Snakes" antes.
+  - LA MENTIRA "Sra. Yolita" anuncio.
+
+### """ + "apañado" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Lo que siento es que no lo "haigan" apañado a él también.
 
 ### """ + "arruina" (1 occurrences)
 - Predicted: None
@@ -3073,11 +3327,11 @@ Accuracy: 99.88%
 - Examples:
   - "Billy Zane" desde arriba, ¿sí?
 
-### """ + "después" (1 occurrences)
+### """ + "desinfla" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Me encanta un poco de "poesía" después de la cena.
+  - Decir "siempre" o "nunca" desinfla las afirmaciones.
 
 ### """ + "dinero" (1 occurrences)
 - Predicted: None
@@ -3090,12 +3344,6 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - He visto "La Guerra de las Galaxias" dos veces.
-
-### """ + "empezó" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Cuando ella dijo "te extrañé" empezó a llorar.
 
 ### """ + "entró" (1 occurrences)
 - Predicted: None
@@ -3175,12 +3423,6 @@ Accuracy: 99.88%
 - Examples:
   - ¿He oído mal, o la palabra "pienso" ha escapado de tus labios?
 
-### """ + "hasta" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Nunca digas eres miembro de los "Cuerpos Heroicos" hasta morir.
-
 ### """ + "hay" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3229,11 +3471,11 @@ Accuracy: 99.88%
 - Examples:
   - "La última noche" jamás iba a funcionar.
 
-### """ + "le" (1 occurrences)
+### """ + "juegas" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "¡No me conduzcas a la tentación!" le dijo la rana a la mosca.
+  - "Mafafo" juegas libre.
 
 ### """ + "llamando" (1 occurrences)
 - Predicted: None
@@ -3301,6 +3543,12 @@ Accuracy: 99.88%
 - Examples:
   - Todo nuestro "progreso técnico" nos ha proporcionado con confort, un estándar.
 
+### """ + "nosotras" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Semos" nosotras.
+
 ### """ + "nuevamente" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3361,17 +3609,17 @@ Accuracy: 99.88%
 - Examples:
   - Estos "almuerzos" prolongados le dan ardor de estómago a mi jefe.
 
+### """ + "puede" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¡Ese "tío" puede ser uno de ellos!
+
 ### """ + "puso" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Por "servido" puso "joder".
-
-### """ + "quiere" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ¿"Tumor" quiere decir lo mismo que "cáncer"?
 
 ### """ + "regrese" (1 occurrences)
 - Predicted: None
@@ -3391,6 +3639,12 @@ Accuracy: 99.88%
 - Examples:
   - "Escopeta" rima con "morisqueta".
 
+### """ + "romántica" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Me lo figuraba, " romántica de porra".
+
 ### """ + "sabe" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3409,6 +3663,12 @@ Accuracy: 99.88%
 - Examples:
   - ¿Por qué "embaixo" se escribe junto y "em cima" separado?
 
+### """ + "señora" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Probe" señora.
+
 ### """ + "siempre" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3420,6 +3680,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Las palabras inglesas "inflammable" y "flammable" significan lo mismo.
+
+### """ + "siguen" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Pero estos "gauchos" siguen protestando.
 
 ### """ + "sino" (1 occurrences)
 - Predicted: None
@@ -3451,12 +3717,6 @@ Accuracy: 99.88%
 - Examples:
   - "Cállate," susurró él.
 
-### """ + "sólo" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Nube inmensa" sólo es un mote que ayuda a sobrevivir.
-
 ### """ + "tenía" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3474,6 +3734,30 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Cuando diga "tres" tus manos quedarán inmóviles.
+
+### """ + "tú" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Aunque esta vez sea la última vez que nos "véamos" tú y yo.
+
+### """ + "unos" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Luego encontramos otra "chica peinada" unos meses más tarde.
+
+### """ + "usó" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Durante el popurrí de "Guitar Man" usó jeans.
+
+### """ + "va" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ese "tío" va a por mí.
 
 ### """ + "van" (1 occurrences)
 - Predicted: None
@@ -3510,12 +3794,6 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Si ponéis "En un mercado persa" yo me quedo en pelotas.
-
-### """ + "ése" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Conservaremos el tiempo" ése es nuestro lema.
 
 ### """" + "habla" (1 occurrences)
 - Predicted: None
@@ -4015,6 +4293,12 @@ Accuracy: 99.88%
 - Examples:
   - MARAVILLAS AMERICANAS "Oye, ser como los demás es ser tonto."
 
+### "Adiós" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Adiós "manguito".
+
 ### "Agrega" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4044,6 +4328,12 @@ Accuracy: 99.88%
 - Actual: None
 - Examples:
   - Alinearlas, alinearlas con un poco de orden, que no suceda como la última vez.
+
+### "Alka" + "–" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Alka–seltzer, ¿por qué?
 
 ### "Alt" + "+" (1 occurrences)
 - Predicted: Space
@@ -4273,11 +4563,23 @@ Accuracy: 99.88%
 - Examples:
   - Exactamente —tronó Chris—.
 
+### "Clifton" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¡El único e incomparable Clifton "Fou Fou" Eddie en batería!
+
 ### "Club" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Samba en el Club "Arpege".
+
+### "Cobardes" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Cobardes "Y al verle, se arroja sobre él enloquecida de dolor."
 
 ### "Colonia" + """ (1 occurrences)
 - Predicted: None
@@ -4303,12 +4605,6 @@ Accuracy: 99.88%
 - Examples:
   - También puedes usar el atajo de teclado Ctrl+Alt+R.
 
-### "Cuál" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ¿Cuál "todo"?
-
 ### "DISPONIBILIDAD" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4320,12 +4616,6 @@ Accuracy: 99.88%
 - Actual: None
 - Examples:
   - Dame cinco.
-
-### "De" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ¿De "Deux Moulins"?
 
 ### "Decirle" + """ (1 occurrences)
 - Predicted: None
@@ -4519,6 +4809,12 @@ Accuracy: 99.88%
 - Examples:
   - El "Thumri", mi hija, y el "Dadra", mi hijo.
 
+### "El" + ""aita" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - El "aita" me la dejó.
+
 ### "Entonces" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4567,6 +4863,12 @@ Accuracy: 99.88%
 - Examples:
   - Son de 'Barras y Estrellas'.
 
+### "Está" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Está "paranclítica".
+
 ### "FINANCIERA" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4585,17 +4887,11 @@ Accuracy: 99.88%
 - Examples:
   - Parece que no has visto 'Fuerzas de la Naturaleza'.
 
-### "Gangman Style" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Gangman Style» es el video más visto en YouTube.
-
-### "Garantía" + "." (1 occurrences)
+### "Gatitos" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Garantía .
+  - ¿Gatitos ?
 
 ### "Goli" + """ (1 occurrences)
 - Predicted: None
@@ -4614,6 +4910,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Gritando "¡Veneno!"
+
+### "Gritemos" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¡¡Gritemos "vivan los novios", y tiremos arroz, ya está!!
 
 ### "Gwangju" + "?" (1 occurrences)
 - Predicted: None
@@ -4813,6 +5115,12 @@ Accuracy: 99.88%
 - Examples:
   - Beatrice, dígame todo sobre los reinados a partir de Luis "el gordo".
 
+### "MENTIRA" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - LA MENTIRA "Sra. Yolita" anuncio.
+
 ### "MUNDIAL" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4921,6 +5229,12 @@ Accuracy: 99.88%
 - Examples:
   - Ningún "Moonlight".
 
+### "No" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿No "vergas"?
+
 ### "O" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4980,6 +5294,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - ¿Crees que nuestro padre me reconocerá, si también me convierto en un Pilar ?
+
+### "Pinche" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¡Pinche "sudaca"!
 
 ### "Poded" + """ (1 occurrences)
 - Predicted: None
@@ -5065,6 +5385,12 @@ Accuracy: 99.88%
 - Examples:
   - Randall "El Escándalo".
 
+### "Re" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Re'loco.
+
 ### "Repito" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5149,6 +5475,12 @@ Accuracy: 99.88%
 - Examples:
   - Vi la tumba de Jean-Paul Sartre y Simone "Bolívar".
 
+### "Sin" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¡Sin "peros"!
+
 ### "Sobre" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5227,6 +5559,12 @@ Accuracy: 99.88%
 - Examples:
   - Séptimo "A".
 
+### "Sí" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Sí "la milagrosa", regalo de mi madre.
+
 ### "Tanto" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5275,6 +5613,12 @@ Accuracy: 99.88%
 - Examples:
   - Vuelve a repartir, 'Tirador'.
 
+### "Tiramisú" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Especial del día, Tiramisú "Norma".
+
 ### "Tocarán" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5310,6 +5654,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Tus "Expedientes Secretos X".
+
+### "Unas" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Unas "Kolombias" del Perú y unas "Kolombias" hasta de Argentina.
 
 ### "Use" + """ (1 occurrences)
 - Predicted: None
@@ -5365,23 +5715,11 @@ Accuracy: 99.88%
 - Examples:
   - Jacob era el hijo mayor de William Williamson—.
 
-### "Y" + "mis" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "Ya" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - ¿Ymis llaves?
-
-### "Y" + "por" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - ¿Ypor qué corta?
-
-### "Y" + "tienes" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Ytienes suerte, porque yo no te haré sufrir.
+  - ¡Ya "lleganos"!
 
 ### "Yen" + "¡" (1 occurrences)
 - Predicted: Space
@@ -5406,6 +5744,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Necesitas controlar a "Peligroso" y Chantal.
+
+### "a" + ""V" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - He traído la entrevista, copiada a "V".
 
 ### "a" + ""lechear" (1 occurrences)
 - Predicted: None
@@ -5442,6 +5786,12 @@ Accuracy: 99.88%
 - Actual: None
 - Examples:
   - Eso debe haber sido antes de su 'accidente'.
+
+### "aclara" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Pero no aclara "tratamiento prolongado".
 
 ### "acompañarlo" + "," (1 occurrences)
 - Predicted: None
@@ -5551,6 +5901,12 @@ Accuracy: 99.88%
 - Examples:
   - Lo que dije fue: 'Dios existe y es americano'.
 
+### "amiga" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Dice que soy la amiga "solitaria".
+
 ### "amigo" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -5623,11 +5979,11 @@ Accuracy: 99.88%
 - Examples:
   - Sus palabras arrancaron un fuerte aplauso—.
 
-### "apodan" + """ (1 occurrences)
+### "apodada" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - ¿Crees que el Piamontés a quien apodan "El Caballero" será mejor?
+  - Oye, ¿conoces a una tal Dorotea, apodada "la Cuarraca"?
 
 ### "apoyar" + "te" (1 occurrences)
 - Predicted: Space
@@ -5946,12 +6302,6 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Salvo que hemos cambiado "amor" por "Navidad".
-
-### "cantar" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Y ahora, a petición del novio, voy a cantar "Necesito Amor".
 
 ### "cantarías" + """ (1 occurrences)
 - Predicted: None
@@ -6343,12 +6693,6 @@ Accuracy: 99.88%
 - Examples:
   - Tengo que decirte algo, Mitch.
 
-### "decirme" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ¿No vas a decirme "heil"?
-
 ### "declararan" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6384,6 +6728,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Es un placer tenerlo a bordo del "Weser", capitán.
+
+### "del" + ""celebro" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - No ves que están malas del "celebro".
 
 ### "deletrea" + """ (1 occurrences)
 - Predicted: None
@@ -6685,6 +7035,12 @@ Accuracy: 99.88%
 - Examples:
   - Claro que no, estoy haciendo el "Witch Watch".
 
+### "el" + ""quite" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tú, haz el "quite", no ves que es muy terca.
+
 ### "electorales" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -6733,11 +7089,11 @@ Accuracy: 99.88%
 - Examples:
   - Él dice 'la encontré' y luego repite 'está aquí'.
 
-### "entiendo" + """ (1 occurrences)
+### "entendido" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Sí, entiendo "pum".
+  - De todo lo que has dicho sólo he entendido "sequedad".
 
 ### "entre" + """ (1 occurrences)
 - Predicted: None
@@ -6750,6 +7106,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - No era "¿Por qué Woo Jin me encerró?"
+
+### "esas" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - No te da vergüenza andar en esas "trazas".
 
 ### "escaleras" + "»" (1 occurrences)
 - Predicted: Space
@@ -6774,6 +7136,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Hoy el maestro escogió "la cultura china" como tema.
+
+### "escribiera" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Que Rosario escribiera "Tarttalo" la conecta con el inductor de los otros casos.
 
 ### "escribir" + "»" (1 occurrences)
 - Predicted: Space
@@ -6829,12 +7197,6 @@ Accuracy: 99.88%
 - Examples:
   - Es sólo eso: una historia.
 
-### "esos" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Fíjate en todos esos "camineros" borrachos.
-
 ### "espanto" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6877,6 +7239,12 @@ Accuracy: 99.88%
 - Examples:
   - «Sí, estaba», dijo Williamson.
 
+### "estamos" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Bosco y yo estamos "enrollados".
+
 ### "estelar" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -6888,12 +7256,6 @@ Accuracy: 99.88%
 - Actual: None
 - Examples:
   - Dicen: 'No tienes que hacer esto'.
-
-### "estos" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Todos estos "trabajos" existen para paralizar la conciencia humana.
 
 ### "estrenaron" + """ (1 occurrences)
 - Predicted: None
@@ -7117,12 +7479,6 @@ Accuracy: 99.88%
 - Examples:
   - Deben llamar a los guardas "Señor Carcelero".
 
-### "gusta" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Cuando dijiste que te gusta "Fever Dog".
-
 ### "haber" + "le" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -7164,6 +7520,24 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Todo lo haces "como siempre".
+
+### "haciendo" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿Qué, haciendo "el gato plateado?"
+
+### "hagas" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - No me hagas "rir".
+
+### "han" + ""cagao" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Si los vemos, la han "cagao".
 
 ### "hará" + """ (1 occurrences)
 - Predicted: None
@@ -7369,17 +7743,17 @@ Accuracy: 99.88%
 - Examples:
   - Luchamos por la justicia ?
 
-### "la" + ""Danza del Dios del Fuego"" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Es la primera vez que oigo de la "Danza del Dios del Fuego".
-
 ### "la" + ""Pensione Fiorini" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Quiero decir que estoy viviendo en la "Pensione Fiorini".
+
+### "la" + "--" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ya no voy a comer niños de la -- ¡Bam!
 
 ### "labios" + "—" (1 occurrences)
 - Predicted: Space
@@ -7507,6 +7881,12 @@ Accuracy: 99.88%
 - Examples:
   - Tú me llamabas "Baby".
 
+### "llamando" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿Me está llamando "mentiroso"?
+
 ### "llamarle" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -7560,12 +7940,6 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Lo llamaste "El Cojo", creo.
-
-### "llamábamos" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - La llamábamos "Lady E".
 
 ### "llamándome" + """ (1 occurrences)
 - Predicted: None
@@ -7687,12 +8061,6 @@ Accuracy: 99.88%
 - Examples:
   - Los frenos "Atala" y el manillar "D'Ambrosio."
 
-### "mantenemos" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Acá nos mantenemos "grandes".
-
 ### "manzanas" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -7782,6 +8150,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Y ellos me renuevan mi "Ausweiss".
+
+### "mi" + "'jito" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Sí mi'jito.
 
 ### "minutos" + "—" (1 occurrences)
 - Predicted: Space
@@ -8035,6 +8409,18 @@ Accuracy: 99.88%
 - Examples:
   - Di 'buenas noches' y vete a tu casa.
 
+### "nos" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¡Ya nos "callanos"!
+
+### "nos" + ""véamos" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Aunque esta vez sea la última vez que nos "véamos" tú y yo.
+
 ### "nosotros" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -8154,6 +8540,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Con el original "Lynxley Journal".
+
+### "otra" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Luego encontramos otra "chica peinada" unos meses más tarde.
 
 ### "otra" + "—" (1 occurrences)
 - Predicted: Space
@@ -8287,12 +8679,6 @@ Accuracy: 99.88%
 - Examples:
   - He votado por «permanecer».
 
-### "pero" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Michael" es un nombre de hombre pero "Michelle" es un nombre de mujer.
-
 ### "persona" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -8304,12 +8690,6 @@ Accuracy: 99.88%
 - Actual: None
 - Examples:
   - Es húmedo y redondo, rodeado de pestañas/pelo.
-
-### "piensas" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Vamos, viejo, sé que piensas "por qué le dije a este que podía pasar".
 
 ### "pinaza" + "—" (1 occurrences)
 - Predicted: Space
@@ -8551,12 +8931,6 @@ Accuracy: 99.88%
 - Examples:
   - Esto significa 'puedo hacer lo que quiera'.
 
-### "quiere" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - No quiere "congee".
-
 ### "quiero" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -8761,6 +9135,12 @@ Accuracy: 99.88%
 - Examples:
   - Vamos a salir - a menos que llueva.
 
+### "salir" + "--" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿Cómo un deseo va a salir --?
+
 ### "samba" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -8772,12 +9152,6 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Washington nos llama la Rusia de las sandalias "lápot".
-
-### "se" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Cómo que se "suponía"?
 
 ### "sea" + """ (1 occurrences)
 - Predicted: None
@@ -8935,6 +9309,12 @@ Accuracy: 99.88%
 - Examples:
   - No soporta que me siente a ver películas sin "contribuir".
 
+### "sino" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - No dijo "mandar al hospital", sino "te voy a llevar al hospital".
+
 ### "siquiera" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9024,12 +9404,6 @@ Accuracy: 99.88%
 - Actual: None
 - Examples:
   - «Y estos dos también», dijo Keith.
-
-### "tan" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Es tan "verde".
 
 ### "tanto" + "»" (1 occurrences)
 - Predicted: Space
@@ -9229,12 +9603,6 @@ Accuracy: 99.88%
 - Examples:
   - Eres una 'turista'.
 
-### "término" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Prefiero el término "capitalista aventurero".
-
 ### "tú" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9252,6 +9620,12 @@ Accuracy: 99.88%
 - Actual: None
 - Examples:
   - Era el dueño de la tienda de ultramarinos—.
+
+### "unas" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Unas "Kolombias" del Perú y unas "Kolombias" hasta de Argentina.
 
 ### "unos" + """ (1 occurrences)
 - Predicted: None
@@ -9294,6 +9668,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Por aquí, por aquí va -exclamó entonces-.
+
+### "vale" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Son los masters de edición, esto sí que vale "pasta".
 
 ### "veces" + ":" (1 occurrences)
 - Predicted: Space
@@ -9469,6 +9849,12 @@ Accuracy: 99.88%
 - Examples:
   - ¡ Vaya, vaya!
 
+### "¿" + "A" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ A quién le dijiste "rata"?
+
 ### "¿" + "Café" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9492,18 +9878,6 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - ¿ CuáI es el problema?
-
-### "¿" + "Cuál" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ¿ Cuál?
-
-### "¿" + "Cuánto" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ¿ Cuánto?
 
 ### "¿" + "Cuántos" (1 occurrences)
 - Predicted: None
@@ -9547,6 +9921,18 @@ Accuracy: 99.88%
 - Examples:
   - ¿ Otra ronda?
 
+### "¿" + "Oye" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Oye papá?
+
+### "¿" + "Oíste" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Oíste?
+
 ### "¿" + "Queréis" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9577,11 +9963,29 @@ Accuracy: 99.88%
 - Examples:
   - ¿ Son para mí?
 
+### "¿" + "Sí" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Sí, qué?
+
 ### "¿" + "SóIo" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - ¿ SóIo uno?
+
+### "¿" + "Usted" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Usted es?
+
+### "¿" + "Vamos" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Vamos a verla?
 
 ### "¿" + "Vive" (1 occurrences)
 - Predicted: None
@@ -9595,6 +9999,12 @@ Accuracy: 99.88%
 - Examples:
   - ¿ Vosotros qué miráis?
 
+### "¿" + "Yolanda" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿ Yolanda?
+
 ### "¿" + "de" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9606,6 +10016,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Yo no olvidé nada, ¿ no es así?
+
+### "¿" + "vamos" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Oiga, ¿ vamos a dar una paseadita?
 
 ### "Éire" + "»" (1 occurrences)
 - Predicted: Space
@@ -9678,6 +10094,12 @@ Accuracy: 99.88%
 - Actual: None
 - Examples:
   - Deja de procrastinar–a partir de mañana.
+
+### "–" + "seltzer" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Alka–seltzer, ¿por qué?
 
 ### "—" + "comenté" (1 occurrences)
 - Predicted: Space

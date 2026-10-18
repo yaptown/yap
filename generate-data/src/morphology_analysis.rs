@@ -1,96 +1,40 @@
-use futures::StreamExt as _;
-use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::features::Morphology;
 use language_utils::{GramFrequencyEntry, Heteronym, Language, PartOfSpeech};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs::File;
 use std::io::Write;
 use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
 
-static CHAT_CLIENT_4O: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::apply_cache_only(crate::base_chat_client("gpt-4o")));
-
-static CHAT_CLIENT_5: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::apply_cache_only(crate::base_chat_client("gpt-5")));
+// Answers from the gpt-4o and gpt-5 clients this stage used before are still
+// read through the migrating client's cache fallbacks.
+static CHAT_CLIENT: LazyLock<ChatClient> =
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-luna"));
 
 pub async fn create_morphology(
     language: Language,
     gram_frequencies: &[GramFrequencyEntry<String>],
 ) -> anyhow::Result<BTreeMap<Heteronym<String>, Vec<Morphology>>> {
-    // Process sentences to get unique words and track occurrences
-    let mut target_language_heteronyms = BTreeMap::new();
-    for entry in gram_frequencies {
-        if let Some(heteronym) = entry.gram.gram.heteronym() {
-            target_language_heteronyms
-                .entry(heteronym.clone())
-                .or_insert(entry.count);
-        }
-    }
-
     // Try Wiktionary first for supported languages
     let mut morphology = gold_morphology::create_gold_morphology(language, gram_frequencies)
         .await
         .unwrap_or_default();
 
-    // Filter out heteronyms that already have morphology from Wiktionary
-    let mut remaining_heteronyms = BTreeMap::new();
-    for (heteronym, count) in target_language_heteronyms {
-        if !morphology.contains_key(&heteronym) {
-            remaining_heteronyms.insert(heteronym, count);
-        }
-    }
+    // The LLM covers the words Wiktionary didn't.
+    let remaining_heteronyms: BTreeSet<_> = gram_frequencies
+        .iter()
+        .filter_map(|entry| entry.gram.gram.heteronym())
+        .filter(|heteronym| !morphology.contains_key(*heteronym))
+        .cloned()
+        .collect();
 
-    let count = remaining_heteronyms.len();
-
-    if count == 0 {
+    if remaining_heteronyms.is_empty() {
         return Ok(morphology);
     }
 
-    let pb = ProgressBar::new(count as u64);
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} morphology entries ({per_sec}, ${msg}, {eta})")
-            .unwrap()
-            .progress_chars("#>-"),
-    );
-    pb.enable_steady_tick(std::time::Duration::from_millis(100));
-
-    let llm_morphology = futures::stream::iter(remaining_heteronyms.iter())
-        .map(async |(heteronym, &freq)| {
-            let cost = CHAT_CLIENT_5.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0);
-            pb.set_message(format!(
-                "{cost:.2} ({},{},{})",
-                heteronym.word, heteronym.lemma, heteronym.pos
-            ));
-
-            let chat_client = if freq > 500 {
-                &*CHAT_CLIENT_5
-            } else {
-                &*CHAT_CLIENT_4O
-            };
-            let morphology_response =
-                llm_morphology::get_morphology(language, heteronym.clone(), chat_client).await;
-
-            pb.inc(1);
-
-            (heteronym, morphology_response)
-        })
-        .buffer_unordered(50)
-        .collect::<Vec<_>>()
-        .await
-        .into_iter()
-        .filter_map(|(heteronym, morphology_result)| {
-            morphology_result
-                .ok()
-                .map(|morph| (heteronym.clone(), vec![morph]))
-        })
-        .collect::<BTreeMap<Heteronym<String>, _>>();
-
-    pb.finish_with_message(format!(
-        "{:.2}",
-        CHAT_CLIENT_5.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0)
-    ));
+    let remaining_heteronyms = remaining_heteronyms.into_iter().collect::<Vec<_>>();
+    let llm_morphology =
+        llm_morphology::get_morphology(language, &remaining_heteronyms, &CHAT_CLIENT).await?;
 
     // Merge Wiktionary and LLM morphology
     morphology.extend(llm_morphology);
@@ -166,34 +110,78 @@ mod llm_morphology {
         aspect: Option<language_utils::features::Aspect>,
     }
 
+    fn user_prompt(language: Language, heteronym: &Heteronym<String>) -> String {
+        let language_name = language.prompt_name();
+        let pos = heteronym.pos;
+        format!(
+            "{language_name} word: {} (lemma: {}) (POS: {pos:?})",
+            heteronym.word, heteronym.lemma
+        )
+    }
+
+    fn tense_prompt(language: Language) -> String {
+        let language_name = language.prompt_name();
+        format!(
+            r#"Determine the tense of the provided {language_name} word.
+Think about whether this word has a fixed tense. Options are:
+- Past
+- Present
+- Future
+- Imperfect
+- Pluperfect
+
+If one of these options is applicable, provide it. If the tense varies or is not applicable, use `"2. tense": null`. (Respond with JSON, using "1. thoughts" then "2. tense".)"#
+        )
+    }
+
+    async fn batch_feature<R, F>(
+        language: Language,
+        heteronyms: &[Heteronym<String>],
+        chat_client: &ChatClient,
+        system_prompt: String,
+        extract: impl Fn(R) -> Option<F>,
+    ) -> anyhow::Result<Vec<Option<F>>>
+    where
+        R: serde::de::DeserializeOwned + schemars::JsonSchema,
+        F: language_utils::features::FeatureSet + Copy,
+    {
+        let applicable = heteronyms
+            .iter()
+            .enumerate()
+            .filter(|(_, heteronym)| F::applies_to(language, heteronym.pos))
+            .collect::<Vec<_>>();
+        let mut values = vec![None; heteronyms.len()];
+        if !applicable.is_empty() {
+            let responses = chat_client
+                .batch_chat_with_system_prompt_fn::<_, _, R>(
+                    system_prompt,
+                    &applicable,
+                    |(_, heteronym)| user_prompt(language, heteronym),
+                    |_| {},
+                )
+                .await?;
+            for ((index, _), response) in responses {
+                // An individual failure leaves only this feature unknown, not the word absent.
+                values[*index] = response.ok().and_then(&extract);
+            }
+        }
+        Ok(values)
+    }
+
     pub async fn get_morphology(
         language: Language,
-        heteronym: Heteronym<String>,
+        heteronyms: &[Heteronym<String>],
         chat_client: &ChatClient,
-    ) -> anyhow::Result<Morphology> {
-        use language_utils::features::{
-            Aspect, Case, FeatureSet, Gender, Mood, Number, Person, Polite, Tense,
-        };
-
-        let pos = heteronym.pos;
-
-        // Determine which features apply to this word
-        let gender_applies = Gender::applies_to(language, pos);
-        let number_applies = Number::applies_to(language, pos);
-        let politeness_applies = Polite::applies_to(language, pos);
-        let tense_applies = Tense::applies_to(language, pos);
-        let person_applies = Person::applies_to(language, pos);
-        let case_applies = Case::applies_to(language, pos);
-        let mood_applies = Mood::applies_to(language, pos);
-        let aspect_applies = Aspect::applies_to(language, pos);
+    ) -> anyhow::Result<BTreeMap<Heteronym<String>, Vec<Morphology>>> {
         let language_name = language.prompt_name();
 
-        // Issue concurrent requests for all applicable features
-        let gender_future = async {
-            if gender_applies {
-                let result: Result<GenderResponse, _> = chat_client.chat_with_system_prompt(
-                format!(
-                    r#"Determine the grammatical gender of the provided {language_name} word
+        // One batch per feature across all applicable words.
+        let gender_future = batch_feature(
+            language,
+            heteronyms,
+            chat_client,
+            format!(
+                r#"Determine the grammatical gender of the provided {language_name} word
 Think about whether this word has a fixed grammatical gender. 
 If it does, provide it. If the gender varies or is not applicable, return null.
 Options are:
@@ -204,59 +192,42 @@ Options are:
 Additionally, some languages do not distinguish masculine/feminine most of the time but they do distinguish neuter vs. non-neuter (Swedish neutrum / utrum). The non-neuter is called common gender. This is only applicable in languages that do not distinguish masculine/feminine.
 - Common
 
-If the gender of the word is not uniquely determined, return null. Neuter is only applicable in languages that have a neuter gender. Like Common, it is not a placeholder for when the gender is not known. If the grammatical gender is ambiguous or not specified, use `"2. gender": null`. (Respond with JSON, using "1. thoughts" then "2. gender".)"# ),
-                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
-            ).await;
-                result.ok().and_then(|r| r.gender)
-            } else {
-                None
-            }
-        };
+If the gender of the word is not uniquely determined, return null. Neuter is only applicable in languages that have a neuter gender. Like Common, it is not a placeholder for when the gender is not known. If the grammatical gender is ambiguous or not specified, use `"2. gender": null`. (Respond with JSON, using "1. thoughts" then "2. gender".)"#
+            ),
+            |r: GenderResponse| r.gender,
+        );
 
-        let politeness_future = async {
-            if politeness_applies {
-                let result: Result<PoliteResponse, _> = chat_client.chat_with_system_prompt(
-                format!(
-                    r#"Determine the morphological politeness of the provided {language_name} word.
+        let politeness_future = batch_feature(
+            language,
+            heteronyms,
+            chat_client,
+            format!(
+                r#"Determine the morphological politeness of the provided {language_name} word.
 Think about whether this word is morphologically formal, informal, elevated, or humble.
 If it has a specific morphological politeness level, provide it. Otherwise, use `"2. politeness": null`. (Respond with JSON, using "1. thoughts" then "2. politeness".){}"#,
-                if language.tv_politeness() {"\nPoliteness should only be non-null in the second person as this is a language with T-V distinction. Literary/archaic forms are not related to politeness."} else {""},
-                ),
-                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
-            ).await;
-                result.ok().and_then(|r| r.politeness)
-            } else {
-                None
-            }
-        };
+                if language.tv_politeness() {
+                    "\nPoliteness should only be non-null in the second person as this is a language with T-V distinction. Literary/archaic forms are not related to politeness."
+                } else {
+                    ""
+                },
+            ),
+            |r: PoliteResponse| r.politeness,
+        );
 
-        let tense_future = async {
-            if tense_applies {
-                let result: Result<TenseResponse, _> = chat_client.chat_with_system_prompt(
-                format!(
-                    r#"Determine the tense of the provided {language_name} word.
-Think about whether this word has a fixed tense. Options are:
-- Past
-- Present
-- Future
-- Imperfect
-- Pluperfect
+        let tense_future = batch_feature(
+            language,
+            heteronyms,
+            chat_client,
+            tense_prompt(language),
+            |r: TenseResponse| r.tense,
+        );
 
-If one of these options is applicable, provide it. If the tense varies or is not applicable, use `"2. tense": null`. (Respond with JSON, using "1. thoughts" then "2. tense".)"#,
-                ),
-                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
-            ).await;
-                result.ok().and_then(|r| r.tense)
-            } else {
-                None
-            }
-        };
-
-        let person_future = async {
-            if person_applies {
-                let result: Result<PersonResponse, _> = chat_client.chat_with_system_prompt(
-                format!(
-                    r#"Determine the grammatical person of the provided {language_name} word.
+        let person_future = batch_feature(
+            language,
+            heteronyms,
+            chat_client,
+            format!(
+                r#"Determine the grammatical person of the provided {language_name} word.
 Think about whether this word has a fixed person (e.g., first person pronoun, third person verb).
 If it does, provide it. If the person varies or is not applicable, return null.
 
@@ -267,20 +238,16 @@ Options are:
 Additionally, some language have more than three persons. So Zeroth and Fourth are also allowed. Most languages only have the three standard persons.
 
 If one of these options is applicable, provide it. If the person varies or is not applicable, use `"2. person": null`. (Respond with JSON, using "1. thoughts" then "2. person".)"#,
-                ),
-                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
-            ).await;
-                result.ok().and_then(|r| r.person)
-            } else {
-                None
-            }
-        };
+            ),
+            |r: PersonResponse| r.person,
+        );
 
-        let case_future = async {
-            if case_applies {
-                let result: Result<CaseResponse, _> = chat_client.chat_with_system_prompt(
-                format!(
-                    r#"Determine the grammatical case of the provided {language_name} word.
+        let case_future = batch_feature(
+            language,
+            heteronyms,
+            chat_client,
+            format!(
+                r#"Determine the grammatical case of the provided {language_name} word.
 Think about whether this word has a fixed case marking. Case helps specify the role of a noun phrase in the sentence.
 
 Common cases include:
@@ -303,20 +270,16 @@ Other cases (mainly in specific language families):
 - And more specialized cases as needed
 
 If this word has a fixed grammatical case, provide it. If case is not applicable or varies, use `"2. case": null`. (Respond with JSON, using "1. thoughts" then "2. case".)"#,
-                ),
-                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
-            ).await;
-                result.ok().and_then(|r| r.case)
-            } else {
-                None
-            }
-        };
+            ),
+            |r: CaseResponse| r.case,
+        );
 
-        let number_future = async {
-            if number_applies {
-                let result: Result<NumberResponse, _> = chat_client.chat_with_system_prompt(
-                format!(
-                    r#"Determine the grammatical number of the provided {language_name} word.
+        let number_future = batch_feature(
+            language,
+            heteronyms,
+            chat_client,
+            format!(
+                r#"Determine the grammatical number of the provided {language_name} word.
 Think about whether this word has a fixed number marking.
 
 Common number values:
@@ -337,20 +300,16 @@ Less common number values (use only if applicable):
 - Collective: grammatical singular describing sets of objects (like "mankind", "furniture")
 
 If this word has a fixed grammatical number, provide it. If number is not applicable, is ambiguous, or varies, use `"2. number": null`. (Respond with JSON, using "1. thoughts" then "2. number".)"#,
-                ),
-                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
-            ).await;
-                result.ok().and_then(|r| r.number)
-            } else {
-                None
-            }
-        };
+            ),
+            |r: NumberResponse| r.number,
+        );
 
-        let mood_future = async {
-            if mood_applies {
-                let result: Result<MoodResponse, _> = chat_client.chat_with_system_prompt(
-                format!(
-                    r#"Determine the mood of the provided {language_name} verb.
+        let mood_future = batch_feature(
+            language,
+            heteronyms,
+            chat_client,
+            format!(
+                r#"Determine the mood of the provided {language_name} verb.
 Think about whether this verb has a fixed mood. Mood expresses modality and subclassifies finite verb forms.
 
 Common moods:
@@ -372,20 +331,16 @@ Less common moods (use only if applicable):
 - Admirative: surprise/irony/doubt (Albanian, Balkan languages)
 
 If this verb has a fixed mood, provide it. If mood is not applicable or varies, use `"2. mood": null`. (Respond with JSON, using "1. thoughts" then "2. mood".)"#,
-                ),
-                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
-            ).await;
-                result.ok().and_then(|r| r.mood)
-            } else {
-                None
-            }
-        };
+            ),
+            |r: MoodResponse| r.mood,
+        );
 
-        let aspect_future = async {
-            if aspect_applies {
-                let result: Result<AspectResponse, _> = chat_client.chat_with_system_prompt(
-                format!(
-                    r#"Determine the grammatical aspect of the provided {language_name} word.
+        let aspect_future = batch_feature(
+            language,
+            heteronyms,
+            chat_client,
+            format!(
+                r#"Determine the grammatical aspect of the provided {language_name} word.
 Aspect specifies the internal temporal structure of the action (duration, completion, habituality, etc.).
 
 Common values:
@@ -397,14 +352,9 @@ Common values:
 - Iterative: repeated action
 
 If this word has a fixed grammatical aspect, provide it. If aspect is not applicable or varies, use `"2. aspect": null`. (Respond with JSON, using "1. thoughts" then "2. aspect".)"#,
-                ),
-                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
-            ).await;
-                result.ok().and_then(|r| r.aspect)
-            } else {
-                None
-            }
-        };
+            ),
+            |r: AspectResponse| r.aspect,
+        );
 
         // Execute all futures concurrently
         let (gender, number, politeness, tense, person, case, mood, aspect) = futures::join!(
@@ -418,16 +368,96 @@ If this word has a fixed grammatical aspect, provide it. If aspect is not applic
             aspect_future,
         );
 
-        Ok(Morphology {
-            gender,
-            number,
-            politeness,
-            tense,
-            person,
-            case,
-            mood,
-            aspect,
-        })
+        let (gender, number, politeness, tense, person, case, mood, aspect) = (
+            gender?,
+            number?,
+            politeness?,
+            tense?,
+            person?,
+            case?,
+            mood?,
+            aspect?,
+        );
+
+        // Retain every word, even if all its applicable feature requests failed.
+        Ok(heteronyms
+            .iter()
+            .enumerate()
+            .map(|(i, heteronym)| {
+                (
+                    heteronym.clone(),
+                    vec![Morphology {
+                        gender: gender[i],
+                        number: number[i],
+                        politeness: politeness[i],
+                        tense: tense[i],
+                        person: person[i],
+                        case: case[i],
+                        mood: mood[i],
+                        aspect: aspect[i],
+                    }],
+                )
+            })
+            .collect())
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[tokio::test]
+        async fn morphology_retains_words_when_feature_requests_fail() {
+            let client = ChatClient::new("unused", "unused").with_cached_only();
+            let heteronyms = vec![
+                Heteronym {
+                    word: "étais".to_owned(),
+                    lemma: "être".to_owned(),
+                    pos: PartOfSpeech::Verb,
+                },
+                Heteronym {
+                    word: "chat".to_owned(),
+                    lemma: "chat".to_owned(),
+                    pos: PartOfSpeech::Noun,
+                },
+            ];
+            let morphology = get_morphology(Language::French, &heteronyms, &client)
+                .await
+                .unwrap();
+            assert_eq!(morphology.len(), heteronyms.len());
+            for heteronym in &heteronyms {
+                assert_eq!(morphology[heteronym], vec![Morphology::default()]);
+            }
+            assert!(
+                get_morphology(Language::French, &[], &client)
+                    .await
+                    .unwrap()
+                    .is_empty()
+            );
+        }
+
+        #[test]
+        fn morphology_prompts_preserve_cache_keys() {
+            assert_eq!(
+                tense_prompt(Language::French),
+                concat!(
+                    "Determine the tense of the provided French word.\n",
+                    "Think about whether this word has a fixed tense. Options are:\n",
+                    "- Past\n- Present\n- Future\n- Imperfect\n- Pluperfect\n\n",
+                    "If one of these options is applicable, provide it. If the tense varies or is not applicable, use `\"2. tense\": null`. (Respond with JSON, using \"1. thoughts\" then \"2. tense\".)",
+                )
+            );
+            assert_eq!(
+                user_prompt(
+                    Language::French,
+                    &Heteronym {
+                        word: "étais".to_owned(),
+                        lemma: "être".to_owned(),
+                        pos: PartOfSpeech::Verb,
+                    }
+                ),
+                "French word: étais (lemma: être) (POS: Verb)"
+            );
+        }
     }
 }
 

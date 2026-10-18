@@ -78,6 +78,7 @@ enum Expectation {
 }
 
 struct Track {
+    title: String,
     language: Language,
     imdb: String,
     raw: Vec<SubtitleLine>,
@@ -270,7 +271,7 @@ fn discover(options: &Options, samples: Option<&[Sample]>) -> Result<Vec<Track>>
             .into_iter()
             .filter_map(|film| {
                 film.course(&options.out)
-                    .map(|language| (film.imdb_id, language))
+                    .map(|language| (film.imdb_id, (language, film.title)))
             })
             .collect::<BTreeMap<_, _>>()
     } else {
@@ -315,7 +316,11 @@ fn discover(options: &Options, samples: Option<&[Sample]>) -> Result<Vec<Track>>
             } else {
                 None
             }
-            .or_else(|| inventory.get(&imdb).map(|l| l.corpus_code().to_owned()));
+            .or_else(|| {
+                inventory
+                    .get(&imdb)
+                    .map(|(language, _)| language.corpus_code().to_owned())
+            });
             let Some(code) = code else {
                 eprintln!("proofread: no language for {imdb}; skipped");
                 continue;
@@ -347,7 +352,7 @@ fn discover(options: &Options, samples: Option<&[Sample]>) -> Result<Vec<Track>>
         // translated subtitle track keeps the language it is written in.
         let language = inventory
             .get(&imdb)
-            .copied()
+            .map(|(language, _)| *language)
             .filter(|language| language.corpus_code() == code)
             .or_else(|| Language::from_code(&code))
             .with_context(|| format!("unknown language {code} for {imdb}"))?;
@@ -360,6 +365,9 @@ fn discover(options: &Options, samples: Option<&[Sample]>) -> Result<Vec<Track>>
                 crate::clips::uncorrected_subtitle_lines(&text)
             };
             result.push(Track {
+                title: inventory
+                    .get(&imdb)
+                    .map_or_else(|| imdb.clone(), |(_, title)| title.clone()),
                 language,
                 imdb: imdb.clone(),
                 raw,
@@ -584,7 +592,7 @@ async fn judge<T: DeserializeOwned + schemars::JsonSchema>(
     let jobs = if live {
         chunks.chunks(chunks.len().div_ceil(LIVE_CALLS)).collect()
     } else {
-        movie_subtitles::llm_segment::batch_jobs::partition::<_, T>(&client, chunks, messages)?
+        vec![chunks]
     };
     let submit = |i: usize| {
         let group = jobs[i];
@@ -616,8 +624,7 @@ async fn judge<T: DeserializeOwned + schemars::JsonSchema>(
             .collect::<Vec<_>>()
             .await
     } else {
-        let indices: Vec<_> = (0..jobs.len()).collect();
-        movie_subtitles::llm_segment::batch_jobs::run(&indices, |&i| submit(i)).await
+        vec![movie_subtitles::llm_segment::batch_jobs::run(|| submit(0)).await]
     };
     let mut rows = Vec::new();
     let mut failed = 0;
@@ -692,7 +699,7 @@ async fn sentence_chunks(
     rows: &[Audited],
     samples: Option<&[Sample]>,
     live: bool,
-) -> Result<Vec<Chunk>> {
+) -> Result<(Vec<Chunk>, BTreeSet<(String, String)>)> {
     let changes = rows
         .iter()
         .filter(|row| row.accepted)
@@ -789,15 +796,32 @@ async fn sentence_chunks(
     };
     let mut seen = BTreeMap::<(Language, &str), BTreeSet<String>>::new();
     let mut result = Vec::new();
+    let mut failed = BTreeSet::new();
     for ((track, lines), ruled) in selected.into_iter().zip(&prepared).zip(&mut ruled) {
         let sentences = match ruled.take() {
             Some(sentences) => sentences,
-            None => movie_subtitles::sentences::keyed_sentences_from_splits(
-                lines,
-                &splits.next().expect("one split result per LLM track"),
-                track.language,
-                &track.imdb,
-            ),
+            None => {
+                let splits = match splits.next().expect("one split result per LLM track") {
+                    Ok(splits) => splits,
+                    Err(error) => {
+                        if failed
+                            .insert((track.language.corpus_code().to_owned(), track.imdb.clone()))
+                        {
+                            eprintln!(
+                                "proofread segmentation {} ({}): {error:#}; film skipped",
+                                track.title, track.imdb
+                            );
+                        }
+                        continue;
+                    }
+                };
+                movie_subtitles::sentences::keyed_sentences_from_splits(
+                    lines,
+                    &splits,
+                    track.language,
+                    &track.imdb,
+                )
+            }
         };
         result.extend(
             chunks(
@@ -825,13 +849,19 @@ async fn sentence_chunks(
         );
     }
     if let Some(samples) = samples {
+        anyhow::ensure!(
+            failed.is_empty(),
+            "segmentation failed for {} films; eval not scored",
+            failed.len()
+        );
         for sample in samples {
             if let Expectation::Coherence { sentence, .. } = &sample.expectation {
                 require_sample(&result, sample, sentence)?;
             }
         }
     }
-    Ok(result)
+    result.retain(|chunk| !failed.contains(&(chunk.language.clone(), chunk.imdb.clone())));
+    Ok((result, failed))
 }
 
 fn print_counts(label: &str, chunks: &[Chunk]) {
@@ -977,7 +1007,8 @@ pub async fn run(options: Options) -> Result<()> {
         );
     }
 
-    let sentences = sentence_chunks(&tracks, &rows, samples.as_deref(), options.live).await?;
+    let (sentences, segmentation_failed) =
+        sentence_chunks(&tracks, &rows, samples.as_deref(), options.live).await?;
     print_counts("coherence sentences", &sentences);
     let (answers, failed) =
         judge::<CoherenceAnswer>(&sentences, prompts::coherence, options.live).await?;
@@ -1007,8 +1038,12 @@ pub async fn run(options: Options) -> Result<()> {
     if options.no_merge {
         return Ok(());
     }
+    // Audit rows remain visible, but a film with any failed track gets no
+    // overlay additions from either pass. The next run retries its cache misses.
     let mut additions = BTreeMap::<String, Vec<Correction>>::new();
-    for row in rows.into_iter().filter(|row| row.accepted) {
+    for row in rows.into_iter().filter(|row| {
+        row.accepted && !segmentation_failed.contains(&(row.language.clone(), row.imdb.clone()))
+    }) {
         additions
             .entry(row.language)
             .or_default()
@@ -1020,7 +1055,9 @@ pub async fn run(options: Options) -> Result<()> {
                 reason: row.reason,
             });
     }
-    for flag in flags.into_iter().filter(|flag| flag.accepted) {
+    for flag in flags.into_iter().filter(|flag| {
+        flag.accepted && !segmentation_failed.contains(&(flag.language.clone(), flag.imdb.clone()))
+    }) {
         additions
             .entry(flag.language)
             .or_default()
@@ -1067,23 +1104,14 @@ mod tests {
             .into_iter()
             .map(|code| (code, prompts::orthography(code)))
             .collect();
-        let client = ChatClient::new("not-a-real-key", "test-model");
-        let jobs = movie_subtitles::llm_segment::batch_jobs::partition::<_, Answer>(
-            &client,
-            &input,
-            |chunk| judge_messages(chunk, &systems),
-        )
-        .unwrap();
-        assert_eq!(jobs.len(), 1, "small languages belong to one pooled job");
         assert_eq!(
-            jobs[0]
+            input
                 .iter()
                 .map(|chunk| chunk.language.as_str())
                 .collect::<Vec<_>>(),
             ["fra", "deu", "fra"]
         );
-        for (actual, expected) in jobs[0].iter().zip(&input) {
-            assert!(std::ptr::eq(actual, expected));
+        for actual in &input {
             let messages = serde_json::to_value(judge_messages(actual, &systems)).unwrap();
             assert_eq!(
                 messages[0]["content"][0]["text"],
@@ -1116,7 +1144,7 @@ mod tests {
         assert!(Cli::parse_from(["proofread", "--live"]).options.live);
         let client = ChatClient::new("not-a-real-key", "test-model");
         let client = transport(client, false);
-        assert_eq!(client.small_batch_threshold, 16);
+        assert_eq!(client.small_batch_threshold, SMALL_BATCH_THRESHOLD);
         assert_eq!(transport(client, true).small_batch_threshold, usize::MAX);
     }
 

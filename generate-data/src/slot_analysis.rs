@@ -51,7 +51,9 @@ static ANALYSIS_CLIENT: LazyLock<ChatClient> =
     LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-terra"));
 
 /// How a slot pattern realizes its argument slot in a real sentence.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
 pub enum SlotRealization {
     /// The slot is filled by an arbitrary nominal, keeping the citation
     /// form's case marker: "c'est arrivé à Jean". Precision varies a lot by
@@ -157,6 +159,7 @@ struct PlaceholderHintsResponse {
 async fn placeholder_hints(
     course: &Course,
     multiword_terms_tokenizations: &BTreeMap<String, lexide::Tokenization>,
+    output_dir: &std::path::Path,
 ) -> anyhow::Result<Vec<Vec<String>>> {
     let language = course.target_language;
     let shared_instructions = "You are helping a language-learning app detect which \
@@ -171,59 +174,61 @@ async fn placeholder_hints(
         clause (French \"faire quelque chose\", English \"do something\"). Do not \
         include ordinary pronouns (je, tu, il...) or reflexive markers.";
 
-    let abstract_response: PlaceholderHintsResponse = HINTS_CLIENT
-        .chat_with_system_prompt(
-            shared_instructions,
-            format!(
-                "Language: {}\nList the placeholder expressions.",
-                language.prompt_name()
-            ),
-        )
-        .await?;
+    let abstract_request = HINTS_CLIENT.chat_with_system_prompt::<PlaceholderHintsResponse>(
+        shared_instructions,
+        format!(
+            "Language: {}\nList the placeholder expressions.",
+            language.prompt_name()
+        ),
+    );
 
     // Grounded call: show a deterministic sample of real terms (with the
     // lemma sequences our tokenizer produced) and ask which placeholder
     // expressions appear in them.
     const GROUNDING_SAMPLE_SIZE: usize = 200;
-    let all_terms: Vec<(&String, &lexide::Tokenization)> =
-        multiword_terms_tokenizations.iter().collect();
-    let sampled: Vec<String> = if all_terms.is_empty() {
-        vec![]
-    } else {
-        (0..GROUNDING_SAMPLE_SIZE.min(all_terms.len()))
-            .map(|i| {
-                let (term, tokens) =
-                    &all_terms[i * all_terms.len() / GROUNDING_SAMPLE_SIZE.min(all_terms.len())];
-                let lemmas = tokens
-                    .tokens()
-                    .iter()
-                    .map(|t| t.lemma.lemma.as_str())
-                    .collect::<Vec<_>>()
-                    .join(" ");
-                format!("{term} (lemmas: {lemmas})")
-            })
-            .collect()
-    };
-    let grounded_response: Option<PlaceholderHintsResponse> = if sampled.is_empty() {
-        None
-    } else {
-        Some(
-            HINTS_CLIENT
-                .chat_with_system_prompt(
-                    format!(
-                        "{shared_instructions}\n\nYou are given a sample of real {language} \
+    let pool: Vec<String> = multiword_terms_tokenizations
+        .iter()
+        .map(|(term, tokens)| {
+            let lemmas = tokens
+                .tokens()
+                .iter()
+                .map(|t| t.lemma.lemma.as_str())
+                .collect::<Vec<_>>()
+                .join(" ");
+            format!("{term} (lemmas: {lemmas})")
+        })
+        .collect();
+    let mut samples =
+        crate::corpus_samples::SampleCache::load(output_dir.join("slot_hint_examples.jsonl"))?;
+    samples.refresh_with(&(), &pool, |survivors, pool| {
+        crate::corpus_samples::select_evenly(survivors, pool, GROUNDING_SAMPLE_SIZE)
+    });
+    samples.save()?;
+    let sampled = samples.get(&());
+    let grounded_request = async {
+        if sampled.is_empty() {
+            return Ok(None);
+        }
+        HINTS_CLIENT
+            .chat_with_system_prompt::<PlaceholderHintsResponse>(
+                format!(
+                    "{shared_instructions}\n\nYou are given a sample of real {language} \
                          multiword terms from the dictionary, each with the lemma sequence \
                          our tokenizer produced. Report every placeholder expression that \
                          appears in any of them, quoting the lemma forms exactly as they \
                          appear in the sample. Also report placeholder expressions you know \
                          the language uses even if absent from this sample.",
-                        language = language.prompt_name()
-                    ),
-                    format!("Terms:\n{}", sampled.join("\n")),
-                )
-                .await?,
-        )
+                    language = language.prompt_name()
+                ),
+                format!("Terms:\n{}", sampled.join("\n")),
+            )
+            .await
+            .map(Some)
     };
+    // Both prompts are independent; observe both even if either cache misses.
+    let (abstract_response, grounded_response) = tokio::join!(abstract_request, grounded_request);
+    let abstract_response = abstract_response?;
+    let grounded_response = grounded_response?;
 
     let mut hints: BTreeSet<Vec<String>> = BTreeSet::new();
     for phrase in abstract_response.placeholder_phrases.iter().chain(
@@ -265,9 +270,10 @@ fn format_parse(tokens: &[Token]) -> String {
 pub async fn analyze_slots(
     course: &Course,
     multiword_terms_tokenizations: &BTreeMap<String, lexide::Tokenization>,
+    output_dir: &std::path::Path,
 ) -> anyhow::Result<BTreeMap<String, Vec<SlotSpec>>> {
     let language = course.target_language;
-    let hints = placeholder_hints(course, multiword_terms_tokenizations).await?;
+    let hints = placeholder_hints(course, multiword_terms_tokenizations, output_dir).await?;
     if hints.is_empty() {
         return Ok(BTreeMap::new());
     }
@@ -684,13 +690,41 @@ pub struct GradeRequest {
     pub sample: Vec<SlotMatch>,
 }
 
+pub type MatchSamples =
+    crate::corpus_samples::SampleCache<(String, SlotRealization), (String, Vec<String>)>;
+
 impl GradeRequest {
-    pub fn new(term: String, realization: SlotRealization, matches: &[SlotMatch]) -> Self {
+    pub fn new(
+        term: String,
+        realization: SlotRealization,
+        matches: &[SlotMatch],
+        samples: &mut MatchSamples,
+    ) -> Self {
+        let key = (term.clone(), realization);
+        // Use the same sentence-deduplicated pool as the original selector.
+        let ordered = sample_matches(matches, matches.len());
+        let pool: Vec<_> = ordered
+            .iter()
+            .map(|m| (m.sentence.clone(), m.matched_words.clone()))
+            .collect();
+        samples.refresh_with(&key, &pool, |survivors, pool| {
+            crate::corpus_samples::select_evenly(survivors, pool, GRADE_SAMPLE_SIZE)
+        });
         Self {
             term,
             realization,
             match_count: matches.len(),
-            sample: sample_matches(matches, GRADE_SAMPLE_SIZE),
+            sample: samples
+                .get(&key)
+                .iter()
+                .map(|(sentence, words)| {
+                    ordered
+                        .iter()
+                        .find(|m| &m.sentence == sentence && &m.matched_words == words)
+                        .unwrap()
+                        .clone()
+                })
+                .collect(),
         }
     }
 }
@@ -864,6 +898,44 @@ pub fn write_summary(path: &std::path::Path, graded: &[GradedPattern]) -> anyhow
 mod tests {
     use super::*;
     use lexide::{Lemma, Text};
+
+    #[test]
+    fn persistent_grading_keeps_initial_bytes_and_ignores_token_index_changes() {
+        let dir = tempfile::tempdir().unwrap();
+        for size in [0, 1, 12, 13, 40] {
+            let mut samples = MatchSamples::load(dir.path().join(format!("{size}.jsonl"))).unwrap();
+            let mut pool: Vec<_> = (0..size)
+                .rev()
+                .map(|i| SlotMatch {
+                    sentence: format!("sentence {i}"),
+                    matched_token_indices: vec![i],
+                    matched_words: vec!["bound".into()],
+                })
+                .collect();
+            let original = GradeRequest {
+                term: "term".into(),
+                realization: SlotRealization::Filled,
+                match_count: pool.len(),
+                sample: sample_matches(&pool, GRADE_SAMPLE_SIZE),
+            };
+            let actual =
+                GradeRequest::new("term".into(), SlotRealization::Filled, &pool, &mut samples);
+            assert_eq!(grade_user_prompt(&actual), grade_user_prompt(&original));
+            for item in &mut pool {
+                item.matched_token_indices = vec![999];
+            }
+            pool.reverse();
+            let current =
+                GradeRequest::new("term".into(), SlotRealization::Filled, &pool, &mut samples);
+            assert_eq!(grade_user_prompt(&current), grade_user_prompt(&actual));
+            assert!(
+                current
+                    .sample
+                    .iter()
+                    .all(|item| item.matched_token_indices == [999])
+            );
+        }
+    }
 
     fn tok(
         text: &str,

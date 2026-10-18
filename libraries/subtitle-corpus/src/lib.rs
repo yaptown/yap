@@ -11,6 +11,7 @@ pub mod audio_check;
 pub mod clips;
 pub mod cues;
 pub mod export;
+pub mod fetch_subtitles;
 pub mod library;
 pub mod ocr;
 pub mod pgs;

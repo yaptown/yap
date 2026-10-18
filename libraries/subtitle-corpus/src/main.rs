@@ -70,6 +70,16 @@ enum Command_ {
         #[arg(long, default_value_t = 8)]
         jobs: usize,
     },
+    /// Fetch OpenSubtitles for owned films marked missing in the inventory plan.
+    FetchSubtitles {
+        #[arg(long, default_value = "/data/andrep/subtitle-corpus")]
+        out: PathBuf,
+        #[arg(long, default_value = "./generate-data/data")]
+        data_root: PathBuf,
+        /// Fetch for this film alone, by IMDb id.
+        #[arg(long)]
+        imdb: Option<String>,
+    },
     /// Bring the corpus up to date with whatever arrived since last time.
     ///
     /// Runs inventory, subtitle/audio extraction, synchronization, transcription,
@@ -85,13 +95,6 @@ enum Command_ {
         data_root: PathBuf,
         #[arg(long, default_value = "/data/andrep/subtitle-corpus")]
         out: PathBuf,
-        /// Limit full-film transcription and its audio extraction to these
-        /// IMDb ids.
-        ///
-        /// May be repeated. Every other refresh stage still considers the whole
-        /// inventory. With no values, refresh processes every film as before.
-        #[arg(long)]
-        transcribe_imdb: Vec<String>,
     },
     /// Pull out the subtitles that are already text on the disc.
     Extract {
@@ -175,13 +178,14 @@ enum Command_ {
         #[arg(long, default_value_t = 0)]
         limit: usize,
     },
-    /// Transcribe every film in full, so its subtitle can be checked against
-    /// what was actually said.
+    /// Transcribe every non-English film in full, so its subtitle can be
+    /// checked against what was actually said.
     ///
     /// Reads the extracted `audio.opus`, cuts it at the quietest seams the
     /// film's speech profile offers, and writes `transcript.jsonl` beside the
     /// subtitle. Responses are cached in the shared store by chunk bytes, so
-    /// re-running is free for everything already transcribed.
+    /// re-running is free for everything already transcribed. Stops starting
+    /// films once the ElevenLabs billing cycle's credits are nearly spent.
     Transcribe {
         #[arg(long, default_value = "/data/andrep/subtitle-corpus")]
         out: PathBuf,
@@ -960,18 +964,22 @@ fn export_sidecars(out: PathBuf) -> Result<()> {
 /// quietly do the wrong work. Any other step failing is reported and skipped
 /// past: a Whisper outage is no reason not to run text-sync, and the next
 /// refresh retries whatever was left undone.
-fn refresh(
-    library: PathBuf,
-    data_root: PathBuf,
-    out: PathBuf,
-    transcribe_imdb: Vec<String>,
-) -> Result<()> {
+fn refresh(library: PathBuf, data_root: PathBuf, out: PathBuf) -> Result<()> {
     println!("━━━ inventory ━━━");
-    inventory(library, data_root.clone(), out.clone(), 8)?;
-    let audio_imdb = transcribe_imdb.clone();
+    inventory(library.clone(), data_root.clone(), out.clone(), 8)?;
 
     type Step<'a> = (&'a str, Box<dyn FnOnce() -> Result<()>>);
     let steps: Vec<Step> = vec![
+        ("fetch-subtitles", {
+            let (out, data_root) = (out.clone(), data_root.clone());
+            Box::new(move || {
+                // Re-plan so this run syncs what was just fetched.
+                if subtitle_corpus::fetch_subtitles::run(&out, &data_root, None)? > 0 {
+                    inventory(library, data_root, out, 8)?;
+                }
+                Ok(())
+            })
+        }),
         ("extract", {
             let out = out.clone();
             Box::new(move || extract(out, 6, 0))
@@ -982,16 +990,7 @@ fn refresh(
         }),
         ("extract-audio", {
             let out = out.clone();
-            Box::new(move || {
-                if audio_imdb.is_empty() {
-                    extract_audio(out, 6, 0, None)
-                } else {
-                    for imdb in audio_imdb {
-                        extract_audio(out.clone(), 1, 0, Some(&imdb))?;
-                    }
-                    Ok(())
-                }
-            })
+            Box::new(move || extract_audio(out, 6, 0, None))
         }),
         ("audio-check", {
             let out = out.clone();
@@ -1021,16 +1020,7 @@ fn refresh(
         }),
         ("transcribe", {
             let out = out.clone();
-            Box::new(move || {
-                if transcribe_imdb.is_empty() {
-                    transcribe_all(out, 4, 0, None)
-                } else {
-                    for imdb in transcribe_imdb {
-                        transcribe_all(out.clone(), 1, 0, Some(imdb))?;
-                    }
-                    Ok(())
-                }
-            })
+            Box::new(move || transcribe_all(out, 4, 0, None))
         }),
         ("segment", {
             let out = out.clone();
@@ -1628,6 +1618,16 @@ async fn segment_all(out: PathBuf, all: bool, limit: usize, imdb: Option<String>
     let (splits, report) =
         llm_segment::split_tracks(&client, &tracks, llm_segment::print_progress()).await?;
     for (((m, language), lines), splits) in todo.iter().zip(&lines).zip(&splits) {
+        let splits = match splits {
+            Ok(splits) => splits,
+            Err(error) => {
+                eprintln!(
+                    "segmentation {} ({}): {error:#}; skipped",
+                    m.title, m.imdb_id
+                );
+                continue;
+            }
+        };
         let keyed = movie_subtitles::sentences::keyed_sentences_from_splits(
             lines.as_slice(),
             splits,
@@ -2033,6 +2033,10 @@ async fn transcribe_one(
     Ok(transcript.words.len())
 }
 
+/// Room left under the cycle's limit for each film in flight: a long, talky
+/// film runs to ~6,000 credits.
+const CREDITS_PER_FILM_MARGIN: u64 = 8_000;
+
 #[tokio::main]
 async fn transcribe_all(
     out: PathBuf,
@@ -2051,6 +2055,14 @@ async fn transcribe_all(
     let mut queue: Vec<Movie> = plan
         .into_iter()
         .filter(|m| imdb.as_deref().is_none_or(|id| m.imdb_id == id))
+        // English films already yield far more clips than any other language,
+        // so they are only transcribed when asked for by name. A film with no
+        // course has no language to transcribe in.
+        .filter(|m| match m.course(&out) {
+            Some(language_utils::Language::English) => imdb.is_some(),
+            Some(_) => true,
+            None => false,
+        })
         .filter(|m| out.join(&m.imdb_id).join("subtitle.srt").exists())
         .filter(|m| transcript_is_stale(m, &out.join(&m.imdb_id)))
         .filter(|m| extracted_audio(m, &out.join(&m.imdb_id)).is_some())
@@ -2071,6 +2083,12 @@ async fn transcribe_all(
     // artifact and rides the R2 mirror to other machines.
     let store = Arc::new(osmo::Store::open("./.cache"));
     let http = Arc::new(reqwest::Client::new());
+    // The limit is read once: ElevenLabs raises it on its own mid-run once
+    // spend nears it, and everything past the original limit bills as
+    // overage. Films already in flight finish after the check, hence the
+    // margin.
+    let (_, allowance) = account.usage(&http).await?;
+    let ceiling = allowance.saturating_sub(films_in_flight.max(1) as u64 * CREDITS_PER_FILM_MARGIN);
     let out = Arc::new(out);
     let progress = AtomicUsize::new(0);
 
@@ -2082,7 +2100,13 @@ async fn transcribe_all(
             let out = Arc::clone(&out);
             let progress = &progress;
             async move {
-                let outcome = transcribe_one(&http, &account, &store, &movie, &out).await;
+                let outcome = match account.usage(&http).await {
+                    Ok((used, _)) if used >= ceiling => Err(anyhow::anyhow!(
+                        "skipped: {used} of this cycle's {allowance} credits spent"
+                    )),
+                    Ok(_) => transcribe_one(&http, &account, &store, &movie, &out).await,
+                    Err(e) => Err(e),
+                };
                 let n = progress.fetch_add(1, Ordering::Relaxed) + 1;
                 match &outcome {
                     Ok(words) => println!(
@@ -2146,7 +2170,9 @@ async fn transcript_check(
     }
     let total = queue.len();
     println!("{total} transcribed films to judge ({ungated} in languages without a phoneme gate left alone)");
-    subtitle_corpus::clips::warm_segmentation(&out, &queue).await?;
+    let segmentation_failed = subtitle_corpus::clips::warm_segmentation(&out, &queue).await?;
+    queue.retain(|movie| !segmentation_failed.contains(&movie.imdb_id));
+    let total = queue.len();
 
     let client = if !dry_run && max_downloads > 0 {
         match opensubtitles_client().await {
@@ -2927,12 +2953,16 @@ fn main() -> Result<()> {
             out,
             jobs,
         } => inventory(library, data_root, out, jobs),
+        Command_::FetchSubtitles {
+            out,
+            data_root,
+            imdb,
+        } => subtitle_corpus::fetch_subtitles::run(&out, &data_root, imdb.as_deref()).map(|_| ()),
         Command_::Refresh {
             library,
             data_root,
             out,
-            transcribe_imdb,
-        } => refresh(library, data_root, out, transcribe_imdb),
+        } => refresh(library, data_root, out),
         Command_::Extract { out, jobs, limit } => extract(out, jobs, limit),
         Command_::ExtractAudio {
             out,

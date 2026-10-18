@@ -351,7 +351,7 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
                         let s = match g {
                             SentenceGram::Learnable(s) | SentenceGram::Obvious(s) => s,
                         };
-                        s == spur_gram
+                        &s.sense == spur_gram
                     });
                     if is_direct {
                         direct.push(sentence_spur);
@@ -723,7 +723,7 @@ fn resolve_sentence(
         Vec::new();
     for sg in &sentence_grams.grams {
         let spur_gram = match sg {
-            SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => g,
+            SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => &g.sense,
         };
         let info = gram_to_info.get(spur_gram);
         let slug = info.and_then(|i| i.slug.clone());

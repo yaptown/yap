@@ -115,7 +115,7 @@
 {"id":"tt0047478","title":"七人の侍","year":1954,"original_language":"ja","rotten_tomatoes_score":100,"variety":"jpn"}
 {"id":"tt0087544","title":"風の谷のナウシカ","year":1984,"original_language":"ja","rotten_tomatoes_score":91,"variety":"jpn"}
 {"id":"tt0113568","title":"GHOST IN THE SHELL","year":1995,"original_language":"ja","rotten_tomatoes_score":95,"variety":"jpn"}
-{"id":"tt0266308","title":"バトル・ロワイアル","year":2000,"original_language":"ja","rotten_tomatoes_score":90}
+{"id":"tt0266308","title":"バトル・ロワイアル","year":2000,"original_language":"ja","rotten_tomatoes_score":90,"variety":"jpn"}
 {"id":"tt0104652","title":"紅の豚","year":1992,"original_language":"ja","rotten_tomatoes_score":96}
 {"id":"tt6587046","title":"君たちはどう生きるか","year":2023,"original_language":"ja","rotten_tomatoes_score":96}
 {"id":"tt8075192","title":"万引き家族","year":2018,"original_language":"ja","rotten_tomatoes_score":99}
@@ -185,3 +185,5 @@
 {"id":"tt0347246","title":"イノセンス","year":2004,"original_language":"ja","rotten_tomatoes_score":65}
 {"id":"tt0113703","title":"Love Letter","year":1995,"original_language":"ja","rotten_tomatoes_score":null,"variety":"jpn"}
 {"id":"tt23289160","title":"Godzilla Minus One","year":2023,"original_language":"ja","rotten_tomatoes_score":null,"variety":"jpn"}
+{"id":"tt27503384","title":"Perfect Days","poster_path":null,"localizations":{},"year":2023,"original_language":"ja","variety":"jpn","rotten_tomatoes_score":null}
+{"id":"tt38872297","title":"Cosmic Princess Kaguya!","poster_path":null,"localizations":{},"year":2026,"original_language":"ja","variety":"jpn","rotten_tomatoes_score":null}

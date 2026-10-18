@@ -175,7 +175,7 @@ impl GramArena {
 
 /// One occurrence of a gram: the corpus sentence key and the char spans
 /// of the heteronym words the gram covers.
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 struct Occurrence {
     text: String,
     spans: Vec<(u32, u32)>,
@@ -337,7 +337,7 @@ fn normalize(v: &mut [f32]) {
 /// which blocks SIMD (float addition is not associative) and runs at FP-add
 /// latency per element; spelling out the lanes fixes a *parallel* summation
 /// order the compiler can vectorize. Deterministic across runs and builds.
-fn dot(a: &[f32], b: &[f32]) -> f32 {
+pub(crate) fn dot(a: &[f32], b: &[f32]) -> f32 {
     let mut acc = [0.0f32; 8];
     for (ca, cb) in a.chunks_exact(8).zip(b.chunks_exact(8)) {
         for k in 0..8 {
@@ -356,7 +356,7 @@ fn dot(a: &[f32], b: &[f32]) -> f32 {
     (((acc[0] + acc[4]) + (acc[1] + acc[5])) + ((acc[2] + acc[6]) + (acc[3] + acc[7]))) + tail
 }
 
-fn mean_normalized(vectors: &[&Vec<f32>]) -> Vec<f32> {
+pub(crate) fn mean_normalized(vectors: &[&Vec<f32>]) -> Vec<f32> {
     let dim = vectors[0].len();
     let mut out = vec![0.0f32; dim];
     for v in vectors {
@@ -491,10 +491,10 @@ fn cosine_silhouette(vectors: &[&Vec<f32>], labels: &[u8]) -> f64 {
 // Cluster proposal (purely geometric — the adjudicator arbitrates)
 // ---------------------------------------------------------------------------
 
-/// One candidate cluster of a gram's occurrence cloud. Only the exemplars
-/// survive into the prompt — the judge labels lines, so cluster membership
-/// carries no downstream authority.
+/// A current cluster's full membership validates its persistent prompt witnesses.
+/// The judge still labels lines; cluster membership carries no downstream authority.
 struct Cluster {
+    members: Vec<usize>,
     /// Exemplar occurrence indices (see [`cluster_exemplars`]).
     exemplars: Vec<usize>,
 }
@@ -735,7 +735,10 @@ fn finish_proposal(
                 .map(|(_, c)| c)
                 .expect("at least two clusters");
             let exemplars = cluster_exemplars(&refs, &indices, own, other);
-            Cluster { exemplars }
+            Cluster {
+                exemplars,
+                members: indices,
+            }
         })
         .collect();
     Some(KeyProposal {
@@ -774,14 +777,14 @@ fn build_forced_proposal(key: GramId, vectors: &[Vec<f32>]) -> Option<KeyProposa
 /// validator rejects).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "lowercase")]
-enum UsageKind {
+pub(crate) enum UsageKind {
     Meaning,
     Construction,
     Formula,
 }
 
 impl UsageKind {
-    fn as_str(self) -> &'static str {
+    pub(crate) fn as_str(self) -> &'static str {
         match self {
             UsageKind::Meaning => "meaning",
             UsageKind::Construction => "construction",
@@ -1096,23 +1099,85 @@ struct KeyPrompt {
     lines: Vec<(usize, usize, usize, String)>,
 }
 
-fn key_prompt(prop: &KeyProposal, occs: &[Occurrence], display: String) -> KeyPrompt {
+type AdjudicationSamples = crate::corpus_samples::SampleCache<(Gram<String>, usize), Occurrence>;
+
+fn key_prompt(
+    prop: &KeyProposal,
+    gram: &Gram<String>,
+    occs: &[Occurrence],
+    vectors: &[Vec<f32>],
+    display: String,
+    samples: &mut AdjudicationSamples,
+) -> KeyPrompt {
     let mut lines = Vec::new();
-    let mut number = 0;
     for (cluster, c) in prop.clusters.iter().enumerate() {
-        for &i in &c.exemplars {
-            lines.push((number, cluster, i, mark_occurrence(&occs[i])));
-            number += 1;
+        let key = (gram.clone(), cluster);
+        let pool: Vec<_> = c.members.iter().map(|&i| occs[i].clone()).collect();
+        samples.refresh_with(&key, &pool, |survivors, _| {
+            if survivors.is_empty() {
+                return c.exemplars.iter().map(|&i| occs[i].clone()).collect();
+            }
+            let refs: Vec<_> = vectors.iter().collect();
+            let centroids: Vec<_> = prop
+                .clusters
+                .iter()
+                .map(|c| {
+                    mean_normalized(&c.members.iter().map(|&i| &vectors[i]).collect::<Vec<_>>())
+                })
+                .collect();
+            let own = &centroids[cluster];
+            let other = centroids
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| *i != cluster)
+                .max_by(|a, b| dot(own, a.1).total_cmp(&dot(own, b.1)))
+                .unwrap()
+                .1;
+            let remaining: Vec<_> = c
+                .members
+                .iter()
+                .copied()
+                .filter(|&i| !survivors.contains(&occs[i]))
+                .collect();
+            survivors
+                .iter()
+                .cloned()
+                .chain(
+                    cluster_exemplars(&refs, &remaining, own, other)
+                        .into_iter()
+                        .take(
+                            (EXEMPLARS_CENTRAL + EXEMPLARS_SPREAD).saturating_sub(survivors.len()),
+                        )
+                        .map(|i| occs[i].clone()),
+                )
+                .collect()
+        });
+        for occurrence in samples.get(&key) {
+            let i = occs.iter().position(|live| live == occurrence).unwrap();
+            lines.push((lines.len(), cluster, i, mark_occurrence(&occs[i])));
         }
     }
     let shown: HashSet<usize> = lines.iter().map(|(_, _, i, _)| *i).collect();
-    let unshown: Vec<usize> = (0..occs.len()).filter(|i| !shown.contains(i)).collect();
-    if !unshown.is_empty() {
-        let stride = unshown.len().div_ceil(RANDOM_SAMPLE_LINES).max(1);
-        for &i in unshown.iter().step_by(stride).take(RANDOM_SAMPLE_LINES) {
-            lines.push((number, RANDOM_SECTION, i, mark_occurrence(&occs[i])));
-            number += 1;
-        }
+    let pool: Vec<_> = occs
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| !shown.contains(i))
+        .map(|(_, o)| o.clone())
+        .collect();
+    let key = (gram.clone(), RANDOM_SECTION);
+    samples.refresh_with(&key, &pool, |survivors, pool| {
+        let remaining = crate::corpus_samples::remaining_items(pool, survivors);
+        let count = RANDOM_SAMPLE_LINES.saturating_sub(survivors.len());
+        let stride = remaining.len().div_ceil(count.max(1)).max(1);
+        survivors
+            .iter()
+            .cloned()
+            .chain(remaining.into_iter().step_by(stride).take(count))
+            .collect()
+    });
+    for occurrence in samples.get(&key) {
+        let i = occs.iter().position(|live| live == occurrence).unwrap();
+        lines.push((lines.len(), RANDOM_SECTION, i, mark_occurrence(&occs[i])));
     }
     KeyPrompt { display, lines }
 }
@@ -1438,7 +1503,7 @@ fn atom_window_matches<'a>(
 /// One anchor occurrence of a usage: a corpus sentence and the char spans
 /// of the gram's words in it. Anchors are stored as (sentence, spans), not
 /// vectors, so centroids can be recomputed under any embedding version.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UsageAnchor {
     pub sentence: String,
     pub spans: Vec<(u32, u32)>,
@@ -1446,8 +1511,15 @@ pub struct UsageAnchor {
     pub gold: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UsageEntry {
+    /// Reading-created slots are an output ledger, not semantic input to B.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
+    /// Defining canonical reading set of a reading-created sense, not an
+    /// annotation table. Semantic-discovery usages leave this absent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub readings: Option<Vec<String>>,
     /// "meaning" | "construction" | "formula".
     pub kind: String,
     pub gloss: String,
@@ -1464,13 +1536,21 @@ pub struct UsageEntry {
     pub anchors: Vec<UsageAnchor>,
 }
 
+impl UsageEntry {
+    pub(crate) fn is_reading_split(&self) -> bool {
+        self.source
+            .as_deref()
+            .is_some_and(|source| source.starts_with("reading-hierarchy:"))
+    }
+}
+
 /// A gram's usage inventory: the pedagogical units it splits into, with
 /// enough labeled data to classify any occurrence of the gram.
 ///
 /// Usage positions are persistent sense ids (one-based). On regeneration,
 /// matching glosses keep their slots, new glosses append, and missing usages
 /// retain their slots with empty anchors. Never sort or compact `usages`.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UsageInventory {
     /// Human-readable display of the mined gram.
     pub key: String,
@@ -1494,8 +1574,11 @@ pub struct UsageInventory {
 }
 
 impl UsageInventory {
-    fn retire_usages(&mut self) {
+    pub(crate) fn retire_usages(&mut self) {
         for usage in &mut self.usages {
+            if !usage.is_reading_split() {
+                usage.readings = None;
+            }
             usage.anchors.clear();
             usage.n_gold = 0;
             usage.n_assigned = 0;
@@ -1506,7 +1589,10 @@ impl UsageInventory {
     /// Preserve ids even when the judge reorders or stops returning a usage.
     fn keep_sense_ids(&mut self, mut previous: Self) {
         previous.retire_usages();
-        for usage in std::mem::take(&mut self.usages) {
+        for mut usage in std::mem::take(&mut self.usages) {
+            if !usage.is_reading_split() {
+                usage.readings = None;
+            }
             if let Some(slot) = previous
                 .usages
                 .iter_mut()
@@ -1702,6 +1788,7 @@ async fn expand_paradigms(
     known_terms: &HashSet<String>,
     known_multi: &HashSet<Vec<SpurAtom>>,
     discovered: &mut Vec<(DiscoveredTerm, Vec<String>)>,
+    samples: &mut crate::corpus_samples::SampleCache<Gram<String>>,
 ) -> Result<BTreeMap<usize, String>> {
     if discovered.is_empty() {
         return Ok(BTreeMap::new());
@@ -1789,6 +1876,11 @@ async fn expand_paradigms(
                     .map(|a| a.resolve(strings))
                     .collect::<Vec<Atom<String>>>(),
             );
+            let pool: Vec<_> = matches.iter().map(|s| s.to_string()).collect();
+            samples.refresh_with(&gram, &pool, |survivors, pool| {
+                crate::corpus_samples::select_first(survivors, pool, 5)
+            });
+            let examples = samples.get(&gram).to_vec();
             discovered.push((
                 DiscoveredTerm {
                     term: surface,
@@ -1801,7 +1893,7 @@ async fn expand_paradigms(
                     source: source.clone(),
                     silhouette,
                 },
-                matches.iter().take(5).map(|s| s.to_string()).collect(),
+                examples,
             ));
             let i = discovered.len() - 1;
             by_surface.insert(key, i);
@@ -1810,6 +1902,7 @@ async fn expand_paradigms(
         }
     }
 
+    samples.save()?;
     let citation_strings: BTreeSet<String> = membership.values().cloned().collect();
     println!(
         "usage-discovery[{}]: paradigms: {} citation forms, {n_new} new variants grounded, \
@@ -1890,6 +1983,20 @@ pub async fn discover(
     mode: DiscoverMode,
 ) -> Result<()> {
     let mut timer = crate::StageTimer::new();
+    let mut samples = crate::corpus_samples::SampleCache::load(
+        format!(
+            "out/{}/usage_expression_sentences.jsonl",
+            language.corpus_code()
+        )
+        .into(),
+    )?;
+    let mut adjudication_samples = AdjudicationSamples::load(
+        format!(
+            "out/{}/usage_adjudication_examples.jsonl",
+            language.corpus_code()
+        )
+        .into(),
+    )?;
     let arena = GramArena::from_vocabulary(&corpus.gram_vocabulary);
 
     // Index every sentence: decoded word spans, the gram segmentation
@@ -2086,14 +2193,19 @@ pub async fn discover(
     let prompts: Vec<KeyPrompt> = judged
         .iter()
         .map(|p| {
+            let mining = &keys[key_lookup[&p.key]];
             key_prompt(
                 p,
-                &keys[key_lookup[&p.key]].occs,
+                &arena.grams[p.key as usize],
+                &mining.occs,
+                &mining.vectors,
                 arena.display(p.key, language),
+                &mut adjudication_samples,
             )
         })
         .collect();
 
+    adjudication_samples.save()?;
     timer.lap("prompt building");
     if mode == DiscoverMode::DumpPrompts {
         println!("──── system prompt ────");
@@ -2209,7 +2321,11 @@ pub async fn discover(
                         .map(|a| a.resolve(&corpus.interners.strings))
                         .collect::<Vec<Atom<String>>>(),
                 );
-                let examples = matches.iter().take(5).map(|s| s.to_string()).collect();
+                let pool: Vec<_> = matches.iter().map(|s| s.to_string()).collect();
+                samples.refresh_with(&gram, &pool, |survivors, pool| {
+                    crate::corpus_samples::select_first(survivors, pool, 5)
+                });
+                let examples = samples.get(&gram).to_vec();
                 (
                     DiscoveredTerm {
                         term: surface,
@@ -2455,6 +2571,8 @@ pub async fn discover(
                 })
                 .collect();
             let entry = |kind: &str| UsageEntry {
+                source: None,
+                readings: None,
                 kind: kind.to_string(),
                 gloss: class.gloss.to_string(),
                 n_gold: class.gold.len(),
@@ -2560,6 +2678,7 @@ pub async fn discover(
     // Paradigm expansion, after the novelty filter so it only runs on terms
     // that are actually going to be proposed, and before opacity so the
     // adoption gate judges whole phrases rather than individual surfaces.
+    samples.save()?;
     let paradigm_membership = expand_paradigms(
         language,
         &corpus.interners.strings,
@@ -2567,6 +2686,7 @@ pub async fn discover(
         &known_terms,
         &known_multi,
         &mut discovered,
+        &mut samples,
     )
     .await?;
 
@@ -2848,28 +2968,38 @@ pub async fn assign_senses(
     restricted: &mut BTreeMap<String, SentenceInfo>,
     interners: &language_utils::GramInterners,
     store: &osmo::Store,
+    readings: &crate::readings::CorpusReadings,
 ) -> Result<BTreeMap<Gram<String>, UsageInventory>> {
     use language_utils::SpurGram;
     use std::num::NonZeroU32;
-    let path = format!(
-        "./generate-data/data/{}/usage_inventories.jsonl",
-        language.corpus_code()
-    );
-    let contents = match std::fs::read_to_string(&path) {
-        Ok(contents) => contents,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => String::new(),
-        Err(error) => return Err(error).context("Failed to read usage inventories"),
+    let rows = match &readings.inventories {
+        Some(rows) => rows.clone(),
+        None => {
+            let path = format!(
+                "./generate-data/data/{}/usage_inventories.jsonl",
+                language.corpus_code()
+            );
+            let contents = match std::fs::read_to_string(&path) {
+                Ok(contents) => contents,
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => String::new(),
+                Err(error) => return Err(error).context("Failed to read usage inventories"),
+            };
+            contents
+                .lines()
+                .map(serde_json::from_str)
+                .collect::<Result<Vec<UsageInventory>, _>>()?
+        }
     };
     let mut inventories = BTreeMap::new();
     struct Classifier {
+        has_readings: Vec<bool>,
         centroids: Vec<(NonZeroU32, Vec<f32>)>,
         counts: Vec<u32>,
         historical: Vec<usize>,
     }
     let mut classifiers: HashMap<SpurGram, Classifier> = HashMap::new();
     let mut skipped = 0usize;
-    for line in contents.lines() {
-        let mut inventory: UsageInventory = serde_json::from_str(line)?;
+    for mut inventory in rows {
         let Some(gram) = inventory
             .gram
             .get_interned(&interners.strings)
@@ -2882,6 +3012,9 @@ pub async fn assign_senses(
             );
             continue;
         };
+        let has_readings: Vec<_> = (1..=inventory.usages.len())
+            .map(|i| readings.has_observed_sense(&inventory.gram, i as u32))
+            .collect();
         let mut centroids = Vec::new();
         for (index, usage) in inventory.usages.iter_mut().enumerate() {
             usage.anchors.retain(|anchor| {
@@ -2892,15 +3025,18 @@ pub async fn assign_senses(
                     centroids.push((NonZeroU32::new(u32::try_from(index + 1)?).unwrap(), vector))
                 }
                 Err(_) => {
-                    usage.anchors.clear();
+                    if !has_readings[index] {
+                        usage.anchors.clear();
+                    }
                     skipped += 1;
                 }
             }
         }
-        if !centroids.is_empty() {
+        if !centroids.is_empty() || has_readings.iter().any(|&observed| observed) {
             classifiers.insert(
                 gram,
                 Classifier {
+                    has_readings,
                     centroids,
                     counts: vec![0; inventory.usages.len()],
                     historical: inventory
@@ -2925,7 +3061,7 @@ pub async fn assign_senses(
     for (text, info) in app.iter_mut().chain(restricted.iter_mut()) {
         let (_, index) = index_sentence(text, info, interners, language);
         let mut word_index = 0usize;
-        for token in &mut info.sentence.tokens {
+        for (gram_index, token) in info.sentence.tokens.iter_mut().enumerate() {
             let word_count = interners
                 .atoms(token.gram)
                 .iter()
@@ -2943,6 +3079,12 @@ pub async fn assign_senses(
             else {
                 continue;
             };
+            if let Some(sense) = readings.sense(text, gram_index) {
+                token.sense = Some(sense);
+                counts[sense.get() as usize - 1] += 1;
+                tagged += 1;
+                continue;
+            }
             if spans.is_empty() {
                 continue;
             }
@@ -2955,8 +3097,10 @@ pub async fn assign_senses(
             let sense = centroids
                 .iter()
                 .max_by(|a, b| dot(&vector, &a.1).total_cmp(&dot(&vector, &b.1)))
-                .unwrap()
-                .0;
+                .map(|(sense, _)| *sense);
+            let Some(sense) = sense else {
+                continue;
+            };
             token.sense = Some(sense);
             tagged += 1;
             counts[sense.get() as usize - 1] += 1;
@@ -2965,20 +3109,23 @@ pub async fn assign_senses(
     let defaults: HashMap<_, _> = classifiers
         .iter()
         .map(|(gram, classifier)| {
-            let sense = classifier
-                .centroids
-                .iter()
-                .max_by_key(|(sense, _)| {
-                    let index = sense.get() as usize - 1;
+            let index = (0..classifier.counts.len())
+                .filter(|&i| {
+                    classifier.has_readings[i]
+                        || classifier
+                            .centroids
+                            .iter()
+                            .any(|(s, _)| s.get() as usize == i + 1)
+                })
+                .max_by_key(|&index| {
                     (
                         classifier.counts[index],
                         classifier.historical[index],
-                        std::cmp::Reverse(*sense),
+                        std::cmp::Reverse(index),
                     )
                 })
-                .unwrap()
-                .0;
-            (*gram, sense)
+                .unwrap();
+            (*gram, NonZeroU32::new((index + 1) as u32).unwrap())
         })
         .collect();
     let fallbacks: usize = app
@@ -3036,6 +3183,171 @@ fn apply_sense_fallbacks(
 
 #[cfg(test)]
 mod tests {
+    fn original_prompt(prop: &KeyProposal, occs: &[Occurrence]) -> KeyPrompt {
+        let mut lines = Vec::new();
+        for (cluster, c) in prop.clusters.iter().enumerate() {
+            for &i in &c.exemplars {
+                lines.push((lines.len(), cluster, i, mark_occurrence(&occs[i])));
+            }
+        }
+        let shown: HashSet<_> = lines.iter().map(|(_, _, i, _)| *i).collect();
+        let unshown: Vec<_> = (0..occs.len()).filter(|i| !shown.contains(i)).collect();
+        if !unshown.is_empty() {
+            let stride = unshown.len().div_ceil(8).max(1);
+            for &i in unshown.iter().step_by(stride).take(8) {
+                lines.push((lines.len(), RANDOM_SECTION, i, mark_occurrence(&occs[i])));
+            }
+        }
+        KeyPrompt {
+            display: "test".into(),
+            lines,
+        }
+    }
+
+    fn proposal(occs: &[Occurrence], vectors: &[Vec<f32>]) -> KeyProposal {
+        let sides = [0, 1].map(|parity| {
+            (
+                (0..occs.len())
+                    .filter(|&i| {
+                        occs[i]
+                            .text
+                            .strip_prefix("word ")
+                            .unwrap()
+                            .parse::<usize>()
+                            .unwrap()
+                            % 2
+                            == parity
+                    })
+                    .collect(),
+                "kmeans",
+            )
+        });
+        finish_proposal(0, vectors, sides.into(), None, None).unwrap()
+    }
+
+    fn occurrence_pool(count: usize) -> Vec<Occurrence> {
+        (0..count)
+            .map(|i| Occurrence {
+                text: format!("word {i}"),
+                spans: vec![(0, 4)],
+            })
+            .collect()
+    }
+
+    #[test]
+    fn adjudication_first_population_matches_original_rendering() {
+        let dir = tempfile::tempdir().unwrap();
+        let gram = Gram(Vec::new());
+        for count in [8, 16, 25, 48, 99] {
+            let occs = occurrence_pool(count);
+            let vectors: Vec<_> = (0..count)
+                .map(|i| vec![if i % 2 == 0 { 1.0 } else { -1.0 }, 0.0])
+                .collect();
+            let prop = proposal(&occs, &vectors);
+            let expected = original_prompt(&prop, &occs);
+            let mut cache =
+                AdjudicationSamples::load(dir.path().join(format!("{count}.jsonl"))).unwrap();
+            let actual = key_prompt(&prop, &gram, &occs, &vectors, "test".into(), &mut cache);
+            assert_eq!(
+                adjudication_user_prompt(&actual),
+                adjudication_user_prompt(&expected)
+            );
+            assert_eq!(actual.lines, expected.lines);
+        }
+    }
+
+    #[test]
+    fn adjudication_growth_remaps_live_indices_and_revalidates_current_slots() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("samples.jsonl");
+        let mut cache = AdjudicationSamples::load(path.clone()).unwrap();
+        let gram = Gram(Vec::new());
+        let original = occurrence_pool(48);
+        let vectors: Vec<_> = (0..48)
+            .map(|i| vec![if i % 2 == 0 { 1.0 } else { -1.0 }, 0.0])
+            .collect();
+        let first = key_prompt(
+            &proposal(&original, &vectors),
+            &gram,
+            &original,
+            &vectors,
+            "test".into(),
+            &mut cache,
+        );
+        assert_eq!(
+            first
+                .lines
+                .iter()
+                .filter(|(_, c, _, _)| *c == RANDOM_SECTION)
+                .count(),
+            8
+        );
+        cache.save().unwrap();
+        let mut cache = AdjudicationSamples::load(path).unwrap();
+        let mut grown = occurrence_pool(148);
+        grown.reverse();
+        // Different ranking geometry cannot replace still-current witnesses.
+        let vectors: Vec<_> = (0..grown.len())
+            .map(|i| vec![1.0, i as f32 / 148.0])
+            .collect();
+        let prop = proposal(&grown, &vectors);
+        let stable = key_prompt(&prop, &gram, &grown, &vectors, "test".into(), &mut cache);
+        assert_eq!(
+            adjudication_user_prompt(&stable),
+            adjudication_user_prompt(&first)
+        );
+        for (before, after) in first.lines.iter().zip(&stable.lines) {
+            assert_eq!(original[before.2], grown[after.2]);
+        }
+        let removed = stable.lines[0].2;
+        let clusters = prop
+            .clusters
+            .iter()
+            .map(|c| {
+                (
+                    c.members
+                        .iter()
+                        .copied()
+                        .filter(|&i| i != removed)
+                        .collect(),
+                    "kmeans",
+                )
+            })
+            .collect();
+        let changed = finish_proposal(0, &vectors, clusters, None, None).unwrap();
+        let refreshed = key_prompt(&changed, &gram, &grown, &vectors, "test".into(), &mut cache);
+        let cluster: Vec<_> = refreshed
+            .lines
+            .iter()
+            .filter(|(_, c, _, _)| *c == 0)
+            .collect();
+        assert!(!cluster.iter().any(|(_, _, i, _)| *i == removed));
+        assert_eq!(
+            cluster
+                .iter()
+                .take(7)
+                .map(|line| &line.3)
+                .collect::<Vec<_>>(),
+            stable.lines[1..8]
+                .iter()
+                .map(|line| &line.3)
+                .collect::<Vec<_>>()
+        );
+        let shown: HashSet<_> = refreshed
+            .lines
+            .iter()
+            .filter(|(_, c, _, _)| *c != RANDOM_SECTION)
+            .map(|(_, _, i, _)| i)
+            .collect();
+        assert!(
+            refreshed
+                .lines
+                .iter()
+                .filter(|(_, c, _, _)| *c == RANDOM_SECTION)
+                .all(|(_, _, i, _)| !shown.contains(i))
+        );
+    }
+
     #[test]
     fn overlays_and_uncached_tokens_use_the_same_fallback() {
         use language_utils::{
@@ -3105,6 +3417,8 @@ mod tests {
                 usages: glosses
                     .iter()
                     .map(|gloss| UsageEntry {
+                        source: None,
+                        readings: None,
                         kind: "meaning".into(),
                         gloss: (*gloss).into(),
                         n_gold: 1,
@@ -3122,9 +3436,12 @@ mod tests {
                 source: "test".into(),
             }
         }
-        let previous = inventory(&["first", "second", "third"]);
+        let mut previous = inventory(&["first", "second", "third"]);
+        previous.usages[0].readings = Some(vec!["かな".into()]);
         let mut next = inventory(&["third", "first", "new"]);
+        next.usages[1].readings = Some(vec!["かんじ".into()]);
         next.keep_sense_ids(previous);
+        assert!(next.usages.iter().all(|u| u.readings.is_none()));
         assert_eq!(
             next.usages
                 .iter()

@@ -7,6 +7,9 @@ out/french_sentences.jsonl filter=lfs diff=lfs merge=lfs -text
 out/french_to_english_translations.jsonl filter=lfs diff=lfs merge=lfs -text
 out/corrected_proper_nouns.jsonl filter=lfs diff=lfs merge=lfs -text
 
+# Persisted reading samples can exceed 50 MB; keep picks, not regeneration work.
+out/*/reading_examples.jsonl filter=lfs diff=lfs merge=lfs -text
+
 # Per-language output files
 out/*/target_language_sentences_nlp.jsonl filter=lfs diff=lfs merge=lfs -text
 out/*/target_language_sentences.jsonl filter=lfs diff=lfs merge=lfs -text

@@ -246,7 +246,7 @@ fn checked_split(
         Ok(answer) => answer,
         // The model answered, just unusably. That is the same case as an
         // answer that fails the letter-for-letter check, so it falls back;
-        // only a failed request (transport, API) fails the pass.
+        // only a failed request (transport, API) fails the track.
         Err(error) if unusable_answer(&error) => {
             if show_rejection {
                 eprintln!("segmentation answer unusable for {cue:?}: {error:#}");
@@ -273,7 +273,7 @@ pub struct SplitReport {
     /// self-evident cues are closed by their own punctuation.
     pub asked: usize,
     /// Unique answers that failed the letter-for-letter check and fell back
-    /// to the cue's speaker turns. Request failures instead fail the pass.
+    /// to the cue's speaker turns. Request failures instead fail the track.
     pub fallbacks: usize,
 }
 
@@ -302,10 +302,35 @@ fn deduplicate_prompts(
     duplicates
 }
 
-fn restore_duplicates(
-    out: &mut [Vec<Option<CueSplit>>],
-    duplicates: &[(CueLocation, CueLocation)],
-) {
+// Errors live at cue granularity: a successful cue in a failed track can
+// still supply a duplicate in another track.
+type CueOutcome = Result<Option<CueSplit>, String>;
+
+fn fail_job(out: &mut [Vec<CueOutcome>], job: &[(usize, usize, String)], error: &str) {
+    for &(track, cue, _) in job {
+        out[track][cue] = Err(error.to_owned());
+    }
+}
+
+fn finish_tracks(out: Vec<Vec<CueOutcome>>) -> Vec<anyhow::Result<Vec<CueSplit>>> {
+    out.into_iter()
+        .map(|track| {
+            let mut failures = track.iter().filter_map(|cue| cue.as_ref().err());
+            if let Some(first) = failures.next() {
+                anyhow::bail!(
+                    "{} segmentation requests failed; first error: {first}",
+                    1 + failures.count()
+                );
+            }
+            Ok(track
+                .into_iter()
+                .map(|cue| cue.unwrap().expect("every cue is self-evident or answered"))
+                .collect())
+        })
+        .collect()
+}
+
+fn restore_duplicates(out: &mut [Vec<CueOutcome>], duplicates: &[(CueLocation, CueLocation)]) {
     for &((track, cue), (source_track, source_cue)) in duplicates {
         out[track][cue] = out[source_track][source_cue].clone();
     }
@@ -315,12 +340,14 @@ fn restore_duplicates(
 ///
 /// One request per cue, all tracks together — a course of fifty films is one
 /// batch, not fifty consecutive ones. Results come back per track, aligned
-/// with the cues passed in. `on_progress` sees the Batch API's status polls.
+/// with the cues passed in. Request and job failures fail only the affected
+/// tracks (including duplicate cues); the outer error is for partition setup.
+/// `on_progress` sees the Batch API's status polls.
 pub async fn split_tracks(
     client: &ChatClient,
     tracks: &[(&[SubtitleLine], Language)],
     on_progress: impl FnMut(&tysm::batch::Batch),
-) -> anyhow::Result<(Vec<Vec<CueSplit>>, SplitReport)> {
+) -> anyhow::Result<(Vec<anyhow::Result<Vec<CueSplit>>>, SplitReport)> {
     let mut prompts: Vec<(usize, usize, String)> = Vec::new();
     let mut evident: Vec<Vec<Option<CueSplit>>> = Vec::with_capacity(tracks.len());
     for (t, (lines, language)) in tracks.iter().enumerate() {
@@ -342,43 +369,25 @@ pub async fn split_tracks(
         &'a (usize, usize, String),
         Result<CueSplit, tysm::chat_completions::IndividualChatError>,
     );
-    let jobs = batch_jobs::partition::<_, CueSplit>(client, &prompts, |(_, _, prompt)| {
-        vec![
-            tysm::chat_completions::ChatMessage::system(SYSTEM_PROMPT),
-            tysm::chat_completions::ChatMessage::user(prompt),
-        ]
-    })?;
-    let results = batch_jobs::run(&jobs, |chunk| {
+    let result = batch_jobs::run(|| {
         client.batch_chat_with_system_prompt_fn::<_, _, CueSplit>(
             SYSTEM_PROMPT,
-            chunk,
+            &prompts,
             |(_, _, p)| p.clone(),
             |batch| (on_progress.lock().unwrap())(batch),
         )
     })
     .await;
     let mut answers: Vec<Answer> = Vec::with_capacity(prompts.len());
-    let mut failed = 0;
-    for (job, result) in jobs.iter().zip(results) {
-        match result {
-            Ok(rows) => answers.extend(rows),
-            Err(error) => {
-                failed += job.len();
-                eprintln!(
-                    "segmentation job failed ({} requests): {error:#}",
-                    job.len()
-                );
-            }
-        }
+    let mut out: Vec<Vec<CueOutcome>> = evident
+        .into_iter()
+        .map(|track| track.into_iter().map(Ok).collect())
+        .collect();
+    match result {
+        Ok(rows) => answers.extend(rows),
+        Err(error) => fail_job(&mut out, &prompts, &format!("{error:#}")),
     }
-    anyhow::ensure!(
-        failed == 0,
-        "{failed} segmentation requests failed at job level"
-    );
-
-    // Model answers land in their cue's slot; the self-evident cues are
-    // already there.
-    let mut out: Vec<Vec<Option<CueSplit>>> = evident;
+    // Model answers land in their cue's slot; self-evident cues are already there.
     let mut report = SplitReport {
         cues: tracks.iter().map(|(lines, _)| lines.len()).sum(),
         asked: prompts.len(),
@@ -389,31 +398,17 @@ pub async fn split_tracks(
         let split = match checked_split(cue, answer, report.fallbacks < SHOWN_FALLBACKS) {
             Ok(split) => split,
             Err(e) => {
-                failed += 1;
-                eprintln!("segmentation request failed for {cue:?}: {e:#}");
+                out[*t][*i] = Err(format!("{e:#}"));
                 continue;
             }
         };
-        out[*t][*i] = Some(split.unwrap_or_else(|| {
+        out[*t][*i] = Ok(Some(split.unwrap_or_else(|| {
             report.fallbacks += 1;
             CueSplit::per_cue(cue)
-        }));
+        })));
     }
-    anyhow::ensure!(
-        failed == 0,
-        "{failed} segmentation requests failed individually"
-    );
     restore_duplicates(&mut out, &duplicates);
-    let out = out
-        .into_iter()
-        .map(|track| {
-            track
-                .into_iter()
-                .map(|s| s.expect("every cue is self-evident or answered"))
-                .collect()
-        })
-        .collect();
-    Ok((out, report))
+    Ok((finish_tracks(out), report))
 }
 
 /// Segment one track.
@@ -423,7 +418,7 @@ pub async fn split(
     language: Language,
 ) -> anyhow::Result<(Vec<CueSplit>, SplitReport)> {
     let (mut tracks, report) = split_tracks(client, &[(lines, language)], print_progress()).await?;
-    Ok((tracks.remove(0), report))
+    Ok((tracks.remove(0)?, report))
 }
 
 /// A progress callback that prints a line to stderr whenever a batch's
@@ -475,7 +470,7 @@ mod tests {
             .unwrap(),
             None
         );
-        // A request that never got an answer fails the pass.
+        // A request that never got an answer fails the track.
         assert!(checked_split(
             "original",
             Err(tysm::chat_completions::IndividualChatError::Other(
@@ -499,12 +494,72 @@ mod tests {
         let first = CueSplit::per_cue("first");
         let second = CueSplit::per_cue("second");
         let mut out = vec![
-            vec![Some(first.clone()), Some(second.clone())],
-            vec![None, None],
+            vec![Ok(Some(first.clone())), Ok(Some(second.clone()))],
+            vec![Ok(None), Ok(None)],
         ];
         restore_duplicates(&mut out, &duplicates);
-        assert_eq!(out[0], [Some(first.clone()), Some(second.clone())]);
-        assert_eq!(out[1], [Some(second), Some(first)]);
+        assert_eq!(out[0], [Ok(Some(first.clone())), Ok(Some(second.clone()))]);
+        assert_eq!(out[1], [Ok(Some(second)), Ok(Some(first))]);
+    }
+
+    #[test]
+    fn individual_failures_follow_only_their_duplicate_cues() {
+        let failure = checked_split(
+            "bad",
+            Err(tysm::chat_completions::IndividualChatError::Other(
+                "offline".into(),
+            )),
+            false,
+        )
+        .map_err(|error| format!("{error:#}"));
+        let good = CueSplit::per_cue("good");
+        let mut out = vec![
+            vec![failure, Ok(Some(good.clone()))],
+            vec![Ok(None), Ok(None)],
+            vec![Ok(None)],
+        ];
+        restore_duplicates(
+            &mut out,
+            &[((1, 0), (0, 0)), ((1, 1), (0, 0)), ((2, 0), (0, 1))],
+        );
+        let results = finish_tracks(out);
+        assert!(results[0]
+            .as_ref()
+            .unwrap_err()
+            .to_string()
+            .contains("1 segmentation requests failed"));
+        let error = results[1].as_ref().unwrap_err().to_string();
+        assert!(error.contains("2 segmentation requests failed"));
+        assert!(error.contains("offline"));
+        assert_eq!(results[2].as_ref().unwrap(), &[good]);
+    }
+
+    #[test]
+    fn job_failure_affects_only_its_cues_and_their_duplicates() {
+        let good = CueSplit::self_evident("Yes!").unwrap();
+        let mut out = vec![
+            vec![Ok(None)],
+            vec![Ok(None)],
+            vec![Ok(None)],
+            vec![Ok(Some(good.clone()))],
+            vec![],
+        ];
+        fail_job(
+            &mut out,
+            &[(0, 0, "a".into()), (1, 0, "b".into())],
+            "job offline",
+        );
+        restore_duplicates(&mut out, &[((2, 0), (1, 0))]);
+        let results = finish_tracks(out);
+        for result in &results[..3] {
+            assert_eq!(
+                result.as_ref().unwrap_err().to_string(),
+                "1 segmentation requests failed; first error: job offline"
+            );
+        }
+        assert_eq!(results[3].as_ref().unwrap(), &[good]);
+        assert!(results[4].as_ref().unwrap().is_empty());
+        assert!(finish_tracks(vec![]).is_empty());
     }
 
     #[test]

@@ -1402,7 +1402,11 @@ fn comprehensible_sentence_from_spur(
     language_pack: &LanguagePack,
     sentence: Spur,
 ) -> Option<ComprehensibleSentence> {
-    let sentence_grams = language_pack.encoded_sentences.get(&sentence)?;
+    let sentence_grams = language_pack
+        .encoded_sentences
+        .get(&sentence)?
+        .clone()
+        .without_readings();
 
     // Collect unique phrases (high and low confidence multiword terms)
     let unique_target_language_phrases = {
@@ -1426,7 +1430,7 @@ fn comprehensible_sentence_from_spur(
 
     Some(ComprehensibleSentence {
         target_language: sentence,
-        target_language_sentence_grams: sentence_grams.clone(),
+        target_language_sentence_grams: sentence_grams,
         unique_target_language_phrases,
         native_languages,
     })
@@ -1783,7 +1787,7 @@ impl weapon::AppState for Deck {
                                 .multiword_terms
                                 .iter()
                                 .chain(encoded_sentence.low_confidence_multiword_terms.iter())
-                                .map(|term| &term.gram)
+                                .map(|term| &term.gram.sense)
                             {
                                 remembered_grams.insert(*gram_spur);
                             }
@@ -7465,15 +7469,15 @@ mod tests {
                 };
                 for sg in &sentence_grams.grams {
                     match sg {
-                        SentenceGram::Learnable(g) => report(g, "learnable"),
-                        SentenceGram::Obvious(g) => report(g, "obvious"),
+                        SentenceGram::Learnable(g) => report(&g.sense, "learnable"),
+                        SentenceGram::Obvious(g) => report(&g.sense, "obvious"),
                     }
                 }
                 for term in &sentence_grams.multiword_terms {
-                    report(&term.gram, "multiword");
+                    report(&term.gram.sense, "multiword");
                 }
                 for term in &sentence_grams.low_confidence_multiword_terms {
-                    report(&term.gram, "low-conf-multiword");
+                    report(&term.gram.sense, "low-conf-multiword");
                 }
             }
         }

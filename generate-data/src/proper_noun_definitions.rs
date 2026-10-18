@@ -115,12 +115,22 @@ Output JSON format:
         native_language = native_language.prompt_name(),
         target_language = target_language.prompt_name()
     );
+    let mut samples = crate::corpus_samples::SampleCache::load(
+        crate::pipeline::course_dirs(&course)?
+            .native_specific_dir
+            .join("proper_noun_sentences.jsonl"),
+    )?;
+    for (noun, pool) in &proper_noun_to_sentences {
+        samples.refresh_with(noun, pool, |survivors, pool| {
+            crate::corpus_samples::select_first(survivors, pool, 3)
+        });
+    }
+    samples.save()?;
     let prompts = proper_noun_to_sentences
-        .iter()
-        .map(|(proper_noun, example_sentences)| {
-            let examples = example_sentences
+        .keys()
+        .map(|proper_noun| {
+            let examples = samples.get(proper_noun)
                 .iter()
-                .take(3)
                 .map(|s| format!("- {s}"))
                 .collect::<Vec<_>>()
                 .join("\n");

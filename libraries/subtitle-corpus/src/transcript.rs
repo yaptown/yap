@@ -55,6 +55,7 @@ use crate::vad::BUCKET_MS;
 const PRODUCED_BY: &str = "elevenlabs_scribe_v2__verbatim_diarize_char";
 
 const SCRIBE_URL: &str = "https://api.elevenlabs.io/v1/speech-to-text";
+const SUBSCRIPTION_URL: &str = "https://api.elevenlabs.io/v1/user/subscription";
 const SCRIBE_MODEL: &str = "scribe_v2";
 
 /// A superset of word timings — same words, same fields, plus per-character
@@ -87,6 +88,24 @@ impl ScribeAccount {
 
     fn key(&self) -> &str {
         &self.key
+    }
+
+    /// Credits spent this billing cycle, and the cycle's limit.
+    pub async fn usage(&self, http: &reqwest::Client) -> Result<(u64, u64)> {
+        #[derive(Deserialize)]
+        struct Subscription {
+            character_count: u64,
+            character_limit: u64,
+        }
+        let s: Subscription = http
+            .get(SUBSCRIPTION_URL)
+            .header("xi-api-key", self.key())
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
+        Ok((s.character_count, s.character_limit))
     }
 }
 

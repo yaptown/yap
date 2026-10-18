@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 3924865
-Total errors: 11085
+Total predictions: 3924895
+Total errors: 11086
 Accuracy: 99.72%
 
 ## Error Patterns (sorted by frequency)
@@ -1606,6 +1606,14 @@ Accuracy: 99.72%
   - I think I prefer "abracadabra."
   - We much prefer "Aquarius".
 
+### "pronounced" + """ (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - It's pronounced "Hastings."
+  - It's pronounced "straws."
+  - There is a word with "a" which is not pronounced "a".
+
 ### "read" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2351,13 +2359,6 @@ Accuracy: 99.72%
 - Examples:
   - How do you pronounce "pfirsichbaeumchen"?
   - How do you pronounce "pronounce"?
-
-### "pronounced" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - It's pronounced "Hastings."
-  - There is a word with "a" which is not pronounced "a".
 
 ### "reading" + """ (2 occurrences)
 - Predicted: None

@@ -179,8 +179,8 @@ pub async fn judge<'a>(
         Transport::Live => client.with_no_batch(),
     };
     match language.corpus_code() {
-        "spa" => judge_with::<SpanishAnswer>(language, &sentences, &client, transport).await,
-        "por" => judge_with::<PortugueseAnswer>(language, &sentences, &client, transport).await,
+        "spa" => judge_with::<SpanishAnswer>(language, &sentences, &client).await,
+        "por" => judge_with::<PortugueseAnswer>(language, &sentences, &client).await,
         _ => anyhow::bail!("no dialect judge for {}", language.corpus_code()),
     }
 }
@@ -189,7 +189,6 @@ async fn judge_with<T: DeserializeOwned + JsonSchema + Into<Dialect>>(
     language: Language,
     sentences: &[&str],
     client: &ChatClient,
-    transport: Transport,
 ) -> Result<HashMap<String, Dialect>> {
     // Every pass goes in the same round of batches.
     let prompts = system_prompts(language);
@@ -198,47 +197,32 @@ async fn judge_with<T: DeserializeOwned + JsonSchema + Into<Dialect>>(
         .flat_map(|prompt| sentences.iter().map(move |&s| (prompt.as_str(), s)))
         .collect();
     let request = |&(system, sentence): &(&str, &str)| messages(system, language, sentence);
-    let jobs = match transport {
-        Transport::Batch => batch_jobs::partition::<_, T>(client, &items, request)?,
-        // The adapter already limits concurrent live requests. One group avoids
-        // repeating its remote prior-batch lookup for each individual sentence.
-        Transport::Live => vec![&items[..]],
-    };
     let bar = indicatif::ProgressBar::new(items.len() as u64);
     bar.set_message(format!("{} dialect routing", language.corpus_code()));
-    let progress = crate::BatchProgress::new(&bar, jobs.len());
-    let submit = |i: usize| {
-        let progress = &progress;
-        let group = jobs[i];
-        async move {
-            client
-                .batch_chat_with_messages_fn::<_, T>(group, request, |batch| {
-                    progress.report(i, group.len(), batch)
-                })
-                .await
-        }
-    };
-    let indices: Vec<_> = (0..jobs.len()).collect();
-    let results = batch_jobs::run(&indices, |&i| submit(i)).await;
+    let progress = crate::BatchProgress::new(&bar, 1);
+    let results = batch_jobs::run(|| {
+        client.batch_chat_with_messages_fn::<_, T>(&items, request, |batch| {
+            progress.report(0, items.len(), batch)
+        })
+    })
+    .await?;
     let mut labels = HashMap::<String, Dialect>::new();
-    for result in results {
-        for ((_, sentence), answer) in result? {
-            let dialect = match answer {
-                Ok(answer) => answer.into(),
-                Err(error) if unusable_answer(&error) => {
-                    eprintln!(
-                        "dialect answer unusable; keeping neutral: {} {sentence:?}: {error:#}",
-                        language.corpus_code()
-                    );
-                    Dialect::Neutral
-                }
-                Err(error) => return Err(error.into()),
-            };
-            let label = labels
-                .entry((*sentence).to_owned())
-                .or_insert(Dialect::Neutral);
-            *label = label.and(dialect);
-        }
+    for ((_, sentence), answer) in results {
+        let dialect = match answer {
+            Ok(answer) => answer.into(),
+            Err(error) if unusable_answer(&error) => {
+                eprintln!(
+                    "dialect answer unusable; keeping neutral: {} {sentence:?}: {error:#}",
+                    language.corpus_code()
+                );
+                Dialect::Neutral
+            }
+            Err(error) => return Err(error.into()),
+        };
+        let label = labels
+            .entry((*sentence).to_owned())
+            .or_insert(Dialect::Neutral);
+        *label = label.and(dialect);
     }
     bar.finish_and_clear();
     Ok(labels)

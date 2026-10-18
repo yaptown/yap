@@ -1,8 +1,8 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 3597616
-Total errors: 6292
-Accuracy: 99.83%
+Total predictions: 3604148
+Total errors: 6383
+Accuracy: 99.82%
 
 ## Error Patterns (sorted by frequency)
 
@@ -14,7 +14,7 @@ Accuracy: 99.83%
   - "A me non piace ripetermi." "Cosa?"
   - "A te chi piace?" "Mary."
 
-### "," + """ (200 occurrences)
+### "," + """ (201 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -22,7 +22,7 @@ Accuracy: 99.83%
   - "Cara Elsa, "volevo solo farti sapere che ora non voglio rompere con te.
   - "Caravan", "Whiplash".
 
-### """ + "in" (71 occurrences)
+### """ + "in" (72 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -54,13 +54,13 @@ Accuracy: 99.83%
   - Alcuni vi definiscono il "Dream Team".
   - Alla fine, vince il "sì"!
 
-### "un" + """ (56 occurrences)
+### "un" + """ (57 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
+  - Ad una festa un "polipo" le si è avvinghiato sulle parti più intime.
   - Anche giacca e cravatta è un "dresscode".
   - Beh, è un soldato modello, ma non è un "purosangue".
-  - Bel modo di trattare un "vet", amico.
 
 ### "è" + """ (55 occurrences)
 - Predicted: None
@@ -78,7 +78,7 @@ Accuracy: 99.83%
   - Al diavolo la "Posta del cuore"?
   - Altre volte, la "madre" prendeva il sopravvento completamente.
 
-### """ + "è" (51 occurrences)
+### """ + "è" (52 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -102,7 +102,7 @@ Accuracy: 99.83%
   - Basta dire "Bob".
   - Che cazzo vuol dire "al sicuro"?
 
-### "parola" + """ (40 occurrences)
+### "parola" + """ (42 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -110,7 +110,7 @@ Accuracy: 99.83%
   - A lei non piace la parola "studio".
   - A me non piace la parola "confessione".
 
-### """ + "non" (39 occurrences)
+### """ + "non" (40 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -182,14 +182,6 @@ Accuracy: 99.83%
   - "La notte" di Rameau, signora contessa.
   - "Non è necessario" di Alain Bosquet.
 
-### "scritto" + """ (24 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Aspetta un momento, hai scritto "Morris" male.
-  - C'era un cartello con scritto "Rani e Vijay si sposano".
-  - C'è scritto "D-FESA" .
-
 ### "significa" + """ (24 occurrences)
 - Predicted: None
 - Actual: Space
@@ -230,7 +222,15 @@ Accuracy: 99.83%
   - "Ti arresteranno" o "Ti manderanno in prigione".
   - Come fanno alcuni con Vonnegut o "Il Grande Lebowski"?
 
-### "chiamano" + """ (21 occurrences)
+### "scritto" + """ (23 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Aspetta un momento, hai scritto "Morris" male.
+  - C'era un cartello con scritto "Rani e Vijay si sposano".
+  - C'è scritto "D-FESA" .
+
+### "chiamano" + """ (22 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -254,6 +254,14 @@ Accuracy: 99.83%
   - Anna, cosa intendi per "normale"?
   - Che cosa intende per "supporto"?
 
+### "è" + "?" (20 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Allora, che c'è ?
+  - BIRIBÒ, BIRIBÈ, indovina chi è ?
+  - Che c'è ?
+
 ### """ + "per" (18 occurrences)
 - Predicted: None
 - Actual: Space
@@ -270,21 +278,13 @@ Accuracy: 99.83%
   - Aspetta, come "nessuno"?
   - Conosciuta anche come "Il Sindacato".
 
-### "è" + "?" (17 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Allora, che c'è ?
-  - BIRIBÒ, BIRIBÈ, indovina chi è ?
-  - Che c'è ?
-
-### "vero" + "?" (15 occurrences)
+### "vero" + "?" (18 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Capo mastro, vero ?
-  - Lei ha una figlia, vero ?
-  - Lei è Gurin, vero ?
+  - Ci sono state le SS vero ?
+  - Credo di non sbagliare vero ?
 
 ### """ + "con" (14 occurrences)
 - Predicted: None
@@ -366,6 +366,14 @@ Accuracy: 99.83%
   - Hai della "Burbujas"?
   - Il nuovo libro di Raleigh trattava della "sindrome di Heinsbergen".
 
+### "io" + "!" (13 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Anch'io !
+  - Aurelio, senti, salgo io, ci parlo io !
+  - Con le tedesche sono sempre andato tranquillo io !
+
 ### "È" + """ (13 occurrences)
 - Predicted: None
 - Actual: Space
@@ -382,6 +390,14 @@ Accuracy: 99.83%
   - "Pedia" come enciclopedia, e "Wiki" come i tanti ricercatori vichinghi.
   - "Pedia" come enciclopedia, e "Wiki" come i tanti ricercatori vichinghi.
 
+### "detto" + "?" (12 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A chi lo hai detto ?
+  - Ai tuoi genitori l'hai detto ?
+  - Che avrebbe detto ?
+
 ### "in" + """ (12 occurrences)
 - Predicted: None
 - Actual: Space
@@ -389,14 +405,6 @@ Accuracy: 99.83%
   - Anch'io ho recitato in "Romeo e Giulietta", facevo il prete.
   - Assuma il ruolo della pubblica accusa, in "lo Stato contro Meade".
   - Come in "circuito fuso"?
-
-### "io" + "!" (12 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Anch'io !
-  - Aurelio, senti, salgo io, ci parlo io !
-  - Con le tedesche sono sempre andato tranquillo io !
 
 ### "mamma" + "?" (12 occurrences)
 - Predicted: None
@@ -486,14 +494,6 @@ Accuracy: 99.83%
   - Ma che face da "patacca"!
   - Mi piacevano le sue prime canzoni, ma da "Papa Don't Preach" è finito tutto.
 
-### "detto" + "?" (10 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A chi lo hai detto ?
-  - Ai tuoi genitori l'hai detto ?
-  - Che avrebbe detto ?
-
 ### "me" + "?" (10 occurrences)
 - Predicted: None
 - Actual: Space
@@ -534,6 +534,14 @@ Accuracy: 99.83%
   - I latini la chiamavano "acqua felice".
   - Il babbo del mio babbo lo chiamavano "Carnazza".
 
+### "lei" + "?" (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Allora il cattivo è lei ?
+  - Chi è lei ?
+  - Come immaginare che avrebbero provato a violentarla mentre stava con lei ?
+
 ### "più" + """ (9 occurrences)
 - Predicted: None
 - Actual: Space
@@ -550,6 +558,14 @@ Accuracy: 99.83%
   - Allora proviamo questo "buon ramen"!
   - Basta con questo "come volete", dammi del tu.
 
+### "qui" + "?" (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Che cosa fate qui ?
+  - Come osi venire qui ?
+  - Come sapevi che eravamo qui ?
+
 ### "sono" + """ (9 occurrences)
 - Predicted: None
 - Actual: Space
@@ -557,6 +573,14 @@ Accuracy: 99.83%
   - Capisco che non sono "facile".
   - E chi diavolo sono "LORO"?
   - Ho detto che sono "fans", al plurale.
+
+### "succede" + "?" (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Che succede ?
+  - Che ti succede ?
+  - Cosa le succede ?
 
 ### "tu" + "?" (9 occurrences)
 - Predicted: None
@@ -598,6 +622,14 @@ Accuracy: 99.83%
   - Già, tu preferisci il gatto alla "passera".
   - I tuoi "ospiti", sono sopravvissuti alla "festa di benvenuto."
 
+### "bene" + "?" (8 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Che c'è di bene ?
+  - Ho parlato bene ?
+  - Non lo sai che sto così bene ?
+
 ### "chiamare" + """ (8 occurrences)
 - Predicted: None
 - Actual: Space
@@ -605,14 +637,6 @@ Accuracy: 99.83%
   - Lo voleva quasi chiamare "Non giocare d'azzardo".
   - Mi puoi chiamare "comandante di bordo".
   - Nessuno mi può chiamare "maschiaccio" e credere di cavarsela.
-
-### "lei" + "?" (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Allora il cattivo è lei ?
-  - Chi è lei ?
-  - Come immaginare che avrebbero provato a violentarla mentre stava con lei ?
 
 ### "non" + """ (8 occurrences)
 - Predicted: None
@@ -630,14 +654,6 @@ Accuracy: 99.83%
   - La Selvaggina è qui !
   - Mi tiri fuori da qui !
 
-### "qui" + "?" (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Che cosa fate qui ?
-  - Come osi venire qui ?
-  - Come sapevi che eravamo qui ?
-
 ### "sai" + "?" (8 occurrences)
 - Predicted: None
 - Actual: Space
@@ -646,13 +662,13 @@ Accuracy: 99.83%
   - Che ne sai ?
   - Comunque abitava lì, sai ?
 
-### "succede" + "?" (8 occurrences)
+### "suo" + """ (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Che succede ?
-  - Che ti succede ?
-  - Cosa le succede ?
+  - Ah, io sono il suo "prossimo marito".
+  - Eccole, il suo "principe"!
+  - Ha detto che anche lui ha il suo "piccolo annuncio" da fare.
 
 ### """ + "ha" (7 occurrences)
 - Predicted: None
@@ -726,14 +742,6 @@ Accuracy: 99.83%
   - Non "Squadra della Squadra Tattica".
   - Non "cosa", ma "chi"!
 
-### "bene" + "?" (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Che c'è di bene ?
-  - Ho parlato bene ?
-  - Non lo sai che sto così bene ?
-
 ### "bene" + "»" (7 occurrences)
 - Predicted: Space
 - Actual: None
@@ -749,6 +757,14 @@ Accuracy: 99.83%
   - Cosa vuol dire essere "strega"?
   - Devono essere "Mak-kuro Kurosuke."
   - E il coma che le hanno indotto, quello farmacologico, pare essere "buono".
+
+### "fatto" + "?" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Che cosa ho fatto ?
+  - Che diavolo ho fatto ?
+  - Che mi hanno fatto ?
 
 ### "giù" + "!" (7 occurrences)
 - Predicted: None
@@ -805,14 +821,6 @@ Accuracy: 99.83%
   - A partire da ora, potrà conoscere solo "l'opinione ufficiale".
   - Dì solo "sì" come una persona normale!
   - E quindi suo padre prima ha detto solo "no"?
-
-### "suo" + """ (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ah, io sono il suo "prossimo marito".
-  - Eccole, il suo "principe"!
-  - Ha detto che anche lui ha il suo "piccolo annuncio" da fare.
 
 ### """ + "cosa" (6 occurrences)
 - Predicted: None
@@ -918,14 +926,6 @@ Accuracy: 99.83%
   - Che tempo fa ?
   - Cosa fa ?
 
-### "fatto" + "?" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Che diavolo ho fatto ?
-  - Che mi hanno fatto ?
-  - Chi te l'ha fatto ?
-
 ### "io" + "»" (6 occurrences)
 - Predicted: Space
 - Actual: None
@@ -974,6 +974,14 @@ Accuracy: 99.83%
   - Ho realmente letto le parole "lenta decomposizione" sul tuo schermo?
   - Le parole "la fase finale" continuano ad affacciarsi nella mia mente.
 
+### "perché" + "?" (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Già perché ?
+  - Ma no, perché ?
+  - Marina perché ?
+
 ### "quel" + """ (6 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1021,6 +1029,22 @@ Accuracy: 99.83%
   - Come va ?
   - Dove va ?
   - Ho qualcosa che non va ?
+
+### "via" + "!" (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Andate via !
+  - Gradisca, non andare via !
+  - Lasciami andare via !
+
+### "visto" + "?" (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ha visto ?
+  - Hai visto ?
+  - Lo hai visto ?
 
 ### """ + "al" (5 occurrences)
 - Predicted: None
@@ -1158,6 +1182,14 @@ Accuracy: 99.83%
   - Potresti essere il cantante dei "The Fall".
   - Prendi Alan dei "Crispy Ambulance" e corri cazzo!
 
+### "fai" + "?" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Che cosa fai ?
+  - Che fai ?
+  - Cosa fai ?
+
 ### "fatto" + "!" (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1165,6 +1197,14 @@ Accuracy: 99.83%
   - Allora dimmi che cosa ha fatto !
   - Basta individuarne uno, farsi vedere e il gioco è fatto !
   - E il gioco è fatto !
+
+### "io" + "?" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Allora vai a cercarlo o vuoi che lo faccia io ?
+  - Che vergogna che siamo noi due tu e io ?
+  - Cosa ci posso fare io ?
 
 ### "leggere" + """ (5 occurrences)
 - Predicted: None
@@ -1310,6 +1350,14 @@ Accuracy: 99.83%
   - Nikita, vengo con te !
   - Non me lo aspettavo da te !
 
+### "tutti" + "?" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ci vuoi ammazzare tutti ?
+  - Perché me lo chiedete tutti ?
+  - Verranno tutti ?
+
 ### "va" + "!" (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1317,14 +1365,6 @@ Accuracy: 99.83%
   - Così non va !
   - Gradisca se ne va !
   - La pro-spe-tti-va !
-
-### "visto" + "?" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ha visto ?
-  - Hai visto ?
-  - Non hai visto ?
 
 ### """ + "disse" (4 occurrences)
 - Predicted: None
@@ -1414,6 +1454,14 @@ Accuracy: 99.83%
   - Auguri, Katia !
   - Katia !
 
+### "Significa" + """ (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Significa "Benvenuto".
+  - Significa "Vieni in mio aiuto, o luce, risorgi alla vita".
+  - Significa "come stai".
+
 ### "Sono" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1494,6 +1542,14 @@ Accuracy: 99.83%
   - Cosa dici ?
   - Ma che cosa dici ?
 
+### "dire" + "?" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Che cosa vuoi dire ?
+  - Che gli devo dire ?
+  - Che vuoi dire ?
+
 ### "due" + "»" (4 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1509,14 +1565,6 @@ Accuracy: 99.83%
   - Ecco, dì "babbo".
   - Ora dì "Ahh".
   - Sorella dì "Sì".
-
-### "fai" + "?" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Che cosa fai ?
-  - Che fai ?
-  - Ehi, che cazzo fai ?!
 
 ### "fare" + "»" (4 occurrences)
 - Predicted: Space
@@ -1541,14 +1589,6 @@ Accuracy: 99.83%
   - Com'è possibile che abbiamo il ciclo lo stesso giorno ?
   - Inventate il lavoro giorno per giorno ?
   - Li sento ogni giorno ?
-
-### "io" + "?" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Allora vai a cercarlo o vuoi che lo faccia io ?
-  - Che vergogna che siamo noi due tu e io ?
-  - Cosa ci posso fare io ?
 
 ### "lassù" + "!" (4 occurrences)
 - Predicted: None
@@ -1638,14 +1678,6 @@ Accuracy: 99.83%
   - Mi piace il nome "Tampopo".
   - Sami pronunciava il suo nome "Shami".
 
-### "perché" + "?" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ma no, perché ?
-  - No, perché ?
-  - Sì, perché ?
-
 ### "piace" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1710,6 +1742,14 @@ Accuracy: 99.83%
   - «La signorina ha ragione», dichiarò Maurice.
   - «Non l’avevo vista da questo punto di vista, ma hai ragione», dissi.
 
+### "ricordi" + "?" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Come quando ci siamo parlati per la prima volta ti ricordi ?
+  - L'adoravano tutti, ti ricordi ?
+  - Me l'aveva data il dentista quando avevo tanto male al dente ricordi ?
+
 ### "scrive" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1758,13 +1798,13 @@ Accuracy: 99.83%
   - Ecco il tuo "Stinky tofu".
   - Puoi farci sentire qualche altra parola del tuo "vocabolario"?
 
-### "tutti" + "?" (4 occurrences)
+### "tutti" + "!" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Ci vuoi ammazzare tutti ?
-  - Perché me lo chiedete tutti ?
-  - Verranno tutti ?
+  - Buonanotte a tutti !
+  - Noi vi distruggeremo tutti !
+  - Via, smontate giù tutti !
 
 ### "tè" + "?" (4 occurrences)
 - Predicted: None
@@ -1789,14 +1829,6 @@ Accuracy: 99.83%
   - Cosa fai, ci vai ?
   - Dove vai ?
   - Katia, dove vai ?
-
-### "via" + "!" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Gradisca, non andare via !
-  - Vai via !
-  - Venite via !
 
 ### "visto" + """ (4 occurrences)
 - Predicted: None
@@ -1957,14 +1989,6 @@ Accuracy: 99.83%
   - Ce l'hai con me, Robert ?
   - Operarti, Robert ?
   - Ti manda Robert ?
-
-### "Significa" + """ (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Significa "Vieni in mio aiuto, o luce, risorgi alla vita".
-  - Significa "come stai".
-  - Significa "principino".
 
 ### "Signora" + "»" (3 occurrences)
 - Predicted: Space
@@ -2214,14 +2238,6 @@ Accuracy: 99.83%
   - Ma quando si perdono i preservativi, tutti dicono "non è mio, non è mio"?
   - Perché quando le persone perdono dei soldi tutti dicono "è mio, è mio"?
 
-### "dire" + "?" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Che cosa vuoi dire ?
-  - Che vuoi dire ?
-  - Sono una nana, perché non si dovrebbe dire ?
-
 ### "direttore" + "?" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2413,6 +2429,22 @@ Accuracy: 99.83%
   - Che ne sappiamo noi ?
   - Che se ne fanno di due come noi ?
   - Vuole mangiare qualcosa con noi ?
+
+### "pare" + "?" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Come ti pare ?
+  - Effettivamente, è venuto fuori un tipo troppo ideale non vi pare ?
+  - Piuttosto che andarci a sposare al governatorato da un fascista vi pare ?
+
+### "parlare" + "?" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Hai preferito vederlo ridotto cosi piuttosto che parlare ?
+  - Perché ha smesso di parlare ?
+  - Siete deciso a non parlare ?
 
 ### "parti" + "?" (3 occurrences)
 - Predicted: None
@@ -2646,14 +2678,6 @@ Accuracy: 99.83%
   - La testa !
   - Tu "la bua" ce l'hai nella testa !
 
-### "tutti" + "!" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Buonanotte a tutti !
-  - Via, smontate giù tutti !
-  - Vorrei ascoltarli tutti !
-
 ### "tutti" + "»" (3 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2717,6 +2741,14 @@ Accuracy: 99.83%
   - L'anno scorso era vivo !
   - Mio figlio è vivo !
   - No, don Amedeo è vivo !
+
+### "voi" + "?" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Che ora fate voi ?
+  - Cosa può essere peggio di restare qui con voi ?
+  - Non avete paura voi ?
 
 ### "zio" + "!" (3 occurrences)
 - Predicted: None
@@ -2804,6 +2836,13 @@ Accuracy: 99.83%
 - Examples:
   - "Ha detto signor Delassalle?" gli ho chiesto.
   - "Ricevuto" gli annuari.
+
+### """ + "le" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Almeno sappiamo suonare bene" le ho detto.
+  - Ad una festa un "polipo" le si è avvinghiato sulle parti più intime.
 
 ### """ + "li" (2 occurrences)
 - Predicted: None
@@ -3505,6 +3544,13 @@ Accuracy: 99.83%
   - E noi siamo donne, capisci ?
   - E sono tutti uomini, capisci ?
 
+### "capito" + "!" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Avete capito !
+  - L'ho capito !
+
 ### "cara" + "!" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3518,6 +3564,13 @@ Accuracy: 99.83%
 - Examples:
   - Amanda, cara», rispose Keith, «un ladro avrebbe colpito per strada.
   - «Amanda, cara», esordì, «hai comprato dello spago numero quattro.»
+
+### "casa" + "?" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Dove sono gli uomini in questa casa ?
+  - Vuoi che tua madre viva murata qui in questa casa ?
 
 ### "cavallo" + "?" (2 occurrences)
 - Predicted: None
@@ -3539,6 +3592,13 @@ Accuracy: 99.83%
 - Examples:
   - Dio, quanto ti ho cercato !
   - Non sai quanto tempo ti ho cercato !
+
+### "cerchi" + "?" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Che cerchi ?
+  - Cosa cerchi ?
 
 ### "certe" + """ (2 occurrences)
 - Predicted: None
@@ -3637,6 +3697,13 @@ Accuracy: 99.83%
 - Examples:
   - «Nessun compratore», disse Brunel.
   - «Non abbiamo ancora un compratore», disse Christopher.
+
+### "conosce" + "?" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - La conosce ?
+  - Mi conosce ?
 
 ### "conoscere" + "?" (2 occurrences)
 - Predicted: None
@@ -3953,6 +4020,13 @@ Accuracy: 99.83%
   - Ora quelli penseranno che la ragione è del più forte !
   - Questo champagne è piuttosto forte !
 
+### "forza" + "!" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Bella forza !
+  - La forza !
+
 ### "funzionato" + "»" (2 occurrences)
 - Predicted: Space
 - Actual: None
@@ -4155,6 +4229,13 @@ Accuracy: 99.83%
 - Examples:
   - Ci danno la merenda ?
   - La merenda ?
+
+### "mica" + "!" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Non attacca mica !
+  - Non te lo mangio mica !
 
 ### "mio" + "!" (2 occurrences)
 - Predicted: None
@@ -4380,6 +4461,13 @@ Accuracy: 99.83%
   - Apri la porta !
   - Apri questa fottuta porta !
 
+### "porta" + "?" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Quella porta ?
+  - Quindi bussa ad ogni porta ?
+
 ### "portato" + "!" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4478,13 +4566,6 @@ Accuracy: 99.83%
   - «Sarò felice di venderti una quota», disse Christopher.
   - «Una quota», disse Johanna.
 
-### "ricordi" + "?" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - L'adoravano tutti, ti ricordi ?
-  - Ti ricordi ?
-
 ### "ricordo" + "!" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4526,6 +4607,13 @@ Accuracy: 99.83%
 - Examples:
   - I sassi !
   - Ma sono molto belli, i sassi !
+
+### "sbrigati" + "!" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Devi andare da Don Pietro sbrigati !
+  - Presto sbrigati !
 
 ### "scritto" + "?" (2 occurrences)
 - Predicted: None
@@ -4589,6 +4677,13 @@ Accuracy: 99.83%
 - Examples:
   - Dove siete ?
   - Signore, dove siete ?
+
+### "sigaretta" + "?" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Sono certo che però prima dell'alba ci metteremo d'accordo una sigaretta ?
+  - Una sigaretta ?
 
 ### "simpatico" + "!" (2 occurrences)
 - Predicted: None
@@ -4856,6 +4951,13 @@ Accuracy: 99.83%
   - Inseguitela Un intruso umano !
   - Odore di umano !
 
+### "urlare" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Come può uno mettersi a urlare "oggi farò sesso"?
+  - Hanno cominciato a urlare "Il mostro!"
+
 ### "vecchia" + "!" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4946,6 +5048,13 @@ Accuracy: 99.83%
 - Examples:
   - Continuava a parlare di Kostrov e tu vuoi "far pressione"?
   - E cosa vuoi "Autorità"?
+
+### "vuoi" + "?" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Che vuoi ?
+  - Cosa vuoi ?
 
 ### "vuole" + "?" (2 occurrences)
 - Predicted: None
@@ -5364,12 +5473,6 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - "Jurassic Park" l'abbiamo già visto.
-
-### """ + "le" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Almeno sappiamo suonare bene" le ho detto.
 
 ### """ + "logica" (1 occurrences)
 - Predicted: None
@@ -6601,6 +6704,12 @@ Accuracy: 99.83%
 - Examples:
   - Chiamalo "umorismo da forca".
 
+### "Chiaro" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Chiaro ?
+
 ### "Chiedete" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6744,6 +6853,12 @@ Accuracy: 99.83%
 - Actual: None
 - Examples:
   - «Confermo», rispose la guaritrice Agatha.
+
+### "Conoscete" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Conoscete ?
 
 ### "Contanti" + "»" (1 occurrences)
 - Predicted: Space
@@ -7177,6 +7292,12 @@ Accuracy: 99.83%
 - Examples:
   - Festeggiamo "che se va bene, ci chiamano".
 
+### "Fiammifero" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Fiammifero ?
+
 ### "Fila" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -7320,6 +7441,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Gigliozzi !
+
+### "Giorgio" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - C'è Giorgio ?
 
 ### "Giosuè" + "!" (1 occurrences)
 - Predicted: None
@@ -8227,6 +8354,12 @@ Accuracy: 99.83%
 - Examples:
   - Pianterà "Autentici" ovunque!
 
+### "Pina" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Perché siamo nel giusto nella via giusta capisci Pina ?
+
 ### "Pista" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -8328,6 +8461,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Puskin ?
+
+### "Quale" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Quale ?
 
 ### "Quali" + "?" (1 occurrences)
 - Predicted: None
@@ -8496,6 +8635,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Auguri Roma !
+
+### "Romoletto" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Apri Romoletto !
 
 ### "Rory" + "»" (1 occurrences)
 - Predicted: Space
@@ -8875,12 +9020,6 @@ Accuracy: 99.83%
 - Examples:
   - Sì …ma non è esattamente cosa stava facendo il Professor Brand manipolando..
 
-### "Telaio" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Telaio "Maino", mozzi "Atala", manubrio "D'Ambrosio", cerchioni "Bianchi".
-
 ### "Teo" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9085,6 +9224,12 @@ Accuracy: 99.83%
 - Examples:
   - Vera !
 
+### "Vero" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Vero ?
+
 ### "Via" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9265,6 +9410,12 @@ Accuracy: 99.83%
 - Examples:
   - Perché, loro dove abitano ?
 
+### "abiti" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Adesso dove abiti ?
+
 ### "accendendo" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9348,6 +9499,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Un bell'affare !
+
+### "affare" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Cosa ha detto lui del mio affare ?
 
 ### "affare" + "»" (1 occurrences)
 - Predicted: Space
@@ -9487,6 +9644,12 @@ Accuracy: 99.83%
 - Examples:
   - Sullo schermo ora c’era scritto «amanda».
 
+### "amanti" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Si ho avuto degli amanti !
+
 ### "amare" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9510,6 +9673,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Victor, sai come dicono gli americani "aspetta"?
+
+### "ami" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Lo ami ?
 
 ### "amica" + "!" (1 occurrences)
 - Predicted: None
@@ -9552,6 +9721,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - È mio amico ..
+
+### "amico" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Che amico ?
 
 ### "ammazzo" + "!" (1 occurrences)
 - Predicted: None
@@ -9990,6 +10165,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Un attimo !
+
+### "attività" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Vorreste farmi credere che non conoscete la sua vera attività ?
 
 ### "attore" + "?" (1 occurrences)
 - Predicted: None
@@ -10501,6 +10682,12 @@ Accuracy: 99.83%
 - Examples:
   - Tu vai fuori campo !
 
+### "canaglie" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Siete qui brutte canaglie !
+
 ### "candela" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -10554,12 +10741,6 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - E se non le capiscono ?
-
-### "capito" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - L'ho capito !
 
 ### "capito" + "»" (1 occurrences)
 - Predicted: Space
@@ -10681,12 +10862,6 @@ Accuracy: 99.83%
 - Examples:
   - No, vado a casa "casa"!
 
-### "casa" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Vuoi che tua madre viva murata qui in questa casa ?
-
 ### "casa" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -10795,23 +10970,17 @@ Accuracy: 99.83%
 - Examples:
   - Continuassero a cercarlo !
 
+### "cercate" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Che cercate ?
+
 ### "cercato" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Io non avrei mai pensato che un giorno avrei cercato "Viagra" su Wikipedia.
-
-### "cerchi" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Che cerchi ?
-
-### "cerchioni" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Telaio "Maino", mozzi "Atala", manubrio "D'Ambrosio", cerchioni "Bianchi".
 
 ### "certo" + "!" (1 occurrences)
 - Predicted: None
@@ -11131,6 +11300,12 @@ Accuracy: 99.83%
 - Examples:
   - Posso presentarti la mia compagna ?
 
+### "compagno" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Non volete nemmeno tentare di convincere il vostro compagno ?
+
 ### "comparso" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -11220,12 +11395,6 @@ Accuracy: 99.83%
 - Actual: None
 - Examples:
   - «Ero curiosa, e hai viaggiato più di chiunque altro io conosca», dissi.
-
-### "conosce" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Mi conosce ?
 
 ### "conoscete" + "?" (1 occurrences)
 - Predicted: None
@@ -11323,6 +11492,12 @@ Accuracy: 99.83%
 - Examples:
   - «È una cooperativa», disse Missy Marky.
 
+### "coperta" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Per favore mi da quella coperta ?
+
 ### "coriandoli" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -11364,6 +11539,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Hai ancora i calzoni corti !
+
+### "cortile" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Scusatemi i tedeschi sono entrati nel cortile ?
 
 ### "cosa" + "!" (1 occurrences)
 - Predicted: None
@@ -11628,6 +11809,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Perché non sai che esistono delitti "simili".
+
+### "delle" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Dopo parleremo delle "eventuali e varie", ma nessuno deve saperlo!
 
 ### "demarcazione" + "?" (1 occurrences)
 - Predicted: None
@@ -12060,6 +12247,12 @@ Accuracy: 99.83%
 - Actual: None
 - Examples:
   - «Ma si vende al doppio», disse Christopher.
+
+### "dormi" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Non dormi ?
 
 ### "doti" + "?" (1 occurrences)
 - Predicted: None
@@ -12691,12 +12884,6 @@ Accuracy: 99.83%
 - Examples:
   - I bottoni, il sapone, il forno !
 
-### "forza" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Bella forza !
-
 ### "fotografia" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -13129,6 +13316,12 @@ Accuracy: 99.83%
 - Examples:
   - E ho "FBI" che viene programmato questa domenica.
 
+### "identità" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - La sua vera identità ?
+
 ### "ieri" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -13164,6 +13357,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Ma sei impazzito ?!
+
+### "importante" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Una persona importante ?
 
 ### "impressionante" + "»" (1 occurrences)
 - Predicted: Space
@@ -13879,12 +14078,6 @@ Accuracy: 99.83%
 - Examples:
   - Posso darti una mano ?
 
-### "manubrio" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Telaio "Maino", mozzi "Atala", manubrio "D'Ambrosio", cerchioni "Bianchi".
-
 ### "mare" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -14131,12 +14324,6 @@ Accuracy: 99.83%
 - Examples:
   - Bambina mia !
 
-### "mica" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Non attacca mica !
-
 ### "miei" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -14316,12 +14503,6 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Per quale motivo ?
-
-### "mozzi" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Telaio "Maino", mozzi "Atala", manubrio "D'Ambrosio", cerchioni "Bianchi".
 
 ### "muoverti" + "!" (1 occurrences)
 - Predicted: None
@@ -14647,6 +14828,12 @@ Accuracy: 99.83%
 - Examples:
   - "Il Trio della lotta contro il crimine" oppure "Sorrisi dagli Inarrestabili."
 
+### "oratorio" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Com'è che non ti si vede più all'oratorio ?
+
 ### "orbita" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -14821,12 +15008,6 @@ Accuracy: 99.83%
 - Examples:
   - Tre donne in una casa quasi vuota, pare "Come sposare un milionario".
 
-### "pare" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Effettivamente, è venuto fuori un tipo troppo ideale non vi pare ?
-
 ### "parecchi" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -14857,12 +15038,6 @@ Accuracy: 99.83%
 - Examples:
   - Non me ne parlare !
 
-### "parlare" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Perché ha smesso di parlare ?
-
 ### "parlare" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -14874,6 +15049,18 @@ Accuracy: 99.83%
 - Actual: None
 - Examples:
   - «Lena», dissi, «devo parlarti».
+
+### "parlasse" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - E se lui non parlasse ?
+
+### "parlo" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Con chi parlo ?
 
 ### "parola" + "»" (1 occurrences)
 - Predicted: Space
@@ -15439,12 +15626,6 @@ Accuracy: 99.83%
 - Examples:
   - "Prima l'ho incontrato sulla porta "E ora, ragazze, sono in lutto!
 
-### "porta" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Quindi bussa ad ogni porta ?
-
 ### "portano" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -15576,6 +15757,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Non devi educarla, passare notti in bianco, correre a prenderla !
+
+### "prenderlo" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Bisogna prenderlo "con le mani nel sacco".
 
 ### "prenderlo" + "?" (1 occurrences)
 - Predicted: None
@@ -15901,6 +16088,12 @@ Accuracy: 99.83%
 - Examples:
   - «Certo che puoi», rispose.
 
+### "purgatorio" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ecco purgatorio !
+
 ### "puro" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -15937,6 +16130,12 @@ Accuracy: 99.83%
 - Examples:
   - Non riesce a fare qualcun'altro questo?
 
+### "quale" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Non so quale ?
+
 ### "qualità" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -15948,6 +16147,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - E ciò che vogliamo davvero è avere molte frasi in molte - e qualsiasi - lingue.
+
+### "quando" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - E per quando ?
 
 ### "quanti" + "!" (1 occurrences)
 - Predicted: None
@@ -16044,6 +16249,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Mi scusi signore, come si arriva dietro le quinte ?
+
+### "raccomando" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Calma mi raccomando !
 
 ### "raccontare" + "?" (1 occurrences)
 - Predicted: None
@@ -16465,6 +16676,12 @@ Accuracy: 99.83%
 - Examples:
   - Forse non sapeva nemmeno cosa mi avesse fatto, a parte «rimetterla in salute».
 
+### "salvarti" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ma non sperare prete ipocrita di salvarti !
+
 ### "salvata" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -16554,12 +16771,6 @@ Accuracy: 99.83%
 - Actual: None
 - Examples:
   - «Ho ancora una cosa da sbrigare», dissi.
-
-### "sbrigati" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Presto sbrigati !
 
 ### "scalone" + "!" (1 occurrences)
 - Predicted: None
@@ -17077,6 +17288,12 @@ Accuracy: 99.83%
 - Examples:
   - «E avverti il nostro altro socio».
 
+### "soddisfatto" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Sei soddisfatto ?
+
 ### "soffitto" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -17359,6 +17576,12 @@ Accuracy: 99.83%
 - Examples:
   - Prima eri una stampatrice ?
 
+### "stanca" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Quanto sono stanca !
+
 ### "stanco" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -17430,6 +17653,12 @@ Accuracy: 99.83%
 - Actual: None
 - Examples:
   - «Ci sono già stata», dissi.
+
+### "stati" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Dove siete stati ?
 
 ### "stato" + "!" (1 occurrences)
 - Predicted: None
@@ -17544,6 +17773,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Perché non hai continuato a studiare ?
+
+### "stupida" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Già ma che stupida !
 
 ### "stupido" + "!" (1 occurrences)
 - Predicted: None
@@ -17821,6 +18056,12 @@ Accuracy: 99.83%
 - Examples:
   - Non sei il mio tipo !
 
+### "tipografo" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Scusa abita qui Francesco il tipografo ?
+
 ### "tonta" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -17904,6 +18145,12 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Ci sono troppi "diversi", Chris.
+
+### "troppo" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ho chiesto troppo ?
 
 ### "trovano" + "!" (1 occurrences)
 - Predicted: None
@@ -18043,6 +18290,12 @@ Accuracy: 99.83%
 - Examples:
   - Una dozzina di imperiali „uh-uh“!
 
+### "ultimo" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Fino all'ultimo !
+
 ### "ultimo" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -18102,12 +18355,6 @@ Accuracy: 99.83%
 - Actual: None
 - Examples:
   - «È un brav’uomo», disse Agatha.
-
-### "urlare" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Come può uno mettersi a urlare "oggi farò sesso"?
 
 ### "urlassi" + """ (1 occurrences)
 - Predicted: None
@@ -18535,17 +18782,23 @@ Accuracy: 99.83%
 - Examples:
   - Volevo essere vicino a voi "sperimentali".
 
-### "voi" + "?" (1 occurrences)
+### "volesse" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Cosa può essere peggio di restare qui con voi ?
+  - E se lui non volesse ?
 
 ### "volete" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Che volete ?
+
+### "voleva" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Cosa voleva ?
 
 ### "volevano" + "»" (1 occurrences)
 - Predicted: Space
@@ -18618,12 +18871,6 @@ Accuracy: 99.83%
 - Actual: Space
 - Examples:
   - Chiedimi quello che vuoi !
-
-### "vuoi" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Cosa vuoi ?
 
 ### "vuole" + "!" (1 occurrences)
 - Predicted: None

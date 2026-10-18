@@ -1,81 +1,101 @@
-{"sentence":"\"A Tom le gusta María.\" \"Dime algo que no sepa.\"","failure_count":2}
-{"sentence":"\"A las niñas les encanta eso.\" \"¿Y cómo lo sabes?\" \"Soy una niña.\"","failure_count":2}
-{"sentence":"\"Ah\", suspiró ella.","failure_count":2}
-{"sentence":"\"Auto\" significa propio, y \"kratia\" poder o regla.","failure_count":2}
-{"sentence":"\"Ayer soñé contigo, Tom.\" \"¿En serio? ¿Qué hacía?\"","failure_count":2}
-{"sentence":"\"Eso fue desconcertante.\" \"¿Sí? ¿Cree usted?\" \"Fue impresionante.\"","failure_count":2}
-{"sentence":"\"Hola, soy Tom.\" \"Hola.\" \"¿Y tú?\" \"Ah, Mary.\"","failure_count":2}
-{"sentence":"\"Le gustás a Tom.\" \"¿Qué?\"","failure_count":1}
-{"sentence":"\"Mi perro no tiene nariz.\" \"¿Cómo huele?\" \"Terrible.\"","failure_count":2}
-{"sentence":"\"Michael\" es nombre de hombre, pero \"Michelle\" es nombre de mujer.","failure_count":2}
-{"sentence":"\"No funciona.\" \"¿Y ahora?\"","failure_count":2}
-{"sentence":"\"No\", dices, \"yo quiero un filete\".","failure_count":2}
-{"sentence":"\"Papá\" solamente significa que estás cuidando a tus hijos.","failure_count":2}
-{"sentence":"\"Pedia\" como \"enciclopedia,\" \"wiki\" como la sangre exploradora de los vikingos.","failure_count":2}
-{"sentence":"\"Pero Mary, ¡te amo!\" \"Yo no.\"","failure_count":2}
-{"sentence":"\"Probad esto.\" \"¿Qué es?\" \"Es cuscús.\"","failure_count":1}
-{"sentence":"\"Prueba esto.\" \"¿Qué es?\" \"Es cuscús.\"","failure_count":2}
-{"sentence":"\"Quiero que algo pase.\" \"¿Como qué?\" \"No sé.\"","failure_count":2}
-{"sentence":"\"Samba en el Club \"Arpege\"\", Luiz Bandeira y Waldir Calmon.","failure_count":2}
-{"sentence":"\"Se ve como tu padre.\" \"¿Qué?\"","failure_count":2}
-{"sentence":"\"Tengo que ir al baño.\" \"Yo también.\" \"Deberíamos haber ido en la estación.\"","failure_count":2}
-{"sentence":"\"Tom estaba en un estado lamentable.\" \"¿Ohio?\" \"¿Qué?\" \"¿Era Ohio?\"","failure_count":2}
-{"sentence":"\"Toma todo el dinero.\" \"¿Pero por qué?\" \"¡Porque te amo, tontito!\"","failure_count":2}
-{"sentence":"\"Yanni está aquí\". \"¿Dónde?\"","failure_count":2}
-{"sentence":"\"Yo he visto esa obra.\" \"Yo también.\"","failure_count":2}
-{"sentence":"\"Yo no soy bueno nadando.\" \"Ni yo.\"","failure_count":2}
-{"sentence":"\"¡Diablos! Dejé mi paraguas en el tren.\" \"¡Pelotudo!\"","failure_count":1}
-{"sentence":"\"¿Cómo te llamas?\" \"Tom.\" \"¿Y tu nombre completo?\" \"Mi nombre es Tom. Solo Tom.\"","failure_count":2}
-{"sentence":"\"¿Quién invitó a Tom?\" \"Yo no fui.\" \"¿Te pregunté?\"","failure_count":2}
-{"sentence":"\"¿Quién te trajo?\" \"Mi hermana.\"","failure_count":2}
-{"sentence":"\"¿Qué está ocurriendo en la cueva? Estoy curioso.\" \"No tengo ni idea.\"","failure_count":1}
-{"sentence":"\"¿Qué está pasando en la cueva? Estoy curioso.\" \"No tengo ni idea.\"","failure_count":2}
-{"sentence":"\"¿Qué habrá en la cueva? Tengo curiosidad.\" \"No tengo ni idea.\"","failure_count":2}
-{"sentence":"\"¿Qué pasa?\" \"No tengo la llave.\" \"¿Qué llave?\" \"La llave de la bicicleta.\"","failure_count":2}
-{"sentence":"\"¿Qué sucede dentro de la cueva? Tengo curiosidad.\" \"No tengo idea.\"","failure_count":2}
-{"sentence":"\"¿Sabes qué día es hoy?\" - \"No\". -\"¡Mi cumpleaños!\"","failure_count":2}
-{"sentence":"\"¿Tu amigo es un idiota o qué?\" Preguntó el padre.","failure_count":2}
-{"sentence":"\"Ámame mucho\", \"Ne me quitte pas\".","failure_count":2}
+{"sentence":"\"A Tom le gusta María.\" \"Dime algo que no sepa.\"","failure_count":3}
+{"sentence":"\"A las niñas les encanta eso.\" \"¿Y cómo lo sabes?\" \"Soy una niña.\"","failure_count":3}
+{"sentence":"\"Ah\", suspiró ella.","failure_count":3}
+{"sentence":"\"Auto\" significa propio, y \"kratia\" poder o regla.","failure_count":3}
+{"sentence":"\"Ayer soñé contigo, Tom.\" \"¿En serio? ¿Qué hacía?\"","failure_count":3}
+{"sentence":"\"Désolé, je l'ai vu mais j'étais une réunion\".","failure_count":3}
+{"sentence":"\"Eso fue desconcertante.\" \"¿Sí? ¿Cree usted?\" \"Fue impresionante.\"","failure_count":3}
+{"sentence":"\"Fresh blood\", , una película muy bonita y educativa.","failure_count":3}
+{"sentence":"\"Hola, soy Tom.\" \"Hola.\" \"¿Y tú?\" \"Ah, Mary.\"","failure_count":3}
+{"sentence":"\"Le gustás a Tom.\" \"¿Qué?\"","failure_count":3}
+{"sentence":"\"Mi perro no tiene nariz.\" \"¿Cómo huele?\" \"Terrible.\"","failure_count":3}
+{"sentence":"\"Michael\" es nombre de hombre, pero \"Michelle\" es nombre de mujer.","failure_count":3}
+{"sentence":"\"Mira\" \"¿Ves?\".","failure_count":3}
+{"sentence":"\"No funciona.\" \"¿Y ahora?\"","failure_count":3}
+{"sentence":"\"No\", dices, \"yo quiero un filete\".","failure_count":3}
+{"sentence":"\"Oui, je t'appelle plus tard\".","failure_count":3}
+{"sentence":"\"Papá\" solamente significa que estás cuidando a tus hijos.","failure_count":3}
+{"sentence":"\"Pedia\" como \"enciclopedia,\" \"wiki\" como la sangre exploradora de los vikingos.","failure_count":3}
+{"sentence":"\"Pero Mary, ¡te amo!\" \"Yo no.\"","failure_count":3}
+{"sentence":"\"Probad esto.\" \"¿Qué es?\" \"Es cuscús.\"","failure_count":3}
+{"sentence":"\"Prueba esto.\" \"¿Qué es?\" \"Es cuscús.\"","failure_count":3}
+{"sentence":"\"Quiero que algo pase.\" \"¿Como qué?\" \"No sé.\"","failure_count":3}
+{"sentence":"\"Samba en el Club \"Arpege\"\", Luiz Bandeira y Waldir Calmon.","failure_count":3}
+{"sentence":"\"Se ve como tu padre.\" \"¿Qué?\"","failure_count":3}
+{"sentence":"\"Tengo que ir al baño.\" \"Yo también.\" \"Deberíamos haber ido en la estación.\"","failure_count":3}
+{"sentence":"\"Tom estaba en un estado lamentable.\" \"¿Ohio?\" \"¿Qué?\" \"¿Era Ohio?\"","failure_count":3}
+{"sentence":"\"Toma todo el dinero.\" \"¿Pero por qué?\" \"¡Porque te amo, tontito!\"","failure_count":3}
+{"sentence":"\"Yanni está aquí\". \"¿Dónde?\"","failure_count":3}
+{"sentence":"\"Yo he visto esa obra.\" \"Yo también.\"","failure_count":3}
+{"sentence":"\"Yo no soy bueno nadando.\" \"Ni yo.\"","failure_count":3}
+{"sentence":"\"¡Diablos! Dejé mi paraguas en el tren.\" \"¡Pelotudo!\"","failure_count":3}
+{"sentence":"\"¿Cómo te llamas?\" \"Tom.\" \"¿Y tu nombre completo?\" \"Mi nombre es Tom. Solo Tom.\"","failure_count":3}
+{"sentence":"\"¿Hola?\".","failure_count":3}
+{"sentence":"\"¿Lejos?\".","failure_count":3}
+{"sentence":"\"¿Quién invitó a Tom?\" \"Yo no fui.\" \"¿Te pregunté?\"","failure_count":3}
+{"sentence":"\"¿Quién te trajo?\" \"Mi hermana.\"","failure_count":3}
+{"sentence":"\"¿Qué está ocurriendo en la cueva? Estoy curioso.\" \"No tengo ni idea.\"","failure_count":3}
+{"sentence":"\"¿Qué está pasando en la cueva? Estoy curioso.\" \"No tengo ni idea.\"","failure_count":3}
+{"sentence":"\"¿Qué habrá en la cueva? Tengo curiosidad.\" \"No tengo ni idea.\"","failure_count":3}
+{"sentence":"\"¿Qué pasa?\" \"No tengo la llave.\" \"¿Qué llave?\" \"La llave de la bicicleta.\"","failure_count":3}
+{"sentence":"\"¿Qué sucede dentro de la cueva? Tengo curiosidad.\" \"No tengo idea.\"","failure_count":3}
+{"sentence":"\"¿Sabes qué día es hoy?\" - \"No\". -\"¡Mi cumpleaños!\"","failure_count":3}
+{"sentence":"\"¿Tu amigo es un idiota o qué?\" Preguntó el padre.","failure_count":3}
+{"sentence":"\"Ámame mucho\", \"Ne me quitte pas\".","failure_count":3}
 {"sentence":"A la primera señal de peligro, se larga de aquí..","failure_count":3}
+{"sentence":"A patadas te voy a sacar del cuerpo las devociones.","failure_count":3}
 {"sentence":"Aah ella está aquí..","failure_count":3}
 {"sentence":"Adit Lamba, ayúdale.","failure_count":3}
 {"sentence":"Ah tonterías, la gente no se relaja en sus propias casas..","failure_count":3}
 {"sentence":"Ah, madre mía de mi coração.","failure_count":3}
+{"sentence":"Ahh, lamento que el Señor lo ponga a prueba de esta forma.","failure_count":3}
 {"sentence":"Ahora sí me disculpan, están en su casa.","failure_count":3}
-{"sentence":"Ahí detrás de mí hay una embarcación auxiliar, una pinaza, no una nave estelar.","failure_count":2}
-{"sentence":"Allá detrás de mí hay una embarcación auxiliar, una pinaza, no una nave estelar.","failure_count":2}
+{"sentence":"Ahí detrás de mí hay una embarcación auxiliar, una pinaza, no una nave estelar.","failure_count":3}
+{"sentence":"Allá detrás de mí hay una embarcación auxiliar, una pinaza, no una nave estelar.","failure_count":3}
+{"sentence":"Aquél es.","failure_count":3}
 {"sentence":"Así de grandes eran sus piernas..","failure_count":3}
 {"sentence":"Así que deberías trasladarte de aquí con Eisha a tu casa..","failure_count":3}
+{"sentence":"Bueno \"aterrícense\" la madera y pónganla contra la pared.","failure_count":3}
+{"sentence":"Bueno, entra tú primero para que no nos \"liquen\" juntas.","failure_count":3}
+{"sentence":"Bueno, y ultimadamente, ¿pa'qué lo quiere saber?","failure_count":3}
 {"sentence":"CONGRESO DE LA RESlSTENClA ¡Silencio!","failure_count":3}
 {"sentence":"Cada arma es diferente, No hay sólo cuchillos o pistolas, además..","failure_count":3}
+{"sentence":"Calor invisible, y tú dices \"un\" microondas.","failure_count":3}
 {"sentence":"Ché cosa può trattenervi ancora qui?","failure_count":3}
 {"sentence":"Cierto, Mun..?","failure_count":3}
-{"sentence":"Como en el \"gilli-danda,\" para coger la pelota.","failure_count":1}
+{"sentence":"Como en el \"gilli-danda,\" para coger la pelota.","failure_count":3}
 {"sentence":"Con lo que te gusta abrir la bocaza.","failure_count":3}
 {"sentence":"Contame algo que todavía no sepa.","failure_count":3}
 {"sentence":"Cravis, arresta a esta persona.","failure_count":3}
 {"sentence":"Creo que voy a ir a esquiar.","failure_count":3}
 {"sentence":"Cualquiera que se convierta en maestro debe estar loco..","failure_count":3}
-{"sentence":"Cuando tú aún mamabas de tu madre, esa \"fulana\" sembraba el terror.","failure_count":2}
+{"sentence":"Cuando llegó a mi casa, apenas si sabía hablar.","failure_count":3}
+{"sentence":"Cuando tú aún mamabas de tu madre, esa \"fulana\" sembraba el terror.","failure_count":3}
+{"sentence":"Cuidao, dale en la mano.","failure_count":3}
 {"sentence":"Cuidaos, madre.","failure_count":3}
 {"sentence":"Cómo entró el Dr. Doolitle?","failure_count":3}
+{"sentence":"De lo que sea que me vas a proponer.","failure_count":3}
+{"sentence":"De manera ininterumpida, nos ha colmado de agasajos desde nuestra entrada.","failure_count":3}
 {"sentence":"De pronto, el moribundo alzó sus puños..","failure_count":3}
 {"sentence":"Debido a la caotica situación..","failure_count":3}
 {"sentence":"Debido a la caótica situación..","failure_count":3}
+{"sentence":"Demasiado hortera, demasiado gordo.","failure_count":3}
 {"sentence":"Depués que pacifique Wu, ella será mia.","failure_count":3}
-{"sentence":"Dile a Amanda que tenía razón”».","failure_count":1}
-{"sentence":"El crucero de Papá, \"Maya\", estaba en formación con la flota.","failure_count":2}
-{"sentence":"El fútbol y la palabra \"soccer\" se originaron en Inglaterra.","failure_count":2}
+{"sentence":"Dile a Amanda que tenía razón”».","failure_count":3}
+{"sentence":"El crucero de Papá, \"Maya\", estaba en formación con la flota.","failure_count":3}
+{"sentence":"El fútbol y la palabra \"soccer\" se originaron en Inglaterra.","failure_count":3}
 {"sentence":"El maíz es el cultivo más subsidiado en Estados unidos.","failure_count":3}
 {"sentence":"Ella es una amiga de un amigo de un amigo.","failure_count":3}
 {"sentence":"Ella está hablando tonterías..","failure_count":3}
 {"sentence":"En cuanto a mí, no estoy minimamente preocupado ni por ti ni por mí mismo,..","failure_count":3}
 {"sentence":"Enséñeme la planta de los pies.","failure_count":3}
 {"sentence":"Entré con la pinaza, con cuidado.","failure_count":3}
+{"sentence":"Eres un \"pelín\" sádica, ¿sabes?","failure_count":3}
 {"sentence":"Es bueno verte a ti.","failure_count":3}
-{"sentence":"Es increíble que hablemos de \"Sólo\" Ray Harris.","failure_count":2}
+{"sentence":"Es increíble que hablemos de \"Sólo\" Ray Harris.","failure_count":3}
+{"sentence":"Es la copia de la copia de la copia de la copia de la copia.","failure_count":3}
 {"sentence":"Es una escuela de música en boston.","failure_count":3}
-{"sentence":"Esa \"nada\" a tu lado.","failure_count":2}
+{"sentence":"Esa \"nada\" a tu lado.","failure_count":3}
 {"sentence":"Escucha,.","failure_count":3}
 {"sentence":"Ese consejo empresario defiende a los contratistas de Defensa y los japoneses.","failure_count":1}
 {"sentence":"Espera, no, no, no, no, no.","failure_count":3}
@@ -92,41 +112,47 @@
 {"sentence":"Huimos.","failure_count":3}
 {"sentence":"Hunyak le lava la ropa por un pavo a la semana.","failure_count":3}
 {"sentence":"Igual que la policía, yo también creía..","failure_count":3}
-{"sentence":"Intentaba ocultarlo, pero era evidente que estaba muy angustiada.","failure_count":1}
+{"sentence":"Intentaba ocultarlo, pero era evidente que estaba muy angustiada.","failure_count":3}
 {"sentence":"Irías en dirección opuesta al río, así que supongo que no te pasará nada.","failure_count":3}
-{"sentence":"Jacquart también está llamándome \"Frenegonda\".","failure_count":2}
+{"sentence":"Jacquart también está llamándome \"Frenegonda\".","failure_count":3}
 {"sentence":"Jacquart, arregle su problema.","failure_count":3}
 {"sentence":"Jacquart, te fuiste de los límites, eso fue vulgar.","failure_count":3}
 {"sentence":"Jacquart, ¿por qué estás vestido así?","failure_count":3}
-{"sentence":"La \"C\" es de combate.","failure_count":2}
-{"sentence":"La \"a\" es la primera letra del abecedario.","failure_count":2}
-{"sentence":"La \"b\" es la segunda letra del abecedario.","failure_count":2}
-{"sentence":"La acentuación de \"guitarra\" vá en la segunda sílaba.","failure_count":2}
+{"sentence":"La \"C\" es de combate.","failure_count":3}
+{"sentence":"La \"a\" es la primera letra del abecedario.","failure_count":3}
+{"sentence":"La \"b\" es la segunda letra del abecedario.","failure_count":3}
+{"sentence":"La acentuación de \"guitarra\" vá en la segunda sílaba.","failure_count":3}
+{"sentence":"La brujería y las prácticas satánicas no son cosas del pasado, Amaia.","failure_count":3}
 {"sentence":"La economía del país está a punto de colapsarse.","failure_count":3}
 {"sentence":"La educación es aprender lo que ni siquiera sabías que no sabías.","failure_count":3}
 {"sentence":"La historia de Ziri se está volviendo enjundiosa.","failure_count":3}
-{"sentence":"La palabra fugusha (\"discapacitado\") puede ser despectiva.","failure_count":2}
+{"sentence":"La palabra fugusha (\"discapacitado\") puede ser despectiva.","failure_count":3}
 {"sentence":"La sangre de Heracles es mía.","failure_count":1}
 {"sentence":"Las escalinatas en las que estamos sentados ahora..","failure_count":3}
 {"sentence":"Las escalinatas fueron asignadas..","failure_count":3}
 {"sentence":"Las flores se inclinan, el césped se curva..","failure_count":3}
+{"sentence":"Le voy a decir a mi mamá que no fuistes a trabajar.","failure_count":3}
 {"sentence":"Limpiaos los pies.","failure_count":3}
 {"sentence":"Lo que llegue a presentarse, lo harás.","failure_count":1}
 {"sentence":"Lo sé, ¡pregúnteme!","failure_count":3}
-{"sentence":"Los \"camineros\" van a pie.","failure_count":2}
+{"sentence":"Lo veo sonreír y es como verte a ti.","failure_count":3}
+{"sentence":"Los \"camineros\" van a pie.","failure_count":3}
+{"sentence":"Los Hუascas saben en dónde estamos.","failure_count":3}
 {"sentence":"Los avestruzes no pueden volar.","failure_count":3}
 {"sentence":"Los generalaes Cai Mao y Zhang Yun, ¡sé que no pueden esperar más!","failure_count":3}
 {"sentence":"Madamme, ¿Quiere alguna cosa?","failure_count":3}
 {"sentence":"Madre mía de mi coração.","failure_count":3}
 {"sentence":"Maldita b..","failure_count":3}
-{"sentence":"Me preguntaron, \"¿Estás bien, muchacho?\". Yo respondí, \"Estoy bien.\"","failure_count":2}
+{"sentence":"Me alegro de verte hija.","failure_count":3}
+{"sentence":"Me preguntaron, \"¿Estás bien, muchacho?\". Yo respondí, \"Estoy bien.\"","failure_count":3}
+{"sentence":"Me siento bien por habértelo contado.","failure_count":3}
 {"sentence":"Meeeiii!!!","failure_count":3}
 {"sentence":"Mi tátara tátara tátara tátara tátara tátara tátara nieta.","failure_count":3}
 {"sentence":"Mientras fuera llueve la brisa nos acaricia..","failure_count":3}
-{"sentence":"Mientras que algunos preguntan \"¿por qué?\", otros preguntan \"¿por qué no?\".","failure_count":2}
+{"sentence":"Mientras que algunos preguntan \"¿por qué?\", otros preguntan \"¿por qué no?\".","failure_count":3}
 {"sentence":"Mis dedos crecieron..","failure_count":3}
-{"sentence":"Morlake Pond es una novela de romances arrebatados famosísima.","failure_count":2}
-{"sentence":"Morlake Pond es una novela rosa de lo más famosa.","failure_count":2}
+{"sentence":"Morlake Pond es una novela de romances arrebatados famosísima.","failure_count":3}
+{"sentence":"Morlake Pond es una novela rosa de lo más famosa.","failure_count":3}
 {"sentence":"Nada que usted ya no sepa.","failure_count":3}
 {"sentence":"Nadaremos y eso nos dejará hambrientos.","failure_count":3}
 {"sentence":"No comprendes nada sobre los seres humanos, cazador,..","failure_count":3}
@@ -136,16 +162,17 @@
 {"sentence":"No es difícil destacarse cuando uno está rodeado de idiotas.","failure_count":3}
 {"sentence":"No hay tal Triángulo de las Bermudas.","failure_count":3}
 {"sentence":"No la morderá, se Io aseguro.","failure_count":3}
-{"sentence":"No llamamos \"astronautos\" a los astronautas hombres.","failure_count":2}
+{"sentence":"No llamamos \"astronautos\" a los astronautas hombres.","failure_count":3}
 {"sentence":"No me da la gana hacerlo.","failure_count":3}
 {"sentence":"No mires, numéro trois.","failure_count":3}
-{"sentence":"No necesitaría verte a ti, pero sí tendría que ver la pantalla.","failure_count":2}
+{"sentence":"No necesitaría verte a ti, pero sí tendría que ver la pantalla.","failure_count":3}
 {"sentence":"No no no no no ¿Entiendes lo que digo?","failure_count":3}
 {"sentence":"No puedes crear algo que no puedas imaginar.","failure_count":3}
-{"sentence":"No tendría que verte a ti, pero sí tendría que ver la pantalla.","failure_count":2}
+{"sentence":"No tendría que verte a ti, pero sí tendría que ver la pantalla.","failure_count":3}
 {"sentence":"No veis la tele.","failure_count":3}
 {"sentence":"No, no, no, no, no torturados.","failure_count":3}
 {"sentence":"No, no, no, no, no, no, no, no.","failure_count":3}
+{"sentence":"Nosotros no \"semos\" cargadores.","failure_count":3}
 {"sentence":"Nunca había esperado encontrármela en un sitio como ese.","failure_count":3}
 {"sentence":"Nunca te dejé y me fui, así que ahora soy tu hijo..","failure_count":3}
 {"sentence":"O Frank's.","failure_count":3}
@@ -161,156 +188,173 @@
 {"sentence":"Olvídate de él.","failure_count":3}
 {"sentence":"Olvídate del disco.","failure_count":3}
 {"sentence":"Olvídate del pie izquierdo.","failure_count":3}
+{"sentence":"Olvídate que tienes madre.","failure_count":3}
 {"sentence":"Olvídate.","failure_count":3}
 {"sentence":"Papitas.","failure_count":3}
 {"sentence":"Papá, no respires así, tu aliento huele mal hasta por teléfono..","failure_count":3}
 {"sentence":"Pareciera que Tom está teniendo un mal día.","failure_count":3}
 {"sentence":"Pareciera que sabes algo que yo no sé.","failure_count":3}
+{"sentence":"Parecés embarazada.","failure_count":3}
 {"sentence":"Parecés un viejito.","failure_count":3}
 {"sentence":"Parecían bastante brillantes».","failure_count":1}
 {"sentence":"Parecían dientes de perro.","failure_count":3}
 {"sentence":"Parecían gente decente.","failure_count":3}
-{"sentence":"Parecían incapaces de firmar un contrato sin antes iniciar una demanda.","failure_count":2}
+{"sentence":"Parecían incapaces de firmar un contrato sin antes iniciar una demanda.","failure_count":3}
 {"sentence":"Parecías aburrida, no decías nada.","failure_count":3}
 {"sentence":"Parecías estar a la altura.","failure_count":3}
+{"sentence":"Paséalo.","failure_count":3}
 {"sentence":"Paséate por ahí, disfruta de la aldea.","failure_count":3}
 {"sentence":"Pero yo estoy bien, sabes,..","failure_count":3}
 {"sentence":"Pidamos un especial todo-lo-que-puedas-comer.","failure_count":3}
 {"sentence":"Polly’s lo conozco mucho mejor».","failure_count":1}
 {"sentence":"Por tanto, los duques de Berri y de Bretaña, de Brabante y de Orleáns, partirán.","failure_count":3}
-{"sentence":"Preguntó \"¿no hay golosinas?\".","failure_count":2}
+{"sentence":"Preguntó \"¿no hay golosinas?\".","failure_count":3}
 {"sentence":"Pásemelo.","failure_count":1}
 {"sentence":"Quid pro quo.","failure_count":1}
-{"sentence":"Retirose el buen hombre.","failure_count":2}
+{"sentence":"Qué lindo es mi \"jefecito\" \"naiden\" le da un parecido.","failure_count":3}
+{"sentence":"Retirose el buen hombre.","failure_count":3}
 {"sentence":"Salid, cubriré la retaguardia.","failure_count":3}
 {"sentence":"Se enredan y retuercen, se desenredan y conectan, y eso es el tiempo.","failure_count":3}
 {"sentence":"Se está muriendo al frente suyo ¡¿Qué demonios es que no está servicio?!","failure_count":3}
-{"sentence":"Se la llamaba \"la picadora de carne\", pero es peor que cualquier picadora.","failure_count":2}
+{"sentence":"Se la llamaba \"la picadora de carne\", pero es peor que cualquier picadora.","failure_count":3}
 {"sentence":"Se trata de Campbell's última residencia conocida.","failure_count":3}
+{"sentence":"Se tumbó, y en un ataque de autocompasión, lloró por su muerte.","failure_count":3}
 {"sentence":"Será policía?","failure_count":3}
-{"sentence":"Si \"pro\" es el opuesto de \"contra\", ¿el opuesto de progreso es Congreso?","failure_count":2}
+{"sentence":"Será posible?","failure_count":3}
+{"sentence":"Si \"pro\" es el opuesto de \"contra\", ¿el opuesto de progreso es Congreso?","failure_count":3}
 {"sentence":"Si alguien conoce al Egipcio, acabaremos enterándonos..","failure_count":3}
 {"sentence":"Si engalanan a Krishna Y lo envuelven en sus brazos ¿No estará celosa Radha?","failure_count":3}
 {"sentence":"Si engalanan a Krishna y lo envuelven en sus brazos ¿No estará celosa Radha?","failure_count":3}
-{"sentence":"Si la \"f\" es de felicidad, ¿por qué pareces un fracasado?","failure_count":2}
+{"sentence":"Si la \"f\" es de felicidad, ¿por qué pareces un fracasado?","failure_count":3}
 {"sentence":"Si no encontramos a los padres de Munni, ¿ella vivirá con nosotros..","failure_count":3}
 {"sentence":"Si reconoces a esta niña, o sabes algo sobre ella..","failure_count":3}
 {"sentence":"Siempre susurras..","failure_count":3}
-{"sentence":"Sin embargo, no iba a presionarla por esa deuda, al menos no esa semana.","failure_count":2}
-{"sentence":"Son \"Duendes del polvo\" ¿Duendes del polvo?","failure_count":2}
+{"sentence":"Sin embargo, no iba a presionarla por esa deuda, al menos no esa semana.","failure_count":3}
+{"sentence":"Son \"Duendes del polvo\" ¿Duendes del polvo?","failure_count":3}
 {"sentence":"Sr. Campbell's aria línea de la mandíbula.","failure_count":3}
 {"sentence":"Srta..","failure_count":3}
 {"sentence":"Su amor por una niña muda Pakistaní de seis años..","failure_count":3}
 {"sentence":"Su legato.","failure_count":3}
 {"sentence":"Subtitles downloaded from www.","failure_count":3}
 {"sentence":"Suculento.","failure_count":3}
-{"sentence":"Supóngola como una nueva manera del amor que te tengo.","failure_count":2}
-{"sentence":"Sí, querida, \"algún\" cazafortunas, eres lo contrario al dinero.","failure_count":2}
+{"sentence":"Supóngola como una nueva manera del amor que te tengo.","failure_count":3}
+{"sentence":"Sí, querida, \"algún\" cazafortunas, eres lo contrario al dinero.","failure_count":3}
 {"sentence":"Te pudrirás en prisión el resto de tu vida..","failure_count":3}
 {"sentence":"Te sorprendería saber todas las veces que le he dicho ha Tom que no haga eso.","failure_count":3}
 {"sentence":"Tengo algo que seguro estáis deseando ver.","failure_count":3}
-{"sentence":"Teníamos dos pinazas y una grúa pequeña; tendría que bastar.","failure_count":2}
-{"sentence":"Tesad los cabos de babor y cobradlos hasta detenernos.","failure_count":2}
+{"sentence":"Teníamos dos pinazas y una grúa pequeña; tendría que bastar.","failure_count":3}
+{"sentence":"Tesad los cabos de babor y cobradlos hasta detenernos.","failure_count":3}
+{"sentence":"Toditita está llena la probe.","failure_count":3}
 {"sentence":"Todos los peligros y dolores desaparecen..","failure_count":3}
 {"sentence":"Tom no puede creer que María realmente crea eso.","failure_count":3}
 {"sentence":"Tom no trabaja nunca los domigos.","failure_count":3}
-{"sentence":"Tomen por ejemplo al hombre que puede volar llamado \"Batman.\"","failure_count":2}
+{"sentence":"Tomen por ejemplo al hombre que puede volar llamado \"Batman.\"","failure_count":3}
 {"sentence":"Tomo no entendió nada.","failure_count":3}
 {"sentence":"Tonterias,..","failure_count":3}
+{"sentence":"Tortas, tortitas.","failure_count":3}
 {"sentence":"Trabajad.","failure_count":3}
 {"sentence":"Tu cuerpo,todo tu cuerpo grita al salir a enfrentarte al público.","failure_count":1}
 {"sentence":"Técnicosamente, no.","failure_count":3}
+{"sentence":"Tú sabes, vamos nene ensénales a jugar el fútbol.","failure_count":3}
 {"sentence":"Un vestido despampanante.","failure_count":3}
 {"sentence":"Un whisky Maker's Mark, por favor.","failure_count":3}
 {"sentence":"Una bola lenta y Afridi la golpeo..","failure_count":3}
+{"sentence":"Una copia de la copia de la copia de la copia de la copia de la copia.","failure_count":3}
 {"sentence":"Ustedes y yo, meneemos todos juntos..","failure_count":3}
 {"sentence":"Voy al Reino unido para ver a mis padres.","failure_count":3}
 {"sentence":"Vénguese.","failure_count":3}
 {"sentence":"Y hoy, este odio obligo a Bajrangi..","failure_count":3}
 {"sentence":"Y la otra mitad reconciliéndose.","failure_count":3}
-{"sentence":"Y vivir con esto que no sé si será \"La\" justicia pero es \"una\" justicia.","failure_count":2}
-{"sentence":"¡Ahora desplegaos!","failure_count":1}
-{"sentence":"¡Chóquela, paisano!","failure_count":2}
-{"sentence":"¡Cobardica!","failure_count":1}
-{"sentence":"¡Cuidado con los jarrones!","failure_count":2}
-{"sentence":"¡De todas maneras se Io diré!","failure_count":2}
-{"sentence":"¡Discípulo!","failure_count":2}
-{"sentence":"¡Discúlpame!","failure_count":2}
-{"sentence":"¡Discúlpate con Megumi y Yoshimi!","failure_count":2}
-{"sentence":"¡Discúlpate con todos!","failure_count":2}
-{"sentence":"¡Discúlpate delante de las sirvientas!","failure_count":2}
-{"sentence":"¡Discúlpate!","failure_count":2}
-{"sentence":"¡Discúlpeme!","failure_count":2}
-{"sentence":"¡Discúlpeme, ¿voy bien para ir a la CEAM?","failure_count":2}
-{"sentence":"¡Discúlpenme!","failure_count":2}
-{"sentence":"¡Discúlpenos!","failure_count":2}
-{"sentence":"¡Discúlpese ante ella!","failure_count":2}
-{"sentence":"¡Divirtámosmos y bebamos cuanto querramos!","failure_count":2}
-{"sentence":"¡ESchool!.","failure_count":2}
-{"sentence":"¡Estos chicos se zambullirán y sacarán monedas del Ganga!","failure_count":2}
-{"sentence":"¡GOL GOOOOOOOOLLLLLLLLLLL de Racing!","failure_count":2}
-{"sentence":"¡GOOOOOOOLLLLLLLLL de Racing Club!","failure_count":2}
-{"sentence":"¡HA SIDO UNA NlÑA!","failure_count":2}
-{"sentence":"¡Hey¡- ¡Hola!","failure_count":2}
-{"sentence":"¡Maldita bocazas!","failure_count":1}
-{"sentence":"¡No interumpas mi historia, jeez!","failure_count":2}
-{"sentence":"¡No no no no no!","failure_count":2}
-{"sentence":"¡No p-p-puedo!","failure_count":2}
-{"sentence":"¡No quiero volver a verte la cara!","failure_count":2}
-{"sentence":"¡No, no, no, no espera Eduardo, espera por favor!","failure_count":2}
-{"sentence":"¡No, no, no, no, no Irene, no puedo!","failure_count":2}
-{"sentence":"¡No, no, no, no, no, no, no!","failure_count":2}
-{"sentence":"¡Nooooo!","failure_count":2}
-{"sentence":"¡Oh, no, no, no, no, no, no!","failure_count":2}
-{"sentence":"¡Oye, oye, oye, oye, oye, oye!","failure_count":2}
-{"sentence":"¡Paguen la multa o muéstrenme sus billetos!","failure_count":2}
-{"sentence":"¡Paséate por el abedul!","failure_count":2}
-{"sentence":"¡Por el káiser, por Dios y por la patria!","failure_count":2}
-{"sentence":"¡Ruo-lan, deja a un lado el improperio, por favor!","failure_count":2}
-{"sentence":"¡Shiva, Shiva, Shiva, Shiva, Shiva, Shiva, Shiva, Shiva!","failure_count":2}
-{"sentence":"¡Suscríbense al canal!","failure_count":2}
-{"sentence":"¡Vamos, pelea comigo, maldita tonta!","failure_count":2}
-{"sentence":"¡¡¡Sólo ciérrela!!!","failure_count":2}
-{"sentence":"¡¿Qué diablos es un Rey rata?!","failure_count":2}
-{"sentence":"¡¿Qué quiere decir con que no hay comprador?!","failure_count":1}
-{"sentence":"¡¿Y bueno?!","failure_count":2}
-{"sentence":"¡¿Ya?!","failure_count":2}
-{"sentence":"«¡¿A qué viene tanta demora?!»","failure_count":1}
-{"sentence":"¿\"Sólo\" sigue siendo una palabra en español?","failure_count":2}
-{"sentence":"¿Campus del norte?","failure_count":2}
-{"sentence":"¿Crees que sólo soy un bocazas?","failure_count":1}
-{"sentence":"¿Cuántos planetas hay en nuestro sistema solar?","failure_count":2}
-{"sentence":"¿Cómo expresarle mi gratituición?","failure_count":2}
-{"sentence":"¿Dónde las arrancastes?","failure_count":2}
-{"sentence":"¿Envió a un par de idiotas?","failure_count":2}
-{"sentence":"¿Es verdad lo que se rumorea?","failure_count":2}
-{"sentence":"¿Ese señor está con Ud?","failure_count":2}
-{"sentence":"¿Estás sugeriendo que se trata de un diseño defectuoso?","failure_count":2}
-{"sentence":"¿Has decidido a qué Universidad americana quieres ir el año que viene?","failure_count":2}
-{"sentence":"¿Hay algo que no sepas hacer?","failure_count":2}
-{"sentence":"¿Karli?","failure_count":2}
-{"sentence":"¿La pinaza?","failure_count":1}
-{"sentence":"¿Muereeeees?","failure_count":2}
-{"sentence":"¿No condimentas a tu ensalda?","failure_count":2}
-{"sentence":"¿No soy la pececilla más escandalicioza del mar?","failure_count":2}
-{"sentence":"¿Oh, Es muy corto, no!?","failure_count":2}
-{"sentence":"¿Por qué no comistes?","failure_count":2}
-{"sentence":"¿Por qué no me preguntastes?","failure_count":2}
-{"sentence":"¿Porqué le diste esto a la recepcionista..?","failure_count":2}
-{"sentence":"¿Puedes decirle orgullosamente a tu hijo sobre tu trabajo?","failure_count":2}
-{"sentence":"¿Qué es lo que resuena en nosotros en respuesta al ruido que para la armonía,..","failure_count":2}
-{"sentence":"¿Qué podría contarte de Olga que ya no sepas?","failure_count":2}
-{"sentence":"¿Qué te hace pensar que debería ayudarte?","failure_count":2}
-{"sentence":"¿Russo?","failure_count":2}
-{"sentence":"¿Se lastimó, Sra?","failure_count":2}
-{"sentence":"¿Solo sabes refunfuñar?","failure_count":2}
-{"sentence":"¿Te acuerdas de cómo tienes que amortajarme?","failure_count":2}
-{"sentence":"¿Te gustan las cervezas alemanes?","failure_count":2}
-{"sentence":"¿¡\"Seres inferiores\"!?","failure_count":2}
-{"sentence":"¿¡\"Y qué pasa\"!?","failure_count":2}
-{"sentence":"¿¡De Messina!?","failure_count":2}
-{"sentence":"¿¡Oh en serio!?","failure_count":2}
-{"sentence":"¿¡Que le pasa?","failure_count":2}
-{"sentence":"¿¡Quién es esta gente!?","failure_count":2}
-{"sentence":"¿¡Qué!?","failure_count":2}
-{"sentence":"¿¡Y el mío!?","failure_count":2}
+{"sentence":"Y vivir con esto que no sé si será \"La\" justicia pero es \"una\" justicia.","failure_count":3}
+{"sentence":"Ya me \"ando\".","failure_count":3}
+{"sentence":"¡A-bu-rrrrrrri-do!","failure_count":3}
+{"sentence":"¡Ahora desplegaos!","failure_count":3}
+{"sentence":"¡Chóquela, paisano!","failure_count":3}
+{"sentence":"¡Cobardica!","failure_count":3}
+{"sentence":"¡Cuidado con los jarrones!","failure_count":3}
+{"sentence":"¡De todas maneras se Io diré!","failure_count":3}
+{"sentence":"¡Discípulo!","failure_count":3}
+{"sentence":"¡Discúlpame!","failure_count":3}
+{"sentence":"¡Discúlpate con Megumi y Yoshimi!","failure_count":3}
+{"sentence":"¡Discúlpate con todos!","failure_count":3}
+{"sentence":"¡Discúlpate delante de las sirvientas!","failure_count":3}
+{"sentence":"¡Discúlpate!","failure_count":3}
+{"sentence":"¡Discúlpeme!","failure_count":3}
+{"sentence":"¡Discúlpeme, ¿voy bien para ir a la CEAM?","failure_count":3}
+{"sentence":"¡Discúlpenme!","failure_count":3}
+{"sentence":"¡Discúlpenos!","failure_count":3}
+{"sentence":"¡Discúlpese ante ella!","failure_count":3}
+{"sentence":"¡Discúlpese, chinga!","failure_count":3}
+{"sentence":"¡Divirtámosmos y bebamos cuanto querramos!","failure_count":3}
+{"sentence":"¡ESchool!.","failure_count":3}
+{"sentence":"¡Estos chicos se zambullirán y sacarán monedas del Ganga!","failure_count":3}
+{"sentence":"¡GOL GOOOOOOOOLLLLLLLLLLL de Racing!","failure_count":3}
+{"sentence":"¡GOOOOOOOLLLLLLLLL de Racing Club!","failure_count":3}
+{"sentence":"¡HA SIDO UNA NlÑA!","failure_count":3}
+{"sentence":"¡Hey¡- ¡Hola!","failure_count":3}
+{"sentence":"¡Hijita te \"volvistes\" a equivocar!","failure_count":3}
+{"sentence":"¡Maldita bocazas!","failure_count":3}
+{"sentence":"¡No interumpas mi historia, jeez!","failure_count":3}
+{"sentence":"¡No no no no no!","failure_count":3}
+{"sentence":"¡No p-p-puedo!","failure_count":3}
+{"sentence":"¡No quiero volver a verte la cara!","failure_count":3}
+{"sentence":"¡No, no, no, no espera Eduardo, espera por favor!","failure_count":3}
+{"sentence":"¡No, no, no, no, no Irene, no puedo!","failure_count":3}
+{"sentence":"¡No, no, no, no, no, no, no!","failure_count":3}
+{"sentence":"¡Nooooo!","failure_count":3}
+{"sentence":"¡Oh, no, no, no, no, no, no!","failure_count":3}
+{"sentence":"¡Oye, oye, oye, oye, oye, oye!","failure_count":3}
+{"sentence":"¡Paguen la multa o muéstrenme sus billetos!","failure_count":3}
+{"sentence":"¡Paséate por el abedul!","failure_count":3}
+{"sentence":"¡Por Dios, viejo..!","failure_count":3}
+{"sentence":"¡Por el káiser, por Dios y por la patria!","failure_count":3}
+{"sentence":"¡Ruo-lan, deja a un lado el improperio, por favor!","failure_count":3}
+{"sentence":"¡Shiva, Shiva, Shiva, Shiva, Shiva, Shiva, Shiva, Shiva!","failure_count":3}
+{"sentence":"¡Suscríbense al canal!","failure_count":3}
+{"sentence":"¡Vamos, pelea comigo, maldita tonta!","failure_count":3}
+{"sentence":"¡¡¡Sólo ciérrela!!!","failure_count":3}
+{"sentence":"¡¿Qué diablos es un Rey rata?!","failure_count":3}
+{"sentence":"¡¿Qué quiere decir con que no hay comprador?!","failure_count":3}
+{"sentence":"¡¿Y bueno?!","failure_count":3}
+{"sentence":"¡¿Ya?!","failure_count":3}
+{"sentence":"«¡¿A qué viene tanta demora?!»","failure_count":3}
+{"sentence":"¿\"Sólo\" sigue siendo una palabra en español?","failure_count":3}
+{"sentence":"¿Campus del norte?","failure_count":3}
+{"sentence":"¿Crees que sólo soy un bocazas?","failure_count":3}
+{"sentence":"¿Cuántos planetas hay en nuestro sistema solar?","failure_count":3}
+{"sentence":"¿Cómo expresarle mi gratituición?","failure_count":3}
+{"sentence":"¿Dónde las arrancastes?","failure_count":3}
+{"sentence":"¿Envió a un par de idiotas?","failure_count":3}
+{"sentence":"¿Es verdad lo que se rumorea?","failure_count":3}
+{"sentence":"¿Ese señor está con Ud?","failure_count":3}
+{"sentence":"¿Estás sugeriendo que se trata de un diseño defectuoso?","failure_count":3}
+{"sentence":"¿Has decidido a qué Universidad americana quieres ir el año que viene?","failure_count":3}
+{"sentence":"¿Hay algo que no sepas hacer?","failure_count":3}
+{"sentence":"¿Karli?","failure_count":3}
+{"sentence":"¿La pinaza?","failure_count":3}
+{"sentence":"¿Muereeeees?","failure_count":3}
+{"sentence":"¿No condimentas a tu ensalda?","failure_count":3}
+{"sentence":"¿No soy la pececilla más escandalicioza del mar?","failure_count":3}
+{"sentence":"¿Oh, Es muy corto, no!?","failure_count":3}
+{"sentence":"¿Por qué no comistes?","failure_count":3}
+{"sentence":"¿Por qué no me preguntastes?","failure_count":3}
+{"sentence":"¿Por qué te hiceron eso?","failure_count":3}
+{"sentence":"¿Porqué le diste esto a la recepcionista..?","failure_count":3}
+{"sentence":"¿Puedes decirle orgullosamente a tu hijo sobre tu trabajo?","failure_count":3}
+{"sentence":"¿Qué es lo que resuena en nosotros en respuesta al ruido que para la armonía,..","failure_count":3}
+{"sentence":"¿Qué podría contarte de Olga que ya no sepas?","failure_count":3}
+{"sentence":"¿Qué te hace pensar que debería ayudarte?","failure_count":3}
+{"sentence":"¿Russo?","failure_count":3}
+{"sentence":"¿Se lastimó, Sra?","failure_count":3}
+{"sentence":"¿Solo sabes refunfuñar?","failure_count":3}
+{"sentence":"¿Te acuerdas de cómo tienes que amortajarme?","failure_count":3}
+{"sentence":"¿Te gustan las cervezas alemanes?","failure_count":3}
+{"sentence":"¿¡\"Seres inferiores\"!?","failure_count":3}
+{"sentence":"¿¡\"Y qué pasa\"!?","failure_count":3}
+{"sentence":"¿¡De Messina!?","failure_count":3}
+{"sentence":"¿¡Oh en serio!?","failure_count":3}
+{"sentence":"¿¡Que le pasa?","failure_count":3}
+{"sentence":"¿¡Quién es esta gente!?","failure_count":3}
+{"sentence":"¿¡Qué!?","failure_count":3}
+{"sentence":"¿¡Y el mío!?","failure_count":3}
+{"sentence":"¿¿¿Qué???","failure_count":3}

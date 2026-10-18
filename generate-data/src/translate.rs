@@ -531,6 +531,52 @@ impl Translator {
         Ok(translation)
     }
 
+    /// Inspect the translator's real cache and render every independent missing
+    /// request through the normal prompt/schema builder, without warming it.
+    pub async fn measure(&self, texts: &[String]) -> anyhow::Result<serde_json::Value> {
+        anyhow::ensure!(
+            tysm::measurement::enabled(),
+            "translation measurement requires global no-inference guard"
+        );
+        let Backend::OpenAi { client, .. } = &self.backend else {
+            anyhow::bail!("Google translation measurement is not implemented");
+        };
+        let mut seen = std::collections::HashSet::new();
+        let mut missing = Vec::new();
+        let mut hits = 0;
+        let mut cached_output_bytes = 0;
+        for text in texts {
+            if !seen.insert(self.primary_hash(text)) {
+                continue;
+            }
+            if let Some(translation) = self.cached(text).await {
+                hits += 1;
+                cached_output_bytes += translation.len();
+            } else {
+                missing.push(text.as_str());
+            }
+        }
+        for chunk in missing.chunks(OPENAI_BATCH_CHUNK) {
+            let results = client
+                .batch_chat_with_system_prompt::<TranslationResponse>(
+                    self.openai_system_prompt(),
+                    chunk.to_vec(),
+                    |_| {},
+                )
+                .await?;
+            anyhow::ensure!(
+                results.iter().all(Result::is_err),
+                "translator should have no tysm response cache"
+            );
+        }
+        Ok(serde_json::json!({
+            "cache_hits": hits, "cache_misses": missing.len(),
+            "cached_usage": null,
+            "cached_output_bytes": cached_output_bytes,
+            "limitation": "translation cache stores text only, not provider usage; source cache may be legacy Google or previous OpenAI model"
+        }))
+    }
+
     /// Best-effort bulk cache warm-up; failed items remain misses for `translate`.
     pub async fn prime(&self, texts: &[String]) -> anyhow::Result<()> {
         if crate::cache_only() {

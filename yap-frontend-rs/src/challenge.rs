@@ -582,7 +582,7 @@ impl Deck {
                 .multiword_terms
                 .iter()
                 .chain(&encoded.low_confidence_multiword_terms)
-                .filter(|term| term.gram == gram)
+                .filter(|term| term.gram.sense == gram)
                 .flat_map(|term| {
                     term.matched_word_indices
                         .iter()

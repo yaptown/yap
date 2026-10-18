@@ -287,14 +287,17 @@ fn language_specific_notes(language: Language) -> &'static str {
 }
 
 /// Deterministically pick up to 20 multi-morpheme example entries from the
-/// golden set to show the LLM.
-fn build_examples(entries: &[AlignedEntry]) -> Vec<&AlignedEntry> {
-    let multi: Vec<&AlignedEntry> = entries.iter().filter(|e| e.segments.len() >= 2).collect();
-
-    let mut sampled = sample_to_target(multi, 30, |e| e.word.clone());
-    sampled.sort_by(|a, b| a.word.cmp(&b.word));
-    sampled.truncate(20);
-    sampled
+/// golden set to show the LLM, retaining surviving examples in their saved order.
+fn select_examples(
+    survivors: &[(String, String)],
+    pool: &[(String, String)],
+) -> Vec<(String, String)> {
+    let remaining = crate::corpus_samples::remaining_items(pool, survivors);
+    let count = 20usize.saturating_sub(survivors.len());
+    let mut sampled = sample_to_target(remaining, count * 3 / 2, |e| e.0.clone());
+    sampled.sort_by(|a, b| a.0.cmp(&b.0));
+    sampled.truncate(count);
+    survivors.iter().cloned().chain(sampled).collect()
 }
 
 /// Render one morpheme the way the LLM is asked to render its output:
@@ -332,10 +335,24 @@ pub async fn generate_llm_aligned_entries(
 
     let language = course.target_language;
     let chat_client = &*CHAT_CLIENT;
-    let examples = build_examples(golden_entries);
+    let mut samples = crate::corpus_samples::SampleCache::load(
+        crate::pipeline::course_dirs(&course)
+            .unwrap()
+            .native_specific_dir
+            .join("etymology_examples.jsonl"),
+    )
+    .unwrap();
+    let pool: Vec<_> = golden_entries
+        .iter()
+        .filter(|e| e.segments.len() >= 2)
+        .map(|e| (e.word.clone(), format_example(e)))
+        .collect();
+    samples.refresh_with(&(), &pool, select_examples);
+    samples.save().unwrap();
+    let examples = samples.get(&());
     let examples_block = examples
         .iter()
-        .map(|e| format_example(e))
+        .map(|(_, rendered)| rendered.as_str())
         .collect::<Vec<_>>()
         .join("\n\n");
 
@@ -481,4 +498,49 @@ pub async fn augment_with_llm_aligned(
     let mut aligned = golden_entries;
     aligned.extend(llm_entries);
     Ok(aligned)
+}
+
+#[cfg(test)]
+mod example_tests {
+    use super::*;
+
+    #[test]
+    fn initial_examples_match_original_sampling_sort_and_truncation() {
+        for size in [0, 1, 20, 30, 100] {
+            let entries: Vec<_> = (0..size)
+                .rev()
+                .map(|i| AlignedEntry {
+                    word: format!("word {i}"),
+                    segments: vec![
+                        MorphemeSegment {
+                            surface: "a".into(),
+                            canonical: "a".into(),
+                            tag: None
+                        };
+                        if i % 3 == 0 { 1 } else { 2 }
+                    ],
+                })
+                .collect();
+            let multi: Vec<_> = entries.iter().filter(|e| e.segments.len() >= 2).collect();
+            let mut expected = sample_to_target(multi, 30, |e| e.word.clone());
+            expected.sort_by(|a, b| a.word.cmp(&b.word));
+            expected.truncate(20);
+            let expected = expected
+                .into_iter()
+                .map(format_example)
+                .collect::<Vec<_>>()
+                .join("\n\n");
+            let pool: Vec<_> = entries
+                .iter()
+                .filter(|e| e.segments.len() >= 2)
+                .map(|e| (e.word.clone(), format_example(e)))
+                .collect();
+            let actual = select_examples(&[], &pool)
+                .into_iter()
+                .map(|(_, text)| text)
+                .collect::<Vec<_>>()
+                .join("\n\n");
+            assert_eq!(actual, expected);
+        }
+    }
 }

@@ -82,12 +82,21 @@ fn cached_chat_client(model: &str, reasoning_effort: &str) -> tysm::chat_complet
 
 /// Wall-clock stage timer for profiling pipeline runs: each `lap` logs the
 /// time since the previous one at info level (`RUST_LOG=generate_data=info`).
+/// Use `run` for overlapping futures: each gets its own clock, starting on poll.
+/// Spend snapshots are cumulative process-wide checkpoints, never stage costs.
 pub struct StageTimer {
     started: std::time::Instant,
     last: std::time::Instant,
 }
 
 impl StageTimer {
+    pub async fn run<T>(label: &str, future: impl std::future::Future<Output = T>) -> T {
+        let mut timer = Self::new();
+        let output = future.await;
+        timer.lap(label);
+        output
+    }
+
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         let now = std::time::Instant::now();
@@ -98,11 +107,13 @@ impl StageTimer {
     }
 
     pub fn lap(&mut self, label: &str) {
+        tysm::spend::snapshot_label(label).expect("persist stage spend snapshot");
         let now = std::time::Instant::now();
         log::info!(
-            "timing[{label}]: {:.1}s (total {:.1}s)",
+            "timing[{label}]: {:.1}s (total {:.1}s), openai spend so far {}",
             (now - self.last).as_secs_f64(),
-            (now - self.started).as_secs_f64()
+            (now - self.started).as_secs_f64(),
+            tysm::chat_completions::process_spend()
         );
         self.last = now;
     }
@@ -173,6 +184,7 @@ pub mod gold;
 pub mod human_audio;
 pub mod lexide_token;
 pub mod llm_etymology;
+pub mod measurement;
 pub mod morpheme_info;
 pub mod morphology_analysis;
 pub mod nlp;
@@ -186,6 +198,7 @@ pub mod proper_noun_definitions;
 pub mod read_anki;
 pub mod reader_book_sentences;
 pub mod reader_books;
+pub mod readings;
 pub mod sense_redundancy;
 pub mod slot_analysis;
 pub mod strokes;

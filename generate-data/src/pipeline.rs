@@ -217,6 +217,70 @@ pub fn initial_gram_frequencies(
     frequencies
 }
 
+/// Decode sentence grams identically for pack generation and cache measurement.
+pub fn sentence_grams(
+    sentences: &[(String, language_utils::EncodedSentence)],
+    nlp: &BTreeMap<String, SentenceInfo>,
+    vocabulary: &[GramVocabEntry<String>],
+) -> Vec<(
+    String,
+    language_utils::SentenceGrams<language_utils::TaggedGram<Gram<String>>>,
+)> {
+    use language_utils::{SentenceGram, SentenceGrams, TaggedGram};
+    use lasso::Key;
+    sentences
+        .iter()
+        .map(|(text, encoded)| {
+            let grams: Vec<_> = encoded
+                .tokens
+                .iter()
+                .filter_map(|&token| {
+                    vocabulary.get(token.gram.into_usize()).map(|entry| {
+                        SentenceGram::from(entry.atoms.clone()).map(|gram| TaggedGram {
+                            gram,
+                            sense: token.sense,
+                        })
+                    })
+                })
+                .collect();
+            let gram_set: HashSet<_> = grams
+                .iter()
+                .map(|gram| match gram {
+                    SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => &g.gram,
+                })
+                .collect();
+            let (multiword_terms, low_confidence_multiword_terms) = nlp
+                .get(text)
+                .map(|info| {
+                    (
+                        info.multiword_terms
+                            .high_confidence
+                            .iter()
+                            .filter(|m| !gram_set.contains(&m.gram.gram))
+                            .cloned()
+                            .collect(),
+                        info.multiword_terms
+                            .low_confidence
+                            .iter()
+                            .filter(|m| !gram_set.contains(&m.gram.gram))
+                            .cloned()
+                            .collect(),
+                    )
+                })
+                .unwrap_or_default();
+            (
+                text.clone(),
+                SentenceGrams {
+                    grams,
+                    capitalize_first: encoded.capitalize_first,
+                    multiword_terms,
+                    low_confidence_multiword_terms,
+                },
+            )
+        })
+        .collect()
+}
+
 /// The matcher patterns compiled from multiword terms and the gram
 /// vocabulary (also used by `main()` to run multiword detection over
 /// secondary sentence sets like homophone practice).
@@ -389,10 +453,27 @@ fn build_citation_map(
     Ok(resolved)
 }
 
+/// Which measured dependencies remain unknown. Slot answers can change only
+/// overlays, never the already-trained/encoded sentence tokens used by B/C.
+#[derive(Debug, Default, Clone, Copy, serde::Serialize)]
+pub struct SegmentationMeasurement {
+    pub encoding_misses: u64,
+    pub overlay_misses: u64,
+}
+impl SegmentationMeasurement {
+    pub fn readings_ready(self) -> bool {
+        self.encoding_misses == 0
+    }
+    pub fn overlays_ready(self) -> bool {
+        self.readings_ready() && self.overlay_misses == 0
+    }
+}
+
 /// The segmented corpus: every sentence in its canonical encoded form with
 /// its multiword matches, the vocabulary that decodes it, and the machinery
 /// to segment new sentences the same way.
 pub struct SegmentedCorpus {
+    pub measurement: SegmentationMeasurement,
     /// App sentences (multiword-matched).
     pub nlp_sentences: BTreeMap<String, SentenceInfo>,
     /// Restricted (Pimsleur) sentences: encoded, but never multiword-matched.
@@ -411,14 +492,19 @@ pub struct SegmentedCorpus {
 pub async fn segment_corpus(
     course: &Course,
     sentence_corpus: &TargetSentences,
+    scratch: Option<&Path>,
 ) -> anyhow::Result<SegmentedCorpus> {
     let course = *course;
+    let measurement_started = tysm::measurement::misses();
     let mut timer = crate::StageTimer::new();
-    let CourseDirs {
-        corpus_dir,
-        target_language_dir,
-        ..
-    } = course_dirs(&course)?;
+    // Sample runs seed their input caches in scratch; every incremental cache
+    // and derived output stays there, without changing any matching logic.
+    let (corpus_dir, target_language_dir) = if let Some(scratch) = scratch {
+        (scratch.to_owned(), scratch.to_owned())
+    } else {
+        let dirs = course_dirs(&course)?;
+        (dirs.corpus_dir, dirs.target_language_dir)
+    };
     let banned_words = load_banned_words(&course)?;
 
     // The sentence set: sentence_corpus app sentences, deduplicated by text (last
@@ -452,14 +538,69 @@ pub async fn segment_corpus(
 
     // Tokenize (incremental cache file: already-processed sentences load).
     let sentences: Vec<String> = sources_by_text.keys().map(|s| s.to_string()).collect();
-    let sentences_tokenizations = crate::nlp::process_sentences(
-        sentences,
-        &corpus_dir.join("target_language_sentences_tokenization.jsonl"),
-        course.target_language,
-    )
-    .await
-    .context("Failed to process sentences tokenization")?;
-    timer.lap("tokenization load");
+    let tokenize_app = async {
+        crate::nlp::process_sentences(
+            sentences,
+            &corpus_dir.join("target_language_sentences_tokenization.jsonl"),
+            course.target_language,
+        )
+        .await
+        .context("Failed to process sentences tokenization")
+    };
+    let tokenize_restricted = async {
+        let texts: Vec<String> = sentence_corpus
+            .restricted_sentences
+            .iter()
+            .map(|(s, _)| s.clone())
+            .collect();
+        if texts.is_empty() {
+            Ok(BTreeMap::new())
+        } else {
+            crate::nlp::process_sentences(
+                texts,
+                &corpus_dir.join("restricted_sentences_tokenization.jsonl"),
+                course.target_language,
+            )
+            .await
+            .context("Failed to process restricted sentences tokenization")
+        }
+    };
+    let tokenize_terms = async {
+        let terms = crate::wiktionary_terms::ensure_multiword_terms_file(&course, &corpus_dir)
+            .await
+            .context("Failed to ensure multiword terms file exists")?;
+        let alt_forms = crate::wiktionary_terms::download_alt_forms(&terms, &corpus_dir)
+            .await
+            .context("Failed to download alt forms")?;
+        let tokens = crate::nlp::process_sentences(
+            terms,
+            &corpus_dir.join("target_language_multiword_terms_tokenization.jsonl"),
+            course.target_language,
+        )
+        .await
+        .context("Failed to process multiword terms tokenization")?;
+        anyhow::Ok((alt_forms, tokens))
+    };
+    // The three caches are disjoint; nothing interns until all three finish.
+    // Measurement uses process-global stage labels, so retain its serial path.
+    let (
+        sentences_tokenizations,
+        restricted_tokenizations,
+        (wiktionary_alt_forms, multiword_terms_tokenizations),
+    ) = if tysm::measurement::enabled() {
+        (
+            tokenize_app.await?,
+            tokenize_restricted.await?,
+            tokenize_terms.await?,
+        )
+    } else {
+        tokio::try_join!(
+            crate::StageTimer::run("app tokenization", tokenize_app),
+            crate::StageTimer::run("restricted tokenization", tokenize_restricted),
+            crate::StageTimer::run("multiword terms + tokenization", tokenize_terms),
+        )?
+    };
+    timer.lap("tokenization fork");
 
     // Convert tokenizations to literals (without multiword detection)
     // Multiword detection will happen later, after omnigram training
@@ -495,23 +636,7 @@ pub async fn segment_corpus(
             })
             .collect();
 
-    // Process restricted (Pimsleur) sentences — tokenize to a separate cache file
-    let restricted_sentence_texts: Vec<String> = sentence_corpus
-        .restricted_sentences
-        .iter()
-        .map(|(s, _)| s.clone())
-        .collect();
-    let restricted_tokenizations = if !restricted_sentence_texts.is_empty() {
-        crate::nlp::process_sentences(
-            restricted_sentence_texts,
-            &corpus_dir.join("restricted_sentences_tokenization.jsonl"),
-            course.target_language,
-        )
-        .await
-        .context("Failed to process restricted sentences tokenization")?
-    } else {
-        BTreeMap::new()
-    };
+    // Restricted literals keep their original merge order below.
     let restricted_literals =
         crate::nlp::convert_tokens_to_literals(&restricted_tokenizations, course.target_language);
     timer.lap("literals + filters");
@@ -524,24 +649,6 @@ pub async fn segment_corpus(
             .entry(text.clone())
             .or_insert_with(|| lits.clone());
     }
-
-    // Multiword terms (the file is a load-or-build cache) and their
-    // tokenizations.
-    let multiword_terms =
-        crate::wiktionary_terms::ensure_multiword_terms_file(&course, &corpus_dir)
-            .await
-            .context("Failed to ensure multiword terms file exists")?;
-    let wiktionary_alt_forms =
-        crate::wiktionary_terms::download_alt_forms(&multiword_terms, &corpus_dir)
-            .await
-            .context("Failed to download alt forms")?;
-    let multiword_terms_tokenizations = crate::nlp::process_sentences(
-        multiword_terms,
-        &corpus_dir.join("target_language_multiword_terms_tokenization.jsonl"),
-        course.target_language,
-    )
-    .await
-    .context("Failed to process multiword terms tokenization")?;
 
     // Filter out "multiword terms" that tokenized to a single token —
     // these are inflected forms or bad tokenizations, not real multi-word expressions
@@ -563,7 +670,7 @@ pub async fn segment_corpus(
             .collect();
 
     // Convert multiword term tokenizations to grams for seeding into omnigram
-    timer.lap("multiword terms + alt forms");
+    timer.lap("multiword term filtering");
     let multiword_term_literals = crate::nlp::convert_tokens_to_literals(
         &multiword_terms_tokenizations,
         course.target_language,
@@ -745,18 +852,39 @@ pub async fn segment_corpus(
     .context("Failed to generate NLP sentences")?;
     timer.lap("multiword matching");
 
+    let before_slots = tysm::measurement::misses();
     // Slot-loosened multiword matching: citation forms like "arriver à
     // quelqu'un" contain placeholder words that never appear literally in
     // real sentences, so their tree patterns above never fire. Compile
     // loosened realizations of the argument slots (slot filled by any
     // nominal, or realized as a clitic pronoun), match them, LLM-grade a
     // sample per (term, realization), and merge the survivors.
-    {
+    'slot_overlays: {
         use crate::slot_analysis::{self, SlotRealization};
 
-        let slot_specs = slot_analysis::analyze_slots(&course, &multiword_terms_tokenizations)
-            .await
-            .context("Failed to analyze multiword term slots")?;
+        tysm::measurement::stage(&format!(
+            "{}:slot-analysis:{}",
+            course.target_language.code(),
+            course.native_language.code()
+        ));
+        let slot_specs = match slot_analysis::analyze_slots(
+            &course,
+            &multiword_terms_tokenizations,
+            &target_language_dir,
+        )
+        .await
+        .context("Failed to analyze multiword term slots")
+        {
+            Ok(specs) => specs,
+            Err(error)
+                if tysm::measurement::enabled() && crate::measurement::is_cache_miss(&error) =>
+            {
+                // Unknown hints block overlays, not the already-known encodings.
+                // No missing hint/spec response is replaced with a fake answer.
+                break 'slot_overlays;
+            }
+            Err(error) => return Err(error),
+        };
 
         // Clitic realizations are high-precision; process them first so a
         // sentence matching both realizations lands in high confidence.
@@ -797,14 +925,28 @@ pub async fn segment_corpus(
         // realizations that clear the precision bar. Per-pattern detail
         // goes to a TSV rather than the log — there are thousands of
         // patterns for a language like English.
+        let mut slot_samples = slot_analysis::MatchSamples::load(
+            target_language_dir.join("slot_match_samples.jsonl"),
+        )?;
         let grade_requests: Vec<slot_analysis::GradeRequest> = slot_patterns
             .iter()
             .zip(&matches_per_pattern)
             .filter(|(_, matched)| !matched.is_empty())
             .map(|((term, _, realization, _), matched)| {
-                slot_analysis::GradeRequest::new((*term).clone(), *realization, matched)
+                slot_analysis::GradeRequest::new(
+                    (*term).clone(),
+                    *realization,
+                    matched,
+                    &mut slot_samples,
+                )
             })
             .collect();
+        slot_samples.save()?;
+        tysm::measurement::stage(&format!(
+            "{}:slot-grading:{}",
+            course.target_language.code(),
+            course.native_language.code()
+        ));
         let graded = slot_analysis::grade_patterns(&grade_requests)
             .await
             .context("Failed to grade slot patterns")?;
@@ -920,6 +1062,10 @@ pub async fn segment_corpus(
     );
 
     Ok(SegmentedCorpus {
+        measurement: SegmentationMeasurement {
+            encoding_misses: before_slots - measurement_started,
+            overlay_misses: tysm::measurement::misses() - before_slots,
+        },
         nlp_sentences,
         restricted_nlp_sentences,
         gram_vocabulary,
@@ -1037,6 +1183,89 @@ pub async fn translate_sentences(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn overlay_misses_do_not_block_readings_but_encoding_misses_do() {
+        let overlay = SegmentationMeasurement {
+            encoding_misses: 0,
+            overlay_misses: 2,
+        };
+        assert!(overlay.readings_ready());
+        assert!(!overlay.overlays_ready());
+        let encoding = SegmentationMeasurement {
+            encoding_misses: 1,
+            overlay_misses: 0,
+        };
+        assert!(!encoding.readings_ready());
+        assert!(!encoding.overlays_ready());
+    }
+
+    #[test]
+    fn multi_atom_overlays_do_not_change_unigram_frequency_inputs() {
+        use language_utils::{
+            Atom, Heteronym, PartOfSpeech, SentenceGram, SentenceGrams, TaggedGram, Word, WordType,
+        };
+        let word = |text: &str| {
+            Atom::Tok(Word {
+                text: text.into(),
+                word_type: WordType::Heteronym(Heteronym {
+                    word: text.into(),
+                    lemma: text.into(),
+                    pos: PartOfSpeech::Noun,
+                }),
+            })
+        };
+        let first = Gram(vec![word("help")]);
+        let second = Gram(vec![word("person")]);
+        let phrase = Gram(vec![word("help"), word("someone")]);
+        let vocabulary = [first.clone(), second.clone(), phrase.clone()]
+            .into_iter()
+            .map(|atoms| GramVocabEntry {
+                atoms,
+                frequency: 4,
+            })
+            .collect::<Vec<_>>();
+        let mut sentences = (0..4)
+            .map(|i| {
+                (
+                    format!("sentence {i}"),
+                    SentenceGrams {
+                        grams: vec![
+                            SentenceGram::Learnable(TaggedGram {
+                                gram: first.clone(),
+                                sense: None,
+                            }),
+                            SentenceGram::Learnable(TaggedGram {
+                                gram: second.clone(),
+                                sense: None,
+                            }),
+                        ],
+                        capitalize_first: false,
+                        multiword_terms: vec![],
+                        low_confidence_multiword_terms: vec![],
+                    },
+                )
+            })
+            .collect::<Vec<_>>();
+        let words = |sentences: &[_]| {
+            crate::frequencies::compute_gram_frequencies(sentences, &vocabulary)
+                .into_iter()
+                .filter(|entry| entry.gram.gram.len() == 1)
+                .map(|entry| (entry.gram, entry.count))
+                .collect::<Vec<_>>()
+        };
+        let before = words(&sentences);
+        for (_, sentence) in &mut sentences {
+            sentence.multiword_terms.push(MultiwordTermMatch {
+                gram: TaggedGram {
+                    gram: phrase.clone(),
+                    sense: None,
+                },
+                matched_word_indices: vec![0, 1],
+            });
+        }
+        assert_eq!(before, words(&sentences));
+    }
 
     fn edges(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
         pairs

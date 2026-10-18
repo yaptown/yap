@@ -647,6 +647,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "bstr"
+version = "1.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bb31b46c14244e20ee9984b11bf5c992b91fb6939fea616e3512c8baecdbe5f"
+dependencies = [
+ "memchr",
+ "regex-automata",
+ "serde_core",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1898,6 +1909,17 @@ name = "fancy-regex"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72cf461f865c862bb7dc573f643dd6a2b6842f7c30b07882b56bd148cc2761b8"
+dependencies = [
+ "bit-set 0.8.0",
+ "regex-automata",
+ "regex-syntax 0.8.11",
+]
+
+[[package]]
+name = "fancy-regex"
+version = "0.19.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d301f5bf187b3c295fce6468d3875037a0bccc5f6b151c63cac2f85babf21912"
 dependencies = [
  "bit-set 0.8.0",
  "regex-automata",
@@ -3951,7 +3973,7 @@ dependencies = [
 [[package]]
 name = "model-prices"
 version = "0.1.1"
-source = "git+https://github.com/anchpop/tysm.git?rev=e2dc7423422ecd6d5967b770979ee2f473596cea#e2dc7423422ecd6d5967b770979ee2f473596cea"
+source = "git+https://github.com/anchpop/tysm.git?rev=24c5b3c1fddd30e303d10cdd056c98f9f84f8adc#24c5b3c1fddd30e303d10cdd056c98f9f84f8adc"
 
 [[package]]
 name = "monostate"
@@ -6763,6 +6785,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "tiktoken-rs"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2aeff724640cfe13037336ddf35befdffd2909cbdb65cf041cc8a4cf8c584cfa"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "bstr",
+ "fancy-regex 0.19.2",
+ "regex 1.13.1",
+ "rustc-hash 2.1.1",
+]
+
+[[package]]
 name = "time"
 version = "0.3.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6861,7 +6897,7 @@ dependencies = [
  "dary_heap",
  "derive_builder",
  "esaxx-rs",
- "fancy-regex",
+ "fancy-regex 0.17.0",
  "getrandom 0.3.3",
  "itertools 0.14.0",
  "log 0.4.31",
@@ -7126,7 +7162,7 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 [[package]]
 name = "tysm"
 version = "0.22.0"
-source = "git+https://github.com/anchpop/tysm.git?rev=e2dc7423422ecd6d5967b770979ee2f473596cea#e2dc7423422ecd6d5967b770979ee2f473596cea"
+source = "git+https://github.com/anchpop/tysm.git?rev=24c5b3c1fddd30e303d10cdd056c98f9f84f8adc#24c5b3c1fddd30e303d10cdd056c98f9f84f8adc"
 dependencies = [
  "base64 0.22.1",
  "dashmap",
@@ -7142,6 +7178,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+ "tiktoken-rs",
  "tokio",
  "tokio-util",
  "tynm",

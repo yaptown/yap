@@ -185,7 +185,7 @@ fn convert_sentence_review(
                                 .multiword_terms
                                 .iter()
                                 .chain(encoded.low_confidence_multiword_terms.iter())
-                                .map(|term| &term.gram)
+                                .map(|term| &term.gram.sense)
                                 .map(|phrase_gram| {
                                     let phrase = context
                                         .language_pack

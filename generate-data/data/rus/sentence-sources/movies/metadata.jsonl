@@ -240,7 +240,7 @@
 {"id":"tt2082197","title":"Барфи!","year":2012,"original_language":"hi","rotten_tomatoes_score":80}
 {"id":"tt2356180","title":"Беги, Милка, беги!","year":2013,"original_language":"hi","rotten_tomatoes_score":75}
 {"id":"tt1562872","title":"Жизнь не может быть скучной!","year":2011,"original_language":"hi","rotten_tomatoes_score":89}
-{"id":"tt0079944","title":"Сталкер","year":1979,"original_language":"ru","rotten_tomatoes_score":100}
+{"id":"tt0079944","title":"Сталкер","year":1979,"original_language":"ru","rotten_tomatoes_score":100,"variety":"rus"}
 {"id":"tt0069293","title":"Солярис","year":1972,"original_language":"ru","rotten_tomatoes_score":92,"variety":"rus"}
 {"id":"tt0091251","title":"Иди и смотри","year":1985,"original_language":"ru","rotten_tomatoes_score":90}
 {"id":"tt0072443","title":"Зеркало","year":1975,"original_language":"ru","rotten_tomatoes_score":100}
@@ -321,3 +321,32 @@
 {"id":"tt0120669","title":"Страх и ненависть в Лас-Вегасе","year":1998,"original_language":"en","rotten_tomatoes_score":51}
 {"id":"tt0066565","title":"The White Sun of the Desert","year":1969,"original_language":"ru","rotten_tomatoes_score":null,"variety":"rus"}
 {"id":"tt1595366","title":"What Men Talk About","year":2010,"original_language":"ru","rotten_tomatoes_score":null,"variety":"rus"}
+{"id":"tt0847880","title":"Cargo 200","poster_path":null,"localizations":{},"year":2007,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0068519","title":"Gentlemen of Fortune","poster_path":null,"localizations":{},"year":1971,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0059550","title":"Operation Y and Other Shurik's Adventures","poster_path":null,"localizations":{},"year":1965,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0070233","title":"Ivan Vasilyevich Changes His Profession","poster_path":null,"localizations":{},"year":1973,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt3560686","title":"The Fool","poster_path":null,"localizations":{},"year":2014,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt8820590","title":"T-34","poster_path":null,"localizations":{},"year":2018,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt11418452","title":"Son of a Rich","poster_path":null,"localizations":{},"year":2019,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt10767426","title":"Text","poster_path":null,"localizations":{},"year":2019,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt5844488","title":"Ice","poster_path":null,"localizations":{},"year":2018,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt2182001","title":"Legend No. 17","poster_path":null,"localizations":{},"year":2013,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt1217565","title":"Radio Day","poster_path":null,"localizations":{},"year":2008,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt6175394","title":"The Last Warrior","poster_path":null,"localizations":{},"year":2017,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0050634","title":"The Cranes Are Flying","poster_path":null,"localizations":{},"year":1957,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt7601480","title":"Major Grom: Plague Doctor","poster_path":null,"localizations":{},"year":2021,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0052600","title":"Ballad of a Soldier","poster_path":null,"localizations":{},"year":1959,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0071411","title":"Dersu Uzala","poster_path":null,"localizations":{},"year":1975,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0488478","title":"12","poster_path":null,"localizations":{},"year":2007,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0072613","title":"Afonya","poster_path":null,"localizations":{},"year":1975,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0417397","title":"9th Company","poster_path":null,"localizations":{},"year":2005,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt7342838","title":"Leto","poster_path":null,"localizations":{},"year":2018,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0114055","title":"Peculiarities of the National Hunt","poster_path":null,"localizations":{},"year":1995,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0076391","title":"Mimino","poster_path":null,"localizations":{},"year":1977,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0091364","title":"Courier","poster_path":null,"localizations":{},"year":1986,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0090368","title":"Ruthless Romance","poster_path":null,"localizations":{},"year":1984,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0309047","title":"War","poster_path":null,"localizations":{},"year":2002,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0420982","title":"Dead Man's Bluff","poster_path":null,"localizations":{},"year":2005,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt4874206","title":"The Student","poster_path":null,"localizations":{},"year":2016,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0851577","title":"The Island","poster_path":null,"localizations":{},"year":2006,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
+{"id":"tt0060161","title":"Beware of the Car!","poster_path":null,"localizations":{},"year":1966,"original_language":"ru","variety":"rus","rotten_tomatoes_score":null}
