@@ -110,65 +110,70 @@ export function AnkiIntro() {
 function CardFan() {
   const video = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
-  const card =
-    "absolute inset-x-0 top-0 overflow-hidden rounded-xl border border-white/10 bg-card shadow-2xl transition-transform duration-500";
+  const face =
+    "overflow-hidden rounded-xl border border-white/10 bg-card shadow-2xl";
+  const card = `absolute inset-x-0 top-0 transition-transform duration-500 ${face}`;
   const still = "aspect-[2/1] w-full object-cover";
   return (
     <div className="group relative mt-6 mb-14 aspect-[16/9] w-full max-w-[16rem] sm:max-w-sm">
-      <ProjectorBeam video={video} />
       <div
         className={`${card} -rotate-[10deg] -translate-x-[30%] translate-y-[2%] scale-90 group-hover:-rotate-[13deg] group-hover:-translate-x-[36%]`}
       >
         <img src="/anki/portrait.avif" alt="" className={still} />
-        <Lit at="80% 0" />
       </div>
       <div
         className={`${card} rotate-[10deg] translate-x-[30%] translate-y-[2%] scale-90 group-hover:rotate-[13deg] group-hover:translate-x-[36%]`}
       >
         <img src="/anki/400-blows.avif" alt="" className={still} />
-        <Lit at="20% 0" />
       </div>
-      <div className={`${card} translate-y-[6%] group-hover:translate-y-[3%]`}>
-        <button
-          type="button"
-          className="relative block w-full"
-          aria-label={t("anki-intro-play-with-sound")}
-          onClick={() => {
-            const element = video.current;
-            if (!element) return;
-            element.muted = !muted;
-            if (muted) element.currentTime = 0;
-            void element.play();
-            setMuted(!muted);
-          }}
-        >
-          <video
-            ref={video}
-            src="/anki/amelie.mp4"
-            poster="/anki/amelie.avif"
-            className={still}
-            autoPlay
-            muted
-            loop
-            playsInline
-          />
-          <Lit at="50% 0" />
-          <span className="absolute top-2 right-2 flex size-8 items-center justify-center rounded-full bg-black/40 ring-1 ring-white/25 backdrop-blur-md">
-            {muted ? (
-              <VolumeX className="size-4 text-white" />
-            ) : (
-              <Volume2 className="size-4 text-white" />
-            )}
-          </span>
-          <p className="absolute inset-x-0 bottom-[8%] text-center text-base font-medium text-white [text-shadow:0_1px_3px_#000] sm:text-lg">
-            <TargetLanguageText language="French">
-              Vous croyez aux miracles ?
-            </TargetLanguageText>
+      {/* The beam rides with the front card so it always lands on its top
+          edge, even when the card lifts on hover. It moves by `top`, not a
+          transform: a transform would isolate the beam's screen blend from
+          the page behind it. */}
+      <div className="absolute inset-x-0 top-[7%] transition-[top] duration-500 group-hover:top-[3%]">
+        <ProjectorBeam video={video} />
+        <div className={face}>
+          <button
+            type="button"
+            className="relative block w-full"
+            aria-label={t("anki-intro-play-with-sound")}
+            onClick={() => {
+              const element = video.current;
+              if (!element) return;
+              element.muted = !muted;
+              if (muted) element.currentTime = 0;
+              void element.play();
+              setMuted(!muted);
+            }}
+          >
+            <video
+              ref={video}
+              src="/anki/amelie.mp4"
+              poster="/anki/amelie.avif"
+              className={still}
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+            <Lit />
+            <span className="absolute top-2 right-2 flex size-8 items-center justify-center rounded-full bg-black/40 ring-1 ring-white/25 backdrop-blur-md">
+              {muted ? (
+                <VolumeX className="size-4 text-white" />
+              ) : (
+                <Volume2 className="size-4 text-white" />
+              )}
+            </span>
+            <p className="absolute inset-x-0 bottom-[8%] text-center text-base font-medium text-white [text-shadow:0_1px_3px_#000] sm:text-lg">
+              <TargetLanguageText language="French">
+                Vous croyez aux miracles ?
+              </TargetLanguageText>
+            </p>
+          </button>
+          <p className="border-t border-dashed px-4 py-3 text-center text-sm text-muted-foreground">
+            {t("anki-intro-sample-translation")}
           </p>
-        </button>
-        <p className="border-t border-dashed px-4 py-3 text-center text-sm text-muted-foreground">
-          {t("anki-intro-sample-translation")}
-        </p>
+        </div>
       </div>
     </div>
   );
@@ -176,9 +181,9 @@ function CardFan() {
 
 // A projector beam from the top of the page, cast by the clip itself: each
 // frame is shrunk to a strip of columns, and each column throws a ray from
-// the lamp down to the same spot on the front card, so bright, warm parts of
-// the scene light the haze above them. Screen-blended and faded out before
-// the card, where Lit takes over.
+// the lamp down to the same spot on the front card's top edge, so bright,
+// warm parts of the scene light the haze above them. Lit carries the light
+// onto the card itself.
 const BEAM_COLUMNS = 24;
 
 function ProjectorBeam({
@@ -255,27 +260,31 @@ function ProjectorBeam({
   return (
     <div
       aria-hidden
-      className="projector-beam pointer-events-none absolute bottom-[45%] left-1/2 z-10 h-[34rem] w-[140%] -translate-x-1/2 mix-blend-screen blur-[6px]"
+      // Reaches a corner radius onto the card, with its edges pulled in by
+      // about the same, so it lands on the card rather than beside its
+      // rounded corners.
+      className="projector-beam pointer-events-none absolute bottom-[calc(100%-1rem)] left-0 z-10 h-[28rem] w-full mix-blend-screen blur-[6px]"
       style={{
-        clipPath: "polygon(48% 0, 52% 0, 100% 100%, 0 100%)",
-        maskImage: "linear-gradient(black 72%, transparent)",
+        clipPath: "polygon(48% 0, 52% 0, 97% 100%, 3% 100%)",
+        maskImage: "linear-gradient(black calc(100% - 0.6rem), transparent)",
       }}
     >
-      <canvas ref={canvas} width={420} height={544} className="size-full" />
+      <canvas ref={canvas} width={300} height={448} className="size-full" />
       <div className="absolute inset-0 bg-[url(/noise.webp)] bg-cover opacity-50 mix-blend-overlay" />
     </div>
   );
 }
 
-// Where the beam lands on a card. Overlay blending lifts the frame's bright
+// Where the beam lands on the card. Overlay blending lifts the frame's bright
 // parts and leaves its shadows dark, as real light on a screen would.
-function Lit({ at }: { at: string }) {
+function Lit() {
   return (
     <span
       aria-hidden
       className="projector-beam pointer-events-none absolute inset-0 mix-blend-overlay"
       style={{
-        background: `radial-gradient(ellipse 70% 110% at ${at}, #fff4dcb0, #fff4dc30 55%, transparent 80%)`,
+        background:
+          "radial-gradient(ellipse 70% 110% at 50% 0, #fff4dcb0, #fff4dc30 55%, transparent 80%)",
       }}
     />
   );
