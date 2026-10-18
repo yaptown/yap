@@ -24,6 +24,8 @@ intentional test inputs: commit them, not generated bindings or screenshots.
 
 Review-screen coverage: French caught-up, review-plan, and goal-reached
 (`accomplishment`) views, Italian first-run, and German needs-more-cards.
+`translation-ruby` and `dictation-ruby` are graded Japanese challenges, the
+moment readings (ruby) appear over the sentence.
 Audio-pending variants are supported but do not yet have a live capture.
 
 Home-screen coverage (`home/`): `home-cards-ready` (Up Next previewing a due

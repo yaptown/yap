@@ -322,6 +322,15 @@ impl ReviewInfo {
             });
         }
         let content = CardContent::Gram {
+            ruby: crate::ruby::word_ruby(
+                literals
+                    .iter()
+                    .flat_map(|l| [l.word.text.as_str(), l.whitespace.as_str()])
+                    .collect::<String>()
+                    .trim(),
+                language_pack.readings_for_sense(gram).next(),
+                deck.context.course.target_language,
+            ),
             gram: literals,
             prefix,
             // Morpheme-level breakdown for single heteronyms, word-level for
@@ -475,7 +484,27 @@ impl Deck {
             *s == sentence.target_language && *t == SentenceChallengeType::Transcription
         });
 
+        let literals: Vec<_> = parts
+            .iter()
+            .flat_map(|part| match part {
+                transcription_challenge::Part::AskedToTranscribe { parts } => parts.as_slice(),
+                transcription_challenge::Part::Provided { part } => std::slice::from_ref(part),
+            })
+            .cloned()
+            .collect();
+        let literal_ruby = crate::ruby::sentence_ruby(
+            language_pack,
+            self.context.course.target_language,
+            sentence.target_language,
+            &literals,
+            &part_gram_indices
+                .iter()
+                .flatten()
+                .copied()
+                .collect::<Vec<_>>(),
+        );
         Some(TranscribeComprehensibleSentence {
+            literal_ruby,
             target_language: language_pack
                 .string_rodeo
                 .resolve(&sentence.target_language)
@@ -632,7 +661,15 @@ impl Deck {
             .iter()
             .any(|(s, t)| *s == target_language && *t == SentenceChallengeType::Translation);
 
+        let literal_ruby = crate::ruby::sentence_ruby(
+            language_pack,
+            self.context.course.target_language,
+            target_language,
+            &target_language_literals,
+            &literal_gram_indices,
+        );
         Some(TranslateComprehensibleSentence {
+            literal_ruby,
             target_language: language_pack
                 .string_rodeo
                 .resolve(&target_language)

@@ -1,0 +1,223 @@
+{
+  "screen": "Review",
+  "view": {
+    "show_account_prompt": false,
+    "native_language": "English",
+    "target_language": "Japanese",
+    "step": {
+      "type": "Challenge",
+      "view": {
+        "challenge": {
+          "type": "TranscribeComprehensibleSentence",
+          "target_language": "帰って",
+          "audio": {
+            "request": {
+              "text": "帰って",
+              "language": "Japanese",
+              "is_ssml": false,
+              "speed": 1.0
+            },
+            "provider": "Gemini"
+          },
+          "native_language": "Go home.",
+          "literal_ruby": [
+            [
+              {
+                "base": "帰",
+                "ruby": "かえ"
+              },
+              {
+                "base": "って",
+                "ruby": null
+              }
+            ]
+          ],
+          "parts": [
+            {
+              "type": "AskedToTranscribe",
+              "parts": [
+                {
+                  "word": {
+                    "text": "帰って",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "帰って",
+                      "lemma": "帰る",
+                      "pos": "VERB"
+                    }
+                  },
+                  "whitespace": ""
+                }
+              ]
+            }
+          ],
+          "part_gram_indices": [
+            [
+              0
+            ]
+          ],
+          "gram_definitions_for_lookup": [
+            {
+              "Dictionary": {
+                "target_language_word": "帰って",
+                "definitions": [
+                  {
+                    "native": "return home",
+                    "note": "Used for going back to one’s home or another place one came from.",
+                    "example_sentence_target_language": "仕事が終わったら、まっすぐ家に帰ってください。",
+                    "example_sentence_native_language": "When you finish work, go straight home.",
+                    "cognate": false,
+                    "false_cognate": false
+                  }
+                ],
+                "morphology": [
+                  {
+                    "gender": null,
+                    "number": null,
+                    "politeness": null,
+                    "tense": null,
+                    "person": null,
+                    "case": null,
+                    "mood": null,
+                    "aspect": null
+                  }
+                ],
+                "segments": [
+                  {
+                    "surface": "帰っ",
+                    "canonical": "帰る"
+                  },
+                  {
+                    "surface": "て",
+                    "canonical": "て"
+                  }
+                ]
+              }
+            }
+          ],
+          "gram_breakdowns_for_lookup": [
+            [
+              [
+                "帰っ",
+                "帰る",
+                "go back"
+              ],
+              [
+                "て",
+                null,
+                "Te-form (conjunctive form)"
+              ]
+            ]
+          ],
+          "movie_titles": [
+            [
+              "tt2582802",
+              "セッション"
+            ],
+            [
+              "tt2194499",
+              "アバウト・タイム ～愛おしい時間について～"
+            ],
+            [
+              "tt0372824",
+              "コーラス"
+            ],
+            [
+              "tt6908274",
+              "嵐の中で"
+            ],
+            [
+              "tt1187043",
+              "きっと、うまくいく"
+            ]
+          ],
+          "proper_noun_definitions": [],
+          "second_chance": false
+        },
+        "transcription": {
+          "literal_ruby": [
+            [
+              {
+                "base": "帰",
+                "ruby": "かえ"
+              },
+              {
+                "base": "って",
+                "ruby": null
+              }
+            ]
+          ],
+          "parts": [
+            {
+              "type": "AskedToTranscribe",
+              "parts": [
+                {
+                  "word": {
+                    "text": "帰って",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "帰って",
+                      "lemma": "帰る",
+                      "pos": "VERB"
+                    }
+                  },
+                  "whitespace": ""
+                }
+              ]
+            }
+          ],
+          "inputs": {
+            "0": "かえて"
+          },
+          "phase": {
+            "type": "Graded",
+            "completed_at_ms": 1792332978689.322,
+            "grade": {
+              "encouragement": "You identified nearly all the correct sounds and got the ending right—good progress!",
+              "explanation": "The missing small <word>っ</word> changes the word. <word>帰る</word> becomes <word>帰って</word>, pronounced with a brief pause before <word>て</word>. Your <word>かえて</word> sounds similar but corresponds to words such as <word>変えて</word> (“change it”).",
+              "results": [
+                {
+                  "type": "AskedToTranscribe",
+                  "parts": [
+                    {
+                      "heard": {
+                        "word": {
+                          "text": "帰って",
+                          "word_type": {
+                            "type": "Heteronym",
+                            "word": "帰って",
+                            "lemma": "帰る",
+                            "pos": "VERB"
+                          }
+                        },
+                        "whitespace": ""
+                      },
+                      "grade": {
+                        "type": "PhoneticallySimilarButContextuallyIncorrect",
+                        "wrote": "かえて"
+                      }
+                    }
+                  ],
+                  "submission": "かえて"
+                }
+              ],
+              "compare": [
+                "帰って",
+                "変えて"
+              ],
+              "autograding_error": null
+            },
+            "translation_revealed": false
+          }
+        },
+        "translation": null
+      }
+    },
+    "progress": 1.0,
+    "total_reviews": 249,
+    "total_count": 5,
+    "keyboard_tip": "Enable the Japanese keyboard on your device to easily type Japanese characters",
+    "offer_engagement": false,
+    "online": true
+  }
+}

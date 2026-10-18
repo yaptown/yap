@@ -9,16 +9,23 @@ struct SentenceVerdictView: View, Equatable {
     let headline: VerdictHeadline?
     let correctLabel: String
     let correct: String
+    /// Readings over `correct`, when there are any to show.
+    var correctRuby: [RubySegment] = []
     var encouragement: String?
     var explanation: String?
     var error: String?
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             if let headline { VerdictHeadlineView(headline: headline) } else { SkeletonBars(widths: [0.45]) }
-            if headline?.tone != .Perfect {
+            // Readings are news even after a perfect answer.
+            if headline?.tone != .Perfect || !correctRuby.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     SectionLabel(text: correctLabel)
-                    Text(correct).font(.title3).textSelection(.enabled)
+                    if correctRuby.isEmpty {
+                        Text(correct).font(.title3).textSelection(.enabled)
+                    } else {
+                        RubyFlow(segments: correctRuby, rubyFont: .caption2.weight(.medium)).font(.title3)
+                    }
                 }
             }
             if let headline {

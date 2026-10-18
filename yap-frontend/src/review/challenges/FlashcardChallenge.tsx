@@ -31,7 +31,7 @@ import { useBackground } from "../../components/background-context";
 import { PlayfulArrow } from "./PlayfulArrow";
 import { cn } from "@/lib/utils";
 import { highlightTermInSentence } from "@/utils/highlightTermInSentence";
-import { TargetLanguageText } from "../../components/TargetLanguageText";
+import { Ruby, TargetLanguageText } from "../../components/TargetLanguageText";
 import { MorphemeBreakdown, type BreakdownRow } from "../MorphemeBreakdown";
 
 function gramDisplayText(gram: Literal<string>[]): string {
@@ -60,9 +60,11 @@ interface FlashcardChallengeProps {
 const CardFront = ({
   content,
   targetLanguage,
+  revealed,
 }: {
   content: CardContent;
   targetLanguage: Language;
+  revealed: boolean;
 }) => {
   return match(content)
     .with({ type: "Listening" }, () => {
@@ -80,7 +82,7 @@ const CardFront = ({
                 {wordPrefix.separator}
               </span>
             )}
-            {text}
+            <Ruby segments={revealed ? content.ruby ?? [] : []}>{text}</Ruby>
           </TargetLanguageText>
         </h2>
       );
@@ -661,6 +663,7 @@ export const FlashcardChallenge = function FlashcardChallenge({
                         <CardFront
                           content={content}
                           targetLanguage={targetLanguage}
+                          revealed={showAnswer}
                         />
                       </div>
                       {audioRequest && (

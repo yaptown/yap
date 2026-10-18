@@ -57,7 +57,7 @@ import { ReportIssueModal } from "./ReportIssueModal";
 import { InlineTextarea } from "../../components/ui/textarea";
 import { GramDefinitionDisplay } from "./TranslationChallenge";
 import { ProperNounGroups } from "./ProperNounGroups";
-import { TargetLanguageText } from "../../components/TargetLanguageText";
+import { Ruby, TargetLanguageText } from "../../components/TargetLanguageText";
 
 interface TranscriptionChallengeProps {
   challenge: TranscribeComprehensibleSentence;
@@ -118,7 +118,11 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
     () =>
       initialState ??
       storage?.load() ??
-      transcription_start(challenge.parts, challenge.proper_noun_definitions),
+      transcription_start(
+        challenge.literal_ruby ?? [],
+        challenge.parts,
+        challenge.proper_noun_definitions,
+      ),
   );
   const stateRef = useRef(state);
   const view = useMemo(() => transcription_view(state), [state]);
@@ -529,13 +533,16 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
                   correctLabel={view.correct_label}
                   correct={
                     <TargetLanguageText language={targetLanguage}>
-                      {challenge.target_language}
+                      <Ruby segments={view.sentence_ruby}>
+                        {challenge.target_language}
+                      </Ruby>
                     </TargetLanguageText>
                   }
                   encouragement={verdict?.encouragement}
                   explanation={verdict?.explanation}
                   autogradingError={verdict?.autograding_error}
                   isPerfect={verdict?.perfect ?? false}
+                  correctHasReadings={view.sentence_ruby.length > 0}
                   targetLanguage={targetLanguage}
                 />
 

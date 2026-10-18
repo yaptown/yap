@@ -58,7 +58,10 @@ struct DictionaryScreen: View {
                     Button { path.append(entry.frequency_index) } label: {
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text((entry.prefix.map { $0.prefix + $0.separator } ?? "") + entry.display_text).foregroundStyle(Color.yapText)
+                                HStack(alignment: .lastTextBaseline, spacing: 0) {
+                                    if let prefix = entry.prefix { Text(prefix.prefix + prefix.separator) }
+                                    RubyText(text: entry.display_text, segments: entry.ruby, rubyFont: .caption2.weight(.medium))
+                                }.foregroundStyle(Color.yapText)
                                 let gloss = entry.gloss
                                 if !gloss.isEmpty { Text(gloss).font(.subheadline).foregroundStyle(Color.yapMuted) }
                                 if entry.is_phrase { Text(L("dictionary-screen-phrase")).font(.caption).foregroundStyle(Color.yapMuted) }
@@ -101,7 +104,10 @@ private struct DictionaryDetail: View {
         ScrollView {
             if let entry {
                 StudyCard {
-                    Text((entry.prefix.map { $0.prefix + $0.separator } ?? "") + entry.display_text).font(.largeTitle.bold())
+                    HStack(alignment: .lastTextBaseline, spacing: 0) {
+                        if let prefix = entry.prefix { Text(prefix.prefix + prefix.separator) }
+                        RubyText(text: entry.display_text, segments: entry.ruby, rubyFont: .subheadline.weight(.medium))
+                    }.font(.largeTitle.bold())
                     if entry.is_phrase { Text(L("dictionary-screen-phrase")).font(.caption).foregroundStyle(Color.yapMuted) }
                     AudioButton(request: entry.audio_request, reviewCount: deck.get_total_reviews())
                     ForEach(entry.senses, id: \.frequency_index) { sense in

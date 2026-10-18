@@ -40,6 +40,7 @@ pub use restrictions::{ChallengeRestrictions, get_challenge_restrictions};
 pub mod opfs_test;
 mod placement_session;
 mod placement_test;
+mod ruby;
 pub use placement_session::{
     PlacementSession, PlacementSessionInfo, get_placement_session_info, toggle_placement_word,
 };
@@ -1007,6 +1008,9 @@ pub struct TranscribeComprehensibleSentence {
     pub target_language: String,
     pub audio: AudioRequest,
     pub native_language: String,
+    /// Readings per literal in flattened `parts`, without literal whitespace.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub literal_ruby: Vec<Vec<language_utils::readings::RubySegment>>,
     pub parts: Vec<transcription_challenge::Part>,
     /// Parallel to `parts`. For each part, one gram-group index per literal
     /// (length matches the literal count of the corresponding part). Lets the
@@ -4473,6 +4477,8 @@ pub struct FlashcardMeaning {
 pub enum CardContent {
     Gram {
         gram: Vec<Literal<String>>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        ruby: Vec<language_utils::readings::RubySegment>,
         /// Pre-computed grammatical prefix (e.g., article for nouns, subject pronoun
         /// for verbs). Computed server-side so the frontend doesn't have to call
         /// into the WASM module just to render the card front.

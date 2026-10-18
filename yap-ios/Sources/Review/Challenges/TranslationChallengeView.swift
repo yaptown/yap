@@ -27,6 +27,7 @@ struct TranslationChallengeView: View {
         return PendingReview(key: slot.key, identity: slot.identity)
     }
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
+    private var hasRuby: Bool { view.words.contains { !$0.ruby.isEmpty } }
     var body: some View {
         ReviewStepScrollView {
             StudyCard(spacing: 20, animated: true) {
@@ -37,7 +38,10 @@ struct TranslationChallengeView: View {
                             HStack(spacing: 0) {
                                 ForEach(chunk.indices, id: \.self) { index in
                                     let word = view.words[Int(index)]
-                                    let text = Text(word.text + word.whitespace)
+                                    let text = HStack(alignment: .lastTextBaseline, spacing: 0) {
+                                        RubyText(text: word.text, segments: word.ruby, rubyFont: .caption.weight(.medium), reserve: hasRuby)
+                                        Text(word.whitespace)
+                                    }
                                         .underline(word.tappable, pattern: .dot)
                                         .font(.title.bold()).foregroundStyle(tint(word.tint))
                                     if word.tappable {

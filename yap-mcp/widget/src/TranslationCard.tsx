@@ -109,6 +109,7 @@ export function TranslationCard({ challenge }: { challenge: TranslationChallenge
             chunks={sentence.chunks}
             words={sentence.literals.map((literal, index) => ({
               text: literal.word.text,
+              ruby: [],
               whitespace: literal.whitespace,
               tappable: false,
               tint: result?.perfect ? "Perfect" :

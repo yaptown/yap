@@ -18,7 +18,7 @@ struct TranscriptionChallengeView: View {
     @FocusState private var focused: Int?
     init(sentence: TranscribeComprehensibleSentence, initialState: TranscriptionState?) {
         self.sentence = sentence
-        let state = initialState ?? transcription_start(parts: sentence.parts, proper_noun_definitions: sentence.proper_noun_definitions)
+        let state = initialState ?? transcription_start(literal_ruby: sentence.literal_ruby, parts: sentence.parts, proper_noun_definitions: sentence.proper_noun_definitions)
         _state = State(initialValue: state)
         let view = transcription_view(state: state)
         _view = State(initialValue: view)
@@ -61,7 +61,7 @@ struct TranscriptionChallengeView: View {
                 if let verdict = view.verdict {
                     // The typed answer is already inline in the sentence above, so
                     // only the grading list repeats it.
-                    SentenceVerdictView(headline: verdict.headline, correctLabel: view.correct_label, correct: sentence.target_language,
+                    SentenceVerdictView(headline: verdict.headline, correctLabel: view.correct_label, correct: sentence.target_language, correctRuby: view.sentence_ruby,
                         encouragement: verdict.encouragement,
                         explanation: verdict.explanation, error: verdict.autograding_error).equatable()
                     if !verdict.compare.isEmpty { compareRow(verdict) }
@@ -82,7 +82,7 @@ struct TranscriptionChallengeView: View {
                         ReviewDefinitionsView(definitions: get_transcription_review_definitions(challenge: sentence, results: grade.results)).equatable()
                     }
                 } else if view.is_grading {
-                    SentenceVerdictView(headline: nil, correctLabel: view.correct_label, correct: sentence.target_language).equatable()
+                    SentenceVerdictView(headline: nil, correctLabel: view.correct_label, correct: sentence.target_language, correctRuby: view.sentence_ruby).equatable()
                 }
             }
             if editing, let tip = screen.keyboard_tip, !keyboardTipDismissed {

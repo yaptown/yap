@@ -292,6 +292,9 @@ pub struct TranslateComprehensibleSentence {
     pub audio: AudioRequest,
     pub target_language: String,
     pub target_language_literals: Vec<Literal<String>>,
+    /// Readings parallel to `target_language_literals`, without literal whitespace.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub literal_ruby: Vec<Vec<language_utils::readings::RubySegment>>,
     /// For each literal, the index of the gram group it belongs to.
     pub literal_gram_indices: Vec<usize>,
     /// Definition for each gram group (indexed by group number). None if no definition is available.
@@ -581,6 +584,7 @@ pub enum TranslationWordTint {
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, serde::Serialize)]
 pub struct TranslationWordView {
+    pub ruby: Vec<language_utils::readings::RubySegment>,
     pub text: String,
     pub whitespace: String,
     pub tint: TranslationWordTint,
@@ -896,6 +900,16 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
                 TranslationWordTint::Neutral
             };
             TranslationWordView {
+                ruby: if correct_translation.is_some() {
+                    state
+                        .sentence
+                        .literal_ruby
+                        .get(i)
+                        .cloned()
+                        .unwrap_or_default()
+                } else {
+                    vec![]
+                },
                 text: literal.word.text.clone(),
                 whitespace: literal.whitespace.to_string(),
                 tint,
@@ -1005,6 +1019,34 @@ mod reducer_tests {
             },
         )
     }
+    #[test]
+    fn ruby_reveals_when_grading_starts_and_hides_on_cancel() {
+        let mut state = start();
+        state.sentence.target_language_literals[0].word.text = "猫".into();
+        state.sentence.literal_ruby = vec![
+            vec![language_utils::readings::RubySegment {
+                base: "猫".into(),
+                ruby: Some("ねこ".into()),
+            }],
+            vec![],
+        ];
+        assert!(translation_view(state.clone()).words[0].ruby.is_empty());
+        state.text = "cat".into();
+        let state = translation_transition(state, TranslationEvent::Submit { now_ms: 1.0 }).state;
+        let view = translation_view(state.clone());
+        assert_eq!(view.words[0].ruby, state.sentence.literal_ruby[0]);
+        assert_eq!(
+            view.words[0]
+                .ruby
+                .iter()
+                .map(|s| s.base.as_str())
+                .collect::<String>(),
+            view.words[0].text
+        );
+        let state = translation_transition(state, TranslationEvent::CancelGrading).state;
+        assert!(translation_view(state).words[0].ruby.is_empty());
+    }
+
     #[test]
     fn chunks_preserve_original_word_indices_and_tap_tints() {
         let mut state = start();

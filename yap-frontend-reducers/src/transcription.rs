@@ -228,6 +228,9 @@ fn local_transcription_review(submission: Vec<PartSubmitted>, target_language: L
 #[bridgerton::bridge(transparent)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct TranscriptionState {
+    /// Readings per literal in flattened `parts`, without literal whitespace.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub literal_ruby: Vec<Vec<language_utils::readings::RubySegment>>,
     pub parts: Vec<Part>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub proper_noun_definitions: Vec<(String, ProperNounDefinition)>,
@@ -360,6 +363,7 @@ pub struct VerdictView {
 #[bridgerton::bridge(transparent)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct TranscriptionView {
+    pub sentence_ruby: Vec<language_utils::readings::RubySegment>,
     pub masked_sentence: Option<String>,
     pub proper_nouns: Vec<ProperNounGroup>,
     pub cant_listen_label: String,
@@ -393,10 +397,12 @@ impl TranscriptionState {
 
 #[bridgerton::bridge]
 pub fn transcription_start(
+    literal_ruby: Vec<Vec<language_utils::readings::RubySegment>>,
     parts: Vec<Part>,
     proper_noun_definitions: Vec<(String, ProperNounDefinition)>,
 ) -> TranscriptionState {
     TranscriptionState {
+        literal_ruby,
         parts,
         proper_noun_definitions,
         inputs: BTreeMap::new(),
@@ -671,7 +677,36 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
     } else {
         None
     };
+    let mut sentence_ruby = Vec::new();
+    if !editing
+        && state
+            .literal_ruby
+            .iter()
+            .flatten()
+            .any(|segment| segment.ruby.is_some())
+    {
+        let literals = state.parts.iter().flat_map(|part| match part {
+            Part::AskedToTranscribe { parts } => parts.as_slice(),
+            Part::Provided { part } => std::slice::from_ref(part),
+        });
+        for (i, literal) in literals.enumerate() {
+            match state.literal_ruby.get(i).filter(|ruby| !ruby.is_empty()) {
+                Some(ruby) => sentence_ruby.extend(ruby.clone()),
+                None => sentence_ruby.push(language_utils::readings::RubySegment {
+                    base: literal.word.text.clone(),
+                    ruby: None,
+                }),
+            }
+            if !literal.whitespace.as_str().is_empty() {
+                sentence_ruby.push(language_utils::readings::RubySegment {
+                    base: literal.whitespace.to_string(),
+                    ruby: None,
+                });
+            }
+        }
+    }
     TranscriptionView {
+        sentence_ruby,
         masked_sentence: editing
             .then(|| language_utils::transcription_challenge::masked_sentence(&state.parts)),
         proper_nouns: if editing {
@@ -717,6 +752,7 @@ mod reducer_tests {
     }
     fn start() -> TranscriptionState {
         transcription_start(
+            vec![],
             vec![
                 Part::Provided { part: literal() },
                 Part::AskedToTranscribe {
@@ -726,6 +762,39 @@ mod reducer_tests {
             vec![],
         )
     }
+    #[test]
+    fn ruby_is_hidden_until_grading_and_spells_the_correct_sentence() {
+        let mut word = literal();
+        word.word.text = "猫".into();
+        word.whitespace = language_utils::Whitespace::Space;
+        let mut state = transcription_start(
+            vec![
+                vec![language_utils::readings::RubySegment {
+                    base: "猫".into(),
+                    ruby: Some("ねこ".into()),
+                }],
+                vec![],
+            ],
+            vec![Part::AskedToTranscribe {
+                parts: vec![word, literal()],
+            }],
+            vec![],
+        );
+        assert!(transcription_view(state.clone()).sentence_ruby.is_empty());
+        state.phase = TranscriptionPhase::Grading {
+            completed_at_ms: 1.0,
+        };
+        let view = transcription_view(state);
+        assert_eq!(
+            view.sentence_ruby
+                .iter()
+                .map(|s| s.base.as_str())
+                .collect::<String>(),
+            "猫 chat"
+        );
+        assert_eq!(view.sentence_ruby[0].ruby.as_deref(), Some("ねこ"));
+    }
+
     #[test]
     fn chunks_keep_blank_indices_and_attach_elisions_and_punctuation() {
         let mut prefix = literal();
@@ -771,7 +840,7 @@ mod reducer_tests {
                 description: None,
             },
         )];
-        let mut state = transcription_start(start().parts, definitions.clone());
+        let mut state = transcription_start(vec![], start().parts, definitions.clone());
         let view = transcription_view(state.clone());
         assert_eq!(view.proper_nouns, proper_noun_groups(&definitions));
         assert_eq!(view.cant_listen_label, "Can't listen now");
@@ -820,6 +889,7 @@ mod reducer_tests {
             })
             .collect();
         let mut state = transcription_start(
+            vec![],
             vec![
                 Part::AskedToTranscribe { parts },
                 Part::Provided { part: literal() },

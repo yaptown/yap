@@ -15,7 +15,7 @@ import type {
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TargetLanguageText } from "@/components/TargetLanguageText";
+import { Ruby, TargetLanguageText } from "@/components/TargetLanguageText";
 import { FeedbackDisplay } from "@/components/FeedbackDisplay";
 import { SentenceChunks } from "@/components/SentenceChunks";
 import { Flag } from "lucide-react";
@@ -77,7 +77,7 @@ export function ChallengeSentence({
                 }}
               >
                 <TargetLanguageText language={targetLanguage}>
-                  {word.text}
+                  <Ruby segments={word.ruby}>{word.text}</Ruby>
                 </TargetLanguageText>
               </span>
               {!last && word.whitespace}
@@ -219,6 +219,7 @@ export function SentenceVerdict({
   explanation,
   autogradingError,
   isPerfect,
+  correctHasReadings = false,
   targetLanguage,
 }: {
   grading: boolean;
@@ -229,6 +230,8 @@ export function SentenceVerdict({
   explanation?: string | null;
   autogradingError?: string | null;
   isPerfect: boolean;
+  /** Keeps the reference answer even when perfect: its readings are news. */
+  correctHasReadings?: boolean;
   targetLanguage: Language;
 }) {
   const tone: VerdictTone = headline?.tone ?? (isPerfect ? "Perfect" : "Wrong");
@@ -239,7 +242,7 @@ export function SentenceVerdict({
       ) : (
         headline && <VerdictHeadline headline={headline} />
       )}
-      {(grading || !isPerfect) && (
+      {(grading || !isPerfect || correctHasReadings) && (
         <div className="space-y-1.5">
           <SectionLabel>{correctLabel}</SectionLabel>
           <p className="text-xl">{correct}</p>

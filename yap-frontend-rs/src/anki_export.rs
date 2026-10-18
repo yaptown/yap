@@ -499,14 +499,19 @@ fn sentence_glosses(
 /// ruby and `{{kanji:…}}` strips the readings. Both filters consume the space
 /// before a base, which stops the base from swallowing the text before it.
 fn furigana(text: &str, reading: Option<&str>, language: Language) -> String {
-    let Some(reading) = reading else {
+    let segments = crate::ruby::word_ruby(text, reading, language);
+    ruby_furigana(text, &segments)
+}
+
+fn ruby_furigana(text: &str, segments: &[language_utils::readings::RubySegment]) -> String {
+    if segments.is_empty() {
         return text.to_owned();
-    };
-    language_utils::readings::ruby_segments(text, reading, language)
-        .into_iter()
-        .map(|segment| match segment.ruby {
+    }
+    segments
+        .iter()
+        .map(|segment| match &segment.ruby {
             Some(ruby) => format!(" {}[{ruby}]", segment.base),
-            None => segment.base,
+            None => segment.base.clone(),
         })
         .collect()
 }
@@ -520,20 +525,11 @@ fn sentence_furigana(
     literals: &[Literal<String>],
     indices: &[usize],
 ) -> String {
-    let grams = &pack.encoded_sentences[&sentence].grams;
-    let pairs: Vec<_> = literals.iter().zip(indices).collect();
-    pairs
-        .chunk_by(|a, b| a.1 == b.1)
+    crate::ruby::sentence_ruby_groups(pack, language, sentence, literals, indices)
+        .into_iter()
         .map(|group| {
-            let (SentenceGram::Learnable(gram) | SentenceGram::Obvious(gram)) = &grams[*group[0].1];
-            let mut text: String = group
-                .iter()
-                .flat_map(|(literal, _)| [literal.word.text.as_str(), literal.whitespace.as_str()])
-                .collect();
-            let trailing = group.last().unwrap().0.whitespace.as_str();
-            text.truncate(text.len() - trailing.len());
-            let reading = gram.reading.map(|s| pack.string_rodeo.resolve(&s));
-            furigana(&text, reading, language) + trailing
+            ruby_furigana(&group.text, &group.ruby)
+                + group.literals.last().unwrap().whitespace.as_str()
         })
         .collect()
 }

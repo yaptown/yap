@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { highlightTermInSentence } from "@/utils/highlightTermInSentence";
 import { Card } from "@/components/ui/card";
 import { LANGUAGES } from "@/lib/languages";
-import { TargetLanguageText } from "../components/TargetLanguageText";
+import { Ruby, TargetLanguageText } from "../components/TargetLanguageText";
 import { AudioButton } from "../audio/AudioButton";
 
 const RESULTS_LIMIT = 100;
@@ -128,7 +128,7 @@ export function Dictionary({
                           {entry.prefix.separator}
                         </span>
                       )}
-                      {entry.display_text}
+                      <Ruby segments={entry.ruby}>{entry.display_text}</Ruby>
                     </TargetLanguageText>
                     {entry.is_phrase && (
                       <span className="text-sm text-muted-foreground/60 font-normal">

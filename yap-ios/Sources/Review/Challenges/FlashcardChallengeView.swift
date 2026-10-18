@@ -26,7 +26,7 @@ struct FlashcardChallengeView: View {
     }
     private var canGrade: Bool { hasOpened || revealed || !view.require_answer_reveal }
     private var listening: Bool { if case .Listening = flashcard.content { true } else { false } }
-    private var meanings: [FlashcardMeaning] { if case let .Gram(_, _, _, meanings) = flashcard.content { meanings } else { [] } }
+    private var meanings: [FlashcardMeaning] { if case let .Gram(_, _, _, _, meanings) = flashcard.content { meanings } else { [] } }
     private var allMarked: Bool { meanings.count > 1 && marks.count == meanings.count }
     private var againLabel: String { (allMarked ? view.continue_label : marks.isEmpty ? nil : view.again_rest_label) ?? view.again_label }
     private var rememberedLabel: String { (allMarked ? view.continue_label : marks.isEmpty ? nil : view.remembered_rest_label) ?? view.remembered_label }
@@ -43,10 +43,12 @@ struct FlashcardChallengeView: View {
                         AudioButton(request: request, reviewCount: screen.total_reviews, autoplay: true, kind: .visualizer)
                             .frame(maxWidth: .infinity)
                     }
-                } else if case let .Gram(gram, prefix, _, _) = flashcard.content {
+                } else if case let .Gram(gram, ruby, prefix, _, _) = flashcard.content {
                     HStack(alignment: .center, spacing: 12) {
-                        (Text(prefix.map { $0.prefix + $0.separator } ?? "").foregroundStyle(Color.yapMuted.opacity(0.6))
-                            + Text(gramText(gram)))
+                        HStack(alignment: .lastTextBaseline, spacing: 0) {
+                            if let prefix { Text(prefix.prefix + prefix.separator).foregroundStyle(Color.yapMuted.opacity(0.6)) }
+                            RubyText(text: gramText(gram), segments: revealed ? ruby : [], rubyFont: .subheadline.weight(.medium))
+                        }
                             .font(.system(size: 34, weight: .bold, design: .rounded)).textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         if let request = flashcard.audio {
@@ -82,7 +84,7 @@ struct FlashcardChallengeView: View {
             .swipeToGrade(enabled: canGrade && !actions.submitting, againLabel: againLabel,
                           rememberedLabel: rememberedLabel, rate: rate)
             // Like the web, the breakdown sits under the card rather than inside it.
-            if revealed, case let .Gram(_, _, breakdown, _) = flashcard.content, let breakdown, !breakdown.isEmpty {
+            if revealed, case let .Gram(_, _, _, breakdown, _) = flashcard.content, let breakdown, !breakdown.isEmpty {
                 MorphemeBreakdownView(parts: breakdown, alignment: .center, revealDelay: 1.5).padding(.top, 12)
             }
             if !revealed, let hint = view.tutorial_hidden_hint {
@@ -260,7 +262,7 @@ private struct FlashcardAnswer: View, Equatable {
     let view: FlashcardView
     @ViewBuilder var body: some View {
         switch content {
-        case let .Gram(_, _, _, meanings):
+        case let .Gram(_, _, _, _, meanings):
             ForEach(Array(meanings.enumerated()), id: \.offset) { _, meaning in
                 VStack(alignment: .leading, spacing: 8) {
                     if let label = meaning.label { MeaningLabel(text: label) }

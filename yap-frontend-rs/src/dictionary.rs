@@ -153,8 +153,20 @@ impl Deck {
         senses.sort_unstable_by_key(|sense| sense.frequency_index);
         let primary = senses.first()?;
         let resolved_gram = language_pack.resolve_gram(&spur_gram.gram);
+        let display_text = resolved_gram.to_display_string(target_language);
+        let primary_gram = *language_pack
+            .gram_frequencies
+            .entries
+            .get_index(primary.frequency_index)?
+            .0;
+        let ruby = crate::ruby::word_ruby(
+            &display_text,
+            language_pack.readings_for_sense(primary_gram).next(),
+            target_language,
+        );
         Some(DictionaryWord {
-            display_text: resolved_gram.to_display_string(target_language),
+            ruby,
+            display_text,
             frequency_index: primary.frequency_index,
             prefix: language_pack.word_prefix(spur_gram.gram, target_language),
             is_phrase: primary.definition.is_phrase,
@@ -205,6 +217,7 @@ impl Deck {
 #[bridgerton::bridge(opaque)]
 pub struct DictionaryWord {
     display_text: String,
+    ruby: Vec<language_utils::readings::RubySegment>,
     frequency_index: usize,
     prefix: Option<WordPrefix>,
     is_phrase: bool,
@@ -223,6 +236,11 @@ pub struct DictionarySense {
 
 #[bridgerton::bridge]
 impl DictionaryWord {
+    #[bridge(getter)]
+    pub fn ruby(&self) -> Vec<language_utils::readings::RubySegment> {
+        self.ruby.clone()
+    }
+
     #[bridge(getter)]
     pub fn display_text(&self) -> String {
         self.display_text.clone()
@@ -244,13 +262,11 @@ impl DictionaryWord {
     }
 
     #[bridge(getter)]
-    #[bridgerton::stable]
     pub fn prefix(&self) -> Option<WordPrefix> {
         self.prefix.clone()
     }
 
     #[bridge(getter)]
-    #[bridgerton::stable]
     pub fn senses(&self) -> Vec<DictionarySense> {
         self.senses.clone()
     }
@@ -268,7 +284,6 @@ impl DictionaryWord {
     }
 
     #[bridge(getter)]
-    #[bridgerton::stable]
     pub fn audio_request(&self) -> AudioRequest {
         AudioRequest {
             request: TtsRequest {

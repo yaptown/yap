@@ -376,6 +376,7 @@ mod tests {
 
     fn gram(phrase: bool) -> CardContent {
         CardContent::Gram {
+            ruby: vec![],
             gram: vec![Literal {
                 word: Word {
                     text: "bonjour".into(),
@@ -451,6 +452,7 @@ mod tests {
             other_tag: OtherWordType::Propn,
         });
         let no_pos = CardContent::Gram {
+            ruby: vec![],
             gram: gram.clone(),
             meanings: meanings.clone(),
             prefix: None,
@@ -470,6 +472,7 @@ mod tests {
         });
         let view = flash(
             CardContent::Gram {
+                ruby: vec![],
                 gram,
                 meanings,
                 prefix: None,

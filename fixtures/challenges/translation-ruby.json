@@ -1,0 +1,343 @@
+{
+  "screen": "Review",
+  "view": {
+    "show_account_prompt": false,
+    "native_language": "English",
+    "target_language": "Japanese",
+    "step": {
+      "type": "Challenge",
+      "view": {
+        "challenge": {
+          "type": "TranslateComprehensibleSentence",
+          "audio": {
+            "request": {
+              "text": "帆高は？",
+              "language": "Japanese",
+              "is_ssml": false,
+              "speed": 1.0,
+              "verification_hints": [
+                "帆高"
+              ]
+            },
+            "provider": "ElevenLabs"
+          },
+          "target_language": "帆高は？",
+          "target_language_literals": [
+            {
+              "word": {
+                "text": "帆高",
+                "word_type": {
+                  "type": "Other",
+                  "other_tag": "PROPN"
+                }
+              },
+              "whitespace": ""
+            },
+            {
+              "word": {
+                "text": "は",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "は",
+                  "lemma": "は",
+                  "pos": "ADP"
+                }
+              },
+              "whitespace": ""
+            },
+            {
+              "word": {
+                "text": "？",
+                "word_type": {
+                  "type": "Other",
+                  "other_tag": "PUNCT"
+                }
+              },
+              "whitespace": ""
+            }
+          ],
+          "literal_ruby": [
+            [
+              {
+                "base": "帆高",
+                "ruby": "ほだか"
+              }
+            ],
+            [],
+            []
+          ],
+          "literal_gram_indices": [
+            0,
+            1,
+            2
+          ],
+          "gram_definitions_for_lookup": [
+            null,
+            {
+              "Dictionary": {
+                "target_language_word": "は",
+                "definitions": [
+                  {
+                    "native": "(topic marker)",
+                    "note": "Pronounced わ when used as a particle. It marks what the sentence is about; it is often translated as “as for” or is not translated directly.",
+                    "example_sentence_target_language": "これは私の本です。",
+                    "example_sentence_native_language": "This is my book.",
+                    "cognate": false,
+                    "false_cognate": false
+                  }
+                ],
+                "morphology": [
+                  {
+                    "gender": null,
+                    "number": null,
+                    "politeness": null,
+                    "tense": null,
+                    "person": null,
+                    "case": null,
+                    "mood": null,
+                    "aspect": null
+                  }
+                ],
+                "segments": [
+                  {
+                    "surface": "は",
+                    "canonical": "は",
+                    "tag": "adp/intj"
+                  }
+                ]
+              }
+            },
+            null
+          ],
+          "gram_breakdowns_for_lookup": [
+            null,
+            null,
+            null
+          ],
+          "unique_target_language_phrases": [],
+          "phrase_definitions": [],
+          "phrase_breakdowns": [],
+          "native_translations": [
+            "What about Hodaka?"
+          ],
+          "movie_titles": [
+            [
+              "tt9426210",
+              "天気の子"
+            ]
+          ],
+          "proper_noun_definitions": [
+            [
+              "帆高",
+              {
+                "is_person_name": true,
+                "is_place_name": false,
+                "is_organization_name": false,
+                "is_other": false,
+                "learner_native_language_translation": "Hodaka",
+                "description": "The given name of the protagonist of *Weathering with You*."
+              }
+            ]
+          ],
+          "primary_expression": {
+            "gram": [
+              {
+                "Tok": {
+                  "text": "は",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "は",
+                    "lemma": "は",
+                    "pos": "ADP"
+                  }
+                }
+              }
+            ],
+            "sense": null
+          },
+          "primary_literal_indices": [
+            1
+          ],
+          "second_chance": false
+        },
+        "transcription": null,
+        "translation": {
+          "sentence": {
+            "audio": {
+              "request": {
+                "text": "帆高は？",
+                "language": "Japanese",
+                "is_ssml": false,
+                "speed": 1.0,
+                "verification_hints": [
+                  "帆高"
+                ]
+              },
+              "provider": "ElevenLabs"
+            },
+            "target_language": "帆高は？",
+            "target_language_literals": [
+              {
+                "word": {
+                  "text": "帆高",
+                  "word_type": {
+                    "type": "Other",
+                    "other_tag": "PROPN"
+                  }
+                },
+                "whitespace": ""
+              },
+              {
+                "word": {
+                  "text": "は",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "は",
+                    "lemma": "は",
+                    "pos": "ADP"
+                  }
+                },
+                "whitespace": ""
+              },
+              {
+                "word": {
+                  "text": "？",
+                  "word_type": {
+                    "type": "Other",
+                    "other_tag": "PUNCT"
+                  }
+                },
+                "whitespace": ""
+              }
+            ],
+            "literal_ruby": [
+              [
+                {
+                  "base": "帆高",
+                  "ruby": "ほだか"
+                }
+              ],
+              [],
+              []
+            ],
+            "literal_gram_indices": [
+              0,
+              1,
+              2
+            ],
+            "gram_definitions_for_lookup": [
+              null,
+              {
+                "Dictionary": {
+                  "target_language_word": "は",
+                  "definitions": [
+                    {
+                      "native": "(topic marker)",
+                      "note": "Pronounced わ when used as a particle. It marks what the sentence is about; it is often translated as “as for” or is not translated directly.",
+                      "example_sentence_target_language": "これは私の本です。",
+                      "example_sentence_native_language": "This is my book.",
+                      "cognate": false,
+                      "false_cognate": false
+                    }
+                  ],
+                  "morphology": [
+                    {
+                      "gender": null,
+                      "number": null,
+                      "politeness": null,
+                      "tense": null,
+                      "person": null,
+                      "case": null,
+                      "mood": null,
+                      "aspect": null
+                    }
+                  ],
+                  "segments": [
+                    {
+                      "surface": "は",
+                      "canonical": "は",
+                      "tag": "adp/intj"
+                    }
+                  ]
+                }
+              },
+              null
+            ],
+            "gram_breakdowns_for_lookup": [
+              null,
+              null,
+              null
+            ],
+            "unique_target_language_phrases": [],
+            "phrase_definitions": [],
+            "phrase_breakdowns": [],
+            "native_translations": [
+              "What about Hodaka?"
+            ],
+            "movie_titles": [
+              [
+                "tt9426210",
+                "天気の子"
+              ]
+            ],
+            "proper_noun_definitions": [
+              [
+                "帆高",
+                {
+                  "is_person_name": true,
+                  "is_place_name": false,
+                  "is_organization_name": false,
+                  "is_other": false,
+                  "learner_native_language_translation": "Hodaka",
+                  "description": "The given name of the protagonist of *Weathering with You*."
+                }
+              ]
+            ],
+            "primary_expression": {
+              "gram": [
+                {
+                  "Tok": {
+                    "text": "は",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "は",
+                      "lemma": "は",
+                      "pos": "ADP"
+                    }
+                  }
+                }
+              ],
+              "sense": null
+            },
+            "primary_literal_indices": [
+              1
+            ],
+            "second_chance": false
+          },
+          "course": {
+            "nativeLanguage": "English",
+            "targetLanguage": "Japanese"
+          },
+          "text": "What about Hodaka?",
+          "tapped": [],
+          "phase": {
+            "type": "Graded",
+            "completed_at_ms": 1792332036132.749,
+            "correct_translation": "What about Hodaka?",
+            "result": {
+              "type": "Perfect",
+              "encouragement": "Perfect! You translated it correctly!",
+              "explanation": null
+            }
+          }
+        }
+      }
+    },
+    "progress": 0.8633333333333333,
+    "total_reviews": 172,
+    "total_count": 1,
+    "keyboard_tip": "Enable the Japanese keyboard on your device to easily type Japanese characters",
+    "offer_engagement": false,
+    "online": true
+  }
+}
