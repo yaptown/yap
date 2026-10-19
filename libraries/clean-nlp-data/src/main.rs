@@ -20,7 +20,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
-use utils::{ValidationResult, validate_and_fix_whitespace};
+use utils::{ValidationResult, normalize_and_validate_tokens};
 
 static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
     ChatClient::from_env("gpt-5.4")
@@ -1287,7 +1287,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         // Validate that the LLM response matches the original text
         match result {
             Ok(ref mut corrected_tokens) => {
-                match validate_and_fix_whitespace(
+                match normalize_and_validate_tokens(
                     &original_sentence.sentence,
                     corrected_tokens,
                     language,
