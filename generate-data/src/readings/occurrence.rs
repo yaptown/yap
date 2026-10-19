@@ -1353,7 +1353,7 @@ mod tests {
             }],
         )]);
         let c = candidates(&g, Language::Japanese, &dictionary);
-        assert!(!needs_hierarchy(&g, &c));
+        assert!(!needs_hierarchy(&g, &c, 1));
         let cache = tempfile::tempdir().unwrap();
         let store = osmo::Store::open(cache.path());
         let examples = vec![occurrence("猫")];

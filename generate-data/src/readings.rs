@@ -628,12 +628,17 @@ fn indexed_candidates(
 
 /// Only a word with one reading and one dictionary sense has nothing for B to
 /// organize. Chinese "/" items mix synonyms and senses, so several items send
-/// a word to B, which merges the synonyms back into one sense.
-fn needs_hierarchy(gram: &Gram<String>, candidates: &Candidates) -> bool {
+/// a word to B, which merges the synonyms back into one sense. A word with no
+/// dictionary sense (a reading composed from parts) can still be polysemous,
+/// so B builds its senses once it occurs often enough for two of them to be
+/// attested; a rarer one can never have sense cards and skips B and C.
+fn needs_hierarchy(gram: &Gram<String>, candidates: &Candidates, occurrences: usize) -> bool {
+    let senses = candidates.senses.values().map(Vec::len).sum::<usize>();
     gram.len() > 1
         || candidates.open
         || candidates.readings.len() != 1
-        || candidates.senses.values().map(Vec::len).sum::<usize>() > 1
+        || senses > 1
+        || (senses == 0 && occurrences >= 2 * inventory::MIN_ATTESTATIONS)
 }
 
 /// B/C depend only on encoded tokens and their text, never matching overlays.
@@ -811,6 +816,45 @@ fn implicit_hierarchy(readings: Vec<String>) -> Vec<SenseReadings> {
 }
 
 impl CorpusReadings {
+    /// One reading and at most one dictionary sense: nothing for B to organize.
+    /// With no sense at all, the word is too rare for sense cards (see
+    /// `needs_hierarchy`), so C has nothing to choose either; it could only
+    /// escape to ask for a meaning no learner-facing output uses. Label it here.
+    fn install_implicit(
+        &mut self,
+        gram: &Gram<String>,
+        candidates: Candidates,
+        occurrences: &[Occurrence],
+    ) {
+        let gloss = candidates
+            .senses
+            .values()
+            .flatten()
+            .cloned()
+            .collect::<Vec<_>>()
+            .join("; ");
+        let readings: Vec<_> = candidates.readings.into_iter().collect();
+        if gloss.is_empty() {
+            for o in occurrences {
+                self.labels.insert(
+                    (o.text.clone(), o.gram_index),
+                    occurrence::Label::Ranked {
+                        choices: vec![Choice {
+                            sense: 0,
+                            reading: readings[0].clone(),
+                        }],
+                    },
+                );
+            }
+        }
+        let mut senses = implicit_hierarchy(readings);
+        senses[0].gloss = gloss;
+        self.hierarchies.insert(gram.clone(), senses);
+        if let Some(sample) = &mut self.sample {
+            sample.provenance.insert(gram.clone(), "implicit");
+        }
+    }
+
     fn install_candidate_fallbacks(&mut self, failed: &BTreeSet<Gram<String>>) {
         for gram in failed {
             let candidates = &self.candidates[gram];
@@ -933,7 +977,7 @@ impl CorpusReadings {
                 multi_atom += 1;
                 added_multi_atom += usize::from(candidates.prior_single);
             }
-            let needs_hierarchy = needs_hierarchy(gram, &candidates);
+            let needs_hierarchy = needs_hierarchy(gram, &candidates, groups[gram].len());
             if needs_hierarchy {
                 population += 1;
             }
@@ -945,21 +989,7 @@ impl CorpusReadings {
                 single += occurrences.len();
             }
             if !needs_hierarchy {
-                // One reading and one dictionary sense: nothing to organize or ask.
-                let gloss = candidates
-                    .senses
-                    .values()
-                    .flatten()
-                    .cloned()
-                    .collect::<Vec<_>>()
-                    .join("; ");
-                let readings = candidates.readings.into_iter().collect();
-                let mut senses = implicit_hierarchy(readings);
-                senses[0].gloss = gloss;
-                self.hierarchies.insert(gram.clone(), senses);
-                if let Some(sample) = &mut self.sample {
-                    sample.provenance.insert(gram.clone(), "implicit");
-                }
+                self.install_implicit(gram, candidates, occurrences);
                 continue;
             }
             requests.push(HierarchyRequest {
@@ -1523,6 +1553,46 @@ mod tests {
     }
 
     #[test]
+    fn rare_composed_readings_without_a_meaning_skip_b_and_c() {
+        let dictionary = Dictionary::from([
+            ("拿".into(), vec!["ná".into()]),
+            ("回".into(), vec!["huí".into()]),
+            (
+                "马达".into(),
+                vec![DictionaryReading {
+                    senses: vec!["motor".into()],
+                    ..DictionaryReading::bare("mǎ dá".into())
+                }],
+            ),
+        ]);
+        let mut data = CorpusReadings::default();
+        for (text, labelled) in [("拿回", true), ("马达", false)] {
+            let gram = gram(&[text]);
+            let c = candidates(&gram, Language::ChineseSimplified, &dictionary);
+            assert!(!needs_hierarchy(&gram, &c, 5));
+            // Frequent enough for two attested senses: only B can find them.
+            assert_eq!(needs_hierarchy(&gram, &c, 6), labelled);
+            let occurrence = Occurrence {
+                text: text.into(),
+                gram_index: 0,
+                bytes: (0, text.len()),
+                spans: vec![(0, 2)],
+            };
+            data.install_implicit(&gram, c, &[occurrence]);
+            assert_eq!(
+                data.labels
+                    .get(&(text.to_string(), 0))
+                    .and_then(|l| l.reading()),
+                labelled.then_some(data.hierarchies[&gram][0].readings[0].as_str())
+            );
+        }
+        assert_eq!(
+            data.labels[&("拿回".to_string(), 0)].reading(),
+            Some("ná huí")
+        );
+    }
+
+    #[test]
     fn failed_hierarchies_reuse_unnamed_candidates_without_assigning_labels() {
         let gram = gram(&["私"]);
         let dictionary =
@@ -1660,7 +1730,7 @@ mod tests {
             assert!(!c.open, "{surface}");
             assert_eq!(c.readings, BTreeSet::from(expected.map(String::from)));
             assert_eq!(c.senses[expected[1]], ["to enter"]);
-            assert!(needs_hierarchy(&gram, &c));
+            assert!(needs_hierarchy(&gram, &c, 1));
         }
         // A lemma spelled with other kanji shares no written stem.
         let c = candidates(
@@ -1687,7 +1757,7 @@ mod tests {
         ] {
             let gram = gram(&[text]);
             assert_eq!(
-                needs_hierarchy(&gram, &candidates(&gram, language, &dictionary)),
+                needs_hierarchy(&gram, &candidates(&gram, language, &dictionary), 100),
                 needs,
                 "{text}"
             );
@@ -1830,7 +1900,7 @@ mod tests {
             BTreeSet::from(["にゅういんちゅう".into(), "にゅういんなか".into()])
         );
         assert!(c.prior_single);
-        assert!(needs_hierarchy(&gram(&["入院", "中"]), &c));
+        assert!(needs_hierarchy(&gram(&["入院", "中"]), &c, 1));
         assert!(candidates(&gram(&["食べ"]), Language::Japanese, &dictionary).open);
     }
     #[test]
@@ -1850,15 +1920,16 @@ mod tests {
             BTreeSet::from(["きょうは".into(), "こんにちは".into()])
         );
         assert!(c.prior_single);
-        assert!(needs_hierarchy(&g, &c));
+        assert!(needs_hierarchy(&g, &c, 1));
         let g = gram(&["彼", "の"]);
         let c = candidates(&g, Language::Japanese, &dictionary);
         assert_eq!(c.readings.len(), 1);
-        assert!(needs_hierarchy(&g, &c));
+        assert!(needs_hierarchy(&g, &c, 1));
         let g = gram(&["彼"]);
         assert!(!needs_hierarchy(
             &g,
-            &candidates(&g, Language::Japanese, &dictionary)
+            &candidates(&g, Language::Japanese, &dictionary),
+            1
         ));
         assert!(candidates(&gram(&["ヶ"]), Language::Japanese, &dictionary).open);
     }
@@ -1918,7 +1989,7 @@ mod tests {
         }
         let c = candidates(&gram(&["你好"]), Language::ChineseSimplified, &dictionary);
         assert!(c.open);
-        assert!(needs_hierarchy(&gram(&["你好"]), &c));
+        assert!(needs_hierarchy(&gram(&["你好"]), &c, 1));
     }
     #[test]
     fn candidates_keep_tones_distinct_until_meaning_assignment() {

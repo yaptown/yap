@@ -11,7 +11,9 @@ fn leaf(sense: u32, reading: &str) -> Choice {
 fn count(counts: &Counts, sense: u32, reading: &str) -> usize {
     counts.get(&leaf(sense, reading)).copied().unwrap_or(0)
 }
-/// A meaning needs three first choices, summed across every reading variant.
+/// First choices a meaning needs, summed across every reading variant.
+pub(super) const MIN_ATTESTATIONS: usize = 3;
+
 /// This map changes only retained identities (temporary -> implicit/durable).
 /// A missing ID means reject the sentence, never choose a different meaning.
 fn prune(senses: &[SenseReadings], counts: &Counts) -> (Vec<SenseReadings>, BTreeMap<u32, u32>) {
@@ -23,7 +25,7 @@ fn prune(senses: &[SenseReadings], counts: &Counts) -> (Vec<SenseReadings>, BTre
                 .iter()
                 .map(|r| count(counts, sense.index, r))
                 .sum::<usize>()
-                >= 3
+                >= MIN_ATTESTATIONS
         })
         .cloned()
         .collect();
@@ -229,7 +231,7 @@ fn materialize(
                     })
                     .collect();
                 assert!(
-                    anchors.len() >= 3,
+                    anchors.len() >= MIN_ATTESTATIONS,
                     "surviving senses need direct C attestation"
                 );
                 let entry = UsageEntry {
