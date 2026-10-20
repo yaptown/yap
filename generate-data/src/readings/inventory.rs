@@ -53,50 +53,45 @@ fn reading_set(language: Language, text: &str, readings: &[String]) -> BTreeSet<
         .collect()
 }
 
-/// Sense ids are slot positions in an append-only `usages` vector, and shipped
-/// deck events store them, so a number must never change meaning. A sense
-/// reuses a slot only when that slot already means exactly this sense: the
-/// same canonical reading set and gloss. Everything else appends past the end.
-/// Unmatched slots, including every meaning-discovery usage, stay behind as
-/// retired placeholders, so the vector's length is the high-water mark.
-/// A reworded gloss (e.g. after a B prompt change) therefore mints a new id,
-/// and old cards fall back to the gram's most frequent sense.
-///
 /// The ledger is consulted only after attestation. B and C use deterministic
 /// temporary IDs, so yesterday's generated slots cannot alter their requests.
+/// Match before retiring anchors; exact gloss/readings break overlap ties and
+/// provide a fallback only when an old slot has no surviving evidence.
 fn stable_ids(
     row: &UsageInventory,
     senses: &[SenseReadings],
     language: Language,
-    active: &BTreeSet<u32>,
+    evidence: &crate::sense_identity::Evidence,
 ) -> BTreeMap<u32, u32> {
     let text = row.gram.to_display_string(language);
-    let mut used = BTreeSet::new();
-    let mut next = row.usages.len() as u32 + 1;
-    senses
-        .iter()
-        .map(|sense| {
-            let id = (1..)
-                .zip(&row.usages)
-                .find_map(|(id, usage)| {
-                    (usage.is_reading_split()
-                        && active.contains(&id)
-                        && !used.contains(&id)
-                        && usage.gloss == sense.gloss
-                        && usage.readings.as_ref().is_some_and(|old| {
-                            reading_set(language, &text, old)
-                                == reading_set(language, &text, &sense.readings)
-                        }))
-                    .then_some(id)
+    crate::sense_identity::assign(
+        row.usages.len() as u32,
+        row.usages
+            .iter()
+            .zip(1..)
+            .filter(|(u, _)| u.is_reading_split())
+            .map(|(u, id)| {
+                (
+                    id,
+                    if u.n_assigned > 0 {
+                        u.anchors.as_slice()
+                    } else {
+                        &[]
+                    },
+                )
+            }),
+        senses.iter().map(|s| s.index),
+        evidence,
+        |old, new| {
+            let usage = &row.usages[old as usize - 1];
+            let sense = senses.iter().find(|s| s.index == new).unwrap();
+            usage.gloss == sense.gloss
+                && usage.readings.as_ref().is_some_and(|old| {
+                    reading_set(language, &text, old)
+                        == reading_set(language, &text, &sense.readings)
                 })
-                .unwrap_or_else(|| {
-                    next += 1;
-                    next - 1
-                });
-            used.insert(id);
-            (sense.index, id)
-        })
-        .collect()
+        },
+    )
 }
 
 fn materialize(
@@ -107,25 +102,8 @@ fn materialize(
     raw_labels: &BTreeMap<(String, usize), occurrence::Label>,
 ) {
     data.rejected_sentences.clear();
-    let active: BTreeMap<_, BTreeSet<_>> = rows
-        .iter()
-        .map(|row| {
-            (
-                row.gram.clone(),
-                row.usages
-                    .iter()
-                    .zip(1..)
-                    .filter_map(|(u, id)| (u.is_reading_split() && u.n_assigned > 0).then_some(id))
-                    .collect(),
-            )
-        })
-        .collect();
-    // Dictionary senses replace meaning discovery for reading languages. Every
-    // slot keeps only its identity; a slot this run does not re-attest has no
-    // anchors, so sense assignment and definitions never see it again.
-    for row in rows.iter_mut() {
-        row.retire_usages();
-    }
+    // Keep old anchors until each gram has been matched against fresh C labels.
+    let mut materialized = BTreeSet::new();
     let indices: BTreeMap<_, _> = rows
         .iter()
         .enumerate()
@@ -173,12 +151,16 @@ fn materialize(
             })
         });
         if let Some(i) = row_index {
-            let ids = stable_ids(
-                &rows[i],
-                &after,
-                language,
-                active.get(gram).unwrap_or(&BTreeSet::new()),
-            );
+            let evidence = occurrences
+                .iter()
+                .filter_map(|o| {
+                    let choice = raw_labels.get(&(o.text.clone(), o.gram_index))?.first()?;
+                    Some(((o.text.clone(), o.spans.clone()), choice.sense))
+                })
+                .collect();
+            let ids = stable_ids(&rows[i], &after, language, &evidence);
+            rows[i].retire_usages();
+            materialized.insert(i);
             for sense in &mut after {
                 sense.index = ids[&sense.index];
             }
@@ -268,6 +250,13 @@ fn materialize(
             data.hierarchies.remove(gram);
         } else {
             data.hierarchies.insert(gram.clone(), after);
+        }
+    }
+    // Unsplit grams use the implicit card, not an invented explicit identity.
+    // Missing grams and split -> implicit transitions retain the ledger only.
+    for (i, row) in rows.iter_mut().enumerate() {
+        if !materialized.contains(&i) {
+            row.retire_usages();
         }
     }
     assert!(rows.iter().all(|r| r.usages.len() >= 2));
@@ -583,6 +572,15 @@ mod tests {
         );
         assert_eq!(current.sense("sentence 0", 0), None);
         assert_eq!(current.hierarchies.values().next().unwrap()[0].index, 0);
+        // Returning to an identical explicit split can reclaim the old slots.
+        let split = run(
+            &mut rows,
+            vec![s(1, &["ほう"]), s(2, &["かた"])],
+            &[1, 1, 1, 2, 2, 2],
+        );
+        assert_eq!(split.sense("sentence 0", 0).unwrap().get(), 1);
+        assert_eq!(split.sense("sentence 3", 0).unwrap().get(), 2);
+        assert_eq!(rows[0].usages.len(), 2);
     }
     fn usage(reading: Option<&str>, source: Option<&str>, gloss: &str) -> UsageEntry {
         UsageEntry {
@@ -618,39 +616,163 @@ mod tests {
             ..s(index, &[reading])
         }
     }
+    fn run(
+        rows: &mut Vec<UsageInventory>,
+        senses: Vec<SenseReadings>,
+        labels: &[u32],
+    ) -> CorpusReadings {
+        let choices = labels
+            .iter()
+            .map(|&id| {
+                vec![leaf(
+                    id,
+                    &senses.iter().find(|s| s.index == id).unwrap().readings[0],
+                )]
+            })
+            .collect();
+        let (mut data, groups) = fixture(senses, choices);
+        let raw = data.labels.clone();
+        materialize(&mut data, rows, &groups, Language::Japanese, &raw);
+        data
+    }
+
     #[test]
-    fn a_slot_is_reused_only_when_it_already_means_exactly_this_sense() {
-        let row = row(vec![
-            usage(None, None, "方向"),
-            usage(Some("ホウ"), Some("reading-hierarchy:old"), "方向"),
-            usage(None, None, "人"),
+    fn exact_metadata_reclaims_retired_reading_slots() {
+        let mut retired = usage(Some("ホウ"), Some("reading-hierarchy:old"), "方向");
+        retired.anchors.clear();
+        retired.n_assigned = 0;
+        let mut rows = vec![row(vec![
+            retired,
             usage(Some("かた"), Some("reading-hierarchy:old"), "人"),
-        ]);
-        let ids = stable_ids(
-            &row,
-            &[
-                // Same reading set and gloss as slot 4, once canonicalized.
-                sense(1, "かた", "人"),
-                sense(2, "ほう", "方向"),
-                // Same reading as slot 4, different meaning: a new id.
-                sense(3, "かた", "やり方"),
-                // A meaning-discovery slot is never reused, even with its gloss.
-                sense(4, "ひと", "人"),
-            ],
-            Language::Japanese,
-            &(1..=4).collect(),
+        ])];
+        let data = run(
+            &mut rows,
+            vec![sense(1, "ほう", "方向"), sense(2, "かた", "人")],
+            &[1, 1, 1, 2, 2, 2],
         );
-        assert_eq!(ids, BTreeMap::from([(1, 4), (2, 2), (3, 5), (4, 6)]));
-        let ids = stable_ids(
-            &row,
-            &[sense(1, "かた", "人")],
-            Language::Japanese,
-            &BTreeSet::new(),
+        assert_eq!(rows[0].usages.len(), 2);
+        assert_eq!(data.sense("sentence 0", 0).unwrap().get(), 1);
+        assert_eq!(rows[0].usages[0].readings.as_ref().unwrap(), &["ほう"]);
+    }
+
+    #[test]
+    fn rename_and_reading_rewrite_follow_occurrences_and_rerun_stably() {
+        let mut rows = vec![];
+        run(
+            &mut rows,
+            vec![s(1, &["あ"]), s(2, &["い"])],
+            &[1, 1, 1, 2, 2, 2],
         );
-        assert_eq!(
-            ids[&1], 5,
-            "retired slots never resurrect, even with an identical meaning"
+        let renamed = vec![
+            sense(1, "う", "new wording"),
+            sense(2, "え", "other wording"),
+        ];
+        run(&mut rows, renamed.clone(), &[1, 1, 1, 2, 2, 2]);
+        assert_eq!(rows[0].usages.len(), 2);
+        assert_eq!(rows[0].usages[0].gloss, "new wording");
+        assert_eq!(rows[0].usages[0].readings.as_ref().unwrap(), &["う"]);
+        let bytes = serde_json::to_string(&rows).unwrap();
+        run(&mut rows, renamed, &[1, 1, 1, 2, 2, 2]);
+        assert_eq!(serde_json::to_string(&rows).unwrap(), bytes);
+    }
+
+    #[test]
+    fn split_plurality_beats_matching_gloss_and_unrelated_sense_appends() {
+        let mut rows = vec![];
+        run(
+            &mut rows,
+            vec![s(1, &["あ"]), s(2, &["い"])],
+            &[1, 1, 1, 1, 1, 1, 1, 2, 2, 2],
         );
+        // Four of slot 1's seven anchors choose new 3, only three choose new 1
+        // despite new 1 retaining the old gloss and reading.
+        let data = run(
+            &mut rows,
+            vec![s(1, &["あ"]), s(2, &["い"]), s(3, &["う"]), s(4, &["え"])],
+            &[1, 1, 1, 3, 3, 3, 3, 2, 2, 2, 4, 4, 4],
+        );
+        assert_eq!(data.sense("sentence 3", 0).unwrap().get(), 1);
+        assert_eq!(data.sense("sentence 0", 0).unwrap().get(), 3);
+        assert_eq!(data.sense("sentence 10", 0).unwrap().get(), 4);
+        assert_eq!(rows[0].usages[0].gloss, "meaning 3");
+    }
+
+    #[test]
+    fn merge_winners_keep_ids_and_losers_retire_stably() {
+        let mut rows = vec![];
+        let original = vec![s(1, &["あ"]), s(2, &["い"]), s(3, &["う"]), s(4, &["え"])];
+        run(
+            &mut rows,
+            original,
+            &[1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4],
+        );
+        run(
+            &mut rows,
+            vec![s(1, &["あ"]), s(3, &["う"]), s(4, &["え"])],
+            &[1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4],
+        );
+        assert_eq!(rows[0].usages[0].n_assigned, 0);
+        assert!(rows[0].usages[0].anchors.is_empty());
+        // Slot 3's eight old anchors beat slot 2's seven after the first merge.
+        let merged = vec![s(1, &["あ"]), s(4, &["え"])];
+        let labels = &[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4];
+        run(&mut rows, merged.clone(), labels);
+        assert_eq!(rows[0].usages[0].n_assigned, 0);
+        assert!(rows[0].usages[0].anchors.is_empty());
+        assert_eq!(rows[0].usages[1].n_assigned, 0);
+        assert_eq!(rows[0].usages[2].n_assigned, 15);
+        assert_eq!(rows[0].usages.len(), 4);
+        let bytes = serde_json::to_string(&rows).unwrap();
+        run(&mut rows, merged, labels);
+        assert_eq!(serde_json::to_string(&rows).unwrap(), bytes);
+    }
+
+    #[test]
+    fn matching_uses_all_new_occurrences_before_capping_stored_anchors() {
+        let senses = vec![s(1, &["あ"]), s(2, &["い"])];
+        let labels: Vec<_> = std::iter::repeat_n(1, 40)
+            .chain(std::iter::repeat_n(2, 40))
+            .collect();
+        let mut rows = vec![];
+        run(&mut rows, senses.clone(), &labels);
+        assert!(rows[0].usages.iter().all(|u| u.anchors.len() == 16));
+        let choices = labels
+            .iter()
+            .map(|&id| vec![leaf(id, if id == 1 { "あ" } else { "い" })])
+            .collect();
+        let (mut data, mut groups) = fixture(senses, choices);
+        // The new first 16 anchors per sense are disjoint from the old 16.
+        groups
+            .values_mut()
+            .for_each(|occurrences| occurrences.reverse());
+        let raw = data.labels.clone();
+        materialize(&mut data, &mut rows, &groups, Language::Japanese, &raw);
+        assert_eq!(rows[0].usages.len(), 2);
+        assert!(
+            rows[0]
+                .usages
+                .iter()
+                .all(|u| u.anchors.len() == 16 && u.n_assigned == 40)
+        );
+    }
+
+    #[test]
+    fn new_evidence_is_not_capped_and_occurrence_spans_matter() {
+        let mut old = usage(Some("あ"), Some("reading-hierarchy:old"), "old");
+        old.anchors[0].sentence = "late sentence".into();
+        old.anchors[0].spans = vec![(4, 5)];
+        let mut row = row(vec![old, usage(None, None, "semantic")]);
+        let mut evidence: crate::sense_identity::Evidence = (0..100)
+            .map(|i| ((format!("sentence {i}"), vec![(0, 1)]), 1))
+            .collect();
+        evidence.insert(("late sentence".into(), vec![(0, 1)]), 1);
+        evidence.insert(("late sentence".into(), vec![(4, 5)]), 2);
+        let senses = vec![s(1, &["あ"]), s(2, &["い"])];
+        let matched = stable_ids(&row, &senses, Language::Japanese, &evidence);
+        assert_eq!(matched, BTreeMap::from([(1, 3), (2, 1)]));
+        row.retire_usages();
+        let matched = stable_ids(&row, &senses, Language::Japanese, &evidence);
+        assert_eq!(matched, BTreeMap::from([(1, 3), (2, 4)]));
     }
     #[test]
     fn every_old_slot_retires_and_new_senses_land_past_the_high_water_mark() {

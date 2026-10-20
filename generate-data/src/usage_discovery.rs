@@ -1548,8 +1548,8 @@ impl UsageEntry {
 /// enough labeled data to classify any occurrence of the gram.
 ///
 /// Usage positions are persistent sense ids (one-based). On regeneration,
-/// matching glosses keep their slots, new glosses append, and missing usages
-/// retain their slots with empty anchors. Never sort or compact `usages`.
+/// overlapping occurrence evidence keeps slots, new meanings append, and missing
+/// usages retain their slots with empty anchors. Never sort or compact `usages`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UsageInventory {
     /// Human-readable display of the mined gram.
@@ -1586,20 +1586,39 @@ impl UsageInventory {
         }
     }
 
-    /// Preserve ids even when the judge reorders or stops returning a usage.
-    fn keep_sense_ids(&mut self, mut previous: Self) {
-        previous.retire_usages();
-        for mut usage in std::mem::take(&mut self.usages) {
-            if !usage.is_reading_split() {
-                usage.readings = None;
-            }
-            if let Some(slot) = previous
+    /// Preserve ids using full fresh assignments, not the capped new anchors.
+    fn keep_sense_ids(&mut self, mut previous: Self, evidence: &crate::sense_identity::Evidence) {
+        let ids = crate::sense_identity::assign(
+            previous.usages.len() as u32,
+            previous
                 .usages
-                .iter_mut()
-                .find(|old| old.gloss == usage.gloss)
-            {
-                *slot = usage;
+                .iter()
+                .zip(1..)
+                .filter(|(u, _)| !u.is_reading_split())
+                .map(|(u, id)| {
+                    (
+                        id,
+                        if u.n_assigned > 0 {
+                            u.anchors.as_slice()
+                        } else {
+                            &[]
+                        },
+                    )
+                }),
+            1..=self.usages.len() as u32,
+            evidence,
+            |old, new| {
+                previous.usages[old as usize - 1].gloss == self.usages[new as usize - 1].gloss
+            },
+        );
+        previous.retire_usages();
+        for (temporary, mut usage) in (1..).zip(std::mem::take(&mut self.usages)) {
+            usage.readings = None;
+            let id = ids[&temporary] as usize;
+            if id <= previous.usages.len() {
+                previous.usages[id - 1] = usage;
             } else {
+                assert_eq!(id, previous.usages.len() + 1);
                 previous.usages.push(usage);
             }
         }
@@ -1634,6 +1653,7 @@ struct UsageLabelRow<'a> {
 /// A label computed during the judged loop, held until the inventory rows
 /// are sorted so each label row can cite its inventory line number.
 struct PendingLabel {
+    sense: Option<u32>,
     usage: String,
     kind: &'static str,
     occ: usize,
@@ -2603,6 +2623,9 @@ pub async fn discover(
                     None => ("expression", format!("expression: {}", class.gloss)),
                 };
                 PendingLabel {
+                    sense: class
+                        .kind
+                        .map(|_| classes[..=ci].iter().filter(|c| c.kind.is_some()).count() as u32),
                     usage,
                     kind,
                     occ: i,
@@ -2817,9 +2840,19 @@ pub async fn discover(
             Ok((inventory.gram.clone(), inventory))
         })
         .collect::<Result<_>>()?;
-    for (row, _, _) in &mut inventory_rows {
+    for (row, key_idx, pending) in &mut inventory_rows {
         if let Some(old) = previous.remove(&row.gram) {
-            row.keep_sense_ids(old);
+            let evidence = pending
+                .iter()
+                .filter_map(|label| {
+                    let occurrence = &keys[*key_idx].occs[label.occ];
+                    Some((
+                        (occurrence.text.clone(), occurrence.spans.clone()),
+                        label.sense?,
+                    ))
+                })
+                .collect();
+            row.keep_sense_ids(old, &evidence);
         }
     }
     let mut f =
@@ -3425,7 +3458,7 @@ mod tests {
                         n_assigned: 1,
                         loo_correct: 1,
                         anchors: vec![UsageAnchor {
-                            sentence: "anchor".into(),
+                            sentence: (*gloss).into(),
                             spans: vec![(0, 6)],
                             gold: true,
                         }],
@@ -3439,22 +3472,34 @@ mod tests {
         let mut previous = inventory(&["first", "second", "third"]);
         previous.usages[0].readings = Some(vec!["かな".into()]);
         let mut next = inventory(&["third", "first", "new"]);
+        next.usages[1].gloss = "renamed first".into();
         next.usages[1].readings = Some(vec!["かんじ".into()]);
-        next.keep_sense_ids(previous);
+        fn evidence(row: &UsageInventory) -> crate::sense_identity::Evidence {
+            row.usages
+                .iter()
+                .zip(1..)
+                .flat_map(|(u, id)| {
+                    u.anchors
+                        .iter()
+                        .map(move |a| ((a.sentence.clone(), a.spans.clone()), id))
+                })
+                .collect()
+        }
+        next.keep_sense_ids(previous, &evidence(&next));
         assert!(next.usages.iter().all(|u| u.readings.is_none()));
         assert_eq!(
             next.usages
                 .iter()
                 .map(|u| u.gloss.as_str())
                 .collect::<Vec<_>>(),
-            ["first", "second", "third", "new"]
+            ["renamed first", "second", "third", "new"]
         );
         assert!(next.usages[1].anchors.is_empty());
         assert_eq!(next.usages[1].n_assigned, 0);
         assert_eq!(next.usages[0].anchors.len(), 1);
-        // A removed usage can return without changing its original id.
+        // Identical metadata can reclaim a retired slot.
         let mut returned = inventory(&["second", "new"]);
-        returned.keep_sense_ids(next);
+        returned.keep_sense_ids(next, &evidence(&returned));
         assert_eq!(returned.usages[1].gloss, "second");
         assert_eq!(returned.usages[1].anchors.len(), 1);
         assert!(returned.usages[0].anchors.is_empty());
@@ -3463,6 +3508,24 @@ mod tests {
         returned.retire_usages();
         assert!(returned.usages.iter().all(|u| u.anchors.is_empty()));
         assert_eq!(returned.usages.len(), 4);
+
+        // Full assigned evidence decides a merge even when old occurrences
+        // are absent from the new capped anchor sample.
+        let previous = inventory(&["first", "second", "third"]);
+        let mut merged = inventory(&["combined", "third"]);
+        let mut labels = evidence(&merged);
+        labels.insert(("first".into(), vec![(0, 6)]), 1);
+        labels.insert(("second".into(), vec![(0, 6)]), 1);
+        merged.keep_sense_ids(previous, &labels);
+        assert_eq!(merged.usages.len(), 3);
+        assert_eq!(merged.usages[0].gloss, "combined");
+        assert_eq!(merged.usages[1].n_assigned, 0);
+        assert_eq!(merged.usages[1].gloss, "second");
+        assert!(merged.usages[1].anchors.is_empty());
+        let bytes = serde_json::to_string(&merged).unwrap();
+        let mut again = inventory(&["combined", "third"]);
+        again.keep_sense_ids(merged, &evidence(&again));
+        assert_eq!(serde_json::to_string(&again).unwrap(), bytes);
     }
 
     fn vec2(x: f32, y: f32) -> Vec<f32> {
