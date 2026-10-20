@@ -227,6 +227,7 @@ pub async fn load_human_audio(
                 continue;
             }
             let bytes = encode_wav_to_opus(&wav_path)
+                .await
                 .with_context(|| format!("Failed to encode {} to opus", wav_path.display()))?;
             // TODO: keep every take rather than last-take-wins. Several
             // manifest texts are recorded more than once (alternate takes we
@@ -372,45 +373,179 @@ pub async fn load_human_audio(
     Ok(out)
 }
 
-/// Encode a .wav file to OGG/Opus by piping ffmpeg's stdout.
-///
-/// Applies EBU R128 loudness normalization (`loudnorm`) so clips from different
-/// contributors land at a consistent perceived volume. -16 LUFS is the Apple
-/// Podcasts standard for spoken-word content; quiet recordings get boosted to
-/// match, well-recorded ones are left roughly unchanged.
-fn encode_wav_to_opus(wav_path: &Path) -> anyhow::Result<Vec<u8>> {
+/// The cache key and ffmpeg invocation share this recipe. Bitexact flags remove
+/// encoder version tags and random Ogg serial numbers; the cache preserves the
+/// encoded bytes even across encoder upgrades.
+const OPUS_ARGS: &[&str] = &[
+    "-af",
+    "loudnorm=I=-16:TP=-1.5:LRA=11",
+    "-c:a",
+    "libopus",
+    "-b:a",
+    "32k",
+    "-application",
+    "voip",
+    "-fflags",
+    "+bitexact",
+    "-flags:a",
+    "+bitexact",
+    "-f",
+    "ogg",
+    "pipe:1",
+];
+
+/// Cache the exact WAV bytes, not its path. Local encoding is also allowed in
+/// cache-only mode: it needs no network and must not drop verified recordings.
+async fn encode_wav_to_opus(wav_path: &Path) -> anyhow::Result<Vec<u8>> {
+    let wav = std::fs::read(wav_path)?;
+    cached_opus(&crate::cache_remote::store(), &wav, OPUS_ARGS, encode_opus).await
+}
+
+async fn cached_opus(
+    store: &osmo::Store,
+    wav: &[u8],
+    recipe: &[&str],
+    encode: impl FnOnce(&[u8], &[&str]) -> anyhow::Result<Vec<u8>>,
+) -> anyhow::Result<Vec<u8>> {
+    use xxhash_rust::xxh3::xxh3_64;
+
+    // JSON preserves argument boundaries (unlike joining with spaces).
+    let recipe_hash = xxh3_64(&serde_json::to_vec(recipe)?);
+    let key = format!("human-audio/opus/{recipe_hash:016x}/{:016x}", xxh3_64(wav));
+    if let Some(bytes) = store.read(&key).await {
+        return Ok(bytes);
+    }
+    let bytes = encode(wav, recipe)?;
+    store.write(&key, &bytes).await?;
+    Ok(bytes)
+}
+
+/// Apply EBU R128 loudness normalization so contributors land at a consistent
+/// perceived volume. -16 LUFS is the Apple Podcasts spoken-word standard.
+fn encode_opus(wav: &[u8], recipe: &[&str]) -> anyhow::Result<Vec<u8>> {
+    // Encode exactly what was hashed, even if the original file changes. A temp
+    // input also avoids deadlocking ffmpeg's stdin against its piped stdout.
+    let mut input = tempfile::NamedTempFile::new()?;
+    input.write_all(wav)?;
     let output = std::process::Command::new("ffmpeg")
         .args(["-y", "-loglevel", "error", "-i"])
-        .arg(wav_path)
-        .args([
-            "-af",
-            "loudnorm=I=-16:TP=-1.5:LRA=11",
-            "-c:a",
-            "libopus",
-            "-b:a",
-            "32k",
-            "-application",
-            "voip",
-            "-f",
-            "ogg",
-            "pipe:1",
-        ])
+        .arg(input.path())
+        .args(recipe)
         .output()
         .context("failed to invoke ffmpeg (is it installed?)")?;
     if !output.status.success() {
-        anyhow::bail!(
-            "ffmpeg failed for {}: {}",
-            wav_path.display(),
-            String::from_utf8_lossy(&output.stderr)
-        );
+        anyhow::bail!("ffmpeg failed: {}", String::from_utf8_lossy(&output.stderr));
     }
     if !output.stdout.starts_with(b"OggS") {
         anyhow::bail!(
-            "ffmpeg produced non-OGG output for {} ({} bytes, magic={:?})",
-            wav_path.display(),
+            "ffmpeg produced non-OGG output ({} bytes, magic={:?})",
             output.stdout.len(),
             &output.stdout.iter().take(4).copied().collect::<Vec<_>>()
         );
     }
     Ok(output.stdout)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn same_wav_and_recipe_reuse_encoded_bytes() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = osmo::Store::open(dir.path());
+        let bytes = cached_opus(&store, b"wav", OPUS_ARGS, |wav, recipe| {
+            assert_eq!(wav, b"wav");
+            assert_eq!(recipe, OPUS_ARGS);
+            Ok(b"OggSencoded".to_vec())
+        })
+        .await
+        .unwrap();
+        let hit = cached_opus(&store, b"wav", OPUS_ARGS, |_, _| {
+            panic!("cache hit must not invoke encoder")
+        })
+        .await
+        .unwrap();
+        assert_eq!(hit, bytes);
+    }
+
+    #[tokio::test]
+    async fn changed_wav_or_recipe_encodes_again() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = osmo::Store::open(dir.path());
+        for (wav, recipe, expected) in [
+            (b"wav".as_slice(), &["a b", "c"][..], b"first".as_slice()),
+            (b"new wav", &["a b", "c"][..], b"changed wav"),
+            (b"wav", &["a", "b c"][..], b"changed recipe"),
+        ] {
+            let bytes = cached_opus(&store, wav, recipe, |_, _| Ok(expected.to_vec()))
+                .await
+                .unwrap();
+            assert_eq!(bytes, expected);
+        }
+    }
+
+    #[tokio::test]
+    async fn failed_encoding_is_not_cached() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = osmo::Store::open(dir.path());
+        let result = cached_opus(&store, b"wav", OPUS_ARGS, |_, _| {
+            anyhow::bail!("encoder failed")
+        })
+        .await;
+        assert_eq!(result.unwrap_err().to_string(), "encoder failed");
+        let bytes = cached_opus(&store, b"wav", OPUS_ARGS, |_, _| Ok(b"retry".to_vec()))
+            .await
+            .unwrap();
+        assert_eq!(bytes, b"retry");
+    }
+
+    /// Exercise the real encoder against repository recordings, without loading
+    /// a course or contacting verification services.
+    #[tokio::test]
+    #[ignore = "requires ffmpeg and the French audio recordings"]
+    async fn french_recordings_encode_reproducibly() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = osmo::Store::open(dir.path());
+        let version_tag = regex::Regex::new(r"(?:Lav[fc]|libopus)\s*\d").unwrap();
+        for file in ["05a_bu.wav", "b185_je_sais_que.wav"] {
+            let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("data/fra/audio/Jean-Cavard")
+                .join(file);
+            let wav = std::fs::read(&path).unwrap();
+            let encoded = cached_opus(&store, &wav, OPUS_ARGS, encode_opus)
+                .await
+                .unwrap();
+            let hit = cached_opus(&store, &wav, OPUS_ARGS, |_, _| {
+                panic!("{file}: cache hit must not invoke ffmpeg")
+            })
+            .await
+            .unwrap();
+            assert_eq!(hit, encoded);
+            assert_eq!(encode_opus(&wav, OPUS_ARGS).unwrap(), encoded);
+            assert!(encoded.starts_with(b"OggS"));
+            let text = String::from_utf8_lossy(&encoded);
+            // Bitexact keeps an unversioned "Lavc libopus" encoder label.
+            assert!(!version_tag.is_match(&text), "{file}: encoder version tag");
+            let mut ogg = tempfile::NamedTempFile::new().unwrap();
+            ogg.write_all(&encoded).unwrap();
+            let decoded = std::process::Command::new("ffmpeg")
+                .args(["-v", "error", "-i"])
+                .arg(ogg.path())
+                .args(["-f", "f32le", "pipe:1"])
+                .output()
+                .unwrap();
+            assert!(
+                decoded.status.success(),
+                "{}",
+                String::from_utf8_lossy(&decoded.stderr)
+            );
+            assert!(!decoded.stdout.is_empty());
+            println!(
+                "{file}: {} Ogg bytes, {} decoded PCM bytes; cache hit and fresh encode identical, no version tags",
+                encoded.len(),
+                decoded.stdout.len()
+            );
+        }
+    }
 }
