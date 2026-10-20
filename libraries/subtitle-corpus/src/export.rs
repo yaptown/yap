@@ -758,7 +758,7 @@ pub struct OrphanManifest {
 /// The full serve pipeline, [`crate::clips`]-style resumable at every stage:
 /// re-map clips (skips films whose provenance is current), export videos
 /// (skips clip dirs with a finished sidecar), upload to R2 over S3 (skips matching `.uploaded`
-/// hashes and verifies stale files against bucket ETags), records orphan candidates,
+/// stamps and verifies stale files against bucket ETags), records orphan candidates,
 /// then exports subtitles into yap. Orphan deletion requires a separate [`prune`].
 /// The yap export runs last so its freshness/verbatim gates see the verdicts
 /// recomputed by the clip re-map, not those from the previous run.
@@ -920,10 +920,11 @@ pub async fn prune(dest: PathBuf, bucket: String, manifest: PathBuf, apply: bool
 }
 
 /// Upload one language's exported clips over S3, with SDK-managed retries.
-/// A `.uploaded` marker records each file's xxh3 hash once all five objects
-/// land. Matching markers skip work; stale files already matching bucket MD5
-/// ETags need no put. Objects are immutable by id and get a forever cache;
-/// the index gets a short one.
+/// A `.uploaded` marker records each file's size and mtime once all five
+/// objects land, so a matching marker skips the dir without reading ~9 MB of
+/// media (restoring files with `cp -a` keeps old mtimes and would hide them).
+/// Stale files already matching bucket MD5 ETags need no put. Objects are
+/// immutable by id and get a forever cache; the index gets a short one.
 async fn upload_lang(lang_dir: &Path, code: &str, r2: &crate::r2::R2) -> Result<HashSet<String>> {
     const IMMUTABLE: &str = "public, max-age=31536000, immutable";
     let etags = r2.list_etags(&format!("{code}/")).await?;
@@ -953,19 +954,10 @@ async fn upload_lang(lang_dir: &Path, code: &str, r2: &crate::r2::R2) -> Result<
                 ("poster", "poster.jpg", "image/jpeg"),
                 ("meta", "meta.json", "application/json"),
             ];
-            // Hashing reads ~9 MB per dir; keep it off the stream's task so
-            // dirs hash in parallel instead of one after another.
-            let hashes = {
-                let dir = dir.clone();
-                tokio::task::spawn_blocking(move || -> Result<serde_json::Map<_, _>> {
-                    let mut hashes = serde_json::Map::new();
-                    for (key, name, _) in files {
-                        hashes.insert(key.into(), file_hash(&dir.join(name))?.into());
-                    }
-                    Ok(hashes)
-                })
-                .await??
-            };
+            let stamps = files
+                .iter()
+                .map(|(key, name, _)| Ok(((*key).into(), file_stamp(&dir.join(name))?.into())))
+                .collect::<Result<serde_json::Map<_, _>>>()?;
             let marked = tokio::fs::read(dir.join(".uploaded"))
                 .await
                 .ok()
@@ -973,7 +965,7 @@ async fn upload_lang(lang_dir: &Path, code: &str, r2: &crate::r2::R2) -> Result<
                 .unwrap_or_default();
             let stale: Vec<_> = files
                 .iter()
-                .filter(|(key, _, _)| marked[*key] != hashes[*key])
+                .filter(|(key, _, _)| marked[*key] != stamps[*key])
                 .collect();
             if stale.is_empty() {
                 return Ok(Some(UploadOutcome::Skipped));
@@ -989,7 +981,7 @@ async fn upload_lang(lang_dir: &Path, code: &str, r2: &crate::r2::R2) -> Result<
                     did_upload = true;
                 }
             }
-            tokio::fs::write(dir.join(".uploaded"), serde_json::to_vec(&hashes)?).await?;
+            tokio::fs::write(dir.join(".uploaded"), serde_json::to_vec(&stamps)?).await?;
             Ok(Some(if did_upload {
                 UploadOutcome::Uploaded
             } else {
@@ -1942,9 +1934,10 @@ fn rendition_args(
     args
 }
 
-fn file_hash(path: &Path) -> Result<String> {
-    let bytes = std::fs::read(path).with_context(|| format!("hashing {}", path.display()))?;
-    Ok(format!("{:016x}", xxhash_rust::xxh3::xxh3_64(&bytes)))
+fn file_stamp(path: &Path) -> Result<String> {
+    let meta = std::fs::metadata(path).with_context(|| format!("stat {}", path.display()))?;
+    let mtime = meta.modified()?.duration_since(std::time::UNIX_EPOCH)?;
+    Ok(format!("{}@{}", meta.len(), mtime.as_nanos()))
 }
 
 fn rendition_info(file: &Path, height: i64) -> serde_json::Value {

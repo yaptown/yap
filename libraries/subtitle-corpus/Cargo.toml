@@ -11,7 +11,9 @@ dotenvy = "0.15.7"
 clap = { version = "4", features = ["derive"] }
 image = { version = "0.25", default-features = false, features = ["png"] }
 serde = { workspace = true }
-serde_json = { workspace = true }
+# Sidecars are read, edited and rewritten; lossy float parsing would change
+# their bytes on every pass and force needless re-uploads.
+serde_json = { workspace = true, features = ["float_roundtrip"] }
 tysm = { workspace = true }
 schemars = { workspace = true }
 base64 = "0.22"
