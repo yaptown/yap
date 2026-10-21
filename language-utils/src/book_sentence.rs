@@ -8,8 +8,20 @@ use serde::{Deserialize, Serialize};
 pub struct ExplainSentenceRequest {
     pub language: Language,
     pub native_language: Language,
+    pub book: BookContext,
     pub paragraph: String,
     pub offset: usize,
+}
+
+/// Where the paragraph sits in its book, so the model reads it in context.
+#[bridgerton::bridge(transparent)]
+#[derive(Serialize, Deserialize, JsonSchema, Clone, Debug, PartialEq)]
+pub struct BookContext {
+    pub title: String,
+    pub author: String,
+    pub chapter: Option<String>,
+    pub previous_paragraph: Option<String>,
+    pub next_paragraph: Option<String>,
 }
 
 #[bridgerton::bridge(transparent)]
@@ -19,6 +31,8 @@ pub struct SentenceExplanation {
     pub end: usize,
     pub translation: String,
     pub word: String,
+    /// A few words in the native language: what the word means here.
+    pub gloss: String,
     pub word_explanation: String,
 }
 

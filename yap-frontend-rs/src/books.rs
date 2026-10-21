@@ -5,7 +5,8 @@ use language_utils::{
     Language,
     book::{Book, BookParagraph},
     book_sentence::{
-        ExplainSentenceRequest, SentenceChatReply, SentenceChatRequest, SentenceExplanation,
+        BookContext, ExplainSentenceRequest, SentenceChatReply, SentenceChatRequest,
+        SentenceExplanation,
     },
 };
 use opfs::{DirectoryHandle as _, FileHandle as _, WritableFileStream as _};
@@ -461,6 +462,34 @@ pub async fn save_book_position(
     position: BookPosition,
 ) -> Result<(), Error> {
     write(&key(language, &slug, "position"), &position).await
+}
+
+/// Starts the sentence tutor on a tap at a UTF-16 offset into one of the reader's paragraphs.
+#[bridgerton::bridge]
+pub fn book_sentence_start(
+    view: BookReaderView,
+    language: Language,
+    native_language: Language,
+    paragraph_index: usize,
+    utf16_offset: u32,
+) -> yap_frontend_reducers::BookSentenceStep {
+    let text = |index: Option<usize>| index.and_then(|i| view.paragraphs.get(i)?.text.clone());
+    let book = BookContext {
+        title: view.title,
+        author: view.author,
+        chapter: view.chapter_title,
+        previous_paragraph: text(paragraph_index.checked_sub(1)),
+        next_paragraph: text(Some(paragraph_index + 1)),
+    };
+    let paragraph = text(Some(paragraph_index)).expect("taps land on a paragraph's text");
+    yap_frontend_reducers::BookSentenceState::start(
+        language,
+        native_language,
+        book,
+        paragraph_index,
+        paragraph,
+        utf16_offset,
+    )
 }
 
 #[bridgerton::bridge]

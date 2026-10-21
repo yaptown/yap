@@ -80,6 +80,7 @@ pub struct BookSentenceView {
     pub sentence: Option<String>,
     pub translation: Option<String>,
     pub word: Option<String>,
+    pub gloss: Option<String>,
     pub word_explanation: Option<String>,
     pub messages: Vec<BookSentenceMessage>,
     pub status: Option<String>,
@@ -106,36 +107,38 @@ fn utf16_offset(text: &str, byte_offset: usize) -> u32 {
     text[..byte_offset].encode_utf16().count() as u32
 }
 
-#[bridgerton::bridge]
-pub fn book_sentence_start(
-    language: Language,
-    native_language: Language,
-    paragraph_index: usize,
-    paragraph: String,
-    utf16_offset: u32,
-) -> BookSentenceStep {
-    let request = ExplainSentenceRequest {
-        language,
-        native_language,
-        offset: byte_offset(&paragraph, utf16_offset),
-        paragraph,
-    };
-    BookSentenceStep {
-        effects: vec![BookSentenceEffect::Explain {
-            request: request.clone(),
-        }],
-        state: BookSentenceState {
-            request,
-            paragraph_index,
-            explanation: BookSentenceExplanation::Loading,
-            messages: vec![],
-            draft: String::new(),
-            reply_status: BookSentenceReplyStatus::Idle,
-        },
-    }
-}
-
 impl BookSentenceState {
+    /// Hosts start through `yap_frontend_rs::book_sentence_start`, which reads the book context off the reader.
+    pub fn start(
+        language: Language,
+        native_language: Language,
+        book: BookContext,
+        paragraph_index: usize,
+        paragraph: String,
+        utf16_offset: u32,
+    ) -> BookSentenceStep {
+        let request = ExplainSentenceRequest {
+            language,
+            native_language,
+            book,
+            offset: byte_offset(&paragraph, utf16_offset),
+            paragraph,
+        };
+        BookSentenceStep {
+            effects: vec![BookSentenceEffect::Explain {
+                request: request.clone(),
+            }],
+            state: BookSentenceState {
+                request,
+                paragraph_index,
+                explanation: BookSentenceExplanation::Loading,
+                messages: vec![],
+                draft: String::new(),
+                reply_status: BookSentenceReplyStatus::Idle,
+            },
+        }
+    }
+
     fn can_send(&self) -> bool {
         matches!(self.explanation, BookSentenceExplanation::Loaded { .. })
             && self.reply_status != BookSentenceReplyStatus::Waiting
@@ -230,6 +233,7 @@ pub fn book_sentence_view(state: BookSentenceState) -> BookSentenceView {
         sentence: explanation.map(|e| state.request.paragraph[e.start..e.end].to_owned()),
         translation: explanation.map(|e| e.translation.clone()),
         word: explanation.map(|e| e.word.clone()),
+        gloss: explanation.map(|e| e.gloss.clone()),
         word_explanation: explanation.map(|e| e.word_explanation.clone()),
         messages: state
             .messages
@@ -261,10 +265,21 @@ pub fn book_sentence_view(state: BookSentenceState) -> BookSentenceView {
 mod tests {
     use super::*;
 
+    fn book() -> BookContext {
+        BookContext {
+            title: "Arsène Lupin".into(),
+            author: "Maurice Leblanc".into(),
+            chapter: None,
+            previous_paragraph: None,
+            next_paragraph: None,
+        }
+    }
+
     fn start() -> BookSentenceStep {
-        book_sentence_start(
+        BookSentenceState::start(
             Language::French,
             Language::English,
+            book(),
             3,
             "C'était l'été — «oui»".into(),
             10,
@@ -282,6 +297,7 @@ mod tests {
                     end,
                     translation: "It was summer — ‘yes’".into(),
                     word: "été".into(),
+                    gloss: "summer".into(),
                     word_explanation: "Summer.".into(),
                 },
             },
@@ -306,6 +322,7 @@ mod tests {
         let state = loaded();
         let view = book_sentence_view(state.clone());
         assert_eq!(view.sentence.as_deref(), Some("C'était l'été — «oui»"));
+        assert_eq!(view.gloss.as_deref(), Some("summer"));
         assert_eq!(
             view.highlight,
             Some(BookSentenceHighlight { start: 0, end: 21 })
@@ -400,9 +417,10 @@ mod tests {
         }
         assert_eq!(byte_offset("😀你好", 1), 0);
         assert_eq!(byte_offset("😀你好", 2), 4);
-        let state = book_sentence_start(
+        let state = BookSentenceState::start(
             Language::ChineseSimplified,
             Language::English,
+            book(),
             2,
             "😀你好。夏天！".into(),
             6,
@@ -417,7 +435,8 @@ mod tests {
                     end: 22,
                     translation: "Summer!".into(),
                     word: "夏天".into(),
-                    word_explanation: "Summer.".into(),
+                    gloss: "summer".into(),
+                    word_explanation: "Two characters, one word.".into(),
                 },
             },
         )

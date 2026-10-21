@@ -445,14 +445,18 @@ function SentenceTutor({
       <div className="flex flex-col gap-5 overflow-y-auto px-6 pb-3 pt-7">
         {view.sentence && (
           <div className="flex flex-col gap-2 pr-8">
-            <p className="font-serif text-xl leading-snug"><TargetLanguageText language={language}>{view.sentence}</TargetLanguageText></p>
-            {view.translation && <p className="text-[var(--reader-muted)]">{view.translation}</p>}
+            <p className="font-serif leading-snug text-[var(--reader-muted)]"><TargetLanguageText language={language}>{view.sentence}</TargetLanguageText></p>
+            {view.translation && <p className="text-xl font-medium leading-snug">{view.translation}</p>}
           </div>
         )}
-        {view.word && view.word_explanation && (
+        {view.word && view.gloss && (
           <div className="flex flex-col gap-1 rounded-2xl bg-current/5 p-4">
-            <p className="font-serif font-semibold"><TargetLanguageText language={language}>{view.word}</TargetLanguageText></p>
-            <p>{view.word_explanation}</p>
+            <p>
+              <span className="font-serif text-lg font-semibold"><TargetLanguageText language={language}>{view.word}</TargetLanguageText></span>
+              <span className="text-[var(--reader-muted)]"> — </span>
+              {view.gloss}
+            </p>
+            {view.word_explanation && <p>{view.word_explanation}</p>}
           </div>
         )}
         {view.messages.map((message, i) =>
@@ -674,9 +678,8 @@ export function BookReader({ language, nativeLanguage, slug }: { language: Langu
           turned={() => { closeTutor(); setBarShown(false); }}
           highlight={tutorView?.highlight ? { paragraph: tutorView.paragraph_index, range: tutorView.highlight } : undefined}
           tapText={(paragraph, offset) => {
-            const text = view.paragraphs[paragraph].text!;
             tutorRun.current++;
-            applyTutor(book_sentence_start(language, nativeLanguage, paragraph, text, offset));
+            applyTutor(book_sentence_start(view, language, nativeLanguage, paragraph, offset));
           }}
           tapAway={tutor && closeTutor}
           turnPast={(direction, before) => {

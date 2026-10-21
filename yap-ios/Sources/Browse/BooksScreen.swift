@@ -126,9 +126,8 @@ struct BookReaderScreen: View {
                     ChapterPages(view: view, layout: layout, paper: paper, controlsShown: barShown, opening: opening, remember: remember,
                                  highlight: highlight,
                                  tapText: { paragraph, offset in
-                                     guard let text = view.paragraphs[paragraph].text else { return }
-                                     startTutor(book_sentence_start(language: language, native_language: nativeLanguage,
-                                                                    paragraph_index: UInt64(paragraph), paragraph: text, utf16_offset: UInt32(offset)))
+                                     startTutor(book_sentence_start(view: view, language: language, native_language: nativeLanguage,
+                                                                    paragraph_index: UInt64(paragraph), utf16_offset: UInt32(offset)))
                                  },
                                  tapAway: tutor == nil ? nil : { closeTutor() },
                                  turned: { closeTutor(); withAnimation { barShown = false } },
@@ -201,10 +200,9 @@ struct BookReaderScreen: View {
             guard DebugHarness.shared.activeScreen == .bookReader else { return }
             let command = DebugHarness.shared.command
             let words = command.split(separator: " ")
-            if words.first == "tap-text", words.count == 3, let paragraph = Int(words[1]), let offset = UInt32(words[2]),
-               let text = view?.paragraphs[paragraph].text {
-                startTutor(book_sentence_start(language: language, native_language: nativeLanguage,
-                                               paragraph_index: UInt64(paragraph), paragraph: text, utf16_offset: offset))
+            if words.first == "tap-text", words.count == 3, let paragraph = UInt64(words[1]), let offset = UInt32(words[2]), let view {
+                startTutor(book_sentence_start(view: view, language: language, native_language: nativeLanguage,
+                                               paragraph_index: paragraph, utf16_offset: offset))
             }
             if command.hasPrefix("ask ") { sendTutor(.DraftChanged(text: String(command.dropFirst(4)))); sendTutor(.Ask) }
             if command == "tutor-close" { closeTutor() }
@@ -745,15 +743,15 @@ private struct SentenceTutor: View {
                     VStack(alignment: .leading, spacing: 20) {
                         if let sentence = view.sentence {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text(sentence).font(.system(.title3, design: .serif))
+                                Text(sentence).font(.system(.body, design: .serif)).foregroundStyle(paper.muted)
                                     .typesettingLanguage(Locale.Language(identifier: lang)).textSelection(.enabled)
-                                if let translation = view.translation { Text(translation).foregroundStyle(paper.muted) }
+                                if let translation = view.translation { Text(translation).font(.title3.weight(.medium)) }
                             }
                         }
-                        if let word = view.word, let explanation = view.word_explanation {
+                        if let word = view.word, let gloss = view.gloss {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(word).font(.system(.headline, design: .serif)).typesettingLanguage(Locale.Language(identifier: lang))
-                                Text(explanation)
+                                Text("\(Text(word).font(.system(.headline, design: .serif)).typesettingLanguage(Locale.Language(identifier: lang)))\(Text(" — ").foregroundStyle(paper.muted))\(gloss)")
+                                if let explanation = view.word_explanation { Text(explanation) }
                             }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
                                 .background(paper.text.opacity(0.05), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
