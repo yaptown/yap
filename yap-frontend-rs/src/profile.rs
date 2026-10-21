@@ -1,35 +1,14 @@
 //! Profile and social endpoints of the AI backend, exposed to every host.
-use crate::utils::hit_ai_server;
+use crate::utils::fetch_ai_json;
 use bridgerton::Error;
 use language_utils::profile::{
     FollowRequest, FollowResponse, FollowStatus, Profile, UpdateProfileRequest,
     UpdateProfileResponse, UserLanguageStats,
 };
 
-/// Perform a request against the AI backend and decode its JSON body.
-async fn fetch_json<T: serde::de::DeserializeOwned>(
-    method: fetch_happen::Method,
-    path: &str,
-    request: Option<impl serde::Serialize>,
-    access_token: Option<&String>,
-) -> Result<T, Error> {
-    let response = hit_ai_server(method, path, request, access_token)
-        .await
-        .map_err(|e| Error::new(format!("Request error: {e:?}")))?;
-
-    if !response.ok() {
-        return Err(Error::new(format!("HTTP error: {}", response.status())));
-    }
-
-    response
-        .json()
-        .await
-        .map_err(|e| Error::new(format!("Response parsing error: {e:?}")))
-}
-
 #[bridgerton::bridge]
 pub async fn get_profile_by_id(user_id: String) -> Result<Profile, Error> {
-    fetch_json(
+    fetch_ai_json(
         fetch_happen::Method::GET,
         &format!("/profile?id={user_id}"),
         None::<()>,
@@ -40,7 +19,7 @@ pub async fn get_profile_by_id(user_id: String) -> Result<Profile, Error> {
 
 #[bridgerton::bridge]
 pub async fn get_profile_by_slug(slug: String) -> Result<Profile, Error> {
-    fetch_json(
+    fetch_ai_json(
         fetch_happen::Method::GET,
         &format!("/profile?slug={slug}"),
         None::<()>,
@@ -56,7 +35,7 @@ pub async fn update_profile(
     access_token: String,
 ) -> Result<UpdateProfileResponse, Error> {
     let request = UpdateProfileRequest { display_name, bio };
-    fetch_json(
+    fetch_ai_json(
         fetch_happen::Method::PATCH,
         "/profile",
         Some(&request),
@@ -69,7 +48,7 @@ pub async fn update_profile(
 pub async fn get_user_language_stats_by_id(
     user_id: String,
 ) -> Result<Vec<UserLanguageStats>, Error> {
-    fetch_json(
+    fetch_ai_json(
         fetch_happen::Method::GET,
         &format!("/user-language-stats?id={user_id}"),
         None::<()>,
@@ -82,7 +61,7 @@ pub async fn get_user_language_stats_by_id(
 pub async fn get_user_language_stats_by_slug(
     slug: String,
 ) -> Result<Vec<UserLanguageStats>, Error> {
-    fetch_json(
+    fetch_ai_json(
         fetch_happen::Method::GET,
         &format!("/user-language-stats?slug={slug}"),
         None::<()>,
@@ -94,7 +73,7 @@ pub async fn get_user_language_stats_by_slug(
 #[bridgerton::bridge]
 pub async fn follow_user(user_id: String, access_token: String) -> Result<FollowResponse, Error> {
     let request = FollowRequest { user_id };
-    fetch_json(
+    fetch_ai_json(
         fetch_happen::Method::POST,
         "/follow",
         Some(&request),
@@ -106,7 +85,7 @@ pub async fn follow_user(user_id: String, access_token: String) -> Result<Follow
 #[bridgerton::bridge]
 pub async fn unfollow_user(user_id: String, access_token: String) -> Result<FollowResponse, Error> {
     let request = FollowRequest { user_id };
-    fetch_json(
+    fetch_ai_json(
         fetch_happen::Method::POST,
         "/unfollow",
         Some(&request),
@@ -128,7 +107,7 @@ pub async fn get_follow_status(
     } else {
         return Err(Error::new("Either user_id or slug must be provided"));
     };
-    fetch_json(
+    fetch_ai_json(
         fetch_happen::Method::GET,
         &format!("/follow-status?{query}"),
         None::<()>,

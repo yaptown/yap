@@ -40,6 +40,27 @@ pub fn lexide_language(language: Language) -> Option<lexide::Language> {
     })
 }
 
+/// Lossless byte ranges from parsley's character-indexed sentence starts.
+/// Prefix joins the first piece, gaps join the preceding piece; model ends are ignored.
+pub fn sentence_ranges(
+    text: &str,
+    starts: impl IntoIterator<Item = usize>,
+) -> Vec<std::ops::Range<usize>> {
+    let offsets: Vec<_> = text
+        .char_indices()
+        .map(|(byte, _)| byte)
+        .chain(std::iter::once(text.len()))
+        .collect();
+    let mut boundaries: Vec<_> = starts.into_iter().map(|start| offsets[start]).collect();
+    if let Some(first) = boundaries.first_mut() {
+        *first = 0;
+    } else {
+        boundaries.push(0);
+    }
+    boundaries.push(text.len());
+    boundaries.windows(2).map(|pair| pair[0]..pair[1]).collect()
+}
+
 /// Longest silence after an unfinished cue across which the next cue can
 /// still continue its sentence.
 ///
@@ -525,5 +546,25 @@ mod boundary_tests {
         assert!(has_internal_boundary("Si. Non !"));
         assert!(has_internal_boundary("M. Godefroy !"));
         assert!(has_internal_boundary("Alors… C’est pas vrai ça !"));
+    }
+}
+
+#[cfg(test)]
+mod partition_tests {
+    use super::sentence_ranges;
+
+    #[test]
+    fn preserves_prefix_gaps_and_unicode() {
+        let text = "  😀Un.  二！ ";
+        let ranges = sentence_ranges(text, [2, 8]);
+        assert_eq!(
+            ranges
+                .iter()
+                .map(|range| &text[range.clone()])
+                .collect::<Vec<_>>(),
+            ["  😀Un.  ", "二！ "]
+        );
+        assert_eq!(sentence_ranges(text, []), [0..text.len()]);
+        assert_eq!(sentence_ranges("", []), [0..0]);
     }
 }

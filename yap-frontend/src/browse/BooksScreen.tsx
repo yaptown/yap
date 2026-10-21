@@ -4,13 +4,23 @@ import { useTheme } from "@/components/theme-provider";
 import { animatePageTurn, type PageSnapshot } from "./page-turn";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
-import { ArrowLeft, ChevronRight, List } from "lucide-react";
+import { ArrowLeft, ArrowUp, ChevronRight, List, LoaderCircle, X } from "lucide-react";
 import {
+  book_sentence_start,
+  book_sentence_transition,
+  book_sentence_view,
   books_copy,
+  chat_book_sentence,
+  explain_book_sentence,
   load_books,
   load_book,
   save_book_position,
   type BookCardView,
+  type BookSentenceEvent,
+  type BookSentenceHighlight,
+  type BookSentenceState,
+  type BookSentenceStep,
+  type BookSentenceView,
   type BooksScreenView,
   type BookReaderView,
   type Language,
@@ -158,6 +168,27 @@ const TEXT_SIZE_KEY = "yap-reader-text-size";
 type Opening = number | "end";
 type OpeningTurn = { before: PageSnapshot; direction: 1 | -1; layout: ReaderLayout };
 
+/** The paragraph and UTF-16 offset of the character drawn under a point, if any. */
+function textAt(x: number, y: number): { paragraph: number; offset: number } | undefined {
+  const caret = document.caretPositionFromPoint?.(x, y);
+  const legacy = caret ? undefined : document.caretRangeFromPoint?.(x, y);
+  const node = caret?.offsetNode ?? legacy?.startContainer;
+  const offset = caret?.offset ?? legacy?.startOffset ?? 0;
+  const paragraph = node?.parentElement?.closest<HTMLElement>("p[data-paragraph]");
+  if (!(node instanceof Text) || !paragraph) return;
+  // The caret falls between characters: take whichever neighbour is under the point.
+  for (const at of [offset, offset - 1]) {
+    if (at < 0 || at >= node.length) continue;
+    const range = document.createRange();
+    range.setStart(node, at);
+    range.setEnd(node, at + 1);
+    if ([...range.getClientRects()].some((r) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom)) {
+      range.setStart(paragraph, 0);
+      return { paragraph: Number(paragraph.dataset.paragraph), offset: range.toString().length - 1 };
+    }
+  }
+}
+
 /**
  * CSS columns paginate the live text; a temporary curved sheet animates each turn.
  * The geometry comes from Rust's `reader_layout`, shared with iOS.
@@ -173,6 +204,9 @@ function ChapterPages({
   remember,
   turnPast,
   turned,
+  highlight,
+  tapText,
+  tapAway,
   tapMiddle,
 }: {
   view: BookReaderView;
@@ -187,6 +221,12 @@ function ChapterPages({
   turnPast: (direction: 1 | -1, before: PageSnapshot) => void;
   /** Called on every page turn the reader makes. */
   turned: () => void;
+  /** The tutor's sentence, as a UTF-16 range within its paragraph. */
+  highlight?: { paragraph: number; range: BookSentenceHighlight };
+  /** A tap on a paragraph's text, at a UTF-16 offset. */
+  tapText: (paragraph: number, offset: number) => void;
+  /** While the tutor is open, a tap off the text closes it instead of turning or showing the bar. */
+  tapAway?: () => void;
   tapMiddle: () => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
@@ -273,7 +313,7 @@ function ChapterPages({
     return () => window.removeEventListener("keydown", onKey);
   }, [paused]);
 
-  // Tap the outer thirds to turn, the middle to show the controls; or swipe.
+  // Tap text for the tutor; elsewhere the outer thirds turn and the middle shows the controls; or swipe.
   const touch = useRef({ x: 0, y: 0, swiped: false });
   return (
     <div
@@ -290,6 +330,9 @@ function ChapterPages({
       onClick={(e) => {
         if (touch.current.swiped) { touch.current.swiped = false; return; }
         if (paused) return;
+        const hit = textAt(e.clientX, e.clientY);
+        if (hit) return tapText(hit.paragraph, hit.offset);
+        if (tapAway) return tapAway();
         const rect = e.currentTarget.getBoundingClientRect();
         const x = (e.clientX - rect.left) / rect.width;
         if (x < 0.3) turn(-1);
@@ -339,7 +382,17 @@ function ChapterPages({
                 data-paragraph={i}
                 className={i > 0 && view.paragraphs[i - 1].text != null ? "indent-[1.5em]" : ""}
               >
-                <TargetLanguageText language={language}>{block.text}</TargetLanguageText>
+                <TargetLanguageText language={language}>
+                  {highlight?.paragraph === i ? (
+                    <>
+                      {block.text.slice(0, highlight.range.start)}
+                      <mark className="rounded-[0.2em] bg-[var(--reader-highlight)] text-inherit [box-decoration-break:clone]">
+                        {block.text.slice(highlight.range.start, highlight.range.end)}
+                      </mark>
+                      {block.text.slice(highlight.range.end)}
+                    </>
+                  ) : block.text}
+                </TargetLanguageText>
               </p>
             ),
           )}
@@ -359,6 +412,84 @@ function ChapterPages({
         })}
       </div>
     </div>
+  );
+}
+
+/**
+ * The tapped sentence, its translation and the tapped word, then a short chat about it.
+ * Pages stay clickable around the panel, so tapping another word moves the tutor there.
+ */
+function SentenceTutor({
+  view, language, send, close,
+}: {
+  view: BookSentenceView;
+  language: Language;
+  send: (event: BookSentenceEvent) => void;
+  close: () => void;
+}) {
+  const end = useRef<HTMLDivElement>(null);
+  useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [view.messages.length]);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && close();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [close]);
+  return (
+    <section
+      aria-live="polite"
+      className="absolute inset-x-0 bottom-0 z-20 mx-auto flex max-h-[55dvh] w-full max-w-xl flex-col rounded-t-3xl border border-current/10 bg-[var(--reader-paper)] shadow-[0_-8px_40px_rgb(0_0_0/0.15)] sm:bottom-4 sm:rounded-3xl"
+    >
+      <Button variant="ghost" size="icon" className="absolute right-3 top-3 z-10 rounded-full bg-[var(--reader-paper)] hover:bg-[var(--reader-paper)] hover:text-inherit" onClick={close} aria-label={books_copy().close}>
+        <X aria-hidden />
+      </Button>
+      <div className="flex flex-col gap-5 overflow-y-auto px-6 pb-3 pt-7">
+        {view.sentence && (
+          <div className="flex flex-col gap-2 pr-8">
+            <p className="font-serif text-xl leading-snug"><TargetLanguageText language={language}>{view.sentence}</TargetLanguageText></p>
+            {view.translation && <p className="text-[var(--reader-muted)]">{view.translation}</p>}
+          </div>
+        )}
+        {view.word && view.word_explanation && (
+          <div className="flex flex-col gap-1 rounded-2xl bg-current/5 p-4">
+            <p className="font-serif font-semibold"><TargetLanguageText language={language}>{view.word}</TargetLanguageText></p>
+            <p>{view.word_explanation}</p>
+          </div>
+        )}
+        {view.messages.map((message, i) =>
+          message.from_learner ? (
+            <p key={i} className="ml-12 self-end rounded-[1.1rem] bg-current/8 px-3.5 py-2.5">{message.text}</p>
+          ) : (
+            <p key={i}>{message.text}</p>
+          ),
+        )}
+        {view.status && (
+          <p className="flex items-center gap-2.5 text-[var(--reader-muted)]" role={view.status_is_error ? "alert" : undefined}>
+            {!view.status_is_error && <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />}
+            {view.status}
+            {view.retry_label && (
+              <button className="font-semibold text-[var(--reader-ink)] underline-offset-4 hover:underline" onClick={() => send({ type: "Retry" })}>
+                {view.retry_label}
+              </button>
+            )}
+          </p>
+        )}
+        <div ref={end} />
+      </div>
+      <form
+        className="m-4 mt-1 flex min-h-12 items-center gap-2 rounded-full bg-current/6 pl-5 pr-1.5"
+        onSubmit={(e) => { e.preventDefault(); send({ type: "Ask" }); }}
+      >
+        <input
+          className="min-w-0 flex-1 bg-transparent py-3 outline-none placeholder:text-[var(--reader-muted)]"
+          placeholder={view.placeholder}
+          value={view.draft}
+          onChange={(e) => send({ type: "DraftChanged", text: e.target.value })}
+        />
+        <Button type="submit" size="icon" className="h-9 w-9 shrink-0 rounded-full bg-[var(--reader-ink)] text-[var(--reader-paper)] hover:bg-[var(--reader-ink)]/85 disabled:opacity-30" disabled={!view.can_send} aria-label={view.send_label}>
+          <ArrowUp aria-hidden />
+        </Button>
+      </form>
+    </section>
   );
 }
 
@@ -410,8 +541,37 @@ function ReaderBar({
   );
 }
 
-export function BookReader({ language, slug }: { language: Language; slug: string }) {
+export function BookReader({ language, nativeLanguage, slug }: { language: Language; nativeLanguage: Language; slug: string }) {
   const copy = books_copy();
+  const { accessToken } = useOutletContext<AppContextType>();
+  // The tapped sentence's tutor, shared with iOS through Rust's `book_sentence` reducer.
+  const [tutor, setTutor] = useState<BookSentenceState>();
+  const tutorRef = useRef(tutor);
+  const tutorRun = useRef(0);
+  const applyTutor = (step: BookSentenceStep) => {
+    tutorRef.current = step.state;
+    setTutor(step.state);
+    const run = tutorRun.current;
+    for (const effect of step.effects) {
+      const reply: Promise<BookSentenceEvent> = effect.type === "Explain"
+        ? explain_book_sentence(effect.request, accessToken).then(
+            (explanation) => ({ type: "Explained", explanation }),
+            () => ({ type: "ExplainFailed" }),
+          )
+        : chat_book_sentence(effect.request, accessToken).then(
+            (reply) => ({ type: "Replied", reply }),
+            () => ({ type: "ReplyFailed" }),
+          );
+      void reply.then((event) => run === tutorRun.current && sendTutor(event));
+    }
+  };
+  const sendTutor = (event: BookSentenceEvent) => tutorRef.current && applyTutor(book_sentence_transition(tutorRef.current, event));
+  const closeTutor = () => {
+    tutorRun.current++;
+    tutorRef.current = undefined;
+    setTutor(undefined);
+  };
+  const tutorView = useMemo(() => tutor && book_sentence_view(tutor), [tutor]);
   const [view, setView] = useState<BookReaderView>();
   const [failed, setFailed] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
@@ -476,6 +636,7 @@ export function BookReader({ language, slug }: { language: Language; slug: strin
       .catch(() => {});
   };
   const open = (chapter: number, opening: Opening, turn?: OpeningTurn) => {
+    closeTutor();
     setContentsOpen(false);
     setRequest((previous) => ({ chapter, opening, revision: (previous?.revision ?? 0) + 1, turn }));
   };
@@ -484,7 +645,7 @@ export function BookReader({ language, slug }: { language: Language; slug: strin
     <div
       ref={screen}
       className="fixed inset-0 z-10 flex flex-col bg-[var(--reader-paper)] text-[var(--reader-ink)]"
-      style={{ "--reader-paper": theme.background, "--reader-ink": theme.ink, "--reader-muted": theme.muted } as CSSProperties}
+      style={{ "--reader-paper": theme.background, "--reader-ink": theme.ink, "--reader-muted": theme.muted, "--reader-highlight": theme.highlight } as CSSProperties}
       data-page="book-reader"
     >
       <ReaderBar
@@ -510,7 +671,14 @@ export function BookReader({ language, slug }: { language: Language; slug: strin
           paused={contentsOpen || settingsOpen}
           language={language}
           remember={remember(view.position.chapter)}
-          turned={() => setBarShown(false)}
+          turned={() => { closeTutor(); setBarShown(false); }}
+          highlight={tutorView?.highlight ? { paragraph: tutorView.paragraph_index, range: tutorView.highlight } : undefined}
+          tapText={(paragraph, offset) => {
+            const text = view.paragraphs[paragraph].text!;
+            tutorRun.current++;
+            applyTutor(book_sentence_start(language, nativeLanguage, paragraph, text, offset));
+          }}
+          tapAway={tutor && closeTutor}
           turnPast={(direction, before) => {
             const chapter = direction === 1 ? view.next : view.previous;
             if (chapter != null) open(chapter, direction === 1 ? 0 : "end", { before, direction, layout });
@@ -522,6 +690,7 @@ export function BookReader({ language, slug }: { language: Language; slug: strin
           {failed ? <span role="alert">{copy.failed}</span> : copy.loading}
         </p>
       )}
+      {tutorView && <SentenceTutor view={tutorView} language={language} send={sendTutor} close={closeTutor} />}
       {view && (
         <Dialog open={contentsOpen} onOpenChange={setContentsOpen}>
           <DialogContent className="max-h-[85dvh] overflow-y-auto rounded-3xl border-current/15" style={{ background: theme.background, color: theme.ink }}>
@@ -551,7 +720,7 @@ export function BooksPage() {
   if (!deck.course) return null;
   const language = deck.course.targetLanguage;
   return slug ? (
-    <BookReader key={`${language}-${slug}`} language={language} slug={slug} />
+    <BookReader key={`${language}-${slug}`} language={language} nativeLanguage={deck.course.nativeLanguage} slug={slug} />
   ) : (
     <Catalog key={language} language={language} nativeLanguage={deck.course.nativeLanguage} />
   );

@@ -40,7 +40,7 @@ struct CourseHome: View {
                             DictionaryScreen(session: session, searching: searching)
                                 .navigationTransition(.zoom(sourceID: DictionarySearchBar.id, in: dictionarySearch))
                         case .books: BooksScreen(language: deck.get_target_language(), nativeLanguage: deck.get_native_language())
-                        case let .book(slug): BookReaderScreen(language: deck.get_target_language(), slug: slug)
+                        case let .book(slug): BookReaderScreen(language: deck.get_target_language(), nativeLanguage: deck.get_native_language(), slug: slug)
                         case .due: DueWordsScreen(review: review)
                         case .settings: SettingsScreen(session: session)
                         }

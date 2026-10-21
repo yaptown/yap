@@ -71,18 +71,10 @@ fn has_text(text: &str) -> bool {
     TEXT.is_match(text)
 }
 
-/// Starts partition the whole input: prefix joins the first piece, gaps join the
-/// preceding piece, and no starts means one piece. Model ends are never used.
-fn partition(text: &str, mut starts: Vec<usize>, language: Language) -> Vec<String> {
-    if let Some(first) = starts.first_mut() {
-        *first = 0;
-    } else {
-        starts.push(0);
-    }
-    starts.push(text.len());
-    starts
-        .windows(2)
-        .map(|bounds| cleanup_sentence(text[bounds[0]..bounds[1]].trim().into(), language))
+fn partition(text: &str, starts: Vec<usize>, language: Language) -> Vec<String> {
+    movie_subtitles::segment::sentence_ranges(text, starts)
+        .into_iter()
+        .map(|range| cleanup_sentence(text[range].trim().into(), language))
         .filter(|piece| has_text(piece))
         .collect()
 }
@@ -100,37 +92,15 @@ pub fn segment_local(
             .map(|sentence| {
                 let start = cursor + text[cursor..].find(&sentence).unwrap();
                 cursor = start + sentence.len();
-                start
+                text[..start].chars().count()
             })
             .collect()
     } else {
-        let offsets: Vec<_> = text
-            .char_indices()
-            .map(|(index, _)| index)
-            .chain(std::iter::once(text.len()))
-            .collect();
-        let hint = match language {
-            Language::French => lexide::Language::French,
-            Language::English => lexide::Language::English,
-            Language::German => lexide::Language::German,
-            Language::Hindi => lexide::Language::Hindi,
-            Language::Italian => lexide::Language::Italian,
-            Language::Japanese => lexide::Language::Japanese,
-            Language::Korean => lexide::Language::Korean,
-            Language::Russian => lexide::Language::Russian,
-            Language::PortugueseBrazilian | Language::PortugueseEuropean => {
-                lexide::Language::PortugueseBrazil
-            }
-            Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
-                lexide::Language::SpanishEuro
-            }
-            _ => anyhow::bail!("unsupported local reader segmentation language: {language}"),
-        };
         model
             .context("non-Chinese segmentation needs a local model")?
-            .segment_detailed(&text, Some(hint))
+            .segment_detailed(&text, movie_subtitles::segment::lexide_language(language))
             .into_iter()
-            .map(|sentence| offsets[sentence.start])
+            .map(|sentence| sentence.start)
             .collect()
     };
     Ok(partition(&text, starts, language))
@@ -188,11 +158,7 @@ mod tests {
     fn reader_partition_keeps_prefix_and_gaps_without_model_ends() {
         let text = "prefix α. β!";
         assert_eq!(
-            partition(
-                text,
-                vec![text.find('α').unwrap(), text.find('β').unwrap()],
-                Language::English
-            ),
+            partition(text, vec![7, 10], Language::English),
             ["prefix α.", "β!"]
         );
         assert_eq!(partition(text, vec![], Language::English), [text]);

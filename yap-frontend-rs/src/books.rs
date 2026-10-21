@@ -4,6 +4,9 @@ use bridgerton::Error;
 use language_utils::{
     Language,
     book::{Book, BookParagraph},
+    book_sentence::{
+        ExplainSentenceRequest, SentenceChatReply, SentenceChatRequest, SentenceExplanation,
+    },
 };
 use opfs::{DirectoryHandle as _, FileHandle as _, WritableFileStream as _};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
@@ -22,6 +25,7 @@ pub struct BooksCopy {
     pub text_smaller: String,
     pub text_larger: String,
     pub appearance: String,
+    pub close: String,
 }
 #[bridgerton::bridge]
 pub fn books_copy() -> BooksCopy {
@@ -37,6 +41,7 @@ pub fn books_copy() -> BooksCopy {
         text_smaller: yap_i18n::tr!("books-text-smaller"),
         text_larger: yap_i18n::tr!("books-text-larger"),
         appearance: yap_i18n::tr!("books-appearance"),
+        close: yap_i18n::tr!("common-close"),
     }
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -124,23 +129,30 @@ pub struct ReaderTheme {
     pub background: String,
     pub ink: String,
     pub muted: String,
+    /// Behind the sentence the tutor is explaining: `#rrggbbaa`, so the paper shows through.
+    pub highlight: String,
 }
 
 #[bridgerton::bridge]
 pub fn reader_themes(dark: bool) -> Vec<ReaderTheme> {
-    let palette = |id: &str, label: String, background: &str, ink: &str, muted: &str| ReaderTheme {
-        id: id.into(),
-        label,
-        background: background.into(),
-        ink: ink.into(),
-        muted: muted.into(),
-    };
+    let palette =
+        |id: &str, label: String, background: &str, ink: &str, muted: &str, highlight: &str| {
+            ReaderTheme {
+                id: id.into(),
+                label,
+                background: background.into(),
+                ink: ink.into(),
+                muted: muted.into(),
+                highlight: highlight.into(),
+            }
+        };
     let paper = palette(
         "paper",
         yap_i18n::tr!("books-theme-paper"),
         "#faf9f6",
         "#292823",
         "#77746c",
+        "#f2c94c59",
     );
     let night = palette(
         "night",
@@ -148,6 +160,7 @@ pub fn reader_themes(dark: bool) -> Vec<ReaderTheme> {
         "#101010",
         "#deddd8",
         "#96948f",
+        "#c9a2364d",
     );
     let mut system = if dark { night.clone() } else { paper.clone() };
     system.id = "system".into();
@@ -161,6 +174,7 @@ pub fn reader_themes(dark: bool) -> Vec<ReaderTheme> {
             "#efe5cf",
             "#443a2c",
             "#796b56",
+            "#d9a93a59",
         ),
         night,
     ]
@@ -447,6 +461,34 @@ pub async fn save_book_position(
     position: BookPosition,
 ) -> Result<(), Error> {
     write(&key(language, &slug, "position"), &position).await
+}
+
+#[bridgerton::bridge]
+pub async fn explain_book_sentence(
+    request: ExplainSentenceRequest,
+    access_token: Option<String>,
+) -> Result<SentenceExplanation, Error> {
+    crate::utils::fetch_ai_json(
+        fetch_happen::Method::POST,
+        "/book-sentence/explain",
+        Some(request),
+        access_token.as_ref(),
+    )
+    .await
+}
+
+#[bridgerton::bridge]
+pub async fn chat_book_sentence(
+    request: SentenceChatRequest,
+    access_token: Option<String>,
+) -> Result<SentenceChatReply, Error> {
+    crate::utils::fetch_ai_json(
+        fetch_happen::Method::POST,
+        "/book-sentence/chat",
+        Some(request),
+        access_token.as_ref(),
+    )
+    .await
 }
 
 #[cfg(test)]

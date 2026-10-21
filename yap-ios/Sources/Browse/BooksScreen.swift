@@ -92,8 +92,13 @@ private enum Opening: Equatable { case paragraph(Int), end }
 
 struct BookReaderScreen: View {
     let language: Language
+    let nativeLanguage: Language
     let slug: String
     @Environment(\.dismiss) private var dismiss
+    @Environment(AuthStore.self) private var auth
+    /// The tapped sentence's tutor, shared with web through Rust's `book_sentence` reducer.
+    @State private var tutor: BookSentenceState?
+    @State private var tutorTask: Task<Void, Never>?
     @State private var view: BookReaderView?
     @State private var opening = Opening.paragraph(0)
     /// Bumped on every completed load, so reopening the current chapter starts it afresh.
@@ -115,8 +120,18 @@ struct BookReaderScreen: View {
             let layout = reader_layout(width: geometry.size.width, height: geometry.size.height, text_size: textSize.map(UInt32.init))
             ZStack(alignment: .top) {
                 if let view {
+                    let highlight = tutor.map { book_sentence_view(state: $0) }.flatMap { tutor in
+                        tutor.highlight.map { (paragraph: Int(tutor.paragraph_index), range: $0) }
+                    }
                     ChapterPages(view: view, layout: layout, paper: paper, controlsShown: barShown, opening: opening, remember: remember,
-                                 turned: { withAnimation { barShown = false } },
+                                 highlight: highlight,
+                                 tapText: { paragraph, offset in
+                                     guard let text = view.paragraphs[paragraph].text else { return }
+                                     startTutor(book_sentence_start(language: language, native_language: nativeLanguage,
+                                                                    paragraph_index: UInt64(paragraph), paragraph: text, utf16_offset: UInt32(offset)))
+                                 },
+                                 tapAway: tutor == nil ? nil : { closeTutor() },
+                                 turned: { closeTutor(); withAnimation { barShown = false } },
                                  turnPast: { direction in
                                      guard let chapter = direction == 1 ? view.next : view.previous else { return false }
                                      Task { await load(chapter: chapter, opening: direction == 1 ? .paragraph(0) : .end) }
@@ -174,12 +189,29 @@ struct BookReaderScreen: View {
                 }.presentationDetents([.medium, .large])
             }
         }
+        .sheet(isPresented: Binding(get: { tutor != nil }, set: { if !$0 { closeTutor() } })) {
+            if let tutor {
+                SentenceTutor(view: book_sentence_view(state: tutor), lang: view?.lang ?? "", paper: paper, send: sendTutor)
+            }
+        }
         .task { await load() }
         #if DEBUG
         .onAppear { DebugHarness.shared.activeScreen = .bookReader }
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
             guard DebugHarness.shared.activeScreen == .bookReader else { return }
             let command = DebugHarness.shared.command
+            let words = command.split(separator: " ")
+            if words.first == "tap-text", words.count == 3, let paragraph = Int(words[1]), let offset = UInt32(words[2]),
+               let text = view?.paragraphs[paragraph].text {
+                startTutor(book_sentence_start(language: language, native_language: nativeLanguage,
+                                               paragraph_index: UInt64(paragraph), paragraph: text, utf16_offset: offset))
+            }
+            if command.hasPrefix("ask ") { sendTutor(.DraftChanged(text: String(command.dropFirst(4)))); sendTutor(.Ask) }
+            if command == "tutor-close" { closeTutor() }
+            if command == "status", let tutor {
+                let view = book_sentence_view(state: tutor)
+                DebugHarness.log("tutor sentence=\(view.sentence ?? "-") word=\(view.word ?? "-") status=\(view.status ?? "-") messages=\(view.messages.count)")
+            }
             if command == "contents" { showingContents.toggle() }
             if command == "bar" { withAnimation { barShown.toggle() } }
             if command.hasPrefix("chapter "), let chapter = UInt64(command.dropFirst(8)) { Task { await load(chapter: chapter, opening: .paragraph(0)) } }
@@ -196,11 +228,43 @@ struct BookReaderScreen: View {
             guard request == requestID, !Task.isCancelled else { return }
             let result = try await load_book(language: language, slug: slug, position: chapter.map { BookPosition(chapter: $0, paragraph: 0) })
             guard request == requestID, !Task.isCancelled else { return }
+            closeTutor()
             view = result
             opening = chapter == nil ? .paragraph(Int(result.position.paragraph)) : requested
             loads += 1
             failed = false
         } catch { if request == requestID { failed = true } }
+    }
+    private func startTutor(_ step: BookSentenceStep) {
+        tutorTask?.cancel()
+        applyTutor(step)
+    }
+    private func closeTutor() {
+        tutorTask?.cancel()
+        tutor = nil
+    }
+    private func sendTutor(_ event: BookSentenceEvent) {
+        guard let tutor else { return }
+        applyTutor(book_sentence_transition(state: tutor, event: event))
+    }
+    private func applyTutor(_ step: BookSentenceStep) {
+        tutor = step.state
+        let token = auth.accessToken
+        for effect in step.effects {
+            tutorTask = Task { @MainActor in
+                let event: BookSentenceEvent
+                switch effect {
+                case let .Explain(request):
+                    do { event = .Explained(explanation: try await explain_book_sentence(request: request, access_token: token)) }
+                    catch { event = .ExplainFailed }
+                case let .Chat(request):
+                    do { event = .Replied(reply: try await chat_book_sentence(request: request, access_token: token)) }
+                    catch { event = .ReplyFailed }
+                }
+                guard !Task.isCancelled else { return }
+                sendTutor(event)
+            }
+        }
     }
     private func remember(_ paragraph: Int) {
         guard let view else { return }
@@ -220,9 +284,14 @@ private struct Paper {
     var muted: Color { Color(uiColor: mutedInk) }
     var ink: UIColor { Self.color(theme.ink) }
     var mutedInk: UIColor { Self.color(theme.muted) }
+    var highlight: UIColor { Self.color(theme.highlight) }
+    /// `#rrggbb`, or `#rrggbbaa` with alpha.
     private static func color(_ hex: String) -> UIColor {
-        let rgb = UInt32(hex.dropFirst(), radix: 16) ?? 0
-        return UIColor(red: CGFloat((rgb >> 16) & 255) / 255, green: CGFloat((rgb >> 8) & 255) / 255, blue: CGFloat(rgb & 255) / 255, alpha: 1)
+        let digits = hex.dropFirst()
+        let value = UInt32(digits, radix: 16) ?? 0
+        let rgba = digits.count == 8 ? value : value << 8 | 255
+        func channel(_ shift: UInt32) -> CGFloat { CGFloat((rgba >> shift) & 255) / 255 }
+        return UIColor(red: channel(24), green: channel(16), blue: channel(8), alpha: channel(0))
     }
 }
 
@@ -264,6 +333,12 @@ private struct ChapterPages: View {
     let controlsShown: Bool
     let opening: Opening
     let remember: (Int) -> Void
+    /// The tutor's sentence, as a UTF-16 range within its paragraph.
+    let highlight: (paragraph: Int, range: BookSentenceHighlight)?
+    /// A tap on a paragraph's text, at a UTF-16 offset.
+    let tapText: (Int, Int) -> Void
+    /// While the tutor is open, a tap off the text closes it instead of turning or showing the bar.
+    let tapAway: (() -> Void)?
     /// Called on every page turn the reader makes.
     let turned: () -> Void
     /// Turning beyond the first or last page; false at the start or end of the book.
@@ -279,7 +354,8 @@ private struct ChapterPages: View {
     var body: some View {
         let spreads = pagination?.spreads(layout) ?? 1
         CurlPages(pagination: pagination, layout: layout, paper: paper, spread: $spread,
-                  hasPrevious: view.previous != nil, hasNext: view.next != nil, tapMiddle: tapMiddle)
+                  hasPrevious: view.previous != nil, hasNext: view.next != nil,
+                  tapText: tapText, tapAway: tapAway, tapMiddle: tapMiddle)
         .id(layout.columns)
         .accessibilityScrollAction { direction in
             if direction == .trailing { turn(1) }
@@ -301,6 +377,8 @@ private struct ChapterPages: View {
             }.font(.caption).foregroundStyle(paper.muted).padding(.top, 28).opacity(controlsShown ? 0 : 1).allowsHitTesting(false)
         }
         .onChange(of: paper.theme) { _, _ in place(layout) }
+        .onChange(of: highlight?.paragraph, initial: true) { _, _ in pagination?.highlight(highlight, color: paper.highlight) }
+        .onChange(of: highlight?.range) { _, _ in pagination?.highlight(highlight, color: paper.highlight) }
         .onChange(of: layout, initial: true) { _, layout in place(layout) }
         .onChange(of: spread) { old, new in
             if new < 0 || new >= spreads {
@@ -318,6 +396,8 @@ private struct ChapterPages: View {
             guard DebugHarness.shared.activeScreen == .bookReader else { return }
             let command = DebugHarness.shared.command
             if command == "next" { turn(1) }
+            let words = command.split(separator: " ").compactMap { Double($0) }
+            if command.hasPrefix("tap "), words.count == 2 { NotificationCenter.default.post(name: .debugReaderTap, object: CGPoint(x: words[0], y: words[1])) }
             if command == "previous" { turn(-1) }
             if command.hasPrefix("page "), let page = Int(command.dropFirst(5)) { withAnimation { spread = page - 1 } }
             if command == "status" { DebugHarness.log("book chapter=\(view.position.chapter) page=\(spread + 1)/\(spreads) anchor=\(String(describing: anchor))") }
@@ -332,6 +412,7 @@ private struct ChapterPages: View {
     }
     private func place(_ layout: ReaderLayout) {
         let pagination = Pagination(view: view, layout: layout, paper: paper)
+        pagination.highlight(highlight, color: paper.highlight)
         self.pagination = pagination
         let spreads = pagination.spreads(layout)
         let target = switch anchor ?? opening {
@@ -357,6 +438,8 @@ private struct CurlPages: UIViewControllerRepresentable {
     @Binding var spread: Int
     let hasPrevious: Bool
     let hasNext: Bool
+    let tapText: (Int, Int) -> Void
+    let tapAway: (() -> Void)?
     let tapMiddle: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -371,6 +454,12 @@ private struct CurlPages: UIViewControllerRepresentable {
         let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tap(_:)))
         tap.delegate = context.coordinator
         controller.view.addGestureRecognizer(tap)
+        #if DEBUG
+        NotificationCenter.default.addObserver(forName: .debugReaderTap, object: nil, queue: .main) { [weak coordinator = context.coordinator, weak controller] note in
+            let point = note.object as! CGPoint
+            MainActor.assumeIsolated { if let controller { coordinator?.tap(at: controller.view.convert(point, from: nil), in: controller.view) } }
+        }
+        #endif
         for direction: UISwipeGestureRecognizer.Direction in [.left, .right] {
             let swipe = UISwipeGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.swipe(_:)))
             swipe.direction = direction
@@ -457,8 +546,17 @@ private struct CurlPages: UIViewControllerRepresentable {
             parent.spread = next
         }
         @objc func tap(_ recognizer: UITapGestureRecognizer) {
-            guard !turning, let view = recognizer.view else { return }
-            let x = recognizer.location(in: view).x / view.bounds.width
+            guard let view = recognizer.view else { return }
+            tap(at: recognizer.location(in: view), in: view)
+        }
+        func tap(at point: CGPoint, in view: UIView) {
+            guard !turning else { return }
+            if let canvas = view.hitTest(point, with: nil) as? PageCanvas.Canvas,
+               let hit = canvas.character(at: view.convert(point, to: canvas)) {
+                return parent.tapText(hit.paragraph, hit.offset)
+            }
+            if let tapAway = parent.tapAway { return tapAway() }
+            let x = point.x / view.bounds.width
             if x < 0.3 { step(-1) } else if x > 0.7 { step(1) } else { parent.tapMiddle() }
         }
         @objc func swipe(_ recognizer: UISwipeGestureRecognizer) { step(recognizer.direction == .left ? 1 : -1) }
@@ -472,6 +570,10 @@ private struct CurlPages: UIViewControllerRepresentable {
     private(set) var containers: [NSTextContainer] = []
     /// Where each paragraph starts in the text.
     private let starts: [Int]
+    /// Each paragraph's text, nil for scene breaks.
+    private let texts: [NSRange?]
+    /// The canvases drawing these pages, to redraw when the highlight moves.
+    let canvases = NSHashTable<PageCanvas.Canvas>.weakObjects()
     let lang: String
 
     init(view: BookReaderView, layout: ReaderLayout, paper: Paper) {
@@ -500,8 +602,10 @@ private struct CurlPages: UIViewControllerRepresentable {
             NSAttributedString.Key(kCTLanguageAttributeName as String): view.lang,
         ]
         var starts: [Int] = []
+        var texts: [NSRange?] = []
         for (index, paragraph) in view.paragraphs.enumerated() {
             starts.append(text.length)
+            texts.append(paragraph.text.map { NSRange(location: text.length, length: ($0 as NSString).length) })
             let last = index == view.paragraphs.count - 1
             if let string = paragraph.text {
                 let indented = index > 0 && view.paragraphs[index - 1].text != nil
@@ -524,6 +628,7 @@ private struct CurlPages: UIViewControllerRepresentable {
                                       .paragraphStyle: style { $0.alignment = .center; $0.paragraphSpacingBefore = 40 }])
         }
         self.starts = starts
+        self.texts = texts
         lang = view.lang
         storage = NSTextStorage(attributedString: text)
         storage.addLayoutManager(layoutManager)
@@ -550,6 +655,30 @@ private struct CurlPages: UIViewControllerRepresentable {
         return max(0, (starts.lastIndex { $0 <= start }) ?? 0)
     }
 
+    /// The paragraph and UTF-16 offset of the character drawn under a point on a page.
+    func character(at point: CGPoint, onPage page: Int) -> (paragraph: Int, offset: Int)? {
+        guard containers.indices.contains(page) else { return nil }
+        let container = containers[page]
+        let glyph = layoutManager.glyphIndex(for: point, in: container)
+        guard layoutManager.boundingRect(forGlyphRange: NSRange(location: glyph, length: 1), in: container).contains(point) else { return nil }
+        let character = layoutManager.characterIndexForGlyph(at: glyph)
+        guard let paragraph = texts.firstIndex(where: { $0.map { NSLocationInRange(character, $0) } ?? false }) else { return nil }
+        return (paragraph, character - starts[paragraph])
+    }
+
+    func highlight(_ highlight: (paragraph: Int, range: BookSentenceHighlight)?, color: UIColor) {
+        // A drawing-only attribute: pages keep their line breaks.
+        storage.beginEditing()
+        storage.removeAttribute(.backgroundColor, range: NSRange(location: 0, length: storage.length))
+        if let highlight, starts.indices.contains(highlight.paragraph) {
+            let start = starts[highlight.paragraph] + Int(highlight.range.start)
+            storage.addAttribute(.backgroundColor, value: color,
+                                 range: NSRange(location: start, length: Int(highlight.range.end - highlight.range.start)))
+        }
+        storage.endEditing()
+        canvases.allObjects.forEach { $0.setNeedsDisplay() }
+    }
+
     /// A page's text, for VoiceOver, since pages are drawn as glyphs.
     func text(onPage page: Int) -> String {
         guard containers.indices.contains(page) else { return "" }
@@ -563,6 +692,10 @@ private struct CurlPages: UIViewControllerRepresentable {
     }
 }
 
+#if DEBUG
+private extension Notification.Name { static let debugReaderTap = Notification.Name("yap-debug-reader-tap") }
+#endif
+
 /// Draws one page's glyphs from the shared layout manager.
 private struct PageCanvas: UIViewRepresentable {
     let pagination: Pagination
@@ -571,6 +704,7 @@ private struct PageCanvas: UIViewRepresentable {
     func updateUIView(_ canvas: Canvas, context: Context) {
         canvas.pagination = pagination
         canvas.page = page
+        pagination.canvases.add(canvas)
         canvas.accessibilityLabel = pagination.text(onPage: page)
         canvas.accessibilityLanguage = pagination.lang
         canvas.setNeedsDisplay()
@@ -586,11 +720,81 @@ private struct PageCanvas: UIViewRepresentable {
             accessibilityTraits = .staticText
         }
         required init?(coder: NSCoder) { fatalError() }
+        func character(at point: CGPoint) -> (paragraph: Int, offset: Int)? { pagination?.character(at: point, onPage: page) }
         override func draw(_ rect: CGRect) {
             guard let pagination, pagination.containers.indices.contains(page) else { return }
             let glyphs = pagination.layoutManager.glyphRange(for: pagination.containers[page])
+            pagination.layoutManager.drawBackground(forGlyphRange: glyphs, at: .zero)
             pagination.layoutManager.drawGlyphs(forGlyphRange: glyphs, at: .zero)
         }
+    }
+}
+
+/// The tapped sentence, its translation and the tapped word, then a short chat about it.
+/// Pages stay tappable behind the sheet, so tapping another word moves the tutor there.
+private struct SentenceTutor: View {
+    let view: BookSentenceView
+    /// The book's BCP 47 language, for the target-language sentence.
+    let lang: String
+    let paper: Paper
+    let send: (BookSentenceEvent) -> Void
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollViewReader { scroll in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        if let sentence = view.sentence {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(sentence).font(.system(.title3, design: .serif))
+                                    .typesettingLanguage(Locale.Language(identifier: lang)).textSelection(.enabled)
+                                if let translation = view.translation { Text(translation).foregroundStyle(paper.muted) }
+                            }
+                        }
+                        if let word = view.word, let explanation = view.word_explanation {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(word).font(.system(.headline, design: .serif)).typesettingLanguage(Locale.Language(identifier: lang))
+                                Text(explanation)
+                            }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                                .background(paper.text.opacity(0.05), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
+                        ForEach(Array(view.messages.enumerated()), id: \.offset) { _, message in
+                            if message.from_learner {
+                                Text(message.text).padding(.horizontal, 14).padding(.vertical, 10)
+                                    .background(paper.text.opacity(0.08), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.leading, 48)
+                            } else {
+                                Text(message.text).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                        if let status = view.status {
+                            HStack(spacing: 10) {
+                                if !view.status_is_error { ProgressView().tint(paper.muted) }
+                                Text(status).foregroundStyle(paper.muted)
+                                if let retry = view.retry_label {
+                                    Button(retry) { send(.Retry) }.fontWeight(.semibold)
+                                }
+                            }
+                        }
+                        Color.clear.frame(height: 0).id("end")
+                    }.padding(.horizontal, 24).padding(.top, 28).padding(.bottom, 12)
+                }
+                .onChange(of: view.messages.count) { _, _ in withAnimation { scroll.scrollTo("end", anchor: .bottom) } }
+            }
+            HStack(spacing: 8) {
+                TextField(view.placeholder, text: Binding(get: { view.draft }, set: { send(.DraftChanged(text: $0)) }))
+                    .submitLabel(.send).onSubmit { send(.Ask) }
+                Button { send(.Ask) } label: { Image(systemName: "arrow.up.circle.fill").font(.title2) }
+                    .disabled(!view.can_send).opacity(view.can_send ? 1 : 0.3).accessibilityLabel(view.send_label)
+            }.padding(.leading, 18).padding(.trailing, 6).frame(minHeight: 48)
+                .background(paper.text.opacity(0.06), in: Capsule())
+                .padding(.horizontal, 16).padding(.bottom, 12)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(paper.text)
+        .presentationDetents([.medium, .large])
+        .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+        .presentationBackground(paper.background)
+        .presentationDragIndicator(.visible)
     }
 }
 

@@ -164,6 +164,30 @@ pub async fn hit_ai_server(
     req.send().await
 }
 
+/// Perform a request against the AI backend and decode its JSON body.
+pub(crate) async fn fetch_ai_json<T: serde::de::DeserializeOwned>(
+    method: fetch_happen::Method,
+    path: &str,
+    request: Option<impl serde::Serialize>,
+    access_token: Option<&String>,
+) -> Result<T, bridgerton::Error> {
+    let response = hit_ai_server(method, path, request, access_token)
+        .await
+        .map_err(|e| bridgerton::Error::new(format!("Request error: {e:?}")))?;
+
+    if !response.ok() {
+        return Err(bridgerton::Error::new(format!(
+            "HTTP error: {}",
+            response.status()
+        )));
+    }
+
+    response
+        .json()
+        .await
+        .map_err(|e| bridgerton::Error::new(format!("Response parsing error: {e:?}")))
+}
+
 #[cfg(test)]
 mod packs_origin_tests {
     use super::*;

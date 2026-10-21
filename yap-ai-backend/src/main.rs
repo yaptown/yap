@@ -33,6 +33,7 @@ use std::sync::LazyLock;
 
 mod anki_package;
 mod anki_tts;
+mod book_sentence;
 mod deck_token;
 mod packs;
 mod tts_cache;
@@ -2307,6 +2308,8 @@ fn app() -> Router {
         .route("/tts/google", post(google_text_to_speech))
         .route("/tts/openai", post(openai_text_to_speech))
         .route("/tts/gemini", post(gemini_text_to_speech))
+        .route("/book-sentence/explain", post(book_sentence::explain))
+        .route("/book-sentence/chat", post(book_sentence::chat))
         .route("/autograde-translation", post(autograde_translation))
         .route("/autograde-transcription", post(autograde_transcription))
         .route(

@@ -24,7 +24,9 @@ enum DebugScreen: String {
 /// Commands are matched in the screen that owns them (grep `DebugHarness.shared.command`);
 /// `status` logs the current state, `tab learn|stats|dictionary|books|settings` switches tabs.
 /// Books: `book SLUG` opens a reader; `chapter N`, `page N`, `next`, `previous`
-/// (pages), `bar`, `text-size STEP` and `contents` drive it.
+/// (pages), `bar`, `text-size STEP` and `contents` drive it. `tap-text PARAGRAPH UTF16`
+/// opens the sentence tutor as a tap there would, `ask TEXT` asks it, `tutor-close` closes it;
+/// `tap X Y` taps the page at a screen point, through the reader's own tap handling.
 @Observable @MainActor final class DebugHarness {
     static let shared = DebugHarness()
     var fixture: Fixture?

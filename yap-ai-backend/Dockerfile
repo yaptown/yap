@@ -15,11 +15,12 @@ COPY libraries/rate-limit/Cargo.toml libraries/rate-limit/Cargo.toml
 COPY libraries/phoneme-verify/Cargo.toml libraries/phoneme-verify/Cargo.toml
 COPY libraries/google-speech/Cargo.toml libraries/google-speech/Cargo.toml
 COPY libraries/autograde-core/Cargo.toml libraries/autograde-core/Cargo.toml
+COPY libraries/movie-subtitles/Cargo.toml libraries/movie-subtitles/Cargo.toml
 COPY libraries/bridgerton/Cargo.toml libraries/bridgerton/Cargo.toml
 COPY libraries/bridgerton/macros/Cargo.toml libraries/bridgerton/macros/Cargo.toml
 # Trim the workspace to the backend and its transitive path dependencies.
 # cargo-chef needs every manifest, even for crates only reached indirectly.
-RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-ai-backend",\n    "language-utils",\n    "libraries/audio-codec",\n    "libraries/whisper",\n    "libraries/rate-limit",\n    "libraries/phoneme-verify",\n    "libraries/google-speech",\n    "libraries/autograde-core",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n]' Cargo.toml
+RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-ai-backend",\n    "language-utils",\n    "libraries/audio-codec",\n    "libraries/whisper",\n    "libraries/rate-limit",\n    "libraries/phoneme-verify",\n    "libraries/google-speech",\n    "libraries/autograde-core",\n    "libraries/movie-subtitles",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n]' Cargo.toml
 # cargo-chef needs stub files for every target declared in the manifests
 RUN mkdir -p yap-ai-backend/src && echo "fn main() {}" > yap-ai-backend/src/main.rs
 RUN mkdir -p language-utils/src && touch language-utils/src/lib.rs
@@ -29,6 +30,7 @@ RUN mkdir -p libraries/rate-limit/src && touch libraries/rate-limit/src/lib.rs
 RUN mkdir -p libraries/phoneme-verify/src && touch libraries/phoneme-verify/src/lib.rs
 RUN mkdir -p libraries/google-speech/src && touch libraries/google-speech/src/lib.rs
 RUN mkdir -p libraries/autograde-core/src && touch libraries/autograde-core/src/lib.rs
+RUN mkdir -p libraries/movie-subtitles/src && touch libraries/movie-subtitles/src/lib.rs
 RUN mkdir -p libraries/bridgerton/src libraries/bridgerton/tests libraries/bridgerton/macros/src \
     && touch libraries/bridgerton/src/lib.rs \
     && echo "fn main() {}" > libraries/bridgerton/tests/tokio_context.rs \
@@ -41,6 +43,8 @@ FROM chef AS builder
 # it to phonemize what the user heard and what they wrote.
 RUN apt-get update && apt-get install -y \
     libopus-dev \
+    libssl-dev \
+    curl \
     pkg-config \
     cmake \
     && rm -rf /var/lib/apt/lists/*
@@ -57,6 +61,7 @@ COPY libraries/rate-limit libraries/rate-limit
 COPY libraries/phoneme-verify libraries/phoneme-verify
 COPY libraries/google-speech libraries/google-speech
 COPY libraries/autograde-core libraries/autograde-core
+COPY libraries/movie-subtitles libraries/movie-subtitles
 COPY libraries/bridgerton libraries/bridgerton
 # Drop target/ within the same layer: it's ~hundreds of MB of incremental
 # artifacts that change every commit, and mode=max cache export would ship
@@ -65,6 +70,12 @@ RUN cargo build --release --bin ai-backend \
     && cp target/release/ai-backend /app/ai-backend \
     && cp -r "$(find /usr/local/cargo/git/checkouts -type d -path '*/g2p-*/*/python' | head -1)" /app/g2p-python \
     && rm -rf target
+
+# Keep cold starts offline: parsley's sentence model is only about 4 MB.
+RUN mkdir -p /app/lexide-models \
+    && curl --fail --location --retry 3 \
+       https://huggingface.co/anchpop/lexide-parsley/resolve/main/onnx/sentence_segmenter.safetensors \
+       --output /app/lexide-models/sentence_segmenter.safetensors
 
 # Runtime stage with required libraries.
 # NOTE: must be the same distro as the builder stage above (or newer), or the
@@ -94,5 +105,7 @@ COPY --from=builder /app/g2p-python /opt/g2p-python
 RUN uv python install 3.13 \
     && for p in thai korean; do uv sync --locked --project /opt/g2p-python/$p; done \
     && rm -rf /opt/g2p-python/*/.venv
+COPY --from=builder /app/lexide-models /opt/lexide-models
+ENV LEXIDE_MODEL_DIR=/opt/lexide-models
 COPY --from=builder /app/ai-backend /usr/local/bin/ai-backend
 ENTRYPOINT ["/usr/local/bin/ai-backend"]

@@ -23,7 +23,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective October 13, 2026.</p>
+            <p className="text-sm">Effective October 20, 2026.</p>
           </div>
         </Card>
 
@@ -67,7 +67,11 @@ export function PrivacyPage() {
               microphone recording is sent to our server and to AI providers to
               generate feedback (the iOS app doesn't use the microphone). When
               you type answers to challenges, the answer is sent to AI
-              providers for grading. The iOS app also saves unfinished typed
+              providers for grading. When you tap a word in a book, the paragraph
+              and tapped word are sent through our server to Google Gemini for
+              translation and explanation. Questions you type in the book tutor
+              and the conversation so far are also sent to Gemini to answer you.
+              The iOS app also saves unfinished typed
               answers, tapped-word hints, and grading results locally on your
               device so you can resume an interrupted review. That pending
               review is cleared when you continue. These are processed to give you feedback,
@@ -132,7 +136,8 @@ export function PrivacyPage() {
               <li>Amazon Web Services — some backend processing and storage</li>
               <li>
                 AI providers (Google, OpenAI, ElevenLabs) — grading practice
-                answers, pronunciation feedback, and generating audio
+                answers, pronunciation feedback, book translations and tutoring,
+                and generating audio
               </li>
             </ul>
           </div>

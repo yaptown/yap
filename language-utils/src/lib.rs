@@ -1,4 +1,5 @@
 pub mod book;
+pub mod book_sentence;
 mod han_script_tables;
 use han_script_tables::{SIMPLIFIED_ONLY, TRADITIONAL_ONLY};
 pub mod clip_content_ratings;

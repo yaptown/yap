@@ -3,6 +3,8 @@
 //! this crate must also support a small standalone WASM for the MCP widget.
 #[macro_use]
 pub mod palette;
+pub mod book_sentence;
+pub use book_sentence::*;
 pub mod deck_load;
 pub use deck_load::*;
 

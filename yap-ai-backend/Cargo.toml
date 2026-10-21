@@ -33,9 +33,10 @@ dotenvy = "0.15.7"
 uuid = { version = "1.23", features = ["serde", "v4"] }
 chrono.workspace = true
 language-utils = { path = "../language-utils" }
+movie-subtitles = { path = "../libraries/movie-subtitles" }
 autograde-core = { path = "../libraries/autograde-core" }
 g2p.workspace = true
-lexide = { workspace = true, features = ["pronunciation", "pronunciation-remote"] }
+lexide = { workspace = true, features = ["pronunciation", "pronunciation-remote", "segment"] }
 tsify.workspace = true
 wasm-bindgen.workspace = true
 postgrest = "1.6"
@@ -46,6 +47,7 @@ unicode-normalization.workspace = true
 rusty-s3 = "0.10"
 hmac = "0.13"
 sha2 = "0.11"
+unicode-segmentation = "1.13.3"
 
 [dev-dependencies]
 tempfile.workspace = true
