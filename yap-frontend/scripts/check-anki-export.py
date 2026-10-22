@@ -94,7 +94,7 @@ def check_sql(package, plan, directory):
     with zipfile.ZipFile(package) as archive:
         assert set(archive.namelist()) == {"collection.anki2", "media", "0", "1", "2", "3"}
         media = json.loads(archive.read("media"))
-        assert set(media.values()) == {"human.ogg", "poster.jpg", "tts.wav", "word.wav"}, media
+        assert set(media.values()) == {"human.mp3", "poster.jpg", "tts.wav", "word.wav"}, media
         for key in media:
             assert archive.read(key)
         archive.extract("collection.anki2", directory)

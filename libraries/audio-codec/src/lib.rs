@@ -1,8 +1,10 @@
 //! Decode and encode provider containers to f32/i16 PCM, plus signal sanity checks.
 //! Provider-agnostic audio helpers.
 
-#[cfg(feature = "full")]
-use anyhow::{Context, Result};
+#[cfg(all(test, feature = "full"))]
+use anyhow::Context;
+#[cfg(any(feature = "full", feature = "mp3-encode"))]
+use anyhow::Result;
 
 mod ogg_caf;
 pub use ogg_caf::ogg_opus_to_caf;
@@ -133,11 +135,26 @@ pub fn pcm_to_wav(samples: &[i16], sample_rate: u32) -> Vec<u8> {
     wav
 }
 
-/// 16-bit mono PCM as an Ogg Opus stream (RFC 7845), the container Cloud TTS
-/// hands back, so clips from every provider share one format in the packs
-/// and the caches. `sample_rate` must be one Opus accepts natively: 8, 12,
-/// 16, 24 or 48 kHz.
-#[cfg(feature = "full")]
+/// Mono speech at 48 kbps. Server/offline only: LAME must not ship in clients.
+#[cfg(feature = "mp3-encode")]
+pub fn encode_mp3(samples: &[i16], sample_rate: u32) -> Result<Vec<u8>> {
+    use mp3lame_encoder::{Bitrate, Builder, FlushGap, MonoPcm, Quality};
+    let mut encoder = Builder::new()
+        .ok_or_else(|| anyhow::anyhow!("LAME init failed"))?
+        .with_num_channels(1)?
+        .with_sample_rate(sample_rate)?
+        .with_brate(Bitrate::Kbps48)?
+        .with_quality(Quality::Best)?
+        .build()?;
+    let mut bytes = Vec::with_capacity(mp3lame_encoder::max_required_buffer_size(samples.len()));
+    encoder.encode_to_vec(MonoPcm(samples), &mut bytes)?;
+    bytes.reserve(7200);
+    encoder.flush_to_vec::<FlushGap>(&mut bytes)?;
+    Ok(bytes)
+}
+
+/// Legacy encoder used to test native playback of existing Ogg packs.
+#[cfg(all(test, feature = "full"))]
 pub fn encode_ogg_opus(samples: &[i16], sample_rate: u32) -> Result<Vec<u8>> {
     use ogg::writing::{PacketWriteEndInfo, PacketWriter};
 
@@ -214,8 +231,8 @@ pub fn encode_ogg_opus(samples: &[i16], sample_rate: u32) -> Result<Vec<u8>> {
 // --- audio decoders ---------------------------------------------------------
 
 /// Dispatches to the right decoder based on magic bytes. Handles the formats
-/// we actually see from our TTS providers and pipelines: OGG Opus (Google),
-/// WAV (Gemini), and MP3 (OpenAI and others).
+/// we actually see from our TTS providers and pipelines: OGG Opus (recordings/old caches),
+/// WAV (raw synthesis), and MP3 (published audio).
 #[cfg(feature = "full")]
 pub fn decode_audio_to_f32(bytes: &[u8]) -> Result<(Vec<f32>, u32), String> {
     if bytes.starts_with(b"OggS") {
@@ -350,46 +367,21 @@ pub fn decode_ogg_opus_to_f32(bytes: &[u8]) -> Result<(Vec<f32>, u32), String> {
     Ok((samples, DECODE_RATE))
 }
 
-#[cfg(all(test, feature = "full"))]
+#[cfg(all(test, feature = "full", feature = "mp3-encode"))]
 mod tests {
-    use super::*;
-
-    // A synthesized tone survives the Opus round trip with its length and
-    // level intact: what the packs store for Gemini clips decodes the same
-    // way as what Cloud TTS returns.
     #[test]
-    fn ogg_opus_round_trips_pcm() {
-        let rate = 24_000u32;
-        let len = rate as usize * 3 / 2;
-        let samples: Vec<i16> = (0..len)
+    fn mp3_round_trips_speech_rate_pcm() {
+        let rate = 24_000;
+        let samples: Vec<i16> = (0..rate)
             .map(|i| {
                 ((i as f32 * 440.0 * std::f32::consts::TAU / rate as f32).sin() * 12_000.0) as i16
             })
             .collect();
-        let ogg = encode_ogg_opus(&samples, rate).unwrap();
-        assert!(ogg.starts_with(b"OggS"));
-
-        // Our decoder neither drops the pre-skip nor trims to the final
-        // granule, so apply both here as a player would (RFC 7845 §4.4).
-        let head = ogg.windows(8).position(|w| w == b"OpusHead").unwrap();
-        let pre_skip = u16::from_le_bytes([ogg[head + 10], ogg[head + 11]]) as usize;
-        let (decoded, decoded_rate) = decode_audio_to_f32(&ogg).unwrap();
-        assert_eq!(decoded_rate, 48_000);
-        let len_48k = len * 48_000 / rate as usize;
-        assert!(
-            decoded.len() >= pre_skip + len_48k,
-            "encoder never flushed its lookahead"
-        );
-        let played = &decoded[pre_skip..pre_skip + len_48k];
-        let rms = |s: &[f32]| {
-            (s.iter().map(|x| (*x as f64).powi(2)).sum::<f64>() / s.len() as f64).sqrt()
-        };
-        assert!((0.2..0.5).contains(&rms(played)), "rms {}", rms(played));
-        // The last 5 ms of the input are still a tone, not the encoder's delay line.
-        assert!(
-            rms(&played[played.len() - 240..]) > 0.2,
-            "tail was lost to lookahead"
-        );
-        assert!(audio_defect(&ogg).is_none());
+        let bytes = super::encode_mp3(&samples, rate).unwrap();
+        let (decoded, decoded_rate) = super::decode_mp3_to_f32(&bytes).unwrap();
+        assert_eq!(decoded_rate, rate);
+        assert!((24_000..27_000).contains(&decoded.len()));
+        assert!(bytes.len() < 8_000);
+        assert!(super::audio_defect(&bytes).is_none());
     }
 }

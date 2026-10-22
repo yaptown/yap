@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-audio-codec = { path = "../audio-codec" }
+audio-codec = { path = "../audio-codec", features = ["mp3-encode"] }
 anyhow = "1.0"
 base64 = "0.22"
 log = { workspace = true }

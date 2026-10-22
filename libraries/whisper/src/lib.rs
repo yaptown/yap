@@ -214,7 +214,7 @@ impl GroqWhisper {
     /// Groq's plain JSON response has no word timestamps; `words` is empty.
     pub async fn transcribe(&self, request: &TranscribeRequest<'_>) -> Result<Transcript> {
         // Groq sniffs the container from the part's filename extension, so it has
-        // to match the bytes: Google returns Ogg Opus, Gemini WAV, the rest MP3.
+        // to match the bytes, including raw WAV and legacy Ogg pipeline inputs.
         let filename = if request.audio.starts_with(b"RIFF") {
             "audio.wav"
         } else if request.audio.starts_with(b"OggS") {

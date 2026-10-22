@@ -102,7 +102,8 @@ async function writeFixtures(buildApkg, output) {
     82, 73, 70, 70, 0, 0, 0, 0, 87, 65, 86, 69, 1, 2, 3,
   ]);
   const bundled = new Map([
-    ["human.ogg", new Uint8Array([79, 103, 103, 83, 1, 2, 3])],
+    // Human audio must also be renamed from its actual bytes, not this stale suffix.
+    ["human.wav", new Uint8Array([73, 68, 51, 1, 2, 3])],
     [
       "subs-clip",
       new TextEncoder().encode(
@@ -194,7 +195,7 @@ async function writeFixtures(buildApkg, output) {
         definition: hostileText,
         source: sentence(2, "").source,
         clip: sentence(2, "").clip,
-        audio: "human.ogg",
+        audio: "human.wav",
         subtitles: "subs-clip",
         tags: [
           "yap",
@@ -225,7 +226,7 @@ async function writeFixtures(buildApkg, output) {
     ],
     bundled: [
       {
-        filename: "human.ogg",
+        filename: "human.wav",
         source: { type: "HumanAudio", text: `Mot ${hostileText}` },
       },
       { filename: "poster.jpg", source: { type: "Poster", imdb_id: "tt0001" } },
@@ -320,7 +321,7 @@ async function writeFixtures(buildApkg, output) {
                     : "subs-clip",
                 );
           const filename =
-            source.type === "Poster" ? "poster.jpg" : "human.ogg";
+            source.type === "Poster" ? "poster.jpg" : "human.wav";
           assert(source.type !== "Tts");
           return bundled.get(filename);
         },

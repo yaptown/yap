@@ -360,7 +360,9 @@ pub async fn generate_pronunciation_audio(
                                 .map(|s| (s.text.clone(), s.start_ms, s.end_ms))
                                 .collect();
                             outcome.clip = Some(PronunciationClip {
-                                audio: Audio { bytes },
+                                audio: Audio {
+                                    bytes: crate::human_audio::encode_audio_to_mp3(&bytes).await?,
+                                },
                                 segments: timed,
                             });
                             outcome.passed = true;

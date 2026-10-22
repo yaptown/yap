@@ -694,7 +694,12 @@ async fn gemini_synthesize(
         language: request.language.tts_locale().to_string(),
     };
     match client.synthesize(&gemini_request).await {
-        Ok(Some(audio)) => Ok(Some(audio.to_wav())),
+        Ok(Some(audio)) => audio_codec::encode_mp3(&audio.samples, audio.sample_rate)
+            .map(Some)
+            .map_err(|error| {
+                eprintln!("Gemini MP3 encoding failed: {error}");
+                SynthError::Failed(StatusCode::BAD_GATEWAY)
+            }),
         Ok(None) => Ok(None),
         Err(e) => {
             eprintln!("Gemini TTS error: {e}");
@@ -1170,9 +1175,8 @@ static GEMINI_PRO_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
 });
 
 /// Gemini's OpenAI-compatible endpoint only accepts "wav" and "mp3" input
-/// audio, so Ogg Opus (what /tts/google returns) is re-encoded as 16-bit PCM
-/// WAV. WAV (what /tts/gemini returns) passes through labeled as such; MP3 is
-/// the fallback for everything else.
+/// audio. User recordings and old cached Ogg clips are converted to WAV;
+/// published TTS is MP3.
 fn gemini_input_audio(
     audio_bytes: &[u8],
 ) -> Result<tysm::chat_completions::InputAudio, StatusCode> {

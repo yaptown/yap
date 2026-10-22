@@ -5226,9 +5226,11 @@ const TTS_SYNTHESIS_REVISION: u32 = 2;
 ///
 /// - Gemini 3: no language was sent, so short text could come back read as
 ///   English ("De" as "day").
+/// - Gemini 4 / Google 3: publish MP3 instead of WAV/Ogg for AnkiMobile.
 fn synthesis_revision(provider: &TtsProvider) -> u32 {
     match provider {
-        TtsProvider::Gemini => 3,
+        TtsProvider::Gemini => 4,
+        TtsProvider::Google => 3,
         _ => TTS_SYNTHESIS_REVISION,
     }
 }

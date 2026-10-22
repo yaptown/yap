@@ -38,7 +38,7 @@ pub struct GoogleTtsRequest {
 /// every attempt was flagged as defective.
 #[derive(Debug, Clone)]
 pub struct GoogleTtsOutcome {
-    /// OGG/Opus-encoded audio bytes (the encoding we always request).
+    /// MP3-encoded audio bytes (the encoding we always request).
     pub audio_bytes: Vec<u8>,
     /// Total attempts made, including the one whose audio we returned.
     pub attempts: usize,
@@ -111,7 +111,7 @@ impl GoogleTtsClient {
                 name: request.voice_name.clone(),
             },
             audio_config: GoogleTtsAudioConfig {
-                audio_encoding: "OGG_OPUS".to_string(),
+                audio_encoding: "MP3".to_string(),
                 speaking_rate: request.speed,
             },
         };

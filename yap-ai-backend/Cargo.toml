@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-audio-codec = { path = "../libraries/audio-codec" }
+audio-codec = { path = "../libraries/audio-codec", features = ["mp3-encode"] }
 whisper = { path = "../libraries/whisper" }
 reqwest = { version = "0.13", default-features = false, features = [
     "json",

@@ -584,7 +584,7 @@ fn sentence_furigana(
 }
 
 fn human_filename(course: Course, text: &str) -> String {
-    format!("yap-word-{}.ogg", guid(course, "word", text))
+    format!("yap-word-{}.mp3", guid(course, "word", text))
 }
 fn poster_filename(imdb: &str) -> String {
     format!("yap-poster-{imdb}.jpg")
@@ -2472,7 +2472,7 @@ mod tests {
             [(
                 "word00".into(),
                 language_utils::Audio {
-                    bytes: b"OggSfixture".to_vec(),
+                    bytes: b"ID3fixture".to_vec(),
                 },
             )]
             .into_iter()
@@ -2511,7 +2511,7 @@ mod tests {
                 text: "word00".into()
             })
             .await,
-            Some(b"OggSfixture".to_vec())
+            Some(b"ID3fixture".to_vec())
         );
         assert_eq!(
             deck.anki_bundled_media(AnkiMediaSource::Poster {

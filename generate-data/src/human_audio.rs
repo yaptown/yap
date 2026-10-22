@@ -3,7 +3,7 @@
 //! Reads per-contributor recordings declared under `<source_data>/audio/`,
 //! runs each clip through the phonemic verifier (see [`crate::audio_verification`])
 //! so badly-mismatched takes never reach the language pack, and encodes the
-//! survivors to OGG/Opus for shipping.
+//! survivors to MP3 for shipping.
 
 use anyhow::Context;
 use futures::{StreamExt, TryStreamExt};
@@ -22,8 +22,7 @@ use std::path::{Path, PathBuf};
 /// which must contain an entry for every contributor subdirectory. We require this
 /// to be explicit so we never accidentally claim a volunteer contribution is paid.
 ///
-/// Each .wav is encoded to OGG/Opus via ffmpeg. The browser already supports this
-/// format (see `is_valid_audio_data` in yap-frontend-rs/src/audio.rs).
+/// Each .wav is encoded to MP3 via ffmpeg for playback on every client.
 pub async fn load_human_audio(
     source_data_path: &Path,
     word_to_pronunciation: &[(String, language_utils::Pronunciations)],
@@ -226,9 +225,9 @@ pub async fn load_human_audio(
                 excluded_for_quality += 1;
                 continue;
             }
-            let bytes = encode_wav_to_opus(&wav_path)
+            let bytes = encode_wav_to_mp3(&wav_path)
                 .await
-                .with_context(|| format!("Failed to encode {} to opus", wav_path.display()))?;
+                .with_context(|| format!("Failed to encode {} to MP3", wav_path.display()))?;
             // TODO: keep every take rather than last-take-wins. Several
             // manifest texts are recorded more than once (alternate takes we
             // commissioned), but the `(actor, text) -> Audio` map discards all
@@ -374,34 +373,46 @@ pub async fn load_human_audio(
 }
 
 /// The cache key and ffmpeg invocation share this recipe. Bitexact flags remove
-/// encoder version tags and random Ogg serial numbers; the cache preserves the
-/// encoded bytes even across encoder upgrades.
-const OPUS_ARGS: &[&str] = &[
+/// encoder version tags; the cache preserves bytes across encoder upgrades.
+const MP3_ARGS: &[&str] = &[
     "-af",
     "loudnorm=I=-16:TP=-1.5:LRA=11",
     "-c:a",
-    "libopus",
+    "libmp3lame",
     "-b:a",
-    "32k",
-    "-application",
-    "voip",
+    "48k",
+    "-ac",
+    "1",
+    "-ar",
+    "24000",
     "-fflags",
     "+bitexact",
     "-flags:a",
     "+bitexact",
     "-f",
-    "ogg",
+    "mp3",
     "pipe:1",
 ];
 
 /// Cache the exact WAV bytes, not its path. Local encoding is also allowed in
 /// cache-only mode: it needs no network and must not drop verified recordings.
-async fn encode_wav_to_opus(wav_path: &Path) -> anyhow::Result<Vec<u8>> {
+async fn encode_wav_to_mp3(wav_path: &Path) -> anyhow::Result<Vec<u8>> {
     let wav = std::fs::read(wav_path)?;
-    cached_opus(&crate::cache_remote::store(), &wav, OPUS_ARGS, encode_opus).await
+    encode_audio_to_mp3(&wav).await
 }
 
-async fn cached_opus(
+/// Reuse verified cached pronunciation audio without resynthesizing it. ffmpeg
+/// accepts its old Ogg container as well as the human recordings' WAV input.
+pub(crate) async fn encode_audio_to_mp3(audio: &[u8]) -> anyhow::Result<Vec<u8>> {
+    if audio.starts_with(b"ID3")
+        || (audio.len() >= 2 && audio[0] == 0xff && audio[1] & 0xe0 == 0xe0)
+    {
+        return Ok(audio.to_vec());
+    }
+    cached_mp3(&crate::cache_remote::store(), audio, MP3_ARGS, encode_mp3).await
+}
+
+async fn cached_mp3(
     store: &osmo::Store,
     wav: &[u8],
     recipe: &[&str],
@@ -411,7 +422,7 @@ async fn cached_opus(
 
     // JSON preserves argument boundaries (unlike joining with spaces).
     let recipe_hash = xxh3_64(&serde_json::to_vec(recipe)?);
-    let key = format!("human-audio/opus/{recipe_hash:016x}/{:016x}", xxh3_64(wav));
+    let key = format!("human-audio/mp3/{recipe_hash:016x}/{:016x}", xxh3_64(wav));
     if let Some(bytes) = store.read(&key).await {
         return Ok(bytes);
     }
@@ -422,7 +433,7 @@ async fn cached_opus(
 
 /// Apply EBU R128 loudness normalization so contributors land at a consistent
 /// perceived volume. -16 LUFS is the Apple Podcasts spoken-word standard.
-fn encode_opus(wav: &[u8], recipe: &[&str]) -> anyhow::Result<Vec<u8>> {
+fn encode_mp3(wav: &[u8], recipe: &[&str]) -> anyhow::Result<Vec<u8>> {
     // Encode exactly what was hashed, even if the original file changes. A temp
     // input also avoids deadlocking ffmpeg's stdin against its piped stdout.
     let mut input = tempfile::NamedTempFile::new()?;
@@ -436,9 +447,12 @@ fn encode_opus(wav: &[u8], recipe: &[&str]) -> anyhow::Result<Vec<u8>> {
     if !output.status.success() {
         anyhow::bail!("ffmpeg failed: {}", String::from_utf8_lossy(&output.stderr));
     }
-    if !output.stdout.starts_with(b"OggS") {
+    if !(output.stdout.starts_with(b"ID3")
+        || output.stdout.starts_with(&[0xff, 0xf3])
+        || output.stdout.starts_with(&[0xff, 0xfb]))
+    {
         anyhow::bail!(
-            "ffmpeg produced non-OGG output ({} bytes, magic={:?})",
+            "ffmpeg produced non-MP3 output ({} bytes, magic={:?})",
             output.stdout.len(),
             &output.stdout.iter().take(4).copied().collect::<Vec<_>>()
         );
@@ -454,14 +468,14 @@ mod tests {
     async fn same_wav_and_recipe_reuse_encoded_bytes() {
         let dir = tempfile::tempdir().unwrap();
         let store = osmo::Store::open(dir.path());
-        let bytes = cached_opus(&store, b"wav", OPUS_ARGS, |wav, recipe| {
+        let bytes = cached_mp3(&store, b"wav", MP3_ARGS, |wav, recipe| {
             assert_eq!(wav, b"wav");
-            assert_eq!(recipe, OPUS_ARGS);
-            Ok(b"OggSencoded".to_vec())
+            assert_eq!(recipe, MP3_ARGS);
+            Ok(b"ID3encoded".to_vec())
         })
         .await
         .unwrap();
-        let hit = cached_opus(&store, b"wav", OPUS_ARGS, |_, _| {
+        let hit = cached_mp3(&store, b"wav", MP3_ARGS, |_, _| {
             panic!("cache hit must not invoke encoder")
         })
         .await
@@ -478,7 +492,7 @@ mod tests {
             (b"new wav", &["a b", "c"][..], b"changed wav"),
             (b"wav", &["a", "b c"][..], b"changed recipe"),
         ] {
-            let bytes = cached_opus(&store, wav, recipe, |_, _| Ok(expected.to_vec()))
+            let bytes = cached_mp3(&store, wav, recipe, |_, _| Ok(expected.to_vec()))
                 .await
                 .unwrap();
             assert_eq!(bytes, expected);
@@ -489,12 +503,12 @@ mod tests {
     async fn failed_encoding_is_not_cached() {
         let dir = tempfile::tempdir().unwrap();
         let store = osmo::Store::open(dir.path());
-        let result = cached_opus(&store, b"wav", OPUS_ARGS, |_, _| {
+        let result = cached_mp3(&store, b"wav", MP3_ARGS, |_, _| {
             anyhow::bail!("encoder failed")
         })
         .await;
         assert_eq!(result.unwrap_err().to_string(), "encoder failed");
-        let bytes = cached_opus(&store, b"wav", OPUS_ARGS, |_, _| Ok(b"retry".to_vec()))
+        let bytes = cached_mp3(&store, b"wav", MP3_ARGS, |_, _| Ok(b"retry".to_vec()))
             .await
             .unwrap();
         assert_eq!(bytes, b"retry");
@@ -507,31 +521,31 @@ mod tests {
     async fn french_recordings_encode_reproducibly() {
         let dir = tempfile::tempdir().unwrap();
         let store = osmo::Store::open(dir.path());
-        let version_tag = regex::Regex::new(r"(?:Lav[fc]|libopus)\s*\d").unwrap();
+        let version_tag = regex::Regex::new(r"(?:Lav[fc]|libmp3lame)\s*\d").unwrap();
         for file in ["05a_bu.wav", "b185_je_sais_que.wav"] {
             let path = Path::new(env!("CARGO_MANIFEST_DIR"))
                 .join("data/fra/audio/Jean-Cavard")
                 .join(file);
             let wav = std::fs::read(&path).unwrap();
-            let encoded = cached_opus(&store, &wav, OPUS_ARGS, encode_opus)
+            let encoded = cached_mp3(&store, &wav, MP3_ARGS, encode_mp3)
                 .await
                 .unwrap();
-            let hit = cached_opus(&store, &wav, OPUS_ARGS, |_, _| {
+            let hit = cached_mp3(&store, &wav, MP3_ARGS, |_, _| {
                 panic!("{file}: cache hit must not invoke ffmpeg")
             })
             .await
             .unwrap();
             assert_eq!(hit, encoded);
-            assert_eq!(encode_opus(&wav, OPUS_ARGS).unwrap(), encoded);
-            assert!(encoded.starts_with(b"OggS"));
+            assert_eq!(encode_mp3(&wav, MP3_ARGS).unwrap(), encoded);
+            assert!(encoded.starts_with(b"ID3"));
             let text = String::from_utf8_lossy(&encoded);
-            // Bitexact keeps an unversioned "Lavc libopus" encoder label.
+            // Bitexact keeps an unversioned "Lavc libmp3lame" encoder label.
             assert!(!version_tag.is_match(&text), "{file}: encoder version tag");
-            let mut ogg = tempfile::NamedTempFile::new().unwrap();
-            ogg.write_all(&encoded).unwrap();
+            let mut mp3 = tempfile::NamedTempFile::new().unwrap();
+            mp3.write_all(&encoded).unwrap();
             let decoded = std::process::Command::new("ffmpeg")
                 .args(["-v", "error", "-i"])
-                .arg(ogg.path())
+                .arg(mp3.path())
                 .args(["-f", "f32le", "pipe:1"])
                 .output()
                 .unwrap();
@@ -542,7 +556,7 @@ mod tests {
             );
             assert!(!decoded.stdout.is_empty());
             println!(
-                "{file}: {} Ogg bytes, {} decoded PCM bytes; cache hit and fresh encode identical, no version tags",
+                "{file}: {} MP3 bytes, {} decoded PCM bytes; cache hit and fresh encode identical, no version tags",
                 encoded.len(),
                 decoded.stdout.len()
             );

@@ -273,19 +273,6 @@ pub struct GeminiTtsAudio {
     pub sample_rate: u32,
 }
 
-impl GeminiTtsAudio {
-    /// The samples wrapped in a WAV header, for callers that want a file.
-    pub fn to_wav(&self) -> Vec<u8> {
-        audio_codec::pcm_to_wav(&self.samples, self.sample_rate)
-    }
-
-    /// The samples as an Ogg Opus stream: what Cloud TTS returns, so audio
-    /// from either provider is stored and played the same way.
-    pub fn to_ogg_opus(&self) -> Result<Vec<u8>> {
-        audio_codec::encode_ogg_opus(&self.samples, self.sample_rate)
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct GeminiClient {
     api_key: String,

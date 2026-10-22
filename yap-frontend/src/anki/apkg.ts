@@ -258,7 +258,7 @@ export async function buildApkg(
     if (bytes && entry.source.type === "Subtitles") {
       captionMarkup.set(entry.filename, new TextDecoder().decode(bytes));
     } else if (bytes) {
-      const filename = entry.source.type === "Tts" ? audioFilename(entry.filename, bytes) : entry.filename;
+      const filename = (entry.source.type === "Tts" || entry.source.type === "HumanAudio") ? audioFilename(entry.filename, bytes) : entry.filename;
       const key = String(mediaIndex++);
       media[key] = filename;
       files[key] = bytes;

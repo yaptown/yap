@@ -755,7 +755,7 @@ fn is_valid_audio_data(bytes: &[u8]) -> bool {
 
     // MP3: ID3 tag or MPEG frame sync (0xFFF)
     // WAV: RIFF header (Gemini TTS returns WAV)
-    // Ogg Opus: "OggS" page header (Google TTS returns OGG_OPUS)
+    // Ogg Opus: "OggS" page header (old cached audio)
     bytes.starts_with(b"ID3")
         || (bytes[0] == 0xFF && bytes[1] & 0xE0 == 0xE0)
         || bytes.starts_with(b"RIFF")

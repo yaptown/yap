@@ -941,7 +941,7 @@ struct CachedTts {
     /// cache entries (written before this field existed) still load.
     #[serde(default)]
     text: Option<String>,
-    /// OGG/Opus audio bytes, base64-encoded.
+    /// Encoded audio bytes, base64-encoded.
     audio_base64: String,
     attempts: usize,
     /// `passed` indicates the audio passed Google's defect check;
@@ -1176,8 +1176,7 @@ pub async fn synthesize(
                     };
                     match client.synthesize(&request).await {
                         Ok(Some(audio)) => {
-                            let bytes = audio
-                                .to_ogg_opus()
+                            let bytes = audio_codec::encode_mp3(&audio.samples, audio.sample_rate)
                                 .with_context(|| format!("encoding Gemini audio for {text:?}"))?;
                             let defect = audio_codec::audio_defect(&bytes);
                             (bytes, 1, defect.is_none(), defect.map(str::to_string))
