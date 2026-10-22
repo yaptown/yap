@@ -276,12 +276,14 @@ pub async fn generate_pronunciation_audio(
                     let candidates = [
                         TtsSynthesis::Gemini {
                             voice: google_speech::gemini::DEFAULT_VOICE.into(),
+                            language: language_code,
                             style: style.clone(),
                             text: spoken.clone(),
                             attempt: 1,
                         },
                         TtsSynthesis::Gemini {
                             voice: google_speech::gemini::DEFAULT_VOICE.into(),
+                            language: language_code,
                             style: style.clone(),
                             text: spoken.clone(),
                             attempt: 2,

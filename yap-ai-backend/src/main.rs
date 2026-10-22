@@ -686,6 +686,7 @@ async fn gemini_synthesize(
         style: gemini_tts_style(request),
         text: request.text.clone(),
         voice: GEMINI_TTS_VOICE.to_string(),
+        language: request.language.tts_locale().to_string(),
     };
     match client.synthesize(&gemini_request).await {
         Ok(Some(audio)) => Ok(Some(audio.to_wav())),
@@ -761,29 +762,19 @@ fn wrap_pcm_in_wav(
 /// language packs pick their own (see generate-data).
 const GEMINI_TTS_VOICE: &str = "Zephyr";
 
-/// House style for Gemini TTS when the caller doesn't ask for something else.
-const GEMINI_TTS_DEFAULT_STYLE: &str = "warm and welcoming";
-
-/// Delivery metadata, separate from the transcript. Gemini has no rate
-/// parameter, so the speaking rate is expressed here too.
+/// Delivery metadata, separate from the transcript, in the text's own
+/// language (see [`Language::tts_direction`]). Gemini has no rate parameter,
+/// so the speaking rate is expressed here too.
 fn gemini_tts_style(request: &TtsRequest) -> String {
-    let style = request
-        .instructions
-        .as_deref()
-        .unwrap_or(GEMINI_TTS_DEFAULT_STYLE);
-
-    let pace = if request.speed < 0.95 {
-        ", speaking slowly and deliberately"
+    let direction = request.language.tts_direction();
+    let mut parts = vec![request.instructions.as_deref().unwrap_or(direction.style)];
+    if request.speed < 0.95 {
+        parts.push(direction.slowly);
     } else if request.speed > 1.05 {
-        ", speaking briskly"
-    } else {
-        ""
-    };
-
-    match request.language.tts_accent() {
-        Some(accent) => format!("{style}{pace}, {accent}"),
-        None => format!("{style}{pace}"),
+        parts.push(direction.briskly);
     }
+    parts.extend(direction.accent);
+    parts.join(", ")
 }
 
 async fn gemini_text_to_speech(
@@ -2393,22 +2384,13 @@ mod tests {
     use tower::ServiceExt;
 
     #[test]
-    fn gemini_styles_include_dialect_and_preserve_delivery() {
-        for (language, accent) in [
-            (
-                Language::SpanishLatinAmerican,
-                "Latin American Spanish accent",
-            ),
-            (
-                Language::SpanishPeninsular,
-                "Peninsular Spanish accent (Spain)",
-            ),
-            (Language::PortugueseBrazilian, "Brazilian Portuguese accent"),
-            (
-                Language::PortugueseEuropean,
-                "European Portuguese accent (Portugal)",
-            ),
-        ] {
+    fn gemini_styles_are_native_and_keep_dialect_and_delivery() {
+        for &language in language_utils::LANGUAGES {
+            let direction = language.tts_direction();
+            let accent = direction
+                .accent
+                .map(|a| format!(", {a}"))
+                .unwrap_or_default();
             let mut request = TtsRequest {
                 text: "test".into(),
                 language,
@@ -2419,15 +2401,27 @@ mod tests {
             };
             assert_eq!(
                 gemini_tts_style(&request),
-                format!("warm and welcoming, {accent}")
+                format!("{}{accent}", direction.style)
             );
             request.instructions = Some("clear".into());
             request.speed = 0.8;
             assert_eq!(
                 gemini_tts_style(&request),
-                format!("clear, speaking slowly and deliberately, {accent}")
+                format!("clear, {}{accent}", direction.slowly)
             );
         }
+        let request = TtsRequest {
+            text: "De".into(),
+            language: Language::French,
+            instructions: None,
+            speed: 1.2,
+            is_ssml: false,
+            verification_hints: vec![],
+        };
+        assert_eq!(
+            gemini_tts_style(&request),
+            "chaleureux et accueillant, en parlant d'un ton vif"
+        );
     }
 
     #[test]

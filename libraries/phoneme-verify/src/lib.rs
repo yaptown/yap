@@ -1042,6 +1042,9 @@ pub enum TtsSynthesis {
     /// cache — a second draw is a genuinely different clip.
     Gemini {
         voice: String,
+        /// BCP-47 locale of `text`. Not keyed: clips cached before it was
+        /// sent each passed their own verification.
+        language: &'static str,
         style: String,
         text: String,
         attempt: u32,
@@ -1066,6 +1069,7 @@ impl TtsSynthesis {
                 style,
                 text,
                 attempt,
+                ..
             } => {
                 let seed = format!(
                     "{}|{voice}|{style}|{text}|{attempt}",
@@ -1151,7 +1155,11 @@ pub async fn synthesize(
                     (outcome.audio_bytes, outcome.attempts, passed, last_defect)
                 }
                 TtsSynthesis::Gemini {
-                    voice, style, text, ..
+                    voice,
+                    language,
+                    style,
+                    text,
+                    ..
                 } => {
                     let api_key = keys.gemini.as_deref().ok_or_else(|| {
                         anyhow::anyhow!("GEMINI_API_KEY is required for uncached Gemini TTS audio")
@@ -1164,6 +1172,7 @@ pub async fn synthesize(
                         style: style.clone(),
                         text: text.clone(),
                         voice: voice.clone(),
+                        language: language.to_string(),
                     };
                     match client.synthesize(&request).await {
                         Ok(Some(audio)) => {

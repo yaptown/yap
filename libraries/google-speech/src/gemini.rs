@@ -184,6 +184,9 @@ pub struct GeminiTtsRequest {
     pub text: String,
     /// A prebuilt voice name, e.g. [`DEFAULT_VOICE`].
     pub voice: String,
+    /// BCP-47 locale of `text`, e.g. `"fr-FR"`. Without it the model guesses
+    /// from the text, and reads a short word like "De" as English.
+    pub language: String,
 }
 
 impl Serialize for GeminiTtsRequest {
@@ -196,7 +199,7 @@ impl Serialize for GeminiTtsRequest {
             "model": GEMINI_TTS_MODEL,
             "input": [{"type": "user_input", "content": [content]}],
             "response_format": {"type": "audio", "mime_type": "audio/l16", "sample_rate": 24000},
-            "generation_config": {"speech_config": [{"voice": self.voice}]},
+            "generation_config": {"speech_config": [{"voice": self.voice, "language": self.language}]},
         })
         .serialize(serializer)
     }
@@ -492,6 +495,7 @@ mod tests {
             style: "warm and welcoming".into(),
             text: "Trouvé.".into(),
             voice: "Zephyr".into(),
+            language: "fr-FR".into(),
         };
         assert_eq!(
             serde_json::to_value(&request).unwrap(),
@@ -500,7 +504,7 @@ mod tests {
                 "input": [{"type": "user_input", "content": [{"type": "text", "text": "Trouvé.",
                     "annotations": [{"type": "speech_metadata", "style": "warm and welcoming"}]}]}],
                 "response_format": {"type": "audio", "mime_type": "audio/l16", "sample_rate": 24000},
-                "generation_config": {"speech_config": [{"voice": "Zephyr"}]},
+                "generation_config": {"speech_config": [{"voice": "Zephyr", "language": "fr-FR"}]},
             })
         );
         request.style.clear();

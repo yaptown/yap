@@ -3612,15 +3612,84 @@ impl Language {
         }
     }
 
-    /// Accent metadata for speech providers without a locale-specific voice.
-    pub fn tts_accent(&self) -> Option<&'static str> {
-        match self {
-            Language::SpanishLatinAmerican => Some("Latin American Spanish accent"),
-            Language::SpanishPeninsular => Some("Peninsular Spanish accent (Spain)"),
-            Language::PortugueseBrazilian => Some("Brazilian Portuguese accent"),
-            Language::PortugueseEuropean => Some("European Portuguese accent (Portugal)"),
+    /// Gemini's delivery direction, written in the language itself. Gemini
+    /// takes the direction as a hint to what language the text is in, so an
+    /// English one (even beside the locale) pulls a short word like "De"
+    /// toward an English reading.
+    pub fn tts_direction(&self) -> TtsDirection {
+        let (style, slowly, briskly) = match self {
+            Language::French => (
+                "chaleureux et accueillant",
+                "en parlant lentement et posément",
+                "en parlant d'un ton vif",
+            ),
+            Language::English => (
+                "warm and welcoming",
+                "speaking slowly and deliberately",
+                "speaking briskly",
+            ),
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => (
+                "cálido y acogedor",
+                "hablando despacio y con calma",
+                "hablando con agilidad",
+            ),
+            Language::German => (
+                "warm und einladend",
+                "langsam und bedacht sprechend",
+                "zügig sprechend",
+            ),
+            Language::Italian => (
+                "caloroso e accogliente",
+                "parlando lentamente e con calma",
+                "parlando con brio",
+            ),
+            Language::PortugueseBrazilian | Language::PortugueseEuropean => (
+                "caloroso e acolhedor",
+                "falando devagar e com calma",
+                "falando com desenvoltura",
+            ),
+            Language::Korean => (
+                "따뜻하고 다정하게",
+                "천천히 또박또박 말하며",
+                "경쾌하게 말하며",
+            ),
+            Language::Russian => (
+                "тепло и приветливо",
+                "говоря медленно и размеренно",
+                "говоря бодро",
+            ),
+            Language::Japanese => (
+                "温かく親しみやすく",
+                "ゆっくりと丁寧に話して",
+                "テンポよく話して",
+            ),
+            Language::ChineseSimplified => ("温暖亲切", "语速缓慢、从容", "语速轻快"),
+            Language::ChineseTraditional => ("溫暖親切", "語速緩慢、從容", "語速輕快"),
+            Language::Hindi => (
+                "गर्मजोशी और अपनेपन से",
+                "धीरे और ठहरकर बोलते हुए",
+                "फुर्ती से बोलते हुए",
+            ),
+            Language::Thai => ("อบอุ่นและเป็นกันเอง", "พูดช้าๆ อย่างชัดเจน", "พูดอย่างกระฉับกระเฉง"),
+        };
+        let accent = match self {
+            Language::SpanishLatinAmerican => Some("con acento latinoamericano"),
+            Language::SpanishPeninsular => Some("con acento de España"),
+            Language::PortugueseBrazilian => Some("com sotaque brasileiro"),
+            Language::PortugueseEuropean => Some("com sotaque de Portugal"),
             _ => None,
+        };
+        TtsDirection {
+            style,
+            slowly,
+            briskly,
+            accent,
         }
+    }
+
+    /// The BCP-47 locale speech providers are given for this language.
+    pub fn tts_locale(&self) -> &'static str {
+        self.google_tts_voice().0
     }
 
     pub fn iso_639_1(&self) -> &'static str {
@@ -5133,6 +5202,19 @@ fn default_speed() -> f64 {
 ///   since then is bad.
 const TTS_SYNTHESIS_REVISION: u32 = 2;
 
+/// [`TTS_SYNTHESIS_REVISION`] for a fix to one provider's renders only, so
+/// the others' clips (ElevenLabs costs eight times Gemini's per recording)
+/// keep their keys.
+///
+/// - Gemini 3: no language was sent, so short text could come back read as
+///   English ("De" as "day").
+fn synthesis_revision(provider: &TtsProvider) -> u32 {
+    match provider {
+        TtsProvider::Gemini => 3,
+        _ => TTS_SYNTHESIS_REVISION,
+    }
+}
+
 /// Cache filename for a TTS request. The key must include *every* input that
 /// changes the synthesized audio — otherwise a request differing only in, say,
 /// `speed` would be served a stale clip rendered at a different speed. One
@@ -5152,6 +5234,14 @@ const TTS_SYNTHESIS_REVISION: u32 = 2;
 /// different audio. Keying them means a pack update that tags a new proper
 /// noun re-verifies the sentences containing it rather than trusting a clip
 /// that was accepted without ever knowing the name.
+/// Delivery direction pieces from [`Language::tts_direction`].
+pub struct TtsDirection {
+    pub style: &'static str,
+    pub slowly: &'static str,
+    pub briskly: &'static str,
+    pub accent: Option<&'static str>,
+}
+
 pub fn tts_cache_filename(request: &TtsRequest, provider: &TtsProvider) -> String {
     // Distinguish instructions None ('n') from Some("") ('s'): the /tts
     // handlers treat them differently (None = default prompt, Some("") = empty
@@ -5170,8 +5260,9 @@ pub fn tts_cache_filename(request: &TtsRequest, provider: &TtsProvider) -> Strin
     // free-form fields, so ["a", "b"] can't collide with ["a b"].
     let hints = request.verification_hints.join("\u{1f}");
     let cache_text = format!(
-        "r{TTS_SYNTHESIS_REVISION}|{provider:?}|{language}|{speed}|{is_ssml}\
+        "r{revision}|{provider:?}|{language}|{speed}|{is_ssml}\
          |{tlen}:{text}|{itag}{ilen}:{instructions}|{hlen}:{hints}",
+        revision = synthesis_revision(provider),
         language = request.language.tts_name(),
         speed = request.speed,
         is_ssml = request.is_ssml,
