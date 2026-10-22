@@ -33,7 +33,10 @@ method = 'GET'
 timeout = '5s'
 path = '/health'
 
+# A dedicated core: on a shared one, a deck export's fan-out (TLS, JSON and
+# audio work for hundreds of requests a minute) ran into the CPU quota.
+# performance-1x needs at least 2 GB.
 [[vm]]
-memory = '1gb'
-cpu_kind = 'shared'
+memory = '2gb'
+cpu_kind = 'performance'
 cpus = 1

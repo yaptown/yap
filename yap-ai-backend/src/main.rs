@@ -43,6 +43,11 @@ use tower_http::cors::{Any, CorsLayer};
 use tts_verify::Transcribers;
 use tysm::chat_completions::ChatClient;
 
+/// Every outbound call shares one connection pool. A client per request paid
+/// for loading the root certificates and a fresh TLS handshake each time, which
+/// on our shared CPU capped a deck export's subtitle fetches at ~37 a second.
+static HTTP: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
+
 static CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
     let my_api =
         "https://g7edusstdonmn3vxdh3qdypkrq0wzttx.lambda-url.us-east-1.on.aws/v1/".to_string();
@@ -706,7 +711,7 @@ async fn text_to_speech(
     // actually, disable authentication for now until people start abusing it:
     let _claims = verify_jwt(auth.token()).await;
 
-    synthesize_checked(&reqwest::Client::new(), &request, TtsProvider::ElevenLabs).await
+    synthesize_checked(&HTTP, &request, TtsProvider::ElevenLabs).await
 }
 
 async fn google_text_to_speech(
@@ -717,7 +722,7 @@ async fn google_text_to_speech(
     // actually, disable authentication for now until people start abusing it:
     let _claims = verify_jwt(auth.token()).await;
 
-    synthesize_checked(&reqwest::Client::new(), &request, TtsProvider::Google).await
+    synthesize_checked(&HTTP, &request, TtsProvider::Google).await
 }
 
 async fn openai_text_to_speech(
@@ -726,7 +731,7 @@ async fn openai_text_to_speech(
 ) -> Result<String, StatusCode> {
     let _claims = verify_jwt(auth.token()).await;
 
-    synthesize_checked(&reqwest::Client::new(), &request, TtsProvider::OpenAI).await
+    synthesize_checked(&HTTP, &request, TtsProvider::OpenAI).await
 }
 
 fn wrap_pcm_in_wav(
@@ -783,7 +788,7 @@ async fn gemini_text_to_speech(
 ) -> Result<String, StatusCode> {
     let _claims = verify_jwt(auth.token()).await;
 
-    synthesize_checked(&reqwest::Client::new(), &request, TtsProvider::Gemini).await
+    synthesize_checked(&HTTP, &request, TtsProvider::Gemini).await
 }
 
 async fn autograde_translation(
@@ -1194,7 +1199,7 @@ async fn generate_pronunciation_feedback(
     Json(request): Json<PronunciationFeedbackRequest>,
 ) -> Result<Json<PronunciationFeedbackResponse>, StatusCode> {
     let _claims = verify_jwt(auth.token()).await;
-    let http = reqwest::Client::new();
+    let http = HTTP.clone();
 
     let user_audio_bytes = base64::engine::general_purpose::STANDARD
         .decode(&request.user_audio)
@@ -1400,8 +1405,7 @@ async fn send_follow_notification(
     // Get the email from auth.users table using Supabase REST API
     let (supabase_url, service_role_key) =
         service_role_credentials().map_err(|status| status.to_string())?;
-    let auth_client = reqwest::Client::new();
-    let auth_response = auth_client
+    let auth_response = HTTP
         .get(format!("{supabase_url}/auth/v1/admin/users/{following_id}"))
         .header("apikey", &service_role_key)
         .header("Authorization", format!("Bearer {service_role_key}"))
@@ -1586,7 +1590,7 @@ async fn delete_account(
     }
 
     let (supabase_url, service_role_key) = service_role_credentials()?;
-    let response = reqwest::Client::new()
+    let response = HTTP
         .delete(format!("{supabase_url}/auth/v1/admin/users/{user_id}"))
         .header("apikey", &service_role_key)
         .bearer_auth(&service_role_key)
@@ -2025,7 +2029,7 @@ async fn clip_manifest(language: Language) -> Result<Vec<ClipRow>, StatusCode> {
     }
 
     let url = clip_url(language, "index.jsonl");
-    let response = reqwest::Client::new()
+    let response = HTTP
         .get(&url)
         .send()
         .await
@@ -2096,7 +2100,7 @@ async fn serve_clip_video(
     }
 
     let url = clip_url(language, &format!("{clip_id}/lo.mp4"));
-    let upstream = match reqwest::Client::new().get(&url).send().await {
+    let upstream = match HTTP.get(&url).send().await {
         Ok(r) => r,
         Err(_) => {
             return Response::builder()
@@ -2174,7 +2178,7 @@ async fn serve_clip_subtitles(
     }
 
     let url = clip_url(language, &format!("{clip_id}/meta.json"));
-    let upstream = reqwest::Client::new()
+    let upstream = HTTP
         .get(&url)
         .send()
         .await
@@ -2212,8 +2216,7 @@ async fn sentry_tunnel(body: Bytes) -> StatusCode {
     }
 
     let url = format!("https://{SENTRY_HOST}/api/{SENTRY_PROJECT_ID}/envelope/");
-    let client = reqwest::Client::new();
-    match client
+    match HTTP
         .post(&url)
         .header("Content-Type", "application/x-sentry-envelope")
         .body(body.to_vec())

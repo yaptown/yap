@@ -5184,6 +5184,24 @@ fn default_speed() -> f64 {
     1.0
 }
 
+impl TtsRequest {
+    /// A recording at the default voice and pace, as the app's challenges
+    /// request it. The Anki export and the backend's `/anki/tts` both build
+    /// their requests here, so a deck can find the app's clips in the shared
+    /// cache by key without asking the backend.
+    pub fn plain(language: Language, text: &str, verification_hints: Vec<String>) -> Self {
+        use unicode_normalization::UnicodeNormalization;
+        TtsRequest {
+            text: text.nfc().collect(),
+            language,
+            is_ssml: false,
+            instructions: None,
+            speed: 1.0,
+            verification_hints,
+        }
+    }
+}
+
 /// Bumped whenever a backend change alters the audio produced for a request
 /// that is itself unchanged — a different voice, model, or post-processing
 /// step. Nothing in a `TtsRequest` describes *how* the backend renders it, so

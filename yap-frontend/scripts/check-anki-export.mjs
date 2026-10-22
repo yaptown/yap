@@ -121,10 +121,12 @@ async function writeFixtures(buildApkg, output) {
   globalThis.fetch = async (url) => {
     fetched.push(url);
     if (
-      url === "https://mock.invalid/bundle" ||
+      url === "https://mock.invalid/cache-hit" ||
       url === "https://mock.invalid/word"
     )
       return new Response(wav);
+    if (url === "https://mock.invalid/cache-miss")
+      return new Response("", { status: 404 });
     if (url === "https://mock.invalid/fail")
       return new Response("", { status: 503 });
     throw new Error(`Unexpected network request: ${url}`);
@@ -229,11 +231,22 @@ async function writeFixtures(buildApkg, output) {
       { filename: "poster.jpg", source: { type: "Poster", imdb_id: "tt0001" } },
       {
         filename: "tts.mp3",
-        source: { type: "Tts", url: "https://mock.invalid/bundle" },
+        source: {
+          type: "Tts",
+          cached: [
+            "https://mock.invalid/cache-miss",
+            "https://mock.invalid/cache-hit",
+          ],
+          url: "https://mock.invalid/synthesize",
+        },
       },
       {
         filename: "word.mp3",
-        source: { type: "Tts", url: "https://mock.invalid/word" },
+        source: {
+          type: "Tts",
+          cached: ["https://mock.invalid/cache-miss"],
+          url: "https://mock.invalid/word",
+        },
       },
       {
         filename: "subs-clip",
@@ -264,7 +277,7 @@ async function writeFixtures(buildApkg, output) {
       },
       {
         filename: "failed.mp3",
-        source: { type: "Tts", url: "https://mock.invalid/fail" },
+        source: { type: "Tts", cached: [], url: "https://mock.invalid/fail" },
       },
     ],
     stats: { sentence_count: 3, word_count: 2, card_count: 8 },
@@ -313,11 +326,14 @@ async function writeFixtures(buildApkg, output) {
         },
         (value) => progress.push(value),
       );
-      assert.deepEqual(fetched, [
-        "https://mock.invalid/bundle",
+      // A cache hit never reaches the synthesizing endpoint.
+      assert.deepEqual(fetched.sort(), [
+        "https://mock.invalid/cache-hit",
+        "https://mock.invalid/cache-miss",
+        "https://mock.invalid/cache-miss",
+        "https://mock.invalid/fail",
+        "https://mock.invalid/fail",
         "https://mock.invalid/word",
-        "https://mock.invalid/fail",
-        "https://mock.invalid/fail",
       ]);
       assert.deepEqual(
         progress.map((value) => value.done),
@@ -337,7 +353,7 @@ async function writeFixtures(buildApkg, output) {
     Date.now = realNow;
   }
 
-  // A slow first request must not hold the other 23 workers idle.
+  // A slow first request must not hold the other 63 workers idle.
   const pending = new Map();
   const started = [];
   globalThis.fetch = (url) =>
@@ -347,9 +363,9 @@ async function writeFixtures(buildApkg, output) {
     });
   const plan = {
     ...base,
-    bundled: Array.from({ length: 26 }, (_, i) => ({
+    bundled: Array.from({ length: 66 }, (_, i) => ({
       filename: `pool-${i}.mp3`,
-      source: { type: "Tts", url: `https://mock.invalid/${i}` },
+      source: { type: "Tts", cached: [], url: `https://mock.invalid/${i}` },
     })),
   };
   const progress = [];
@@ -358,18 +374,19 @@ async function writeFixtures(buildApkg, output) {
     () => assert.fail("only TTS"),
     (value) => progress.push(value),
   );
-  assert.equal(started.length, 24, "bounded initial concurrency");
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(started.length, 64, "bounded initial concurrency");
   for (const i of [1, 2]) {
     pending.get(`https://mock.invalid/${i}`)(new Response(wav));
     await new Promise((resolve) => setImmediate(resolve));
     assert.equal(
       started.length,
-      24 + i,
+      64 + i,
       "replace a finished request without waiting for request zero",
     );
   }
   // Finish out of order, with one failure. Media indices still follow the plan.
-  for (const i of Array.from({ length: 26 }, (_, i) => 25 - i).filter(
+  for (const i of Array.from({ length: 66 }, (_, i) => 65 - i).filter(
     (i) => i !== 1 && i !== 2,
   )) {
     pending.get(`https://mock.invalid/${i}`)(
@@ -380,16 +397,16 @@ async function writeFixtures(buildApkg, output) {
   const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));
   assert.deepEqual(
     Object.values(JSON.parse(strFromU8(files.media))),
-    Array.from({ length: 26 }, (_, i) => i)
+    Array.from({ length: 66 }, (_, i) => i)
       .filter((i) => i !== 7)
       .map((i) => `pool-${i}.wav`),
   );
   assert.deepEqual(
     progress.map((value) => value.done),
-    Array.from({ length: 27 }, (_, i) => i),
+    Array.from({ length: 67 }, (_, i) => i),
   );
-  assert(progress.every((value) => value.total === 26));
-  assert.equal(new Set(started).size, 26, "each request runs once");
+  assert(progress.every((value) => value.total === 66));
+  assert.equal(new Set(started).size, 66, "each request runs once");
   await assert.rejects(
     buildApkg(
       base,

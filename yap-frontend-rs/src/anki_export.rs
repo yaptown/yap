@@ -10,8 +10,8 @@ use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use bridgerton::Error;
 use language_utils::{
     Atom, Course, GramDefinition, Language, Literal, MovieMetadataBasic, OtherWord, OtherWordType,
-    SentenceGram, SpurGram, TaggedGram, Word, WordType, clip_url, dictionary_entry_slug,
-    language_pack::LanguagePack,
+    SentenceGram, SpurGram, TaggedGram, TtsProvider, TtsRequest, Word, WordType, clip_url,
+    dictionary_entry_slug, language_pack::LanguagePack, tts_cache_filename, tts_cache_url,
 };
 use lasso::Spur;
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
@@ -21,7 +21,6 @@ use std::{
     cell::RefCell,
     collections::{BTreeSet, VecDeque},
 };
-use unicode_normalization::UnicodeNormalization;
 use xxhash_rust::xxh3::xxh3_64;
 
 use crate::{Deck, clips, get_language_metadata, human_audio, utils};
@@ -168,7 +167,11 @@ pub enum AnkiMediaSource {
     HumanAudio {
         text: String,
     },
+    /// `cached` are the shared cache's copies of this recording in each voice
+    /// the app may have verified it with, in order of preference; the host
+    /// tries them before `url`, which synthesizes on a miss.
     Tts {
+        cached: Vec<String>,
         url: String,
     },
     Subtitles {
@@ -376,9 +379,7 @@ fn word_note(
         let filename = format!("yap-word-{}.mp3", guid(course, "word", word));
         bundled.push(AnkiBundledMedia {
             filename: filename.clone(),
-            source: AnkiMediaSource::Tts {
-                url: tts_url(course.target_language, word, &[], token),
-            },
+            source: tts_source(course.target_language, word, &[], token),
         });
         filename
     };
@@ -449,19 +450,26 @@ const COMPONENT: &AsciiSet = &NON_ALPHANUMERIC
 fn component(value: &str) -> String {
     utf8_percent_encode(value, COMPONENT).to_string()
 }
-fn tts_url(language: Language, text: &str, hints: &[String], token: &str) -> String {
+fn tts_source(language: Language, text: &str, hints: &[String], token: &str) -> AnkiMediaSource {
+    let request = TtsRequest::plain(language, text, hints.to_vec());
+    // A clip the app already verified is free in either voice; Gemini, the
+    // deck voice, is what the backend would make on a miss.
+    let cached = [TtsProvider::Gemini, TtsProvider::ElevenLabs]
+        .iter()
+        .map(|provider| tts_cache_url(&tts_cache_filename(&request, provider)))
+        .collect();
     let name = serde_json::to_value(language).unwrap();
     let mut url = format!(
         "{}/anki/tts?language={}&text={}&d={}",
         utils::ai_server_url(),
         component(name.as_str().unwrap()),
-        component(&text.nfc().collect::<String>()),
+        component(&request.text),
         component(token)
     );
     for hint in hints {
         url.push_str(&format!("&hint={}", component(hint)));
     }
-    url
+    AnkiMediaSource::Tts { cached, url }
 }
 fn definition(def: &GramDefinition) -> String {
     crate::definition_view(def.clone())
@@ -1279,19 +1287,18 @@ impl PlannerState {
             .unwrap();
         let (source, clip, subtitles) =
             clip_presentation(pack, language, &row, token, posters, bundled, &mut tags);
-        let url = tts_url(
-            language,
-            &text,
-            &challenge.audio.request.verification_hints,
-            token,
-        );
         // Every sentence ships its recording: a Listening card cannot
         // be answered without it, and the Translate card shares the
         // same file, so there is nothing to save by streaming.
         let filename = format!("yap-sentence-{}.mp3", guid(course, "sentence", &text));
         bundled.push(AnkiBundledMedia {
             filename: filename.clone(),
-            source: AnkiMediaSource::Tts { url },
+            source: tts_source(
+                language,
+                &text,
+                &challenge.audio.request.verification_hints,
+                token,
+            ),
         });
         let tts = filename;
         let include_listening = !matches!(options.card_types, AnkiCardTypes::Reading);
@@ -1939,7 +1946,7 @@ mod tests {
                         )
                     );
                     assert!(
-                        matches!(&entry.source, AnkiMediaSource::Tts { url } if url == &tts_url(Language::English, word, &[], "a+b&雪"))
+                        matches!((&entry.source, tts_source(Language::English, word, &[], "a+b&雪")), (AnkiMediaSource::Tts { url, .. }, AnkiMediaSource::Tts { url: expected, .. }) if url == &expected)
                     );
                     (*note_id, *card_id, guid)
                 }
@@ -1977,7 +1984,7 @@ mod tests {
                     );
                     let entry = a.bundled.iter().find(|m| &m.filename == tts).unwrap();
                     assert!(
-                        matches!(&entry.source, AnkiMediaSource::Tts { url } if url.contains("language=English&text="))
+                        matches!(&entry.source, AnkiMediaSource::Tts { url, .. } if url.contains("language=English&text="))
                     );
                     assert!(ids.insert(*card_id + 1));
                     (*note_id, *card_id, guid)
@@ -2410,11 +2417,17 @@ mod tests {
     }
     #[test]
     fn anki_tts_normalizes_and_preserves_hint_order() {
-        let url = tts_url(
-            Language::French,
-            "E\u{301}lodie & Paris?",
-            &["Élodie".into(), "Paris".into(), "Élodie".into()],
-            "a+b",
+        let hints = ["Élodie".into(), "Paris".into(), "Élodie".into()];
+        let AnkiMediaSource::Tts { cached, url } =
+            tts_source(Language::French, "E\u{301}lodie & Paris?", &hints, "a+b")
+        else {
+            unreachable!()
+        };
+        // The keys the app's own fetches use, so its clips are found directly.
+        let app = TtsRequest::plain(Language::French, "Élodie & Paris?", hints.to_vec());
+        assert_eq!(
+            cached[0],
+            tts_cache_url(&tts_cache_filename(&app, &TtsProvider::Gemini))
         );
         assert!(url.ends_with("language=French&text=%C3%89lodie%20%26%20Paris%3F&d=a%2Bb&hint=%C3%89lodie&hint=Paris&hint=%C3%89lodie"));
     }

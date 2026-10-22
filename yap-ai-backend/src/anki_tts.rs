@@ -9,15 +9,10 @@ use axum_extra::extract::Query;
 use language_utils::{Language, TtsProvider, TtsRequest, audio_mime_type, tts_cache_filename};
 use postgrest::Postgrest;
 use serde::Deserialize;
-use std::sync::LazyLock;
 
 use crate::{
-    deck_token, service_role_client, synthesize_checked_bytes, tts_cache, tts_verify::Transcribers,
+    HTTP, deck_token, service_role_client, synthesize_checked_bytes, tts_verify::Transcribers,
 };
-
-// A deck makes hundreds of requests to the same cache origin. Reuse the
-// connection pool instead of paying DNS/TLS setup for every recording.
-static HTTP: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 #[derive(Debug, Deserialize)]
 pub struct Params {
@@ -29,17 +24,8 @@ pub struct Params {
 }
 
 impl Params {
-    // Match sentence cards exactly, including the hints: otherwise an Anki
-    // fetch would pay for a clip the app has already put in the shared cache.
     fn request(self) -> TtsRequest {
-        TtsRequest {
-            text: self.text,
-            language: self.language,
-            is_ssml: false,
-            instructions: None,
-            speed: 1.0,
-            verification_hints: self.hint,
-        }
+        TtsRequest::plain(self.language, &self.text, self.hint)
     }
 }
 
@@ -55,20 +41,11 @@ pub async fn tts(Query(params): Query<Params>) -> Result<Response, StatusCode> {
     let token = params.d.clone();
     let request = params.request();
     let http = &*HTTP;
-    // Gemini is the deck voice (about an eighth of ElevenLabs' price per
-    // recording), but a clip the app already verified with either voice is
-    // free, so serve whichever the shared cache has before synthesizing.
+    // The export has already looked in the shared cache for this clip in
+    // either voice (see `AnkiMediaSource::Tts`), so a request here is a miss.
+    // Gemini is the deck voice: about an eighth of ElevenLabs' price.
     let cache_filename = tts_cache_filename(&request, &TtsProvider::Gemini);
-    for filename in [
-        &cache_filename,
-        &tts_cache_filename(&request, &TtsProvider::ElevenLabs),
-    ] {
-        if let Some(url) = tts_cache::existing_url(http, filename).await {
-            return Ok((StatusCode::FOUND, [(header::LOCATION, url)]).into_response());
-        }
-    }
 
-    // Playback from the cache above needed no secret; only new spend does.
     if !deck_token::configured() {
         eprintln!("anki TTS: DECK_TOKEN_SECRET is not set, refusing to synthesize");
         return Err(StatusCode::NOT_IMPLEMENTED);
@@ -166,28 +143,6 @@ fn record_in_background(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn sentence_request_shares_the_app_cache_key() {
-        let params = Params {
-            language: Language::French,
-            text: "Élodie voit Paris.".into(),
-            hint: vec!["Élodie".into(), "Paris".into()],
-            d: "token".into(),
-        };
-        let direct = TtsRequest {
-            text: "Élodie voit Paris.".into(),
-            language: Language::French,
-            is_ssml: false,
-            instructions: None,
-            speed: 1.0,
-            verification_hints: vec!["Élodie".into(), "Paris".into()],
-        };
-        assert_eq!(
-            tts_cache_filename(&params.request(), &TtsProvider::ElevenLabs),
-            tts_cache_filename(&direct, &TtsProvider::ElevenLabs),
-        );
-    }
 
     #[test]
     fn hints_round_trip_through_repeated_query_keys() {

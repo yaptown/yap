@@ -4,11 +4,11 @@ import type {
   AnkiMediaSource,
 } from "../../../yap-frontend-rs/pkg";
 
-// The backend paces itself against Gemini's and Whisper's per-minute quotas,
-// so the fan-out here only needs to be wide enough to keep those saturated;
-// it is not what protects the providers. The failure cap still stops a
-// broken export before it floods the service.
-const CONCURRENCY = 24;
+// A new recording spends about four seconds waiting on Gemini and Whisper,
+// which in 2026-10 took 128 at once without slowing down, so the fan-out is
+// what sets a first export's speed. The failure cap still stops a broken
+// export before it floods the service.
+const CONCURRENCY = 64;
 const TIMEOUT_MS = 60_000;
 const RETRIES = 1;
 const MAX_FAILURES = 32;
@@ -61,6 +61,24 @@ async function recording(
   }
 }
 
+/** The shared cache's copy, straight from the CDN. Any failure, a stall
+ * included, is a miss. */
+async function cached(urls: string[], signal: AbortSignal) {
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, {
+        signal: AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]),
+      });
+      if (response.ok) {
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (bytes.length) return bytes;
+      }
+    } catch {
+      signal.throwIfAborted();
+    }
+  }
+}
+
 /** Results stay in plan order, regardless of request completion order. */
 export async function fetchMedia(
   plan: AnkiDeckPlan,
@@ -86,7 +104,8 @@ export async function fetchMedia(
             const { source, filename } = plan.bundled[index];
             const bytes =
               source.type === "Tts"
-                ? await recording(source.url, controller)
+                ? ((await cached(source.cached, controller.signal)) ??
+                  (await recording(source.url, controller)))
                 : await fetchBundled(source);
             controller.signal.throwIfAborted();
             if (!bytes && source.type !== "Subtitles") {

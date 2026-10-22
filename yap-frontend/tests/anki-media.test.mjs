@@ -41,7 +41,7 @@ function harness(fetch, count) {
   const plan = {
     bundled: Array.from({ length: count }, (_, i) => ({
       filename: `${i}.mp3`,
-      source: { type: "Tts", url: String(i) },
+      source: { type: "Tts", cached: [], url: String(i) },
     })),
   };
   return {
@@ -100,14 +100,14 @@ test("32 exhausted recordings stop a large failing queue", async () => {
   const h = harness(async (url) => {
     attempts.set(url, (attempts.get(url) ?? 0) + 1);
     return new Response("", { status: 503 });
-  }, 100);
+  }, 200);
   await assert.rejects(h.run(), (error) => error.code === "audio_unavailable");
   await flush();
   assert([...attempts.values()].filter((count) => count === 2).length >= 32);
   assert([...attempts.values()].every((count) => count <= 2));
   assert(
-    attempts.size <= 55,
-    "only 23 already-running requests may remain at the cutoff",
+    attempts.size <= 95,
+    "only 63 already-running requests may remain at the cutoff",
   );
   assert.equal(h.timers.size, 0);
 });
