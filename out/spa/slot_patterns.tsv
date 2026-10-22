@@ -1,7 +1,7 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-dar algo	filled	8734	8	12	0.67	yes	"A ti y a mí nos da tristeza".	da … tristeza
-ser alguien	filled	5192	0	12	0.00	no	"El paraíso es esto."	es … esto
-dar algo	clitic	409	10	12	0.83	yes	Lo que me dé la gana.	Lo … dé
+dar algo	filled	8744	8	12	0.67	yes	"A ti y a mí nos da tristeza".	da … tristeza
+ser alguien	filled	5201	0	12	0.00	no	"El paraíso es esto."	es … esto
+dar algo	clitic	410	10	12	0.83	yes	Lo que me dé la gana.	Lo … dé
 necesito su ayuda	clitic	90	12	12	1.00	yes		
 su gracia	filled	49	3	12	0.25	no	Al contrario, muchas gracias a usted.	gracias … usted
 a sus pies	clitic	25	11	12	0.92	yes	Agárrate a mi pie y dame la mano Yo te ayudaré.	a … mi … pie

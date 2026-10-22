@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 4400126
-Total errors: 5601
+Total predictions: 4404918
+Total errors: 5611
 Accuracy: 99.87%
 
 ## Error Patterns (sorted by frequency)
@@ -134,7 +134,7 @@ Accuracy: 99.87%
   - A las esposas de los desaparecidos aquí se les llama "semiviudas".
   - A los niños cuyos padres están muertos se les llama "huérfanos".
 
-### "--" + "¿" (48 occurrences)
+### "--" + "¿" (49 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -150,13 +150,13 @@ Accuracy: 99.87%
   - Debe haberte costado mucho.
   - Debería de haberte dejado una nota.
 
-### "significa" + """ (47 occurrences)
+### "significa" + """ (48 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "El príncipe de las tinieblas" significa "Satanás".
+  - "Keiko" significa "la suertuda", no "la suerte".
   - "Miau" significa "guau" en gato.
-  - "No" significa "no".
 
 ### "la" + """ (45 occurrences)
 - Predicted: None
@@ -366,7 +366,7 @@ Accuracy: 99.87%
   - Creo que ha dicho "júdete".
   - Ha dicho "Shino".
 
-### """ + "significa" (19 occurrences)
+### """ + "significa" (20 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -422,6 +422,14 @@ Accuracy: 99.87%
   - El mejor "calavera" que la gente tiene.
   - Eso es el "Akira" que querías encontrar.
 
+### "era" + """ (14 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Así que ella era "La India", y mi padre era "El Guapo".
+  - Así que ella era "La India", y mi padre era "El Guapo".
+  - Aunque creí que en esta ciudad, el sistema era "uno tú, uno yo".
+
 ### """ + "dijo" (13 occurrences)
 - Predicted: None
 - Actual: Space
@@ -445,14 +453,6 @@ Accuracy: 99.87%
   - Dijiste papá te llamó, así que dije "huh".
   - Le dije "buenas noches".
   - Me levanté y le dije "Excelente, ya se ha divertido." y quise marcharme.
-
-### "era" + """ (13 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Así que ella era "La India", y mi padre era "El Guapo".
-  - Así que ella era "La India", y mi padre era "El Guapo".
-  - Aunque creí que en esta ciudad, el sistema era "uno tú, uno yo".
 
 ### "llamado" + """ (13 occurrences)
 - Predicted: None
@@ -670,6 +670,14 @@ Accuracy: 99.87%
   - Está bien, si no tiene miedo, vamos a "chazar" con mi "chupín".
   - He perdido mi "gilli".
 
+### "no" + """ (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Keiko" significa "la suertuda", no "la suerte".
+  - "Para una solución total", no "para una solución final".
+  - Bueno, en realidad no "dice" nada.
+
 ### "nombre" + """ (9 occurrences)
 - Predicted: None
 - Actual: Space
@@ -726,6 +734,14 @@ Accuracy: 99.87%
   - Dijo "culata"?
   - Dijo "mamá".
 
+### "Un" + """ (8 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Un "arma-pedos".
+  - Un "calavera", carajo.
+  - Un "edificio fantasma"?
+
 ### "digo" + """ (8 occurrences)
 - Predicted: None
 - Actual: Space
@@ -765,14 +781,6 @@ Accuracy: 99.87%
   - Ah, excepto por lo "verdadero", el resto está bien.
   - Desde mañana no lo "haremos" en ninguna parte.
   - En Estados Unidos, cuando alguien es despedido, se dice que lo "decapitaron".
-
-### "no" + """ (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Para una solución total", no "para una solución final".
-  - Bueno, en realidad no "dice" nada.
-  - El periódico se llamaba "Pif el Perro", y no "Hercule el Gato".
 
 ### "por" + """ (8 occurrences)
 - Predicted: None
@@ -877,14 +885,6 @@ Accuracy: 99.87%
   - Significa "Nunca Jugar".
   - Significa "Sinceridad".
   - Significa "cómo estás".
-
-### "Un" + """ (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Un "arma-pedos".
-  - Un "calavera", carajo.
-  - Un "edificio fantasma"?
 
 ### "diga" + """ (7 occurrences)
 - Predicted: None
@@ -1006,6 +1006,14 @@ Accuracy: 99.87%
   - Dice "depósito de agua".
   - Dice "hola" y él dispara.
 
+### "Dijiste" + """ (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Dijiste "Mala suerte".
+  - Dijiste "a las doce en punto, donde siempre".
+  - ¿Dijiste "Aquarius"?
+
 ### "dicen" + """ (6 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1013,6 +1021,14 @@ Accuracy: 99.87%
   - Es por eso que le dicen "Pájaro".
   - Los budistas nos dicen "la vida es un mar de amargura".
   - Me dicen "Derek".
+
+### "está" + """ (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ahí está "la tísica", ve a correrla tú.
+  - Entonces, ¿dónde diablos está "seguro"?
+  - Hasta entonces, aquí está "Roobaroo".
 
 ### "llamarme" + """ (6 occurrences)
 - Predicted: None
@@ -1094,14 +1110,6 @@ Accuracy: 99.87%
   - Decir "no" es lo único que no puedo decir.
   - Decir "siempre" o "nunca" desinfla las afirmaciones.
 
-### "Dijiste" + """ (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Dijiste "Mala suerte".
-  - ¿Dijiste "Aquarius"?
-  - ¿Dijiste "etiqueta de tren en el asa"?
-
 ### "Ese" + """ (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1173,14 +1181,6 @@ Accuracy: 99.87%
   - "Lón", ¿cómo se escribe "lón"?
   - No se escribe "desgraciado" porque sí.
   - ¿Cómo se escribe "Rubita"?
-
-### "está" + """ (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ahí está "la tísica", ve a correrla tú.
-  - Entonces, ¿dónde diablos está "seguro"?
-  - Hasta entonces, aquí está "Roobaroo".
 
 ### "gritó" + """ (5 occurrences)
 - Predicted: None
@@ -3717,6 +3717,12 @@ Accuracy: 99.87%
 - Examples:
   - "Cállate," susurró él.
 
+### """ + "sí" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Chunuc" sí lo conocemos.
+
 ### """ + "tenía" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5660,6 +5666,12 @@ Accuracy: 99.87%
 - Actual: Space
 - Examples:
   - Unas "Kolombias" del Perú y unas "Kolombias" hasta de Argentina.
+
+### "Unos" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¡Unos "takeikos"!
 
 ### "Use" + """ (1 occurrences)
 - Predicted: None

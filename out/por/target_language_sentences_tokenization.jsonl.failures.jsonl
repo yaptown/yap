@@ -34,7 +34,7 @@
 {"sentence":"A bateria do meu laptop não dura mais tanto quanto costumava durar.","failure_count":3}
 {"sentence":"A cara perigosa e má no noticiário não é minha.","failure_count":1}
 {"sentence":"A cerveja inglês servida morna me surpreendeu.","failure_count":1}
-{"sentence":"A mulher do Antonio era uma padeiríssima, e a filha mais nova era ainda melhor.","failure_count":2}
+{"sentence":"A mulher do Antonio era uma padeiríssima, e a filha mais nova era ainda melhor.","failure_count":3}
 {"sentence":"A palavra \"física\" vem do grego, e significa natureza.","failure_count":3}
 {"sentence":"A propósito”, eu disse, “tentei desembarcar em Torfleet e em Castlefleet.","failure_count":3}
 {"sentence":"A sombra das árvores alivia o calor da tarde.","failure_count":1}
@@ -55,14 +55,14 @@
 {"sentence":"Apesar dele ter dinheiro, ele não é feliz.","failure_count":3}
 {"sentence":"Apetitoso.","failure_count":3}
 {"sentence":"Aplaudam!","failure_count":1}
-{"sentence":"Apoiu o queixo nas pontas dos dedos.","failure_count":2}
+{"sentence":"Apoiu o queixo nas pontas dos dedos.","failure_count":3}
 {"sentence":"Apontei para minha escrivaninha, que estava quase toda arrumada.","failure_count":3}
 {"sentence":"Apreenda.","failure_count":1}
 {"sentence":"Aproveitamos para fumar..","failure_count":3}
 {"sentence":"Aqui todo mundo trabalha, entendeu!?","failure_count":3}
 {"sentence":"As chances eram meio a meio de que eu voltasse a ver outra algum dia.","failure_count":3}
 {"sentence":"As mulheres de vocês gostam de dormir..","failure_count":3}
-{"sentence":"Aterariam, e haveria quem lhes desse as boas-vindas.","failure_count":2}
+{"sentence":"Aterariam, e haveria quem lhes desse as boas-vindas.","failure_count":3}
 {"sentence":"Ayan?","failure_count":1}
 {"sentence":"Baptizei algum filho seu?","failure_count":3}
 {"sentence":"Bardas queria prendê-lo.","failure_count":3}
@@ -73,7 +73,7 @@
 {"sentence":"Comei e bebei o que quiserdes!","failure_count":3}
 {"sentence":"Como \"mais\"?","failure_count":3}
 {"sentence":"Como é que tu está, mulher?","failure_count":3}
-{"sentence":"Concedei-lhe alguma paz de espírito.","failure_count":1}
+{"sentence":"Concedei-lhe alguma paz de espírito.","failure_count":2}
 {"sentence":"Creakle's.","failure_count":3}
 {"sentence":"Cumprimente o doutor.","failure_count":3}
 {"sentence":"Cumprimente, cumprimente!","failure_count":3}
@@ -88,7 +88,7 @@
 {"sentence":"Duas mil e trezentas.","failure_count":3}
 {"sentence":"E \"amonto\" bem, que já fui vaqueiro.","failure_count":3}
 {"sentence":"E como parece diferente, mas já estávamos em guerra.","failure_count":3}
-{"sentence":"E estávamos a comer torradas com doce de abóbora, muito bom.","failure_count":1}
+{"sentence":"E estávamos a comer torradas com doce de abóbora, muito bom.","failure_count":2}
 {"sentence":"E eu fui despejada.","failure_count":3}
 {"sentence":"Educação é aprender aquilo que você nem sabia que não sabia.","failure_count":3}
 {"sentence":"Ei!..","failure_count":3}
@@ -106,7 +106,7 @@
 {"sentence":"Enquanto ao trabalho das mulheres estava atento..","failure_count":3}
 {"sentence":"Enquanto você envergonhou Inder Vihar.","failure_count":1}
 {"sentence":"Enterrada e latindo, Sr. Bispo, \"au, au, au\", não sabe?","failure_count":3}
-{"sentence":"Entrámos, afastámo-nos da porta e olhámos em redor.","failure_count":2}
+{"sentence":"Entrámos, afastámo-nos da porta e olhámos em redor.","failure_count":3}
 {"sentence":"Então eu tenho que ir, ok?","failure_count":1}
 {"sentence":"Então eu vou deixar você me beijar de novo.","failure_count":1}
 {"sentence":"Então o convido para se juntar a mim em meu voo final.","failure_count":3}
@@ -153,7 +153,7 @@
 {"sentence":"Graças a ele, teremos que dormir aqui agora.","failure_count":3}
 {"sentence":"Graças a este telescóplo, uns poucos metros.","failure_count":3}
 {"sentence":"Graças a isto me livrei do serviço militar.","failure_count":3}
-{"sentence":"Graças a si, Padre Dinis.","failure_count":1}
+{"sentence":"Graças a si, Padre Dinis.","failure_count":2}
 {"sentence":"Graças a ti, eu sinto-me muito melhor.","failure_count":3}
 {"sentence":"Graças a uma necessidade urgente, ele não poderá vir.","failure_count":3}
 {"sentence":"Graças a você conseguimos terminar este trabalho a tempo.","failure_count":3}
@@ -164,7 +164,7 @@
 {"sentence":"Graças aos Céus.","failure_count":3}
 {"sentence":"Graças aos céus, já foram.","failure_count":3}
 {"sentence":"Graças à Santa Bárbra a Morte não levou meu melhor amigo.","failure_count":3}
-{"sentence":"Graças à fase da lua, a maré seria bastante fraca.","failure_count":2}
+{"sentence":"Graças à fase da lua, a maré seria bastante fraca.","failure_count":3}
 {"sentence":"Graças à fase da lua, a maré seria bem fraca.","failure_count":3}
 {"sentence":"Graças à lobotomia, hoje a psiquiatria é uma especialidade médica.","failure_count":3}
 {"sentence":"Graças à sua boa ação, os anjos e os serafins rejubilam no Reino dos Céus.","failure_count":3}
@@ -175,6 +175,7 @@
 {"sentence":"Havíamos fechado os negócios com bastante antecedência, e todos foram cumpridos.","failure_count":3}
 {"sentence":"Há muito tempo não ouvíamos risadas nesta casa.","failure_count":3}
 {"sentence":"Ignorando o aviso de \"Não entre\", ela abriu a porta e entrou.","failure_count":3}
+{"sentence":"Imaginas que me mete medo?","failure_count":3}
 {"sentence":"Importa-se se eu chamá-lo de filho?","failure_count":3}
 {"sentence":"Importa-se se ouvirmos um som?","failure_count":3}
 {"sentence":"Investiga-se se as pegadas encontradas na porta são as do ladrão.","failure_count":3}
@@ -202,9 +203,10 @@
 {"sentence":"Lazzaro, você descarrega!","failure_count":3}
 {"sentence":"Lembro da Costa do Marfim.","failure_count":1}
 {"sentence":"Ligarei para ele antes dele sair.","failure_count":3}
+{"sentence":"Livra!","failure_count":1}
 {"sentence":"Mas como você deu, é como um presente para mim.","failure_count":1}
 {"sentence":"Mas estávamos felizes em ter um motorista jovem e divertido também.","failure_count":3}
-{"sentence":"Mas fora isso que ele prometera.","failure_count":2}
+{"sentence":"Mas fora isso que ele prometera.","failure_count":3}
 {"sentence":"Mas não impona, estou aqui para o que der e vier.","failure_count":3}
 {"sentence":"Mas onde estava?","failure_count":1}
 {"sentence":"Mas quando uma valise vibra, os \"bagaginhas\" têm de chamar a polícia.","failure_count":3}
@@ -221,7 +223,7 @@
 {"sentence":"Na primeira sílaba, \"Ca\" o A está no início, ou no fim da sílaba?","failure_count":3}
 {"sentence":"Nenê num \"té\", nenê num \"té\"!","failure_count":3}
 {"sentence":"No me gustan los padres pero esse está haciendo um buen servicio.","failure_count":3}
-{"sentence":"Não lhe é destinada, mas acho que é altura de saber que vida amargurada é a sua.","failure_count":1}
+{"sentence":"Não lhe é destinada, mas acho que é altura de saber que vida amargurada é a sua.","failure_count":2}
 {"sentence":"Não me diga que não tem papel de parede.","failure_count":1}
 {"sentence":"Não me importo com o \"sonoros\", mas essa história de \"perus\" não dá.","failure_count":3}
 {"sentence":"Não me lembro do que estávamos fazendo naquele momento.","failure_count":3}
@@ -263,12 +265,12 @@
 {"sentence":"Passei o endereço para o motorista e ele me trouxe..","failure_count":3}
 {"sentence":"Pegem ele.","failure_count":3}
 {"sentence":"Pena, estávamos nos dando tão bem.","failure_count":3}
-{"sentence":"Pensas como um homem.","failure_count":1}
+{"sentence":"Pensas como um homem.","failure_count":2}
 {"sentence":"Pensas demais.","failure_count":3}
 {"sentence":"Pensas que eu não sei o que está acontecendo?","failure_count":3}
-{"sentence":"Pensas que isto é uma pensão?","failure_count":1}
+{"sentence":"Pensas que isto é uma pensão?","failure_count":2}
 {"sentence":"Pensas que não sei o que está acontecendo?","failure_count":3}
-{"sentence":"Pensas que se afundará sozinho?","failure_count":1}
+{"sentence":"Pensas que se afundará sozinho?","failure_count":2}
 {"sentence":"Pensas que tenho que fazer isso, não é?","failure_count":3}
 {"sentence":"Pensas que és o único que consegues fazer isso?","failure_count":3}
 {"sentence":"Perdão, Nessa.","failure_count":3}
@@ -276,7 +278,7 @@
 {"sentence":"Perkovic.","failure_count":3}
 {"sentence":"Pode entrar? Entre!","failure_count":1}
 {"sentence":"Por acaso tu sabe onde fica a China?","failure_count":3}
-{"sentence":"Por causa dele, a freguesia aumentou e hasta foi fotografiada.","failure_count":1}
+{"sentence":"Por causa dele, a freguesia aumentou e hasta foi fotografiada.","failure_count":2}
 {"sentence":"Por esta razão estávamos lá.","failure_count":3}
 {"sentence":"Por este motivo estávamos lá.","failure_count":3}
 {"sentence":"Por favor, confira se seu nome de usuário e sua senha estão corretos.","failure_count":1}
@@ -302,8 +304,8 @@
 {"sentence":"Sami foi sentenciado a prisão perpértua.","failure_count":3}
 {"sentence":"Sanjec'ka, tenho que sair um minuto.","failure_count":3}
 {"sentence":"Schenck.","failure_count":3}
-{"sentence":"Se eu emprestasse dinheiro para o navio, a coisa complicar-se-ia muito depressa.","failure_count":2}
-{"sentence":"Se eu fosse mais novo, eu partia-te os cornos!","failure_count":1}
+{"sentence":"Se eu emprestasse dinheiro para o navio, a coisa complicar-se-ia muito depressa.","failure_count":3}
+{"sentence":"Se eu fosse mais novo, eu partia-te os cornos!","failure_count":2}
 {"sentence":"Se precisar de mais, então me dizer eu vou..","failure_count":3}
 {"sentence":"Se tivese estudado.","failure_count":3}
 {"sentence":"Sem julgamento, mas tipo, o que é mais importante para vocês..","failure_count":3}
@@ -356,7 +358,7 @@
 {"sentence":"Terá seguro, não?","failure_count":3}
 {"sentence":"Terá uma prova.","failure_count":3}
 {"sentence":"Tive cinco anos para ensaiar.","failure_count":1}
-{"sentence":"Tive o cuidado de me deixar ver a beber mais.","failure_count":2}
+{"sentence":"Tive o cuidado de me deixar ver a beber mais.","failure_count":3}
 {"sentence":"Tocamos a alarme.","failure_count":3}
 {"sentence":"Todo mundo começou a correr.","failure_count":1}
 {"sentence":"Tolinho!","failure_count":3}
@@ -369,7 +371,7 @@
 {"sentence":"Trouxemos todos para baixo.","failure_count":3}
 {"sentence":"Trouxemos-lhe a roupa do seu filho completamente ensanguentada.","failure_count":3}
 {"sentence":"Tá explicado por que estávamos sem sinal.","failure_count":3}
-{"sentence":"Tínhamo-los.","failure_count":2}
+{"sentence":"Tínhamo-los.","failure_count":3}
 {"sentence":"Tô \"bebido\" João!","failure_count":2}
 {"sentence":"Um \"toh\" inteiro de arroz?","failure_count":3}
 {"sentence":"Um dia em Londres, no próximo Dubrovnik.","failure_count":1}
@@ -389,9 +391,9 @@
 {"sentence":"Viemos atrás do Gu.","failure_count":3}
 {"sentence":"Viemos juntos.","failure_count":3}
 {"sentence":"Viemos porque queremos falar com o Tom.","failure_count":3}
-{"sentence":"Vinham pedir desculpa por terem sido mal-educados comigo.","failure_count":2}
+{"sentence":"Vinham pedir desculpa por terem sido mal-educados comigo.","failure_count":3}
 {"sentence":"Vista de perto, aumentavaem valor de coração o que perdia no quilate dos olhos.","failure_count":3}
-{"sentence":"Viu o que estávamos a fazer.","failure_count":2}
+{"sentence":"Viu o que estávamos a fazer.","failure_count":3}
 {"sentence":"Viu o que estávamos fazendo.","failure_count":3}
 {"sentence":"Você disse a Tom que estávamos aqui?","failure_count":3}
 {"sentence":"Você disse que o nome dela era qual, mesmo?","failure_count":1}
@@ -399,14 +401,19 @@
 {"sentence":"Você não é a primeiro a sugerir isso.","failure_count":3}
 {"sentence":"Você é a razão dele está em apuros.","failure_count":3}
 {"sentence":"Você é diplomática.","failure_count":3}
+{"sentence":"Você é um cara meigo.","failure_count":2}
 {"sentence":"Volte para a Índia.","failure_count":1}
-{"sentence":"Vossemecê que tem?","failure_count":2}
+{"sentence":"Vossemecê bebeu vinho e tá-me a deitar água pelos olhos?","failure_count":1}
+{"sentence":"Vossemecê hoje está a falar bem mas olhe que ainda não percebi nada!","failure_count":1}
+{"sentence":"Vossemecê não se quer tratar!","failure_count":1}
+{"sentence":"Vossemecê que tem?","failure_count":3}
+{"sentence":"Vossemecê é capaz de me fazer um grande favorzinho?","failure_count":1}
 {"sentence":"ÁIvaro, fica aqui!","failure_count":3}
 {"sentence":"É Isso, né?","failure_count":3}
 {"sentence":"É a partir desta colônia..?","failure_count":3}
 {"sentence":"É com dois \"s.\"","failure_count":3}
 {"sentence":"É isso!..","failure_count":3}
-{"sentence":"É mais fácil guardar um segredo quando se sabe exactamente qual é —disse ela.","failure_count":2}
+{"sentence":"É mais fácil guardar um segredo quando se sabe exactamente qual é —disse ela.","failure_count":3}
 {"sentence":"É mesmo \"seu\" bebê.","failure_count":3}
 {"sentence":"É o Ben Fong-Torres, certo?","failure_count":1}
 {"sentence":"É que hoje estávamos fechando.","failure_count":3}

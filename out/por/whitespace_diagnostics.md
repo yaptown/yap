@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 2467404
-Total errors: 3044
+Total predictions: 2481829
+Total errors: 3054
 Accuracy: 99.88%
 
 ## Error Patterns (sorted by frequency)
@@ -30,7 +30,7 @@ Accuracy: 99.88%
   - "Pédia" de "enciclopédia", "wiki" relembrando o espírito explorador dos Vikings.
   - "Quioto" é um anagrama de "Tóquio".
 
-### "o" + """ (80 occurrences)
+### "o" + """ (82 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -54,7 +54,7 @@ Accuracy: 99.88%
   - A palavra é "desculpa".
   - Aquilo é "dar um coice no cavalo".
 
-### "um" + """ (54 occurrences)
+### "um" + """ (55 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -126,7 +126,7 @@ Accuracy: 99.88%
   - A cidade de Recife é conhecida como "Veneza Brasileira".
   - A água no estado gasoso é conhecida como "vapor".
 
-### "e" + """ (27 occurrences)
+### "e" + """ (28 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -598,6 +598,14 @@ Accuracy: 99.88%
   - Fala mais sobre esse "Mike".
   - O que quis dizer com esse "sem sentido"?
 
+### "filme" + """ (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Este não é um filme "B" de terror.
+  - O filme "Clube da Luta" tem um final surpresa.
+  - Quando eu era criança, adorava o filme "Jurassic Park".
+
 ### "foi" + """ (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -669,6 +677,14 @@ Accuracy: 99.88%
   - "Como se chama?" são três palavras.
   - As palavras "livro" e "mesa" são substantivos comuns.
   - Os "Outros" são soldados na eterna guerra.
+
+### """ + "também" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Então, o "tehsildar" também quer estabelecer a sua sede na escola.
+  - Por favor, não seja "Diabólico" também!
+  - Quem havia de dizer que o "amigo dos animais" também ia matar o bicho?
 
 ### "No" + """ (4 occurrences)
 - Predicted: None
@@ -749,14 +765,6 @@ Accuracy: 99.88%
   - Eu falei "Espere, eu quero ver isso!"
   - Eu falei "contorne"!
   - Eu falei "nada de camelo".
-
-### "filme" + """ (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Este não é um filme "B" de terror.
-  - O filme "Clube da Luta" tem um final surpresa.
-  - Quando eu era criança, adorava o filme "Jurassic Park".
 
 ### "isso" + "»" (4 occurrences)
 - Predicted: Space
@@ -853,14 +861,6 @@ Accuracy: 99.88%
   - "Ela" quem, senhora Condessa, se não sou indiscreto?
   - "Ele" quem?
   - Pedro "Alves" quem descobriu o Brasil e fez a escada de pedra e de sangue.
-
-### """ + "também" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Então, o "tehsildar" também quer estabelecer a sua sede na escola.
-  - Por favor, não seja "Diabólico" também!
-  - É um "A" também.
 
 ### """ + "à" (3 occurrences)
 - Predicted: None
@@ -1937,6 +1937,12 @@ Accuracy: 99.88%
 - Examples:
   - Esta é a "tivia-row" Imperial.
 
+### """ + "João de Deus" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Minha mãe," João de Deus.
+
 ### """ + "Não" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2176,6 +2182,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Quer ir ao "Taksim" esta noite?
+
+### """ + "estalo" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - E levar um "grande" estalo.
 
 ### """ + "esteve" (1 occurrences)
 - Predicted: None
@@ -6365,6 +6377,12 @@ Accuracy: 99.88%
 - Examples:
   - «Aceitaríamos arroz em troca», disse Kat.
 
+### "tu" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Pois era bem feito tu "robarze-a".
+
 ### "tu" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -6682,6 +6700,12 @@ Accuracy: 99.88%
 - Actual: None
 - Examples:
   - Não pude negar―que era pouco.
+
+### "”" + "Já" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - ”Já matei a minha mulher!”
 
 ### "…" + """ (1 occurrences)
 - Predicted: None
