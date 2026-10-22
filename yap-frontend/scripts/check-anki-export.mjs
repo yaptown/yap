@@ -104,15 +104,15 @@ async function writeFixtures(buildApkg, output) {
   const bundled = new Map([
     ["human.ogg", new Uint8Array([79, 103, 103, 83, 1, 2, 3])],
     [
-      "_yap-subs-clip.vtt",
+      "subs-clip",
       new TextEncoder().encode(
-        "WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n<c.sentence>bonjour</c>\n",
+        '<span class="sentence" data-at="0" data-until="1000">bonjour</span>',
       ),
     ],
     [
-      "_yap-subs-clip-masked.vtt",
+      "subs-clip-masked",
       new TextEncoder().encode(
-        "WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n<c.sentence>____</c>\n",
+        '<span class="sentence" data-at="0" data-until="1000"><i class="gap"></i></span>',
       ),
     ],
     ["poster.jpg", new Uint8Array([255, 216, 255, 217])],
@@ -149,6 +149,11 @@ async function writeFixtures(buildApkg, output) {
       },
       { text: "plain", gloss: null, url: null },
     ],
+    // Only some notes name anyone, so the empty field's section is covered too.
+    proper_nouns: index % 2 ? [] : [{ spans: [
+      { text: hostileText, target_language: true },
+      { text: ": names", target_language: false },
+    ] }],
     source: {
       title: hostileText,
       year: 2001,
@@ -158,12 +163,15 @@ async function writeFixtures(buildApkg, output) {
     clip: {
       mp4: 'https://mock.invalid/video.mp4?d=fake&v="<>',
       webm: 'https://mock.invalid/video.webm?d=fake&v="<>',
+      poster: 'https://mock.invalid/poster.jpg?d=fake&v="<>',
+      aspect_ratio: index === 1 ? null : 2.39,
     },
     tts,
     include_reading: true,
     include_listening: true,
-    subtitles: index === 4 ? "_yap-subs-missing.vtt" : "_yap-subs-clip.vtt",
-    masked_subtitles: "_yap-subs-clip-masked.vtt",
+    subtitles: index === 4 ? "subs-missing" : "subs-clip",
+    masked_subtitles: "subs-clip-masked",
+    masked_sentence: `Phrase ${index} <i class="gap">仕事</i>`,
     tags: ["yap", "yap::fra-eng", "yap::sentence", "yap::film::Amélie_2001"],
   });
   const base = {
@@ -185,7 +193,7 @@ async function writeFixtures(buildApkg, output) {
         source: sentence(2, "").source,
         clip: sentence(2, "").clip,
         audio: "human.ogg",
-        subtitles: "_yap-subs-clip.vtt",
+        subtitles: "subs-clip",
         tags: [
           "yap",
           "yap::fra-eng",
@@ -228,7 +236,7 @@ async function writeFixtures(buildApkg, output) {
         source: { type: "Tts", url: "https://mock.invalid/word" },
       },
       {
-        filename: "_yap-subs-clip.vtt",
+        filename: "subs-clip",
         source: {
           type: "Subtitles",
           clip_id: "clip",
@@ -237,7 +245,7 @@ async function writeFixtures(buildApkg, output) {
         },
       },
       {
-        filename: "_yap-subs-clip-masked.vtt",
+        filename: "subs-clip-masked",
         source: {
           type: "Subtitles",
           clip_id: "clip",
@@ -246,7 +254,7 @@ async function writeFixtures(buildApkg, output) {
         },
       },
       {
-        filename: "_yap-subs-missing.vtt",
+        filename: "subs-missing",
         source: {
           type: "Subtitles",
           clip_id: "missing",
@@ -295,8 +303,8 @@ async function writeFixtures(buildApkg, output) {
               ? undefined
               : bundled.get(
                   source.masked_sentence
-                    ? "_yap-subs-clip-masked.vtt"
-                    : "_yap-subs-clip.vtt",
+                    ? "subs-clip-masked"
+                    : "subs-clip",
                 );
           const filename =
             source.type === "Poster" ? "poster.jpg" : "human.ogg";

@@ -36,6 +36,35 @@ def assert_safe(markup):
         assert attrs.get("src") != "x", (tag, attrs)
 
 
+def captions(key):
+    return {
+        "subs-clip": '<span class="sentence" data-at="0" data-until="1000">bonjour</span>',
+        "subs-clip-masked": '<span class="sentence" data-at="0" data-until="1000"><i class="gap"></i></span>',
+        "subs-missing": "",
+        None: "",
+    }[key]
+
+
+def assert_card(markup):
+    tags = Tags(markup).tags
+    assert sum(tag == "script" for tag, _ in tags) == 1
+    script = re.search(r"<script>\s*\(\(\) => \{.*?\}\)\(\);\s*</script>", markup, re.S)
+    assert script, markup
+    assert sum(tag == "style" for tag, _ in tags) == 1
+    style = re.match(r"\s*<style>.*?</style>\s*", markup, re.S)
+    assert style and ".scene {" in style.group(), markup
+    body = markup[style.end():script.start()].strip()
+    assert not markup[script.end():].strip()
+    assert body.startswith('<div class="yap">') and body.endswith('</div>')
+    assert_safe(body)
+    assert not any(tag in ("audio", "track") or "autoplay" in attrs for tag, attrs in tags)
+    for tag, attrs in tags:
+        if tag == "video":
+            assert attrs.keys() == {"poster", "preload", "playsinline"} and attrs["preload"] == "metadata", attrs
+    assert '<hr id="answer">' in body
+    return body
+
+
 def autoplay_sources(render, side):
     native = getattr(render, side + "_av_tags")
     tags = Tags(getattr(render, side + "_text")).tags
@@ -63,9 +92,9 @@ def counts(collection):
 
 def check_sql(package, plan, directory):
     with zipfile.ZipFile(package) as archive:
-        assert set(archive.namelist()) == {"collection.anki2", "media", "0", "1", "2", "3", "4", "5"}
+        assert set(archive.namelist()) == {"collection.anki2", "media", "0", "1", "2", "3"}
         media = json.loads(archive.read("media"))
-        assert set(media.values()) == {"human.ogg", "poster.jpg", "tts.wav", "word.wav", "_yap-subs-clip.vtt", "_yap-subs-clip-masked.vtt"}, media
+        assert set(media.values()) == {"human.ogg", "poster.jpg", "tts.wav", "word.wav"}, media
         for key in media:
             assert archive.read(key)
         archive.extract("collection.anki2", directory)
@@ -87,42 +116,42 @@ def check_sql(package, plan, directory):
         for flds in names.values():
             assert len(set(flds)) == len(flds), flds
         for model_type in (model, word_model):
-            assert model_type["flds"][-1]["name"] == "ClipWebmUrl"
             for template in model_type["tmpls"]:
                 for side in ("qfmt", "afmt"):
-                    tags = Tags(re.sub(r"{{[#/^][^}]*}}", "", template[side])).tags
-                    video = next(attrs for tag, attrs in tags if tag == "video")
-                    assert "src" not in video
+                    markup = template[side]
+                    body = assert_card(re.sub(r"{{[#/^][^}]*}}", "", markup))
+                    tags = Tags(body).tags
+                    assert sum(tag == "video" for tag, _ in tags) == 1
                     sources = [attrs for tag, attrs in tags if tag == "source"]
                     assert sources == [
                         {"src": "{{ClipUrl}}", "type": 'video/mp4; codecs="avc1.64001F, mp4a.40.2"'},
                         {"src": "{{ClipWebmUrl}}", "type": 'video/webm; codecs="vp9, opus"'},
                     ], sources
-                assert all("<audio" not in template[side] for side in ("qfmt", "afmt"))
+                    field = "MaskedSubtitles" if template["name"] == "Listening" and side == "qfmt" else "Subtitles"
+                    assert '{{#ClipUrl}}<button type="button" class="scene" style="aspect-ratio: {{ClipAspect}}"><video' in markup
+                    assert '</video><div class="subs">{{' + field + '}}</div>' in markup
+                    assert '<span class="play"><svg ' in markup
+                    assert '</button>{{/ClipUrl}}' in markup
+                    assert '{{#Source}}<div class="source">{{Source}}</div>{{/Source}}\n<hr id="answer">' in markup
+                    assert "FrontSide" not in markup
+                # Revealing the answer must not move anything: both sides match
+                # down to the answer line, which the badge then the answer follow.
+                # The Listening prompt's blanks are the sentence's own words in
+                # invisible ink, so it fills the sentence's slot.
+                def slots(markup):
+                    markup = re.sub(r"{{(kanji|furigana):", "{{", markup)
+                    return markup.replace("{{MaskedSubtitles}}", "{{Subtitles}}").replace("{{MaskedSentence}}", "{{Sentence}}")
+                front = slots(re.sub(r"^{{#Include\w+}}|{{/Include\w+}}$", "", template["qfmt"]))
+                above, below = front.split('<hr id="answer">')
+                assert slots(template["afmt"]).startswith(above + '<hr id="answer">'), template["name"]
+                eyebrow = {"Reading": "Translate", "Listening": "Listen", "Word": "Word"}[template["name"]]
+                assert below.lstrip().startswith(f'<span class="eyebrow">{eyebrow}</span>')
+                assert template["afmt"].split('<hr id="answer">')[1].lstrip().startswith('<div class="answer">')
+                assert 'class="eyebrow"' not in template["afmt"]
         for ordinal, template in enumerate(model["tmpls"]):
             name = ["Reading", "Listening"][ordinal]
             assert template["name"] == name and template["ord"] == ordinal
             assert template["qfmt"].startswith("{{#Include" + name + "}}")
-            for side in ("qfmt", "afmt"):
-                markup = template[side]
-                assert "FrontSide" not in markup
-                # The clip, then the film (poster + title), close both sides.
-                assert re.sub(r"{{[^}]*}}", "", markup).strip().endswith('</video>\n<div class="source"></div>')
-                tags = Tags(re.sub(r"{{[#/^][^}]*}}", "", markup)).tags
-                video = next(attrs for tag, attrs in tags if tag == "video")
-                track = next(attrs for tag, attrs in tags if tag == "track")
-                field = "MaskedSubtitles" if name == "Listening" and side == "qfmt" else "Subtitles"
-                assert track["src"] == "{{" + field + "}}"
-                assert track["kind"] == "subtitles" and "default" in track
-                assert "crossorigin" not in video
-                assert "autoplay" not in video and "poster" not in video
-                assert video["preload"] == "metadata"
-                assert "controls" in video and "playsinline" in video
-                autoplay = [(tag, attrs) for tag, attrs in tags if "autoplay" in attrs]
-                assert not autoplay
-                assert '<hr id="answer">' in markup
-            assert "Tap to reveal the answer" in template["qfmt"]
-            assert "Tap to reveal the answer" not in template["afmt"]
             assert "{{Translation}}" in template["afmt"]
             assert "{{Glosses}}" in template["afmt"]
         for index, note in enumerate(plan["notes"]):
@@ -136,25 +165,47 @@ def check_sql(package, plan, directory):
             values = row["flds"].split("\x1f")
             assert len(values) == len(names[row["mid"]])
             fields = dict(zip(names[row["mid"]], values))
-            clip = note.get("clip") or {"mp4": "", "webm": ""}
+            clip = note.get("clip") or {"mp4": "", "webm": "", "poster": "", "aspect_ratio": None}
             assert html.unescape(fields["ClipUrl"]) == clip["mp4"]
             assert html.unescape(fields["ClipWebmUrl"]) == clip["webm"]
+            assert html.unescape(fields["ClipPosterUrl"]) == clip["poster"]
+            assert fields["ClipAspect"] == ("" if clip.get("aspect_ratio") is None else str(clip["aspect_ratio"]))
             assert_safe(row["flds"])
+            assert fields["Subtitles"] == captions(note.get("subtitles"))
+            source = note.get("source")
+            expected_source = ""
+            if source:
+                if source.get("poster_filename"):
+                    expected_source += f'<img src="{html.escape(source["poster_filename"])}" alt="">'
+                year = f' · {source["year"]}' if source.get("year") else ""
+                expected_source += f'<span>{html.escape(source["title"])}{year}</span>'
+            assert fields["Source"] == expected_source
             if note["type"] == "Word":
                 assert html.unescape(fields["Word"]) == note["word_furigana"]
                 assert html.unescape(fields["Definition"]) == note["definition"]
-                assert fields["Subtitles"] == ("_yap-subs-clip.vtt" if index == 0 else "")
                 wanted_ordinals = [0]
             else:
                 assert html.unescape(fields["Sentence"]) == note["sentence_furigana"]
                 assert html.unescape(fields["Translation"]) == note["translation"]
-                assert "<img src=x" not in fields["Glosses"]
+                glosses = []
+                for gloss in note["glosses"]:
+                    term = f'<a class="term" lang="fr" href="{html.escape(gloss["url"])}">' if gloss["url"] else '<span class="term" lang="fr">'
+                    end = "</a>" if gloss["url"] else "</span>"
+                    glosses.append(f'<li>{term}{html.escape(gloss["text"])}{end}<span class="gloss">{html.escape(gloss["gloss"] or "")}</span></li>')
+                assert fields["Glosses"] == "".join(glosses)
+                assert fields["ProperNouns"] == "".join(
+                    "<li>" + "".join(
+                        f'<span class="name" lang="fr">{html.escape(span["text"])}</span>' if span["target_language"] else html.escape(span["text"])
+                        for span in group["spans"]
+                    ) + "</li>"
+                    for group in note["proper_nouns"]
+                )
                 if index == 2:
                     assert fields["TtsBundled"] == "[sound:tts.wav]"
                 if index == 4:
                     assert fields["TtsBundled"] == "" and fields["IncludeListening"] == ""
-                assert fields["Subtitles"] == ("" if index == 4 else "_yap-subs-clip.vtt")
-                assert fields["MaskedSubtitles"] == "_yap-subs-clip-masked.vtt"
+                assert fields["MaskedSubtitles"] == captions(note.get("masked_subtitles"))
+                assert fields["MaskedSentence"] == (note.get("masked_sentence") or "")
                 wanted_ordinals = ([0] if note["include_reading"] else []) + (
                     [1] if note["include_listening"] and index != 4 else []
                 )
@@ -182,9 +233,6 @@ def check_variant(root, variant):
         try:
             for iteration in range(2):
                 result = import_package(collection, package)
-                # Template-only tracks must actually survive import, not just render in the HTML.
-                for filename in ("_yap-subs-clip.vtt", "_yap-subs-clip-masked.vtt"):
-                    assert (Path(collection.media.dir()) / filename).is_file(), filename
                 assert counts(collection) == (5, plan["stats"]["card_count"] - int(variant != "reading"))
                 assert len(result.log.new) == (5 if iteration == 0 else 0)
                 for note in plan["notes"]:
@@ -209,8 +257,6 @@ def check_variant(root, variant):
                 render = card.render_output()
                 note = next(note for note in plan["notes"] if note["guid"] == collection.get_note(card.nid).guid)
                 is_word = note["type"] == "Word"
-                assert_safe(render.question_text)
-                assert_safe(render.answer_text)
                 # Word cards play their recording on both sides, like sentence cards.
                 bundled = is_word or note["tts"] != "failed.mp3"
                 assert autoplay_sources(render, "question") == int(bundled)
@@ -218,19 +264,20 @@ def check_variant(root, variant):
                 assert len(render.question_av_tags) == int(bundled)
                 assert len(render.answer_av_tags) == int(bundled)
                 # With readings, the front strips them and the back shows them as ruby.
-                # (The Listening front omits the sentence; word fixture 1 has no reading.)
+                # (The Listening front shows the masked sentence; word fixture 1 has no reading.)
                 text = html.escape(note["word"] if is_word else note["sentence"])
                 if "仕事" in text:
-                    sentence = re.compile(r'<div class="sentence".*?</div>', re.S)
+                    sentence = re.compile(r'<div class="sentence(?: word)? prompt"><span lang="[^"]*">(.*?)</span>', re.S)
                     question = sentence.findall(render.question_text)
                     answer = sentence.findall(render.answer_text)
-                    shown = is_word or card.ord == 0
-                    assert len(question) == int(shown) and len(answer) == 1, (question, answer)
-                    assert all(text in markup and "[" not in markup for markup in question), question
+                    assert len(question) == 1 and len(answer) == 1, (question, answer)
+                    if is_word or card.ord == 0:
+                        assert text in question[0] and "[" not in question[0], question
                     ruby = "<ruby><rb>仕事</rb><rt>しごと</rt></ruby>"
                     expected = text.replace("仕事", ruby) if plan["furigana"] else text
                     assert expected in answer[0] and "[" not in answer[0], (expected, answer)
                 for back, markup in enumerate((render.question_text, render.answer_text)):
+                    body = assert_card(markup)
                     videos = [attrs for tag, attrs in Tags(markup).tags if tag == "video"]
                     assert len(videos) == int(bool(note.get("clip")))
                     if videos:
@@ -238,13 +285,22 @@ def check_variant(root, variant):
                         sources = [attrs for tag, attrs in Tags(markup).tags if tag == "source"]
                         assert [source["src"] for source in sources] == [note["clip"]["mp4"], note["clip"]["webm"]]
                         assert "autoplay" not in videos[0]
-                        assert "poster" not in videos[0]
-                    tracks = [attrs for tag, attrs in Tags(markup).tags if tag == "track"]
+                        assert videos[0]["poster"] == note["clip"]["poster"]
                     field = "masked_subtitles" if not is_word and card.ord == 1 and not back else "subtitles"
-                    filename = note.get(field)
-                    expected = [] if not filename or filename == "_yap-subs-missing.vtt" else [filename]
-                    assert [track["src"] for track in tracks] == expected, (note, tracks)
-                    assert all(tag != "audio" for tag, _ in Tags(markup).tags)
+                    if not is_word and card.ord == 1 and not back:
+                        assert note["masked_sentence"] in body
+                    subs = re.findall(r'<div class="subs">(.*?)</div>', body, re.S)
+                    assert subs == ([captions(note.get(field))] if videos else []), (note, subs)
+                    assert ('<ul class="names">' in body) == bool(note.get("proper_nouns")), (note, body)
+                    assert len(re.findall(r'<button type="button" class="scene" style="aspect-ratio: [\d.]*">', body)) == len(videos)
+                    assert body.count('<span class="play">') == len(videos)
+                    imported = collection.get_note(card.nid)
+                    for value in imported.fields:
+                        assert_safe(value)
+                    if note.get("source"):
+                        assert f'<div class="source">{imported["Source"]}</div>\n<hr id="answer">' in body
+                    else:
+                        assert '<div class="source">' not in body
             media = collection.media.check()
             assert not media.missing and not media.unused, media
             print(f"PASS {variant}: repeat import, SQL, escaping, AV/autoplay, media")

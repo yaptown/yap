@@ -93,23 +93,16 @@ pub struct ClipSubtitleCue {
     pub role: String,
 }
 
-/// Native WebVTT tracks for exported cards; only the target cue is masked.
-pub(crate) fn subtitles_webvtt(
+/// Timed caption spans for exported cards, which show them over the clip
+/// themselves (iOS doesn't render native tracks there); only the target cue
+/// is masked, its blanks drawn as gaps.
+pub(crate) fn subtitles_html(
     cues: &[ClipSubtitleCue],
     sentence: &str,
     masked_sentence: Option<&str>,
 ) -> String {
     use std::fmt::Write;
-    fn timestamp(ms: i64) -> String {
-        format!(
-            "{:02}:{:02}:{:02}.{:03}",
-            ms / 3_600_000,
-            ms / 60_000 % 60,
-            ms / 1_000 % 60,
-            ms % 1_000
-        )
-    }
-    let mut vtt = String::from("WEBVTT\n\n");
+    let mut html = String::new();
     for cue in cues {
         let start = cue.at_ms.max(0);
         let is_sentence = cue.role == "sentence";
@@ -125,17 +118,17 @@ pub(crate) fn subtitles_webvtt(
         let text = text
             .replace('&', "&amp;")
             .replace('<', "&lt;")
-            .replace('>', "&gt;");
+            .replace('>', "&gt;")
+            .replace("____", r#"<i class="gap"></i>"#);
         let class = if is_sentence { "sentence" } else { "context" };
-        writeln!(
-            vtt,
-            "{} --> {}\n<c.{class}>{text}</c>\n",
-            timestamp(start),
-            timestamp(cue.until_ms)
+        write!(
+            html,
+            r#"<span class="{class}" data-at="{start}" data-until="{}">{text}</span>"#,
+            cue.until_ms
         )
         .unwrap();
     }
-    vtt
+    html
 }
 
 /// The clip and its playback-relevant metadata.
@@ -897,11 +890,11 @@ async fn download_clip(
 }
 
 #[cfg(test)]
-mod webvtt_tests {
+mod subtitles_html_tests {
     use super::*;
 
     #[test]
-    fn webvtt_clamps_filters_escapes_and_masks_only_sentence_cues() {
+    fn subtitles_html_clamps_filters_escapes_and_masks_only_sentence_cues() {
         let cue = |text: &str, at_ms, until_ms, role: &str| ClipSubtitleCue {
             text: text.into(),
             at_ms,
@@ -917,15 +910,15 @@ mod webvtt_tests {
             cue("backwards", 2000, 1000, "context-after"),
             cue("  ", 3000, 4000, "context-after"),
         ];
-        let plain = subtitles_webvtt(&cues, "bonjour", None);
+        let plain = subtitles_html(&cues, "bonjour", None);
         assert_eq!(
             plain,
-            "WEBVTT\n\n00:00:00.000 --> 00:00:01.200\n<c.context>A &amp; &lt;B&gt;</c>\n\n00:00:01.200 --> 00:00:02.345\n<c.sentence>bonjour. Au revoir.</c>\n\n01:01:01.001 --> 01:01:02.002\n<c.context>Au revoir</c>\n\n"
+            r#"<span class="context" data-at="0" data-until="1200">A &amp; &lt;B&gt;</span><span class="sentence" data-at="1200" data-until="2345">bonjour. Au revoir.</span><span class="context" data-at="3661001" data-until="3662002">Au revoir</span>"#
         );
         assert_eq!(
-            subtitles_webvtt(&cues, "bonjour", Some("____ & <ami>")),
-            plain.replace("bonjour", "____ &amp; &lt;ami&gt;")
+            subtitles_html(&cues, "bonjour", Some("____ & <ami>")),
+            plain.replace("bonjour", r#"<i class="gap"></i> &amp; &lt;ami&gt;"#)
         );
-        assert_eq!(subtitles_webvtt(&[], "bonjour", None), "WEBVTT\n\n");
+        assert_eq!(subtitles_html(&[], "bonjour", None), "");
     }
 }
