@@ -8,6 +8,7 @@
 //! harness in `generate-data`).
 
 pub mod audio_check;
+pub mod clip_exclusions;
 pub mod clips;
 pub mod cues;
 pub mod export;

@@ -46,11 +46,12 @@ use movie_subtitles::{cleanup_subtitle_text, SubtitleLine};
 use phoneme_verify::FrameMatrix;
 use serde::{Deserialize, Serialize};
 
+use crate::clip_exclusions::read_clip_plan;
 use crate::cues::{
     agreement_tokens, agrees, align_sentence, load_transcript, parse_cues, slice_wav_padded,
     tokenization_for, AUDIO_PAD_MS, MATCH_SLOP_MS, MAX_CUE_MS, MIN_CUE_MS, MIN_TOKENS,
 };
-use crate::library::{read_plan, Movie};
+use crate::library::Movie;
 use crate::transcript::{Kind, Spoken};
 
 /// Bump when the record format or the gating logic changes in a way that
@@ -1585,7 +1586,7 @@ pub async fn clips_all(
     langs: Option<Vec<String>>,
     gate: Gate,
 ) -> Result<std::collections::HashSet<String>> {
-    let plan = read_plan(&out)?;
+    let plan = read_clip_plan(&out)?;
     let mut queue: Vec<Movie> = plan
         .into_iter()
         .filter(|m| imdb.as_deref().is_none_or(|id| m.imdb_id == id))

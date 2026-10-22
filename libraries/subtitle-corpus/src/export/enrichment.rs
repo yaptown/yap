@@ -364,20 +364,18 @@ async fn enrich_one(dir: &Path, judge: &ChatClient, frames: &Arc<Semaphore>) -> 
     Ok(failed)
 }
 
-pub(super) async fn enrich_language(lang_dir: &Path) -> Result<()> {
+pub(super) async fn enrich_language(dirs: &[std::path::PathBuf]) -> Result<()> {
+    if dirs.is_empty() {
+        return Ok(());
+    }
     let judge = ChatClient::from_env(MODEL)?
         .with_cache_directory("./.cache")
         .with_reasoning_effort(REASONING_EFFORT)
         .with_no_batch();
     let frames = Arc::new(Semaphore::new(std::thread::available_parallelism()?.get()));
-    let dirs = std::fs::read_dir(lang_dir)?
-        .map(|entry| entry.map(|e| e.path()))
-        .collect::<std::io::Result<Vec<_>>>()?
-        .into_iter()
-        .filter(|dir| dir.is_dir() && dir.join("meta.json").is_file());
-    let mut results = stream::iter(dirs.map(|dir| {
+    let mut results = stream::iter(dirs.iter().map(|dir| {
         let (judge, frames) = (&judge, &frames);
-        async move { enrich_one(&dir, judge, frames).await }
+        async move { enrich_one(dir, judge, frames).await }
     }))
     .buffer_unordered(LIVE_JOBS);
     let (mut done, mut failed) = (0, 0);

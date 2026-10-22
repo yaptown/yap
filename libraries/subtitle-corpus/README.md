@@ -1,5 +1,19 @@
 # Subtitle corpus
 
+## Clip exclusions
+
+`config/clip-exclusions.jsonl` lists films whose video isn't fit for clips yet
+(e.g. burned-in subtitles), one
+`{"language":"fra","imdb_id":"tt17009710","reason":"English hardsubs in <release>"}`
+per line, keyed by corpus code. It's read at runtime, so edits need no rebuild.
+`inventory`/`refresh` print each entry; one naming a film not in the library is
+an error.
+
+An excluded film skips clip mapping and video export, and publish leaves its
+clips out of the index and upload. They become orphan candidates for `prune`.
+Its subtitle still feeds the course text. Entries are keyed by film, not
+release, so remove one by hand once a replacement release is checked clean.
+
 `subtitle-corpus training-export` is how film clips reach lexide training.
 
 ```sh

@@ -25,6 +25,7 @@ use serde_json::json;
 use sha2::{Digest, Sha256};
 use unicode_normalization::UnicodeNormalization;
 
+use crate::clip_exclusions::{read_clip_plan, ClipExclusions};
 use crate::clips::{
     clips_path, read_file as read_clips_with_provenance, subtitle_sentences, Clip, Provenance,
 };
@@ -211,7 +212,7 @@ pub async fn export_clips(
     {
         bail!("the ffmpeg on PATH lacks scale_cuda/tonemap_cuda; run from the dev shell (jellyfin-ffmpeg)");
     }
-    let plan = read_plan(&out)?;
+    let plan = read_clip_plan(&out)?;
     let mut queue: Vec<Movie> = plan
         .into_iter()
         .filter(|m| imdb.as_deref().is_none_or(|id| m.imdb_id == id))
@@ -262,12 +263,17 @@ pub async fn export_clips(
 
     // The index is rebuilt from the sidecars on every run, so resumed and
     // partial runs still leave it whole.
+    let exclusions = ClipExclusions::load()?;
     for lang in queue
         .iter()
         .filter_map(|m| m.course(&out).map(|l| l.corpus_code()))
         .collect::<std::collections::BTreeSet<_>>()
     {
-        let n = write_index(&dest.join(lang))?;
+        let lang_dir = dest.join(lang);
+        // A language whose films all failed or passed nothing still gets its
+        // (empty) index: the queue named it, so the served listing must too.
+        std::fs::create_dir_all(&lang_dir)?;
+        let n = write_index(&lang_dir, &clip_dirs(&lang_dir, lang, &exclusions)?)?;
         println!("index: {lang} {n} clips");
     }
     Ok(ExportOutcome { valid, failed })
@@ -729,6 +735,28 @@ async fn export_one(
     })
 }
 
+fn film_id(id: &str) -> &str {
+    id.split('-').next().unwrap_or_default()
+}
+
+/// The clip dirs a language serves: every exported clip on disk (orphans stay
+/// served until a reviewed prune) except those of films in the clip
+/// exclusions. Enrichment, the index and the upload all take this one list.
+fn clip_dirs(lang_dir: &Path, code: &str, exclusions: &ClipExclusions) -> Result<Vec<PathBuf>> {
+    let mut dirs = Vec::new();
+    for entry in std::fs::read_dir(lang_dir)? {
+        let entry = entry?;
+        if entry.file_type()?.is_dir()
+            && exclusions.allows(code, film_id(&entry.file_name().to_string_lossy()))
+            && entry.path().join("meta.json").is_file()
+        {
+            dirs.push(entry.path());
+        }
+    }
+    dirs.sort();
+    Ok(dirs)
+}
+
 /// Clip ids no longer valid, excluding films with an operational failure.
 fn orphan_ids(
     present: impl IntoIterator<Item = String>,
@@ -737,9 +765,7 @@ fn orphan_ids(
 ) -> Vec<String> {
     let mut ids: Vec<_> = present
         .into_iter()
-        .filter(|id| {
-            !valid.contains(id) && !failed.contains(id.split('-').next().unwrap_or_default())
-        })
+        .filter(|id| !valid.contains(id) && !failed.contains(film_id(id)))
         .collect();
     ids.sort();
     ids.dedup();
@@ -798,14 +824,16 @@ pub async fn publish(
             .filter_map(|e| e.file_name().into_string().ok())
             .collect(),
     };
-    // Exactly the same directories as upload/index, including old clips whose
-    // films failed this run. Standalone export stays offline and scoped.
+    let exclusions = ClipExclusions::load()?;
+    let mut selected = BTreeMap::new();
     println!("=== posters and content ratings ===");
     for code in &codes {
         let lang_dir = dest.join(code);
         std::fs::create_dir_all(&lang_dir)?;
-        enrichment::enrich_language(&lang_dir).await?;
-        let n = write_index(&lang_dir)?;
+        let dirs = clip_dirs(&lang_dir, code, &exclusions)?;
+        enrichment::enrich_language(&dirs).await?;
+        let n = write_index(&lang_dir, &dirs)?;
+        selected.insert(code.clone(), dirs);
         println!("index: {code} {n} clips");
     }
     println!("=== stage 3: upload to {bucket} ===");
@@ -820,7 +848,7 @@ pub async fn publish(
     let empty = HashSet::new();
     for code in codes {
         let lang_dir = dest.join(&code);
-        let r2_ids = upload_lang(&lang_dir, &code, &r2).await?;
+        let r2_ids = upload_lang(&lang_dir, &selected[&code], &code, &r2).await?;
         let local_ids = std::fs::read_dir(&lang_dir)?
             .flatten()
             .filter(|e| e.path().is_dir())
@@ -925,16 +953,15 @@ pub async fn prune(dest: PathBuf, bucket: String, manifest: PathBuf, apply: bool
 /// media (restoring files with `cp -a` keeps old mtimes and would hide them).
 /// Stale files already matching bucket MD5 ETags need no put. Objects are
 /// immutable by id and get a forever cache; the index gets a short one.
-async fn upload_lang(lang_dir: &Path, code: &str, r2: &crate::r2::R2) -> Result<HashSet<String>> {
+async fn upload_lang(
+    lang_dir: &Path,
+    dirs: &[PathBuf],
+    code: &str,
+    r2: &crate::r2::R2,
+) -> Result<HashSet<String>> {
     const IMMUTABLE: &str = "public, max-age=31536000, immutable";
     let etags = r2.list_etags(&format!("{code}/")).await?;
     println!("{code}: listed {} keys in bucket", etags.len());
-    let mut dirs: Vec<PathBuf> = std::fs::read_dir(lang_dir)?
-        .flatten()
-        .map(|e| e.path())
-        .filter(|p| p.is_dir())
-        .collect();
-    dirs.sort();
     let mut uploaded = 0;
     let mut verified = 0;
     let mut skipped = 0;
@@ -1244,13 +1271,42 @@ mod tests {
         metadata["variety"] = movie.course(root.path()).unwrap().code().into();
         assert_eq!(metadata["media"]["stamp"], original_stamp);
         std::fs::write(dir.join("meta.json"), metadata.to_string()).unwrap();
-        assert_eq!(write_index(&root.path().join("spa")).unwrap(), 1);
+        assert_eq!(write_index(&root.path().join("spa"), &[dir]).unwrap(), 1);
         let index: serde_json::Value = serde_json::from_str(
             &std::fs::read_to_string(root.path().join("spa/index.jsonl")).unwrap(),
         )
         .unwrap();
         assert_eq!(index["variety"], "spa-es");
         assert!(!root.path().join("spa-es").exists());
+    }
+
+    #[test]
+    fn excluded_films_leave_the_index_but_stay_on_disk() {
+        let root = tempfile::tempdir().unwrap();
+        let lang = root.path().join("fra");
+        let ids = ["tt17009710-a-0", "tt2-current-0", "tt3-orphan-0"];
+        for id in ids {
+            let dir = lang.join(id);
+            std::fs::create_dir_all(&dir).unwrap();
+            std::fs::write(dir.join("meta.json"), json!({"id": id}).to_string()).unwrap();
+        }
+        let exclusions = ClipExclusions::parse(
+            r#"{"language":"fra","imdb_id":"tt17009710","reason":"fixture hardsubs"}"#,
+        )
+        .unwrap();
+        let dirs = clip_dirs(&lang, "fra", &exclusions).unwrap();
+        assert_eq!(write_index(&lang, &dirs).unwrap(), 2);
+        let index = std::fs::read_to_string(lang.join("index.jsonl")).unwrap();
+        // Orphans stay served until a reviewed prune; exclusions do not.
+        assert!(index.contains(ids[1]) && index.contains(ids[2]));
+        assert!(!index.contains(ids[0]));
+        assert!(lang.join(ids[0]).join("meta.json").exists());
+        // The excluded film's clips are never valid, so prune can collect them.
+        let valid = HashSet::from([ids[1].to_owned()]);
+        assert_eq!(
+            orphan_ids(ids.map(str::to_owned), &valid, &HashSet::new()),
+            [ids[0], ids[2]]
+        );
     }
 
     #[test]
@@ -1949,38 +2005,33 @@ fn rendition_info(file: &Path, height: i64) -> serde_json::Value {
 }
 
 /// One line per exported clip, rebuilt from the sidecars.
-fn write_index(lang_dir: &Path) -> Result<usize> {
-    // A language whose films all failed or passed nothing still gets its
-    // (empty) index: the queue named it, so the served listing must too.
-    std::fs::create_dir_all(lang_dir)?;
+fn write_index(lang_dir: &Path, dirs: &[PathBuf]) -> Result<usize> {
     let mut rows: Vec<(String, serde_json::Value)> = Vec::new();
-    if let Ok(entries) = std::fs::read_dir(lang_dir) {
-        for entry in entries.flatten() {
-            let meta = entry.path().join("meta.json");
-            let Ok(bytes) = std::fs::read(&meta) else {
-                continue;
-            };
-            let m: serde_json::Value = serde_json::from_slice(&bytes)?;
-            let mut row = json!({
-                "id": m["id"],
-                "imdb_id": m["film"]["imdb_id"],
-                "variety": m["variety"],
-                "title": m["film"]["title"],
-                "sentence": m["sentence"]["text"],
-                "course_sentence": m["sentence"]["course_sentence"],
-                "duration_ms": m["media"]["duration_ms"],
-                "critical": m["critical"],
-                "clear_before_ms": m["verification"]["clear_before_ms"],
-                "clear_after_ms": m["verification"]["clear_after_ms"],
-                "pad_before_ms": m["verification"]["pad_before_ms"],
-                "pad_after_ms": m["verification"]["pad_after_ms"],
-                "aspect_ratio": m["media"]["aspect_ratio"],
-                "hi_bytes": m["media"]["renditions"]["hi"]["bytes"],
-                "lo_bytes": m["media"]["renditions"]["lo"]["bytes"],
-            });
-            enrichment::extend_index(&m, &entry.path(), &mut row);
-            rows.push((m["id"].as_str().unwrap_or_default().to_string(), row));
-        }
+    for dir in dirs {
+        let meta = dir.join("meta.json");
+        let Ok(bytes) = std::fs::read(&meta) else {
+            continue;
+        };
+        let m: serde_json::Value = serde_json::from_slice(&bytes)?;
+        let mut row = json!({
+            "id": m["id"],
+            "imdb_id": m["film"]["imdb_id"],
+            "variety": m["variety"],
+            "title": m["film"]["title"],
+            "sentence": m["sentence"]["text"],
+            "course_sentence": m["sentence"]["course_sentence"],
+            "duration_ms": m["media"]["duration_ms"],
+            "critical": m["critical"],
+            "clear_before_ms": m["verification"]["clear_before_ms"],
+            "clear_after_ms": m["verification"]["clear_after_ms"],
+            "pad_before_ms": m["verification"]["pad_before_ms"],
+            "pad_after_ms": m["verification"]["pad_after_ms"],
+            "aspect_ratio": m["media"]["aspect_ratio"],
+            "hi_bytes": m["media"]["renditions"]["hi"]["bytes"],
+            "lo_bytes": m["media"]["renditions"]["lo"]["bytes"],
+        });
+        enrichment::extend_index(&m, dir, &mut row);
+        rows.push((m["id"].as_str().unwrap_or_default().to_string(), row));
     }
     rows.sort_by(|a, b| a.0.cmp(&b.0));
     let n = rows.len();

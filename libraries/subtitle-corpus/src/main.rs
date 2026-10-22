@@ -853,7 +853,26 @@ fn parallel<T: Send + Sync, R: Send>(
 }
 
 fn inventory(library: PathBuf, data_root: PathBuf, out: PathBuf, jobs: usize) -> Result<()> {
+    inventory_impl(library, data_root, out, jobs, true)
+}
+
+fn inventory_impl(
+    library: PathBuf,
+    data_root: PathBuf,
+    out: PathBuf,
+    jobs: usize,
+    report_exclusions: bool,
+) -> Result<()> {
     let movies = library::load_library(&library)?;
+    let exclusions = subtitle_corpus::clip_exclusions::ClipExclusions::load()?;
+    exclusions.validate(
+        movies
+            .iter()
+            .map(|m| (m.original_language.as_str(), m.imdb_id.as_str())),
+    )?;
+    if report_exclusions {
+        exclusions.print();
+    }
     println!("{} movies on disk", movies.len());
 
     let probed = parallel(movies, jobs, "probing", |entry| -> Result<_> {
@@ -975,7 +994,7 @@ fn refresh(library: PathBuf, data_root: PathBuf, out: PathBuf) -> Result<()> {
             Box::new(move || {
                 // Re-plan so this run syncs what was just fetched.
                 if subtitle_corpus::fetch_subtitles::run(&out, &data_root, None)? > 0 {
-                    inventory(library, data_root, out, 8)?;
+                    inventory_impl(library, data_root, out, 8, false)?;
                 }
                 Ok(())
             })
