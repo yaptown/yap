@@ -259,6 +259,12 @@ function AnkiScreen({
   );
   const busy = phase !== undefined;
   const status = useRef<HTMLDivElement>(null);
+  const result = useRef<HTMLDivElement>(null);
+  // The finished deck's link and buttons land below the fold; bring them up.
+  useEffect(() => {
+    if (summary)
+      result.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [summary]);
 
   useEffect(() => {
     let active = true;
@@ -612,7 +618,7 @@ function AnkiScreen({
               )}
             </div>
             {summary && (
-              <Card className="p-5">
+              <Card ref={result} className="scroll-mb-4 p-5">
                 <ExportResult
                   view={view}
                   signedIn={!!userInfo}

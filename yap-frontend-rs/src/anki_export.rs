@@ -230,9 +230,9 @@ pub struct AnkiExportView {
 
 /// Sentence notes per deck. Not a choice yet: one good default beats a
 /// number nobody knows how to pick.
-const DECK_SIZE: usize = 300;
+const DECK_SIZE: usize = 200;
 /// Fewer sentences than this and the deck isn't worth downloading. Every
-/// real course fills all 300 at every level (`skill_levels`); only manifests
+/// real course fills all 200 at every level (`skill_levels`); only manifests
 /// cut below ~500 clip sentences come up short, and then by a lot (0-158).
 const MIN_SENTENCES: usize = 50;
 
@@ -969,7 +969,7 @@ impl AnkiDeckPlanner {
 }
 
 /// A deck that barely moves the number isn't worth bragging about: an
-/// advanced learner's new words are rare ones, so 300 sentences can add a
+/// advanced learner's new words are rare ones, so 200 sentences can add a
 /// single point.
 fn finish_message(before: f64, after: f64, name: &str) -> Option<String> {
     (after - before >= 3.0).then(|| {
