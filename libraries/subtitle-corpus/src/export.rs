@@ -2101,9 +2101,34 @@ pub fn export_yap(
         if !wanted(course) {
             continue;
         }
+        let movies = data_root
+            .join(language.corpus_code())
+            .join("sentence-sources/movies");
+        let metadata = language_utils::MovieMetadataBasic {
+            id: movie.imdb_id.clone(),
+            title: movie.title.clone(),
+            poster_path: None,
+            localizations: Default::default(),
+            year: movie.year,
+            original_language: Some(language.iso_639_1().to_owned()),
+            variety: Some(language.code().to_owned()),
+            rotten_tomatoes_score: None,
+        };
+        let mut refresh_metadata = || -> Result<bool> {
+            let appended = movie_metadata::append_movie_metadata(
+                &movies.join("metadata.jsonl"),
+                &metadata,
+                dry_run,
+            )?;
+            rows += usize::from(appended);
+            Ok(appended)
+        };
         // Writing a synced download back to its raw input invalidates its
         // source stamp on the next inventory, causing perpetual re-syncing.
+        // Its metadata still follows the variety the audio check heard, which
+        // fetch-subtitles could not know when it wrote the row.
         if matches!(movie.source, Source::Downloaded { .. }) {
+            refresh_metadata()?;
             downloaded += 1;
             continue;
         }
@@ -2117,31 +2142,13 @@ pub fn export_yap(
             unverified += 1;
             continue;
         }
-        let movies = data_root
-            .join(language.corpus_code())
-            .join("sentence-sources/movies");
         let dest = movies
             .join("subtitles-raw")
             .join(format!("{}.srt", movie.imdb_id));
         let srt = yap_srt(&std::fs::read_to_string(dir.join("subtitle.srt"))?)
             .with_context(|| format!("{}: subtitle.srt", movie.imdb_id))?;
         let identical = read_optional(&dest)?.as_deref() == Some(srt.as_bytes());
-        let metadata = language_utils::MovieMetadataBasic {
-            id: movie.imdb_id.clone(),
-            title: movie.title.clone(),
-            poster_path: None,
-            localizations: Default::default(),
-            year: movie.year,
-            original_language: Some(language.iso_639_1().to_owned()),
-            variety: Some(language.code().to_owned()),
-            rotten_tomatoes_score: None,
-        };
-        let appended = movie_metadata::append_movie_metadata(
-            &movies.join("metadata.jsonl"),
-            &metadata,
-            dry_run,
-        )?;
-        rows += usize::from(appended);
+        let appended = refresh_metadata()?;
         if identical {
             kept += 1;
         } else {
