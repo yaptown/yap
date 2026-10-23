@@ -165,7 +165,7 @@ export function useOneSignalNotifications() {
         user_id: user.id,
       });
     } catch (err) {
-      console.error("Error subscribing:", err);
+      console.warn("Error subscribing:", err);
       setError(
         err instanceof Error
           ? err.message
