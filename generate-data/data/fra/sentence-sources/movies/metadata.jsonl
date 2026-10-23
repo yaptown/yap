@@ -74,7 +74,7 @@
 {"id":"tt0048673","title":"Vacances à Venise","year":1955,"original_language":"en","rotten_tomatoes_score":92}
 {"id":"tt0036775","title":"Assurance sur la mort","year":1944,"original_language":"en","rotten_tomatoes_score":97}
 {"id":"tt0116209","title":"Le Patient anglais","year":1996,"original_language":"en","rotten_tomatoes_score":86}
-{"id":"tt1675434","title":"Intouchables","year":2011,"original_language":"fr","rotten_tomatoes_score":75}
+{"id":"tt1675434","title":"Intouchables","year":2011,"original_language":"fr","rotten_tomatoes_score":75,"variety":"fra"}
 {"id":"tt0110413","title":"Léon","year":1994,"original_language":"fr","rotten_tomatoes_score":76}
 {"id":"tt0211915","title":"Le Fabuleux Destin d'Amélie Poulain","year":2001,"original_language":"fr","rotten_tomatoes_score":90,"variety":"fra"}
 {"id":"tt0119116","title":"Le Cinquième Élément","year":1997,"original_language":"fr","rotten_tomatoes_score":71}
@@ -83,23 +83,23 @@
 {"id":"tt0250223","title":"Astérix & Obélix : Mission Cléopâtre","year":2002,"original_language":"fr","rotten_tomatoes_score":86,"variety":"fra"}
 {"id":"tt4954522","title":"Grave","year":2017,"original_language":"fr","rotten_tomatoes_score":92,"variety":"fra"}
 {"id":"tt1255953","title":"Incendies","year":2010,"original_language":"fr","rotten_tomatoes_score":91,"variety":"fra"}
-{"id":"tt17009710","title":"Anatomie d'une chute","year":2023,"original_language":"fr","rotten_tomatoes_score":96}
+{"id":"tt17009710","title":"Anatomie d'une chute","year":2023,"original_language":"fr","rotten_tomatoes_score":96,"variety":"fra"}
 {"id":"tt8613070","title":"Portrait de la jeune fille en feu","year":2019,"original_language":"fr","rotten_tomatoes_score":97,"variety":"fra"}
 {"id":"tt3612616","title":"Mommy","year":2014,"original_language":"fr","rotten_tomatoes_score":89,"variety":"fra"}
 {"id":"tt0372824","title":"Les Choristes","year":2004,"original_language":"fr","rotten_tomatoes_score":68,"variety":"fra"}
-{"id":"tt0053198","title":"Les Quatre Cents Coups","year":1959,"original_language":"fr","rotten_tomatoes_score":99}
+{"id":"tt0053198","title":"Les Quatre Cents Coups","year":1959,"original_language":"fr","rotten_tomatoes_score":99,"variety":"fra"}
 {"id":"tt7458762","title":"Le Chant du loup","year":2019,"original_language":"fr","rotten_tomatoes_score":null}
 {"id":"tt5078204","title":"Demain tout commence","year":2016,"original_language":"fr","rotten_tomatoes_score":43}
 {"id":"tt0101765","title":"La Double Vie de Véronique","year":1991,"original_language":"fr","rotten_tomatoes_score":86,"variety":"fra"}
-{"id":"tt0101700","title":"Delicatessen","year":1991,"original_language":"fr","rotten_tomatoes_score":90}
+{"id":"tt0101700","title":"Delicatessen","year":1991,"original_language":"fr","rotten_tomatoes_score":90,"variety":"fra"}
 {"id":"tt0108394","title":"Trois couleurs : Bleu","year":1993,"original_language":"fr","rotten_tomatoes_score":98,"variety":"fra"}
 {"id":"tt0338135","title":"Les Invasions barbares","year":2003,"original_language":"fr","rotten_tomatoes_score":81,"variety":"fra"}
 {"id":"tt0387898","title":"Caché","year":2005,"original_language":"fr","rotten_tomatoes_score":89,"variety":"fra"}
-{"id":"tt0401383","title":"Le Scaphandre et le Papillon","year":2007,"original_language":"fr","rotten_tomatoes_score":94}
+{"id":"tt0401383","title":"Le Scaphandre et le Papillon","year":2007,"original_language":"fr","rotten_tomatoes_score":94,"variety":"fra"}
 {"id":"tt0401711","title":"Paris, je t'aime","year":2006,"original_language":"fr","rotten_tomatoes_score":85}
 {"id":"tt0362225","title":"Ne le dis à personne","year":2006,"original_language":"fr","rotten_tomatoes_score":93,"variety":"fra"}
 {"id":"tt1235166","title":"Un prophète","year":2009,"original_language":"fr","rotten_tomatoes_score":96,"variety":"fra"}
-{"id":"tt10944760","title":"Titane","year":2021,"original_language":"fr","rotten_tomatoes_score":90}
+{"id":"tt10944760","title":"Titane","year":2021,"original_language":"fr","rotten_tomatoes_score":90,"variety":"fra"}
 {"id":"tt0070460","title":"La Nuit américaine","year":1973,"original_language":"fr","rotten_tomatoes_score":98,"variety":"fra"}
 {"id":"tt0046911","title":"Les Diaboliques","year":1955,"original_language":"fr","rotten_tomatoes_score":95,"variety":"fra"}
 {"id":"tt0046268","title":"Le Salaire de la peur","year":1953,"original_language":"fr","rotten_tomatoes_score":100,"variety":"fra"}
@@ -107,7 +107,7 @@
 {"id":"tt0091288","title":"Jean de Florette","year":1986,"original_language":"fr","rotten_tomatoes_score":93,"variety":"fra"}
 {"id":"tt0091480","title":"Manon des sources","year":1986,"original_language":"fr","rotten_tomatoes_score":81,"variety":"fra"}
 {"id":"tt0060474","title":"La Grande Vadrouille","year":1966,"original_language":"fr","rotten_tomatoes_score":null,"variety":"fra"}
-{"id":"tt0108500","title":"Les Visiteurs","year":1993,"original_language":"fr","rotten_tomatoes_score":31}
+{"id":"tt0108500","title":"Les Visiteurs","year":1993,"original_language":"fr","rotten_tomatoes_score":31,"variety":"fra"}
 {"id":"tt1650048","title":"Laurence Anyways","year":2012,"original_language":"fr","rotten_tomatoes_score":84,"variety":"fra"}
 {"id":"tt0457430","title":"Le Labyrinthe de Pan","year":2006,"original_language":"es","rotten_tomatoes_score":95}
 {"id":"tt4857264","title":"L'Accusé","year":2017,"original_language":"es","rotten_tomatoes_score":67}

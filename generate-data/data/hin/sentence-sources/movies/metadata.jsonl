@@ -14,11 +14,11 @@
 {"id":"tt0986264","title":"तारे ज़मीन पर","year":2007,"original_language":"hi","rotten_tomatoes_score":93,"variety":"hin"}
 {"id":"tt1187043","title":"3 ईडियट","year":2009,"original_language":"hi","rotten_tomatoes_score":100}
 {"id":"tt2338151","title":"पीके","year":2014,"original_language":"hi","rotten_tomatoes_score":80,"variety":"hin"}
-{"id":"tt8108198","title":"अंधाधुन","year":2018,"original_language":"hi","rotten_tomatoes_score":100}
-{"id":"tt0347304","title":"कल हो ना हो","year":2003,"original_language":"hi","rotten_tomatoes_score":70}
+{"id":"tt8108198","title":"अंधाधुन","year":2018,"original_language":"hi","rotten_tomatoes_score":100,"variety":"hin"}
+{"id":"tt0347304","title":"कल हो ना हो","year":2003,"original_language":"hi","rotten_tomatoes_score":70,"variety":"hin"}
 {"id":"tt8178634","title":"రౌద్రం రణం రుధిరం","year":2022,"original_language":"te","rotten_tomatoes_score":96}
 {"id":"tt8239946","title":"तुम्बाड","year":2018,"original_language":"hi","rotten_tomatoes_score":87,"variety":"hin"}
-{"id":"tt3863552","title":"बजरंगी भाईजान","year":2015,"original_language":"hi","rotten_tomatoes_score":88}
+{"id":"tt3863552","title":"बजरंगी भाईजान","year":2015,"original_language":"hi","rotten_tomatoes_score":88,"variety":"hin"}
 {"id":"tt0040522","title":"Ladri di biciclette","year":1948,"original_language":"it","rotten_tomatoes_score":99}
 {"id":"tt3094914","title":"Bakit Hindi Ka Crush ng Crush Mo?","year":2013,"original_language":"tl","rotten_tomatoes_score":null}
 {"id":"tt2310332","title":"दि हॉबिट: अंतिम अध्याय","year":2014,"original_language":"en","rotten_tomatoes_score":59}
@@ -58,3 +58,5 @@
 {"id":"tt5935704","title":"Padmaavat","poster_path":null,"localizations":{},"year":2018,"original_language":"hi","variety":"hin","rotten_tomatoes_score":null}
 {"id":"tt15354916","title":"Jawan","poster_path":null,"localizations":{},"year":2023,"original_language":"hi","variety":"hin","rotten_tomatoes_score":null}
 {"id":"tt15428134","title":"Dunki","poster_path":null,"localizations":{},"year":2023,"original_language":"hi","variety":"hin","rotten_tomatoes_score":null}
+{"id":"tt0367110","title":"Swades","poster_path":null,"localizations":{},"year":2004,"original_language":"hi","variety":"hin","rotten_tomatoes_score":null}
+{"id":"tt5074352","title":"Dangal","poster_path":null,"localizations":{},"year":2016,"original_language":"hi","variety":"hin","rotten_tomatoes_score":null}
