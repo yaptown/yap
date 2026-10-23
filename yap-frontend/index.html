@@ -18,6 +18,10 @@
                             window.location.hostname === '127.0.0.1' ||
                             window.location.port === '5173'; // Vite's default dev port
 
+        // The production OneSignal app is restricted to yap.town, so init
+        // throws on any other origin (e.g. the yap-beta.pages.dev channel).
+        if (!isDevelopment && window.location.hostname !== 'yap.town') return;
+
         const config = isDevelopment ? {
           // Local development
           appId: "cdde60d3-fd8c-4271-87cd-e3f18f6377b4",
