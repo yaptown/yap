@@ -1,6 +1,6 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 3259387
+Total predictions: 3261901
 Total errors: 12199
 Accuracy: 99.63%
 

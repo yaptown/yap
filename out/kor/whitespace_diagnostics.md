@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 1867496
-Total errors: 94345
+Total predictions: 1867524
+Total errors: 94346
 Accuracy: 94.95%
 
 ## Error Patterns (sorted by frequency)
@@ -2046,6 +2046,14 @@ Accuracy: 94.95%
   - 같은 편이야
   - 난 네 편이야
 
+### "겁" + "니다" (25 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - 그 젖산이 산티아고의 폐출혈을 일으킨 겁니다
+  - 그는 이미 브라질 체육계의 우상이었지만 이제 세계 스포츠계의 위대한 우상이 된 겁니다
+  - 그래서 모나코에서 세나의 천재성이 빛난 겁니다
+
 ### "것" + "이야" (25 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2189,14 +2197,6 @@ Accuracy: 94.95%
   - 각자 방식이 다를 뿐 그래서 다투는 거겠죠
   - 군대 동기 좋다는 게 바로 이런 거겠죠
   - 그때를 못 잊는 거겠죠
-
-### "겁" + "니다" (24 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - 그 젖산이 산티아고의 폐출혈을 일으킨 겁니다
-  - 그는 이미 브라질 체육계의 우상이었지만 이제 세계 스포츠계의 위대한 우상이 된 겁니다
-  - 그래서 모나코에서 세나의 천재성이 빛난 겁니다
 
 ### "당신" + "이랑" (24 occurrences)
 - Predicted: Space

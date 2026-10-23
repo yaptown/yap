@@ -1,12 +1,12 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 4404918
-Total errors: 5611
+Total predictions: 4413239
+Total errors: 5618
 Accuracy: 99.87%
 
 ## Error Patterns (sorted by frequency)
 
-### "ver" + "te" (374 occurrences)
+### "ver" + "te" (375 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
@@ -22,7 +22,7 @@ Accuracy: 99.87%
   - "A decir verdad, tengo vértigo." "¡Eres un cobarde!"
   - "A ella le gusta la música." "A mí también."
 
-### "," + """ (214 occurrences)
+### "," + """ (217 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -326,6 +326,14 @@ Accuracy: 99.87%
   - El "Cien Pies".
   - El "Deux Moulins", ya lo sé.
 
+### "haber" + "me" (24 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Deberías haberme dicho antes.
+  - Ella me pidió perdón por haberme pisado el pie.
+  - Ella se volvió loca conmigo por haberme salido del camino.
+
 ### "o" + """ (24 occurrences)
 - Predicted: None
 - Actual: Space
@@ -341,14 +349,6 @@ Accuracy: 99.87%
   - Así, aun cuando yo tuviera una "Pola", no sacaría tu foto.
   - El suplente que tienes es una "manteca".
   - En el ejército le pusieron una "X" en su mano izquierda.
-
-### "haber" + "me" (23 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Deberías haberme dicho antes.
-  - Ella me pidió perdón por haberme pisado el pie.
-  - Ella se volvió loca conmigo por haberme salido del camino.
 
 ### "como" + """ (22 occurrences)
 - Predicted: None
@@ -1390,6 +1390,14 @@ Accuracy: 99.87%
   - Pero "lleganos", lo "prometinos" y lo "cumplinos."
   - Pero "tú" carece de sentido ahora.
 
+### "decimos" + """ (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A ese color le decimos "azul medianoche".
+  - Cuando nos vamos a dormir decimos "buenas noches".
+  - Por eso decimos "ella".
+
 ### "decirle" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1693,14 +1701,6 @@ Accuracy: 99.87%
   - Dándonos de comer "eccema roti".
   - Quiero comer "takoyaki".
   - ¿Debo comer "eso" también?
-
-### "decimos" + """ (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A ese color le decimos "azul medianoche".
-  - Cuando nos vamos a dormir decimos "buenas noches".
-  - Por eso decimos "ella".
 
 ### "dirá" + """ (3 occurrences)
 - Predicted: None
@@ -6872,6 +6872,12 @@ Accuracy: 99.87%
 - Actual: Space
 - Examples:
   - No, no digáis "ketebesé".
+
+### "dijeran" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ¿Es cierto que a ti, de niño, te apenaba que te dijeran "el Prieto"?
 
 ### "dijeron" + """ (1 occurrences)
 - Predicted: None

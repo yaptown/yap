@@ -1,5 +1,5 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-tirar algo	filled	1313	11	12	0.92	yes	"Daí começou a tocar Bob Marley e ele me tirou para dançar."	me … tirou
+tirar algo	filled	1314	11	12	0.92	yes	"Daí começou a tocar Bob Marley e ele me tirou para dançar."	me … tirou
 tirar algo	clitic	123	12	12	1.00	yes		
 acontecer a alguém	clitic	59	12	12	1.00	yes		
 acontecer a alguém	filled	31	12	12	1.00	yes		

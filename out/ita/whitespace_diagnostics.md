@@ -1,12 +1,12 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 3604148
-Total errors: 6383
+Total predictions: 3604187
+Total errors: 6387
 Accuracy: 99.82%
 
 ## Error Patterns (sorted by frequency)
 
-### """ + """ (404 occurrences)
+### """ + """ (406 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -486,6 +486,14 @@ Accuracy: 99.82%
   - Il "Successo"!
   - Il "Tigre" e Robert?
 
+### "chiamavano" + """ (10 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A Hollywood lo chiamavano "the continental lover".
+  - I latini la chiamavano "acqua felice".
+  - Il babbo del mio babbo lo chiamavano "Carnazza".
+
 ### "da" + """ (10 occurrences)
 - Predicted: None
 - Actual: Space
@@ -525,14 +533,6 @@ Accuracy: 99.82%
   - Allora, andiamo al "Westin".
   - E Szilárd al "Met Lab" a Chicago.
   - Il secondo premio va al "Goethe".
-
-### "chiamavano" + """ (9 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A Hollywood lo chiamavano "the continental lover".
-  - I latini la chiamavano "acqua felice".
-  - Il babbo del mio babbo lo chiamavano "Carnazza".
 
 ### "lei" + "?" (9 occurrences)
 - Predicted: None
@@ -5341,6 +5341,12 @@ Accuracy: 99.82%
 - Actual: Space
 - Examples:
   - Le parole "la fase finale" continuano ad affacciarsi nella mia mente.
+
+### """ + "cose" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Mi chiamavano "Ghetto Pat," "Rocket Man," cose del genere.
 
 ### """ + "crescerà" (1 occurrences)
 - Predicted: None

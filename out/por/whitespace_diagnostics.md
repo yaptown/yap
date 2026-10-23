@@ -1,84 +1,76 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 2481829
-Total errors: 3054
+Total predictions: 2519240
+Total errors: 3075
 Accuracy: 99.88%
 
 ## Error Patterns (sorted by frequency)
 
-### """ + """ (281 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "A América é maior que a Europa?" "Sim, a América é maior que a Europa."
-  - "A culpa é minha." "Não, não é."
-  - "A matemática é divertida." "Não é, não."
-
-### "," + """ (187 occurrences)
+### "," + """ (236 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "Bem", ele pensou, "Então isso explica o fedor."
-  - "Em desespero de causa, mandou-me o irmão gémeo, "Artur de Montfort.
+  - "Bora", "bora", pô!
   - "Excelentíssima Senhora, "perdoe-me a audácia de lhe mandar esta carta.
 
-### "de" + """ (107 occurrences)
+### "de" + """ (156 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Dr." é a abreviação de "doutor".
   - "Pédia" de "enciclopédia", "wiki" relembrando o espírito explorador dos Vikings.
-  - "Quioto" é um anagrama de "Tóquio".
+  - A chamavam de "Cisne voador".
+  - A equipe inteira os chama de "Sofrimento" e "Piedade".
 
-### "o" + """ (82 occurrences)
+### "o" + """ (108 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "Charo" é uma espécie de cowboy mexicano, como o "cowboy astral".
   - "Encontre-o "e entregue o envelope a ele.
-  - Acho que esse seria o "exemplo feliz".
+  - A carta dele diz que o outro cara, o "espelho", nem se mexeu.
 
-### """ + "é" (72 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "A pequena sereia" é o título de um conto de fadas dinamarquês.
-  - "A" é a letra de amor e de amargura.
-  - "Adivinha" é o caralho!
-
-### "é" + """ (66 occurrences)
+### "é" + """ (83 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - A canção é "Love Thing."
   - A palavra é "desculpa".
-  - Aquilo é "dar um coice no cavalo".
+  - A profissão de taxista é "do cão", ultimamente.
 
-### "um" + """ (55 occurrences)
+### """ + "é" (82 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
+  - "A" é a letra de amor e de amargura.
+  - "A" é a primeira letra do alfabeto.
+  - "Adivinha" é o caralho!
+
+### "um" + """ (78 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Antes disso, um "oi".
   - Aqui é um "o"?
-  - Cabo Barnes, cite algumas razões para um "código vermelho".
-  - Cheque se há um "preto e branco" nas redondezas.
+  - Até um "melhor que buceta" eu já ouvi.
 
-### """ + "em" (49 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "A mais bela" em zulu.
-  - "Bomba" em chinês.
-  - "Esposas" significa "esposas" e "algemas" em espanhol.
-
-### "disse" + """ (44 occurrences)
+### "disse" + """ (64 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Acho que ela disse "feder".
-  - Dan, descobriu o cinzel, e disse "Se as pedras falassem".
-  - E agora eu disse "merda".
+  - Alguém disse "oi"?
+  - Aí, o carro morreu e alguém disse "oi".
 
-### "com" + """ (42 occurrences)
+### "," + "“" (51 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - " Bora" , “bora" , “bora" , porra.
+  - " Bora" , “bora" , “bora" , porra.
+  - A cozinha entrou em pânico”, anunciou ela, “mas mantive tudo sob controle.
+
+### "com" + """ (51 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -86,23 +78,31 @@ Accuracy: 99.88%
   - "Mentes Perigosas" com "The OC"?
   - Até lá, fiquem com "Roobaroo".
 
-### "dizer" + """ (41 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Acho que a senhora deveria apenas dizer "obrigado".
-  - Alguém precisava fincar a bandeira na areia e dizer "Sigam-me", entende?
-  - Basta dizer "por favor".
-
-### """ + "e" (38 occurrences)
+### """ + "e" (48 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "Center" e "Friedrich Grove".
-  - "Esposas" significa "esposas" e "algemas" em espanhol.
   - "Pátria" e "leis" não significam nada para um porco.
+  - "Rejubilizemos" e Oz brilhará para todo sempre.
 
-### "a" + """ (31 occurrences)
+### "dizer" + """ (48 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Acho que a senhora deveria apenas dizer "obrigado".
+  - Agora ela achou outro malandro para dizer "eu te amo".
+  - Basta dizer "por favor".
+
+### "do" + """ (43 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A canção é um pedido especial de nosso vizinho, Sr. Chadda do "Queens".
+  - A lei do "olho por olho" cega a todos.
+  - Agora, como é aquele comercial do "Kunwari Kudi"?
+
+### "a" + """ (37 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -110,31 +110,15 @@ Accuracy: 99.88%
   - Agora, somos a "Joy Division."
   - Ao chegar a "Kuzmich", chorava e a "ouço rumores" já não se ouvia com o pranto.
 
-### "do" + """ (30 occurrences)
+### "diz" + """ (30 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A canção é um pedido especial de nosso vizinho, Sr. Chadda do "Queens".
-  - A lei do "olho por olho" cega a todos.
-  - Antes do "quanto"?
+  - Agora sou eu quem diz "não".
+  - Agora, nem sequer diz "papai".
+  - Até meu celular diz "sim".
 
-### "como" + """ (28 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A Nicarágua é conhecida como "o país dos lagos e vulcões".
-  - A cidade de Recife é conhecida como "Veneza Brasileira".
-  - A água no estado gasoso é conhecida como "vapor".
-
-### "e" + """ (28 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Center" e "Friedrich Grove".
-  - "Esposas" significa "esposas" e "algemas" em espanhol.
-  - "Pátria" e "leis" não significam nada para um porco.
-
-### "que" + """ (27 occurrences)
+### "que" + """ (29 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -142,63 +126,23 @@ Accuracy: 99.88%
   - Acho que "ladrão" é mais preciso.
   - Acho que "muito" é um exagero.
 
-### "diz" + """ (26 occurrences)
+### "O" + """ (26 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Agora sou eu quem diz "não".
-  - Como se diz "adeus" em alemão?
-  - Como se diz "amigo" em élfico?
+  - O "Acadêmico" está bloqueado pelo gelo no Estreito.
+  - O "Acadêmico" livrou-se do gelo.
+  - O "Arma Grande" e eu atiraremos nos alvos e guardas.
 
-### "Ter" + "ei" (24 occurrences)
+### "Vam" + "'" (26 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Terei aprendido mais uma língua estrangeira e mudado para um novo país.
-  - Terei aprendido mais uma língua estrangeira.
-  - Terei aprendido mais uma.
+  - Vam'bora aí.
+  - Vam'bora daqui.
+  - Vam'bora pra praia.
 
-### "se" + """ (24 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A Coreia do Sul chama-se "Hanguk" em coreano.
-  - A Espanha chama-se "Espainia" em basco.
-  - A Noruega chama-se "Norge" em norueguês.
-
-### "," + "«" (23 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A trote, «Sultão»!
-  - Amanda, querida», respondeu Keith, «um ladrão teria atacado na rua.
-  - Amanda», disse Jerry, «atirou-se do topo do mastro grande.
-
-### "significa" + """ (22 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Esposas" significa "esposas" e "algemas" em espanhol.
-  - "Tatoeba" significa "por exemplo" em japonês.
-  - A palavra Tóquio significa "capital do oriente".
-
-### "palavra" + """ (21 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A palavra "clichê" vem do francês.
-  - A palavra "híbrido" deriva do termo latino "hybrida".
-  - A palavra "peru" continua aí no meio, não é?
-
-### "O" + """ (20 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - O "Arma Grande" e eu atiraremos nos alvos e guardas.
-  - O "Cego Jeremias" aqui na rua!
-  - O "Chef-du-partie" e o "Demi Chef-du-partie", ambos importantes.
-
-### """ + "de" (19 occurrences)
+### """ + "de" (25 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -206,15 +150,39 @@ Accuracy: 99.88%
   - "Pédia" de "enciclopédia", "wiki" relembrando o espírito explorador dos Vikings.
   - "S" de Simón!
 
-### "em" + """ (19 occurrences)
+### "e" + """ (25 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Center" e "Friedrich Grove".
+  - "Pátria" e "leis" não significam nada para um porco.
+  - "The foot" e "the coun"?
+
+### "em" + """ (25 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - A esta altura ele deve estar em "ótimas condições".
+  - Atlas, eu gostaria de ver você hipnotizar três caras em "belga".
   - Boo é a personagem mais interessante em "O Sol é para Todos".
-  - Clique em "modo de edição".
 
-### """ + "não" (18 occurrences)
+### "como" + """ (23 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A cidade de Recife é conhecida como "Veneza Brasileira".
+  - Algo como "Missa em Si Menor" de Bach.
+  - Algo como "Obrigado por nascer".
+
+### """ + "em" (22 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "A mais bela" em zulu.
+  - "Bomba" em chinês.
+  - "Molle" em Berlim é como cerveja, sabe?
+
+### """ + "não" (21 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -222,31 +190,23 @@ Accuracy: 99.88%
   - "Aquela" não.
   - "De olho" não é bonito.
 
-### """ + "significa" (18 occurrences)
+### "palavra" + """ (21 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Biológico" significa que a semente não é minha.
-  - "Esposas" significa "esposas" e "algemas" em espanhol.
-  - "Fazer direito" significa como fizeram na Operação Ciénaga?
+  - A palavra "mas" é muito mais importante que a palavra "e".
+  - A palavra "mas" é muito mais importante que a palavra "e".
+  - A palavra "peru" continua aí no meio, não é?
 
-### "É" + """ (16 occurrences)
+### "uma" + """ (21 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - É "Caravan".
-  - É "Deus" ou "deus"?
-  - É "Ngaati".
+  - A Academia emitiu uma "ordem de expulção" contra você?
+  - E hoje em dia nos pedem para desenvolver uma "nova consciência".
+  - E preciso abrir-lhe uma "casa" na barriga.
 
-### "chamado" + """ (13 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A tia Olivia tem um problema chamado "síndrome da ave que não voa".
-  - A um lugar chamado "Frango no Espeto".
-  - Comi um prato muito saboroso chamado "Shoujin Ryouri" ano passado em Nagoya.
-
-### "os" + """ (13 occurrences)
+### "os" + """ (19 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -254,15 +214,111 @@ Accuracy: 99.88%
   - Deixarei isso para os "humanos."
   - Desculpe, os "bagaginhas"?
 
-### "uma" + """ (13 occurrences)
+### "É" + """ (18 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - E hoje em dia nos pedem para desenvolver uma "nova consciência".
-  - Ela era uma "Band-Aid".
-  - Ela era uma "Rainha Negra" muito famosa.
+  - É "Caravan".
+  - É "Meu Pequeno Pônei".
+  - É "Ngaati".
 
-### "ao" + """ (12 occurrences)
+### """ + "." (17 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - " Bora, bora, bora mané" .
+  - Acorda aí, “mané" .
+  - Alê é o caralho, hein, “mermão" .
+
+### """ + """ (16 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Amar não pode ser pecado" "mesmo que não me importe."
+  - "E não tiver amor," "Terei o som do cobre."
+  - "Estamos orgulhosos de vocês" "Gujju!"
+
+### "significa" + """ (16 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Acho que sei o que significa "Se você construir, ele virá".
+  - E Azad significa "liberdade".
+  - Em romeno, "gol" significa "vazio".
+
+### """ + "," (14 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - " Bora" , porra!
+  - " Bora" , ô coroa.
+  - " Bora" , “bora" , “bora" , porra.
+
+### "assim" + """ (14 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Como assim "Vá se foder"?
+  - Como assim "acordo"?
+  - Como assim "as falas"?
+
+### "chamado" + """ (14 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A tia Olivia tem um problema chamado "síndrome da ave que não voa".
+  - A um lugar chamado "Frango no Espeto".
+  - Como farei um filme chamado "O Velho Moinho" sem um moinho?
+
+### "da" + """ (14 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A história da "Mão Direita, Mão Esquerda".
+  - Alô, aqui é a consultora sênior Yeo, da "The Care".
+  - Despertando assim o ciúme da "mãe" e a "Mamãe" matou a garota.
+
+### "diga" + """ (14 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Marido e mulher", diga "Marido e mulher"!
+  - Ao ouvir seu nome, diga "presente" e embarque.
+  - Apenas diga "sim", como alguém normal!
+
+### "por" + """ (14 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A defesa deve tratá-lo por "Coronel" ou "Senhor".
+  - A música será tocada por "Ernie Higgins e seus Happiness Boys".
+  - As mulheres de pescoço comprido são também conhecidas por "mulheres-girafas".
+
+### """ + "ou" (13 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A defesa deve tratá-lo por "Coronel" ou "Senhor".
+  - Bandeiras do "Sim" ou do "Não"?
+  - Diga "meu amigo" ou "meu amor".
+
+### """ + "que" (13 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Aqueles "vermelhos" que nós vimos, vieram pelo ouro.
+  - Diga ao "El País" que a resposta é "Não" e me deixe em paz!
+  - Eu "ordenifico" que algo mágico… aconteça!
+
+### """ + "significa" (13 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Biológico" significa que a semente não é minha.
+  - "Fazer direito" significa como fizeram na Operação Ciénaga?
+  - "Insônia" significa não conseguir dormir.
+
+### "ao" + """ (13 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -270,37 +326,61 @@ Accuracy: 99.88%
   - Bem-vindos ao "Paceiros em crise", um um curso para duplas rumo ao desastre.
   - Bem-vindos ao "Seb's".
 
-### "diga" + """ (12 occurrences)
+### "chama" + """ (13 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Marido e mulher", diga "Marido e mulher"!
-  - Apenas diga "sim", como alguém normal!
-  - Dê um a cada um deles e diga "obrigado", entendeu?
+  - "Teste do idiota" e a quem chama "idiota?", a mim ou a você?
+  - A primeira delas é que o projeto agora se chama "Aquarius".
+  - Essa música se chama "Transmission".
 
-### "assim" + """ (11 occurrences)
+### """ + "no" (12 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Como assim "acordo"?
-  - Como assim "as falas"?
-  - Como assim "de quais prédios"?
+  - Acontece que você berrou "acorde" no meu ouvido!
+  - Ela pôde nem mesmo diga "EU-UM" no próprio dela!
+  - Está escrito "alvo humano" no meu peito.
 
-### "da" + """ (11 occurrences)
+### "Diga" + """ (12 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A capacidade de antever e prover da "natureza" parece insuperável.
-  - A história da "Mão Direita, Mão Esquerda".
-  - Ela é a Estrela da "Trilogia da Vingança", e de "O Vizinho".
+  - Diga "Ah".
+  - Diga "Cresça de novo", e jogue.
+  - Diga "Igube"!
 
-### """ + "ou" (10 occurrences)
+### "não" + """ (12 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A defesa deve tratá-lo por "Coronel" ou "Senhor".
-  - Bandeiras do "Sim" ou do "Não"?
-  - Diga "meu amigo" ou "meu amor".
+  - "D", não "C".
+  - Ele viaja com eles, mas não "com" eles.
+  - Equipe Tática de Narcóticos, e não "equipe equipe".
+
+### """ + "na" (11 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - E preciso abrir-lhe uma "casa" na barriga.
+  - Ele notou que alguém escreveu "eu te amo" na areia do parquinho.
+  - Está escrito "Tonta" na testa?
+
+### "sua" + """ (11 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Cale-se e coma sua "paratha".
+  - De sua "mãe".
+  - E como é que tá sendo essa sua "ajuda profissional"?
+
+### """ + "do" (10 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Vigiar e Punir" do Foucault, tá?
+  - "Wings" do Nautilius.
+  - Como que tá a "plocula" do "cacholinho"?
 
 ### "Como" + """ (10 occurrences)
 - Predicted: None
@@ -310,45 +390,69 @@ Accuracy: 99.88%
   - Como "Jacky" ficou tão rico?
   - Como "Love Thing."
 
-### "são" + """ (10 occurrences)
+### "no" + """ (10 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - E quem são "nós"?
-  - Eles são "Fuligens Pretas".
-  - Eles são "Nice", e não Nike.
+  - Billy Flynn no "Rag da Coletiva".
+  - Continua no "todos juntos"?
+  - Ela vai usar peruca no "Pamela".
 
-### """ + "que" (9 occurrences)
+### "ou" + """ (10 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Aqueles "vermelhos" que nós vimos, vieram pelo ouro.
-  - Eu "ordenifico" que algo mágico… aconteça!
-  - Foi o "por favor" que me ficou na cabeça.
+  - "Reader's Digest" "Western Living", ou "Country Home"?
+  - A defesa deve tratá-lo por "Coronel" ou "Senhor".
+  - Asier Zabaltegui, ou "Tirapu".
 
-### "Diga" + """ (9 occurrences)
+### "seu" + """ (10 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Diga "Ah".
-  - Diga "Cresça de novo", e jogue.
-  - Diga "Igube"!
+  - Aqui, eu continuo sendo seu "árabe"?
+  - Aí vem seu "acompanhante".
+  - Como é o nome do seu "Bogart"?
 
-### "Tínha" + "mos" (9 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Tínhamos dois escaleres e um guindaste pequeno; teria de chegar.
-  - Tínhamos duas cartas pedindo resgate.
-  - Tínhamos estado a pescar perto da margem mais próxima da Baía Exterior.
-
-### "chamada" + """ (9 occurrences)
+### """ + "ao" (9 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Antes de dar fruto, as laranjeiras dão uma flor chamada "azahar".
-  - Conhece uma banda chamada "The The"?
-  - Eles formaram uma banda chamada "Os Esquilos".
+  - "Não" ao corte de empregos!
+  - "Sim" ao amor, meu amor.
+  - Depois, hackeei o Tumblr e descobri que decidiram dar o nome de "Da-vé" ao bebê.
+
+### """ + "da" (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A "diária" da escola é suficiente?
+  - Cara, cada "disco de jazz" da Starbucks prova isso.
+  - Ele fica "cafetando" da sua bicicleta agora.
+
+### """ + "o" (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Hipo" o quê?
+  - "O quê" o quê?
+  - "Ozifique" o visual.
+
+### "E" + """ (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - E "biscoito" é um termo britânico.
+  - E "bolas altas" é um drinque.
+  - E "brilhante".
+
+### "dos" + """ (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Vermelhos" cuidando das crianças dos "Vermelhos".
+  - Conhece a história dos "Seis Viajantes?"
+  - Era alguém dos "Flying Daggers"?
 
 ### "letra" + """ (9 occurrences)
 - Predicted: None
@@ -358,21 +462,13 @@ Accuracy: 99.88%
   - A letra "O".
   - A letra "a" é de alegria e não de abatimento.
 
-### "não" + """ (9 occurrences)
-- Predicted: None
-- Actual: Space
+### "n" + "'" (9 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - "D", não "C".
-  - Ele viaja com eles, mas não "com" eles.
-  - Eu disse "coração", não "cabeça".
-
-### "ou" + """ (9 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Reader's Digest" "Western Living", ou "Country Home"?
-  - A defesa deve tratá-lo por "Coronel" ou "Senhor".
-  - Asier Zabaltegui, ou "Tirapu".
+  - As pessoas têm dificuldade em explicar o rock'n'roll de verdade.
+  - Bacon, ovos, mortadela, rock'n'roll, motocicletas.
+  - Isso é o rock'n'roll, o que você deixa de fora.
 
 ### "para" + """ (9 occurrences)
 - Predicted: None
@@ -382,55 +478,23 @@ Accuracy: 99.88%
   - Está mais para "Rebelde sem Causa".
   - Está mais para "Roboto".
 
-### "por" + """ (9 occurrences)
+### "rock" + "'" (9 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - As pessoas têm dificuldade em explicar o rock'n'roll de verdade.
+  - Bacon, ovos, mortadela, rock'n'roll, motocicletas.
+  - Isso é o rock'n'roll, o que você deixa de fora.
+
+### "são" + """ (9 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A defesa deve tratá-lo por "Coronel" ou "Senhor".
-  - Conhecido por "Rato".
-  - E a testemunha tratará este juiz por "meritíssimo".
+  - E quem são "nós"?
+  - Eles são "Fuligens Pretas".
+  - Eles são "Nice", e não Nike.
 
-### """ + "da" (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A "diária" da escola é suficiente?
-  - Essa é a "situação violenta" da qual falei.
-  - Membro do movimento "Volksfrei" da Alemanha Ocidental.
-
-### """ + "o" (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Hipo" o quê?
-  - "O quê" o quê?
-  - "Ozifique" o visual.
-
-### "dos" + """ (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Vermelhos" cuidando das crianças dos "Vermelhos".
-  - Conhece a história dos "Seis Viajantes?"
-  - Era alguém dos "Flying Daggers"?
-
-### """ + "," (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - " Bora" , porra!
-  - " Bora" , “bora" , “bora" , porra.
-  - " Bora" , “bora" , “bora" , porra.
-
-### """ + "ao" (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Não" ao corte de empregos!
-  - "Sim" ao amor, meu amor.
-  - De qualquer forma, por favor pare de usar "lindo" ao descrever um homem.
-
-### """ + "com" (7 occurrences)
+### """ + "com" (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -438,39 +502,7 @@ Accuracy: 99.88%
   - "Mentes Perigosas" com "The OC"?
   - "Titanic na Fontanka" com Grebenschikov.
 
-### """ + "ele" (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "A" ele é.
-  - "B" ele não gosta.
-  - "Deus te abençoe!" ele chorou. "Salvaste a minha honra."
-
-### """ + "no" (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ela pôde nem mesmo diga "EU-UM" no próprio dela!
-  - Está escrito "alvo humano" no meu peito.
-  - Lemos "O Morro dos Ventos Uivantes" no curso de Inglês na escola secundária.
-
-### "no" + """ (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Continua no "todos juntos"?
-  - Ela vai usar peruca no "Pamela".
-  - Então está metido no "Sim"?
-
-### "nome" + """ (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - E o nome "Jesus"?
-  - Ele gosta do nome "Jack".
-  - Eles colocaram no filho deles o nome "John".
-
-### """ + "foi" (6 occurrences)
+### """ + "foi" (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -478,63 +510,7 @@ Accuracy: 99.88%
   - "Hoess" foi o outro.
   - "O Aparato Humano" foi uma obra-prima absoluta!
 
-### "," + "“" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - " Bora" , “bora" , “bora" , porra.
-  - " Bora" , “bora" , “bora" , porra.
-  - Ah, não, “fofo” nada.
-
-### "Joe Jackson" + """ (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Aquele é Joe Jackson "Descalço"!
-  - De Joe Jackson "Descalço"?
-  - Joe Jackson "Descalço" tinha um problema.
-
-### "Significa" + """ (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Significa "aproveita o dia".
-  - Significa "jerreiro".
-  - Significa "messias".
-
-### "Sultão" + "»" (6 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - A trote, «Sultão»!
-  - O «Sultão» dava três passos, e ficava fora do cortelho.
-  - Sai cá p'ra fora, «Sultão»!
-
-### "—" + "disse" (6 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Depois, serás trazido de volta para aqui —disse Keith.
-  - Já quase me aconteceu, mais do que uma vez —disse eu.
-  - Mas avançamos até lá devagar, um passo de cada vez —disse eu.
-
-### """ + "como" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Morde" como verbo.
-  - Em Latim, "gallus" significa tanto "galo" como "francês".
-  - Encontrei algo completamente "Atordoante" como dizia a sua mãe.
-
-### """ + "na" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Está escrito "Tonta" na testa?
-  - Eu jamais imaginaria que algum dia buscaria por "Viagra" na Wikipédia.
-  - Sim, o "zaousse" na beira do mar, sabe?
-
-### """ + "por" (5 occurrences)
+### """ + "por" (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -542,149 +518,397 @@ Accuracy: 99.88%
   - Exceto que mudamos a palavra "Amor" por "Natal".
   - Ganhei o nome "Alpha" por ser a melhor da turma.
 
-### """ + "quer" (5 occurrences)
+### "Os" + """ (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Encontro às escuras" quer dizer um encontro com um rapaz que nunca me viu.
-  - "Toelle" quer dizer verdadeiro.
-  - E, como todos sabemos, "verdadeiro engano" quer dizer "verdadeiro bluff".
+  - Os "Flying Daggers" estão sempre se movendo.
+  - Os "Flying Daggers" possuem muitos mestres.
+  - Os "Mama Aiuto" nem têm dinheiro para a pintura.
 
-### "A" + """ (5 occurrences)
+### "Um" + """ (8 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Um "Fechador"?
+  - Um "Obscuro".
+  - Um "Volvo" estará lá, com dois caras.
+
+### "nome" + """ (8 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - E o nome "Jesus"?
+  - Ele gosta do nome "Jack".
+  - Ganhei o nome "Alpha" por ser a melhor da turma.
+
+### """ + "!" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Cuzão" !
+  - Abre essa porra, ô “cuzão" !
+  - Atira nesta piranha, “mermão" !
+
+### """ + "aqui" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Assassinar" aqui.
+  - Está cheio de "negão" aqui já.
+  - O "Cego Jeremias" aqui na rua!
+
+### """ + "está" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "A Chegada de Pamela" está no caminho certo agora.
+  - "Mamma Aiuto" está atacando!
+  - "Se foi" está correto?
+
+### """ + "para" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Cantando "venha para cá", "venha para cá" para o Sr. Chadda?
+  - Fala "tchau" para a mamãe, antes de entrar?
+  - Foi tipo um "uhuu!" para você.
+
+### "Joe Jackson" + """ (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Aquele é Joe Jackson "Descalço"!
+  - De Joe Jackson "Descalço"?
+  - Estou arremessando para Joe Jackson "Descalço".
+
+### "Significa" + """ (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Significa "Eu te amo".
+  - Significa "aproveita o dia".
+  - Significa "jerreiro".
+
+### "Tínha" + "mos" (7 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Tínhamos duas cartas pedindo resgate.
+  - Tínhamos duas lanchas e um guindaste pequeno; teria de dar conta.
+  - Tínhamos que abortar.
+
+### "chamada" + """ (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Conhece uma banda chamada "The The"?
+  - Era chamada "A Mulher que Canta" porque cantava o tempo todo.
+  - Há uma música do Baz Luhrmann chamada "Sunscreen".
+
+### "dizendo" + """ (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - E ele continuou me olhando, dizendo "eu sei, eu sei".
+  - Ela está dizendo "estupro"?
+  - Eu não fico dizendo "Que coincidência!".
+
+### "está" + """ (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Acho que sim, pois diz que está "gravemente doente."
+  - Aqui está "Der Zauberberg".
+  - Ele está "epistolando" como um mestre.
+
+### "muito" + """ (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Amo muito "o" França.
+  - Nado muito "bonita".
+  - Num tá achando isso muito "cheguei", não?
+
+### "na" + """ (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A operação será realizada na "Rocha branca".
+  - De agora em diante, só confiaremos na "Poderosa".
+  - Economista Sênior na "Guiproryba".
+
+### "vam" + "'" (7 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Aí, vam'bora, voltar.
+  - Cala a boca, vam'bora.
+  - Chega lá, chega lá, vam'bora.
+
+### """ + "agora" (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Eles" agora vão tentar matar você?
+  - "Shoeses" agora devem ter salto alto com bico fino.
+  - Por que do "meu Senhor" agora?
+
+### """ + "como" (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Morde" como verbo.
+  - Ele está "epistolando" como um mestre.
+  - Encontrei algo completamente "Atordoante" como dizia a sua mãe.
+
+### """ + "ele" (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "A" ele é.
+  - "B" ele não gosta.
+  - "Devemos ser modernos," ele disse.
+
+### "A" + """ (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - A "Finlandia".
+  - A "Garota Grana"!
   - A "Instamatic" funciona?
-  - A "Palavra de Deus"?
 
-### "E" + """ (5 occurrences)
+### "chamamos" + """ (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - E "brilhante".
-  - E "caralho"!
-  - E "graças a Deus", como dizem.
+  - A partir de agora nos chamamos "A Onda."
+  - Nós a chamamos "nossa bruxa".
+  - Quase o chamamos "Não Jogo".
 
-### "Os" + """ (5 occurrences)
+### "era" + """ (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Os "Flying Daggers" possuem muitos mestres.
-  - Os "Mama Aiuto" nem têm dinheiro para a pintura.
-  - Os "Outros" são soldados na eterna guerra.
+  - Meu codinome era "Ghetto Pat", "Rocket Man", algo assim.
+  - Não era "nada".
+  - O jornal era "Pif o cão" e não o "Gato Hércules".
 
-### "Spencerport" + "»" (5 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Algo como «O Sol de Spencerport» ou «Sol e Estrelas de Spencerport».
-  - Algo como «O Sol de Spencerport» ou «Sol e Estrelas de Spencerport».
-  - «Em Spencerport», interveio Kat.
-
-### "dito" + """ (5 occurrences)
+### "escreveu" + """ (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Bem, fico feliz que não tenha dito "experiência".
-  - Desculpe, eu devia ter dito "pela cauda".
-  - Poderia ter dito "foder", e ficaríamos com sérios problemas.
+  - Ele escreveu "idiota!"
+  - Ele notou que alguém escreveu "eu te amo" na areia do parquinho.
+  - Foi ele que escreveu "Amor" e "Primavera nos Dentes".
 
-### "esse" + """ (5 occurrences)
+### "esse" + """ (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - E esse "algum" sou eu, claro.
   - Fala mais sobre esse "Mike".
-  - O que quis dizer com esse "sem sentido"?
+  - O mesmo que contou pra esse "Mike"?
+
+### "falei" + """ (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - De jeito nenhum, falei "tubo", é o metrô.
+  - Eu falei "Espere, eu quero ver isso!"
+  - Eu falei "contorne"!
+
+### "foi" + """ (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A ordem que foi dada a estes soldados foi "lutem para matar".
+  - Bach foi "o cara".
+  - Então a resposta dele foi "Não"!
+
+### "se" + """ (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Charlie Parker tornou-se "Bird" porque Jones jogou um chimbal em sua cabeça.
+  - Como diz-se "corra atrás dela"?
+  - Eu nunca sei se "esfinge" é com "i" ou "y".
+
+### "sobre" + """ (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A próxima reportagem é sobre "Lendas Urbanas".
+  - Antes, você perguntou sobre "nossa filha".
+  - E aquela merda sobre "Eu não acho que ela seja tão boa".
+
+### "termo" + """ (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Não vou usar o termo "inteligência".
+  - O termo "clichê" é oriundo da língua francesa.
+  - Odeio quando os adultos usam o termo "sexualmente ativo."
+
+### "tipo" + """ (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Eu acho que tipo "Uau".
+  - Mas o cara do barco era mais do tipo "Não".
+  - Não gosto de apelidos, tipo "pimpolha".
+
+### """ + "?" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A senhora quer que eu “fico" ?
+  - Como “como assim" ?
+  - Qual teu nome, “mermão" ?
+
+### """ + "eu" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Um" eu disse.
+  - Até um "melhor que buceta" eu já ouvi.
+  - E que "cara" eu tenho?
+
+### """ + "também" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Bom" também não digo, né?
+  - Então, o "tehsildar" também quer estabelecer a sua sede na escola.
+  - Por favor, não seja "Diabólico" também!
+
+### "Não" + """ (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Não "Vou falar sobre uma garota".
+  - Não "amor".
+  - Não "o que", quero dizer "quem"!
+
+### "Uma" + """ (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Uma "Atuação Especializada".
+  - Uma "Diva".
+  - Uma "amiga".
+
+### "chamar" + """ (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - E pare de me chamar "garota".
+  - Eles iriam me chamar "Brush" Carter.
+  - Eu costumava lhe chamar "Gitlee", quando éramos crianças.
+
+### "dizia" + """ (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ele dizia "olá".
+  - Ele sempre dizia "a caridade começa em casa".
+  - Mas cada vez que dizia "Serguei", soluçava.
 
 ### "filme" + """ (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Este não é um filme "B" de terror.
-  - O filme "Clube da Luta" tem um final surpresa.
-  - Quando eu era criança, adorava o filme "Jurassic Park".
+  - Quem é o responsável pelo casting do filme "Aquele Querido Mês de Agosto"?
+  - Você já viu o filme "A Caixa"?
 
-### "foi" + """ (5 occurrences)
+### "pra" + """ (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A ordem que foi dada a estes soldados foi "lutem para matar".
-  - Então a resposta dele foi "Não"!
-  - Essa foi "Doesn't Somebody Want To Be Wanted".
+  - Acha que tenho tempo pra "paixonites" infantis?
+  - Aí você vai direto pra "totulina".
+  - E o remédio é pra "frigião" aguda infantil!
 
-### "na" + """ (5 occurrences)
+### """ + "Bora" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A operação será realizada na "Rocha branca".
-  - De agora em diante, só confiaremos na "Poderosa".
-  - Li o artigo na "Forbes".
+  - " Bora" , porra!
+  - " Bora" , ô coroa.
+  - " Bora" , “bora" , “bora" , porra.
 
-### "termo" + """ (5 occurrences)
+### """ + "França" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Não vou usar o termo "inteligência".
-  - Odeio quando os adultos usam o termo "sexualmente ativo."
-  - Prefiro o termo "capitalista aventureiro".
+  - Amo muito "o" França.
+  - Por exemplo, eu amo muito o Sul "do" França.
+  - Você ama muito "o" França ou há uma parte "do" França que você ama muito?
 
-### """ + "aqui" (4 occurrences)
+### """ + "a" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Assassinar" aqui.
-  - O "Cego Jeremias" aqui na rua!
-  - Olha o que a gente "encontlou" aqui, hein?
+  - Acabamos de "testar" a cama e você já está trabalhando?
+  - As pessoas "vestem" a própria história de vida no rosto.
+  - Quero "congelar" a imagem do prédio todo.
 
-### """ + "do" (4 occurrences)
+### """ + "ela" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Wings" do Nautilius.
-  - Não sou o "advogado" do Conde, nem o meu sorriso tem a intenção que lhe atribui.
-  - Nós somos "o escudo e a espada" do Partido.
+  - "Como você pôde pensar que eu machucaria você??" ela disse, e caiu no chão.
+  - "Queime," ela diz!
+  - Tem uma droga chamada "Tempo" ela acaba com o sono.
 
-### """ + "está" (4 occurrences)
+### """ + "me" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "A Chegada de Pamela" está no caminho certo agora.
-  - "Se foi" está correto?
-  - Está atrasado, mas o "jump seat" está vago.
+  - "All India Radio" me deu um espaço noturno.
+  - "Demônio" me cai muito bem!
+  - Esse "senhor" me levou até o inferno.
 
-### """ + "para" (4 occurrences)
+### """ + "nele" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Cantando "venha para cá", "venha para cá" para o Sr. Chadda?
-  - Ela disse "obrigada pela refeição" para o cozinheiro.
-  - Mas pedir "I Ran" para um músico sério é ir longe demais.
+  - Não repare, mas pus umas frases "errôneas" nele.
+  - Para dar um "código vermelho" nele.
+  - Tem um "h" nele?
 
-### """ + "perguntou" (4 occurrences)
+### """ + "porque" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Estou na presença do Espírito do Natal Ainda Por Vir?" perguntou Scrooge.
-  - "O professor falou sobre o quê?" perguntou o aluno.
-  - "O que é?" perguntou Sherlock Holmes.
+  - Charlie Parker tornou-se "Bird" porque Jones jogou um chimbal em sua cabeça.
+  - Era chamada "A Mulher que Canta" porque cantava o tempo todo.
+  - Kendrick mandou dar um "código vermelho" porque você ordenou!
+
+### """ + "se" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Essa aí" se chama Lucilla.
+  - Com um "hurra" se juntaram a mim Logo tivemos que cair fora.
+  - Do "Não" se vende nada.
 
 ### """ + "são" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "Como se chama?" são três palavras.
-  - As palavras "livro" e "mesa" são substantivos comuns.
+  - As "Meditações metafísicas" são uma obra de Descartes.
   - Os "Outros" são soldados na eterna guerra.
 
-### """ + "também" (4 occurrences)
+### "Disse" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Então, o "tehsildar" também quer estabelecer a sua sede na escola.
-  - Por favor, não seja "Diabólico" também!
-  - Quem havia de dizer que o "amigo dos animais" também ia matar o bicho?
+  - Disse "Estou satisfeito, Spider."
+  - Disse "Mansão das Vadias"?
+  - Disse "adesivo de trenzinho na alça"?
 
 ### "No" + """ (4 occurrences)
 - Predicted: None
@@ -694,61 +918,21 @@ Accuracy: 99.88%
   - No "Richmond".
   - No "Welton Honor" desta semana saiu um artigo profano e clandestino.
 
-### "Um" + """ (4 occurrences)
+### "diria" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Um "Fechador"?
-  - Um "Obscuro".
-  - Um "doce veneno", como dizem por aí.
+  - Alguém se espremeria e diria "Por favor, nos ajustemos".
+  - E eu não diria "trocada".
+  - Eu não diria "metade", mas você está bem.
 
-### "Uma" + """ (4 occurrences)
+### "dito" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Uma "Diva".
-  - Uma "amiga".
-  - Uma "leitura de poesia".
-
-### "bem" + "»" (4 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Ainda bem», disse Clorinda.
-  - «E paga bem», interrompeu a Kat.
-  - «Estou bem», respondi.
-
-### "can" + "'t" (4 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Antonietta can't eat dishes with gluten.
-  - I can't have pets.
-  - My knees can't endure it.
-
-### "chama" + """ (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A primeira delas é que o projeto agora se chama "Aquarius".
-  - Esse sistema chama "soundtrack".
-  - Padre, chama "Padinho Ciço"!
-
-### "chamamos" + """ (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Quase o chamamos "Não Jogo".
-  - Sabe como chamamos "casamento arranjado" no Paquistão, Emily?
-  - Só chamamos "Trabalho" é aquilo que cria um valor de mercado.
-
-### "escreveu" + """ (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Darwin escreveu "A origem das espécies".
-  - Ele escreveu "idiota!"
-  - Foi ele que escreveu "Amor" e "Primavera nos Dentes".
+  - Bem, fico feliz que não tenha dito "experiência".
+  - Desculpe, eu devia ter dito "pela cauda".
+  - Poderia ter dito "foder", e ficaríamos com sérios problemas.
 
 ### "escrito" + """ (4 occurrences)
 - Predicted: None
@@ -758,37 +942,45 @@ Accuracy: 99.88%
   - Está escrito "alvo humano" no meu peito.
   - Mas está escrito "correios".
 
-### "falei" + """ (4 occurrences)
+### "essa" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Eu falei "Espere, eu quero ver isso!"
-  - Eu falei "contorne"!
-  - Eu falei "nada de camelo".
+  - Francamente, eu acho que essa "teoria do complô" é ridícula.
+  - Onde arrumou essa "beca"?
+  - Por favor, pegue essa "natureza confiante" e bata na porta de outra pessoa.
 
-### "isso" + "»" (4 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Se voltarmos a fazer isso», disse Kat, «devíamos fazê-lo melhor.
-  - «Há só um pequeno problema com isso», disse Plaitonos Euripideson.
-  - «Ouvi uns rumores sobre isso», disse Piotr.
-
-### "muito" + """ (4 occurrences)
+### "meu" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Amo muito "o" França.
-  - Nado muito "bonita".
-  - Tem muito "diverso", Chris.
+  - Ele vai decorar meu "hole"!
+  - Salve, meu "Padinho Ciço"!
+  - Vigo não vive no bando do meu "cumpade" Lampião!!
+
+### "nosso" + """ (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Este é Pavlos, nosso "faz-tudo".
+  - Fiona meu amor, vamos nos beijar para o nosso "viver felizes para sempre".
+  - Mas você esperou por nosso "compromisso" por um bom tempo.
 
 ### "palavras" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - As palavras "livro" e "mesa" são substantivos comuns.
+  - As palavras "a fase final" continuam me vindo à mente.
+  - As palavras "malin plaisir" só existem em francês.
   - Consegue ler as palavras "Entrar" e "Sair"?
-  - Eu também não sei o que as palavras "segredo" e "íris" significam.
+
+### "sempre" + """ (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Para mim será sempre "O Boi".
+  - Por que é sempre "escola isto, escola aquilo"?
+  - É sempre "Sim, senhor" e "Não, senhor".
 
 ### "só" + """ (4 occurrences)
 - Predicted: None
@@ -798,37 +990,29 @@ Accuracy: 99.88%
   - Bom, parece que aqui o teu amigo está só "quase morto".
   - Não, é só "A Lebre".
 
-### "―" + "e" (4 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Eu chamo-me Theodoro―e fui amanuense do Ministério do Reino.
-  - Instalei-me num palacete da avenida dos Campos-Elysios―e fui medonho.
-  - Senti tremer o Globo sob os meus pés―e cerrei um momento os olhos.
-
-### """ + "dele" (3 occurrences)
+### "tem" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Ele já plantou o "pepino" dele?
-  - Eu conheço o seu Sergei e a "situação" dele.
-  - O cabo afirma que o "espelho" dele ia atirar.
+  - Mas ele não tem "um" problema, ele tem muitos.
+  - Não tem "Apollo Choco".
+  - O que é que tem "sim"?
 
-### """ + "disse" (3 occurrences)
+### "vem" + "!" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Pizza Generation" disse que ia mandar mensagem.
-  - "Vim pedir-lhe a Cloé como esposa," disse ele.
-  - O grupo "Mamma Aiuto" disse que não poderia vir hoje.
+  - Floquinho, vem aqui, vem !
+  - Nem vem !
+  - Vem Floquinho, vem !
 
-### """ + "eles" (3 occurrences)
+### """ + "aí" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "A-rá!" eles diriam.
-  - "Para te fazer rico," eles dizem.
-  - Ele viaja com eles, mas não "com" eles.
+  - Entra pra “caxanga" aí.
+  - Esse "Kevo" aí era filho seu?
+  - Não disse que havia "coisa" aí dentro?
 
 ### """ + "era" (3 occurrences)
 - Predicted: None
@@ -838,13 +1022,29 @@ Accuracy: 99.88%
   - Essa "Donzela do Tempo" era um tipo de xamã, certo?
   - Quando crinaça, era tão pobre que pensava que "Não está à venda" era uma marca.
 
-### """ + "nas" (3 occurrences)
+### """ + "hoje" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Cheque se há um "preto e branco" nas redondezas.
-  - Não é bom ter o nome do "Gusteau's" nas manchetes?
-  - Nós lemos "O Monte dos Vendavais" nas aulas de Inglês na escola secundária.
+  - Madrinha, vamos no "flip" hoje?
+  - O Fuhrer começou o "Clausewitz" hoje.
+  - Você tá “maneirinho" hoje, hein?
+
+### """ + "já" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ao chegar a "Kuzmich", chorava e a "ouço rumores" já não se ouvia com o pranto.
+  - E o seu "Alô" já me enche de alegria.
+  - VERIFICANDO DISPONIBILIDADE "Adolf ponto Hitler" já existe.
+
+### """ + "pra" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Bora" pra lá, Neto.
+  - Diga "oi" pra Elisa.
+  - Dá uma “licencinha" pra tia passar.
 
 ### """ + "quando" (3 occurrences)
 - Predicted: None
@@ -862,6 +1062,14 @@ Accuracy: 99.88%
   - "Ele" quem?
   - Pedro "Alves" quem descobriu o Brasil e fez a escada de pedra e de sangue.
 
+### """ + "vai" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Com sua letra, o "Grande Romance" vai virar o "Grande Garrancho".
+  - Essa propaganda do "Não" vai esfriar em alguns dias.
+  - Seu "muito" vai ter que esperar.
+
 ### """ + "à" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -875,40 +1083,56 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - "Branca de Neve na roda dos anões. "
-  - "Deus te abençoe!" ele chorou. "Salvaste a minha honra."
-  - "Eu sou o Espírito do Presente Natal", disse a aparição. "Olhe bem para mim!"
+  - "Claro, não preciso nem de câmera pra isso. "
+  - "Provavelmente irei te matar pela manhã. "
 
-### "Amanda" + "»" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Amanda», disse Jerry, «atirou-se do topo do mastro grande.
-  - «A Anson está lá atrás, Amanda», disseram-me num cumprimento amistoso.
-  - «Boa noite, Amanda», disse Sparhawk.
-
-### "Defina" + """ (3 occurrences)
+### "As" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Defina "justiça".
-  - Defina "melhores".
-  - Defina "responsabilidade".
+  - As "Meditações metafísicas" são uma obra de Descartes.
+  - As "Pedras pretas" estão mais próximas e tem mais peixe.
+  - As "flores" daqui raramente podem ser chamadas de flores.
 
-### "Disse" + """ (3 occurrences)
+### "Digam" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Disse "Estou satisfeito, Spider."
-  - Disse "Mansão das Vadias"?
-  - Disse "senhor"?
+  - Digam "Vida longa à Coreia!"
+  - Digam "oi".
+  - Digam "roubo"!
 
-### "Não" + """ (3 occurrences)
+### "Esse" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Não "amor".
-  - Não "o que", quero dizer "quem"!
-  - Não "se importa" com o que os outros pensam.
+  - Esse "Kevo" aí era filho seu?
+  - Esse "cara legal" fez um ótimo trabalho hoje.
+  - Esse "senhor" me levou até o inferno.
+
+### "Estou" + """ (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Essa é… Estou "arrepiassado".
+  - Estou "deslumbrilhada"!
+  - Estou "mais melhor", papai.
+
+### "Joe" + """ (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Menos Joe "Descalço".
+  - Papai dizia que ninguém rebatia como Joe "Descalço".
+  - Por que era chamado de Joe "Descalço"?
+
+### "Ou" + """ (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ou "Tia".
+  - Ou "especial cebolinha"?
+  - Ou "malandro", o que combina mais.
 
 ### "Para" + """ (3 occurrences)
 - Predicted: None
@@ -926,61 +1150,45 @@ Accuracy: 99.88%
   - Que "puta vesga", o quê?
   - Que "tempo"?
 
-### "cais" + "»" (3 occurrences)
-- Predicted: Space
-- Actual: None
+### "Sem" + """ (3 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Depois há as reparações dos cais», disse eu.
-  - «Suponho que a dragagem faça parte da reparação de um cais», disse eu.
-  - «É para isso que servem os cais», respondeu ele.
+  - Sem "mas" ou te transformo em carvão!
+  - Sem "migué", tá entendendo?
+  - Sem "para, mãe", já falei!
 
-### "capitã" + "»" (3 occurrences)
-- Predicted: Space
-- Actual: None
+### "apenas" + """ (3 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Boa noite, capitã», gaguejou.
-  - «Cem, capitã», concluiu Henrison.
-  - «És capitã», disse Clorinda.
+  - Agoras somos mais do que apenas "nós".
+  - Ele nunca era Norman completamente, mas frequentemente era apenas "mãe".
+  - É difícil conversar com alguém que diz apenas "sim" e "não".
 
 ### "disser" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - E se eu disser "não"?
+  - Quando disser "três", comecem a se aproximar.
   - Se amanhã matar alguém e disser "Não sabia que não podia matar", vai preso.
   - Se disser "bem-vindo", olhe para ele.
 
-### "disso" + "»" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Na verdade, sou especialista na história disso», disse Nicholas.
-  - «Não há grande procura disso», respondeu ele.
-  - «Trato disso», disse ele.
-
-### "entre" + """ (3 occurrences)
+### "dissesse" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Há uma grande diferença entre "quase morto" e "completamente morto".
-  - Qual é a diferença entre "Eu poderia" e "Eu posso"?
-  - Qual é a diferença entre "skill" and "ability" em inglês?
+  - Então se eu dissesse "Caramba, você é ótimo na cama."
+  - Se dissesse "advogado" pensariam "tudo bem, já serve".
+  - Se dissesse "serei médico", diriam "é mentira".
 
-### "está" + """ (3 occurrences)
+### "falou" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Acho que sim, pois diz que está "gravemente doente."
-  - Aqui está "Der Zauberberg".
-  - Um homem não está muito cansado, está "exausto".
-
-### "faz" + """ (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A vaca faz "muu" e o gato faz "miau".
-  - A vaca faz "muu" e o gato faz "miau".
-  - Só faz "Shhh!"
+  - Nossa, falou "dar cabo"?
+  - Não acredito, você falou "dar cabo"?
+  - Você falou "onze".
 
 ### "ler" + """ (3 occurrences)
 - Predicted: None
@@ -998,45 +1206,21 @@ Accuracy: 99.88%
   - Aqui teremos maçãs "Antonovka".
   - Estas são maçãs "Shtrifel".
 
-### "me" + "»" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Apanhaste-me», respondeu a Kat.
-  - «Aquela a quem devo obedecer está a chamar-me», anunciou.
-  - «Ele ia matar-me», disse baixinho.
-
-### "preço" + "»" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Ao mesmo preço», respondi.
-  - «O suficiente para justificar o preço», disse Kat.
-  - «Por peixes-leão, qualquer preço», disse.
-
-### "sempre" + """ (3 occurrences)
+### "nas" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Para mim será sempre "O Boi".
-  - É sempre "Sim, senhor" e "Não, senhor".
-  - É sempre "só desta vez".
+  - E na certa os antepassados da bichinha também vieram nas "galeras", não é isso?
+  - Então tem certeza que estará nas "Pedras pretas"?
+  - Sim, nas "Pedras pretas".
 
-### "sobre" + """ (3 occurrences)
+### "ser" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A próxima reportagem é sobre "Lendas Urbanas".
-  - E aquela merda sobre "Eu não acho que ela seja tão boa".
-  - Já ouviu sobre "direitos de propriedade intelectual"?
-
-### "soletrar" + """ (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Não sabe soletrar "guarda-costas"?
-  - O Tommy não sabe nem soletrar "Ranger".
-  - É muito difícil de soletrar "oftalmologista".
+  - O rapaz deve ser "Sardar", por favor.
+  - Tem que ser "Frango no Espeto".
+  - Você sabe que seu nome devia ser "Rainha do drama."
 
 ### "somos" + """ (3 occurrences)
 - Predicted: None
@@ -1046,63 +1230,27 @@ Accuracy: 99.88%
   - Não somos "zugezogenen"?
   - Nós somos "o escudo e a espada" do Partido.
 
-### "tipo" + """ (3 occurrences)
+### "sou" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Eu acho que tipo "Uau".
-  - Não existe palavra tipo "não posso".
-  - Tem um sabor assustador tipo "Kennedy".
+  - Eu sou "sua" filha.
+  - Faça isso por mim, já que sou "exilada".
+  - Não sou "ongueiro"!
 
-### "vem" + "!" (3 occurrences)
+### """ + "Geum" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Floquinho, vem aqui, vem !
-  - Vem Floquinho, vem !
-  - Vem, vem !
+  - Mas continuou conhecida como "Bondosa" Geum-ja.
+  - Todos lá a chamam de "Bondosa" Geum-ja.
 
-### """ + "?" (2 occurrences)
+### """ + "dele" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A senhora quer que eu “fico" ?
-  - Como “como assim" ?
-
-### """ + "Bora" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - " Bora" , porra!
-  - " Bora" , “bora" , “bora" , porra.
-
-### """ + "França" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Amo muito "o" França.
-  - Por exemplo, eu amo muito o Sul "do" França.
-
-### """ + "a" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - As pessoas "vestem" a própria história de vida no rosto.
-  - Quero "congelar" a imagem do prédio todo.
-
-### """ + "agora" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Shoeses" agora devem ter salto alto com bico fino.
-  - Por que do "meu Senhor" agora?
-
-### """ + "ano" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Comi um prato muito saboroso chamado "Shoujin Ryouri" ano passado em Nagoya.
-  - Eu comi um prato muito saboroso chamado "Shoujin Ryouri" ano passado em Nagoya.
+  - Ele já plantou o "pepino" dele?
+  - O cabo afirma que o "espelho" dele ia atirar.
 
 ### """ + "depois" (2 occurrences)
 - Predicted: None
@@ -1118,33 +1266,54 @@ Accuracy: 99.88%
   - No "Welton Honor" desta semana saiu um artigo profano e clandestino.
   - O que tem a letra "a" desta máquina?
 
-### """ + "duas" (2 occurrences)
+### """ + "disse" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Eu já vi "Star Wars" duas vezes.
-  - Mas eles "previram" duas semanas na cadeia.
+  - "Pizza Generation" disse que ia mandar mensagem.
+  - O grupo "Mamma Aiuto" disse que não poderia vir hoje.
 
-### """ + "ela" (2 occurrences)
+### """ + "eles" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Queime," ela diz!
-  - Tinha uma droga chamada "Tempo" ela acaba com o sono.
+  - "Para te fazer rico," eles dizem.
+  - Ele viaja com eles, mas não "com" eles.
 
-### """ + "eu" (2 occurrences)
+### """ + "estão" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Um" eu disse.
-  - E que "cara" eu tenho?
+  - As "Pedras pretas" estão mais próximas e tem mais peixe.
+  - Os "Flying Daggers" estão sempre se movendo.
 
-### """ + "gritou" (2 occurrences)
+### """ + "fechou" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Katasonych!" gritou o capitão.
-  - "Nãoo!" gritou o Tom.
+  - A loja de conserto de TVs "Adolf Hennecke" fechou.
+  - Meu "Padinho Pade Ciço" fechou tudo isso aqui.
+
+### """ + "ficou" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Como "Jacky" ficou tão rico?
+  - O "dia de bônus" ficou dividido.
+
+### """ + "filha" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Eu sou "sua" filha.
+  - Por uma "branquela" filha da puta que nem me dava atenção.
+
+### """ + "há" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Eles o "expandiram" há algum tempo.
+  - Não faço uma crítica ao "Gusteau's" há anos.
 
 ### """ + "isso" (2 occurrences)
 - Predicted: None
@@ -1153,26 +1322,54 @@ Accuracy: 99.88%
   - Ha-ha-ha que não é um "Rufle" isso é um "Rifle!"
   - O senhor diz "toujours" isso, mas nunca fala do papel!
 
-### """ + "já" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ao chegar a "Kuzmich", chorava e a "ouço rumores" já não se ouvia com o pranto.
-  - VERIFICANDO DISPONIBILIDADE "Adolf ponto Hitler" já existe.
-
 ### """ + "mais" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Não se preocupe, vai gostar dela, porque é "a" mais sexy.
-  - Pensando naquele tipo de coisas, assisti a "Duck Soup" mais uma vez.
+  - Você é de longe o amigo "porção única" mais interessante que já conheci.
 
-### """ + "sem" (2 occurrences)
+### """ + "nas" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Como farei um filme chamado "O Velho Moinho" sem um moinho?
-  - Tom clicou em "enviar" sem querer.
+  - Cheque se há um "preto e branco" nas redondezas.
+  - Não é bom ter o nome do "Gusteau's" nas manchetes?
+
+### """ + "pai" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - O "Jorginho" pai foi descartado, portanto é a vez dele.
+  - Ou continuamos com o “Jorginho" pai?
+
+### """ + "primeiro" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Por que não disseram "oi" primeiro?
+  - Precisamos "fazer um flagrante" primeiro.
+
+### """ + "quer" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "El País" quer eu escreva sobre você para o jornal de domingo.
+  - "Toelle" quer dizer verdadeiro.
+
+### """ + "só" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - As palavras "malin plaisir" só existem em francês.
+  - Não me chame de "meu amor" só para se desculpar, droga!
+
+### """ + "tem" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - O "cara" tem um nome, sabia?
+  - Só seus “Bem-vindos" tem força.
 
 ### """ + "virá" (2 occurrences)
 - Predicted: None
@@ -1181,12 +1378,12 @@ Accuracy: 99.88%
   - "Hiran" virá.
   - Durma ou do contrário "Habbad" virá.
 
-### """ + "–" (2 occurrences)
+### """ + "você" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Na verdade eu não sou o Tom." – "Tanto faz."
-  - "Na verdade, eu não sou o Tom." – "Não importa."
+  - Eu não "convoquei" você.
+  - Tentei "salvar" você.
 
 ### "," + "####" (2 occurrences)
 - Predicted: None
@@ -1195,68 +1392,33 @@ Accuracy: 99.88%
   - E sempre vou amar, ####.
   - Ou só late, ####?
 
-### "-" + "deveríamos" (2 occurrences)
+### "," + "-" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Esse feriado está muito sem graça - deveríamos ter voltado para casa.
-  - Esse feriado não está muito divertido - deveríamos ter ido para casa.
+  - Deixe estar, - pensou ele um dia - fujo daqui e não volto mais.
+  - E ela continuou a vê-lo dormir, - dormir e talvez sonhar.
 
-### "-" + "o" (2 occurrences)
+### "-" + "laró" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Deus me perdoe - o dinheiro estaria na mesa amanhã.
-  - Os homens procuram apenas uma coisa na vida - o seu prazer.
+  - Quando é que eu lhe poderei cantar o tro-laró- laró- laró?
+  - Quando é que eu lhe poderei cantar o tro-laró- laró- laró?
 
-### "-" + "um" (2 occurrences)
+### "." + "—" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Dois guerreiam - um terceiro lucra.
-  - O céu está nublado e cinzento - um céu típico da estação das chuvas.
+  - Ele ganhou na loteria. — É?!
+  - Ele voltou com a ex. — É?!
 
-### "Biblioteca" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Também tinham uma data de livros históricos, os «Cadernos da Biblioteca».
-  - «A remessa da Biblioteca», respondi.
-
-### "Camilloff" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Camilloff».
-  - «General Camilloff».
-
-### "Capitã" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Capitã», disse Saunders, «olhe com atenção para o candeeiro em cima da mesa.»
-  - «Um momento, Capitã», disse Chiang.
-
-### "Claro" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Claro», disse Gunther.
-  - «Claro», disse.
-
-### "Compreendo" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Compreendo», respondeu ele.
-  - «Compreendo», respondi.
-
-### "Digam" + """ (2 occurrences)
+### "Defina" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Digam "Vida longa à Coreia!"
-  - Digam "roubo"!
+  - Defina "melhores".
+  - Defina "responsabilidade".
 
 ### "Diz" + """ (2 occurrences)
 - Predicted: None
@@ -1272,12 +1434,12 @@ Accuracy: 99.88%
   - Dulcibear!
   - Dulcibear.
 
-### "Estou" + """ (2 occurrences)
+### "Fala" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Essa é… Estou "arrepiassado".
-  - Estou "deslumbrilhada"!
+  - Fala "cão"!
+  - Fala "tchau" para a mamãe, antes de entrar?
 
 ### "Falei" + """ (2 occurrences)
 - Predicted: None
@@ -1293,20 +1455,6 @@ Accuracy: 99.88%
   - Jeff "Babey".
   - Vocais de Jeff "Bebay".
 
-### "Joe" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Menos Joe "Descalço".
-  - Por que era chamado de Joe "Descalço"?
-
-### "Kat" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Kat», perguntei por fim, «porque é que não quiseste comprar nenhum dos amarelos?
-  - «Ir ver o Justiciar é assunto de trabalho, Kat», respondi por fim.
-
 ### "Leu" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1321,12 +1469,26 @@ Accuracy: 99.88%
   - Algum problema, Maxim ?
   - Sim, Maxim ?
 
+### "Meu" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Meu "Padinho Pade Ciço" fechou tudo isso aqui.
+  - Meu "espelho" apontou.
+
 ### "Muito" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Muito "Borden, Borden", quando todos nós sabemos que é Strauss.
   - Muito "de acordo".
+
+### "Nas" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Nas "Rochas pretas" como combinamos.
+  - Nas "brilhas", como se diz no Porto.
 
 ### "Não" + "," (2 occurrences)
 - Predicted: None
@@ -1335,19 +1497,12 @@ Accuracy: 99.88%
   - Não , Parveen LT.
   - Não , pensei.
 
-### "Não" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Não», disse a Kat.
-  - «Não», respondeu Agatha.
-
-### "Ou" + """ (2 occurrences)
+### "Procure" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Ou "Tia".
-  - Ou "malandro", o que combina mais.
+  - Procure "Sobrevivência".
+  - Procure "estoque em falta".
 
 ### "Quentin" + "!" (2 occurrences)
 - Predicted: None
@@ -1356,12 +1511,19 @@ Accuracy: 99.88%
   - Julien Quentin !
   - Quentin !
 
-### "Senhora" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
+### "Seu" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Fui lá fora, como tínhamos combinado, Senhora», disse Chiang.
-  - «Senhora», disse James Victorson, ofegante.
+  - Seu "ausweiss", irmã.
+  - Seu "muito" vai ter que esperar.
+
+### "Somos" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Somos "Band Aids."
+  - Somos "O Clique".
 
 ### "Só" + """ (2 occurrences)
 - Predicted: None
@@ -1377,12 +1539,26 @@ Accuracy: 99.88%
   - Talvez "Daijin"?
   - Talvez "consciência" seja uma palavra melhor.
 
+### "Tem" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tem "Sacred Princess Casino" escrito.
+  - Tem "mar" demais até.
+
 ### "Vamos" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Vamos "costurá-lo".
   - Vamos "petiscar".
+
+### "Você" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Você "não ser" padre.
+  - Você "vê" melhor com as orelhas.
 
 ### "a" + "Alemanha" (2 occurrences)
 - Predicted: Space
@@ -1391,13 +1567,6 @@ Accuracy: 99.88%
   - Ainda bem que aAlemanha é mais perto que a Rússia.
   - Meninos, despeçam-se de Peppino, que vai para aAlemanha.
 
-### "a" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Com cautela, toquei na letra «a».
-  - Ouviu-se um clique quase impercetível, e apareceu um «m» a seguir ao «a».
-
 ### "algo" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1405,33 +1574,47 @@ Accuracy: 99.88%
   - Claro, mas não farão nada até que algo "dramático" aconteça.
   - Preciso de algo "azuleado".
 
-### "anos" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «A última nave estelar veio há vinte anos», respondeu Chiang.
-  - «O meu pai morreu há quase dois anos», respondi.
-
-### "apenas" + """ (2 occurrences)
+### "aquele" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Agoras somos mais do que apenas "nós".
-  - Ele nunca era Norman completamente, mas frequentemente era apenas "mãe".
+  - Conheço aquele "ú"!
+  - Sabe aquele "ú"?
 
-### "aqui" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Estou aqui», disse eu baixinho.
-  - «Não se vê muita gente de Spencerport por aqui», disse Piotr.
-
-### "botão" + """ (2 occurrences)
+### "aqui" + ".." (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - O botão "X" no alto, à direita, fecha a janela.
-  - Querida, esse botão "Enviar" é como um lançador de mísseis!
+  - Doravante, se um único peixe é roubado aqui ..
+  - Os peixes que você está pegando aqui ..
+
+### "as" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A esta hora só podem ser as "madamas"!
+  - E as "Rochas pretas"?
+
+### "cada" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Cara, cada "disco de jazz" da Starbucks prova isso.
+  - Temos informações exatas de que cada "inocente" é inimigo da nação.
+
+### "cantando" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Marcelo e eu, bêbados, escutando Chavela Vargas cantando "A Noite do Meu Bem".
+  - É o Sonic Youth cantando "Superstar" dos The Carpenters.
+
+### "canção" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A canção "Fever Dog" é um grande passo para vocês.
+  - Mas não a canção "Vou falar sobre uma garota".
 
 ### "chamados" + """ (2 occurrences)
 - Predicted: None
@@ -1447,13 +1630,6 @@ Accuracy: 99.88%
   - Eu sei por que te chamam "a Bovarinha".
   - Falava eu do descaminho do mundo, daquilo a que chamam "progresso".
 
-### "chamar" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Não, ouvi chamar "Spider, Spider".
-  - É só chamar "Chicó!" que ele vem.
-
 ### "chamas" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1461,68 +1637,26 @@ Accuracy: 99.88%
   - E porque me chamas "Bovarinha"?
   - Se não porque é que te chamas "João"?
 
-### "chamo" + """ (2 occurrences)
+### "chamava" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Eu não me chamo "gente".
-  - Eu não me chamo "pessoal".
+  - Desde os tempos de moleque, quando ele ainda se chamava "Dadinho".
+  - Naquela época não se chamava "aprontar".
 
-### "chuva" + "-" (2 occurrences)
+### "desse" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Leva o guarda-chuva - eles preveem chuva.
-  - Leva o guarda-chuva - preveem chuva.
-
-### "clientes" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Vendemos sobretudo aos comerciantes, e eles vendem aos clientes», respondi.
-  - «Vou ter de consultar os meus clientes», disse ele.
-
-### "comprador" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Ainda não temos comprador», disse Christopher.
-  - «Não há comprador», disse Brunel.
-
-### "conta" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Na verdade, pôs várias outras palavras antes de «conta».
-  - «Tenho de pagar a conta», disse eu, levantando-me.
-
-### "cuidado" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Tenha cuidado», respondeu ele.
-  - «Teria de ter cuidado», disse eu.
-
-### "desculpa" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Peço desculpa», disse eu, «mas as nossas palavras e as vossas não coincidem.
-  - «Tenho de voltar a pedir desculpa», disse eu.
+  - Chega desse "senhor", me trate por você.
+  - Estou saindo desse "Livro da Selva".
 
 ### "digo" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
+  - Então, quando digo "passe a bola", é pra passar, tá?
   - Não, por isso digo "outro qualquer".
-  - Às vezes digo "sim" mesmo querendo dizer "não".
-
-### "dinheiro" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «O Chris deve-me dinheiro», repetiu Williamson.
-  - «Quando era vivo, devia-te dinheiro», corrigiu Brunel.
 
 ### "dirá" + """ (2 occurrences)
 - Predicted: None
@@ -1531,26 +1665,19 @@ Accuracy: 99.88%
   - Ela voltará depois de dois dias a dirá "sinto muito".
   - Porque é o dia em que ela dirá "não".
 
-### "dissesse" + """ (2 occurrences)
+### "disseram" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Se dissesse "advogado" pensariam "tudo bem, já serve".
-  - Se dissesse "serei médico", diriam "é mentira".
+  - Por que não disseram "oi" primeiro?
+  - Vocês disseram "beliscar".
 
-### "dizemos" + """ (2 occurrences)
+### "dizem" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Como nós dizemos "obrigado" em francês?
-  - Em alemão, dizemos "Zum Wohle".
-
-### "dizia" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ele sempre dizia "a caridade começa em casa".
-  - Mas cada vez que dizia "Serguei", soluçava.
+  - Eles dizem "muito melhor", nunca "mais melhor", querido.
+  - Mas dizem "tempo integral"!
 
 ### "dois" + """ (2 occurrences)
 - Predicted: None
@@ -1559,19 +1686,12 @@ Accuracy: 99.88%
   - Kapoor com dois "O's".
   - Sim, com dois "fs".
 
-### "eles" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Na verdade, eles», corrigiu Keith.
-  - «Ninguém disparou contra eles», respondeu o Comandante Sénior Parsons.
-
-### "era" + """ (2 occurrences)
+### "empresa" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Não era "nada".
-  - O jornal era "Pif o cão" e não o "Gato Hércules".
+  - As comissárias são todas nossas performers da empresa "Cinco Continentes".
+  - Vamos começar a empresa "Bagrov Brothers".
 
 ### "escrever" + """ (2 occurrences)
 - Predicted: None
@@ -1580,12 +1700,33 @@ Accuracy: 99.88%
   - Eu disse para escrever "Estação".
   - Por que era tão difícil escrever "espada"?
 
-### "essa" + """ (2 occurrences)
+### "este" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Por favor, pegue essa "natureza confiante" e bata na porta de outra pessoa.
-  - Sou melhor que essa "vadia"!
+  - Creio que posso lidar com este "pepino".
+  - E este "emprego"?!
+
+### "fala" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ele chuta quando a gente fala "Tá tudo bem"!
+  - Sabe, ela fala "Mamãe, somos muçulmanas?"
+
+### "falam" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Até papagaios falam "sim"!
+  - Como vocês falam "mamãe" em coreano?
+
+### "faz" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ela faz "Open Mics" e bota pra quebrar.
+  - Só faz "Shhh!"
 
 ### "fazer" + """ (2 occurrences)
 - Predicted: None
@@ -1593,6 +1734,13 @@ Accuracy: 99.88%
 - Examples:
   - Tem que fazer "Trincheiras".
   - É, não ficar tão obcecados em fazer "nossa Claire".
+
+### "fica" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ele fica "cafetando" da sua bicicleta agora.
+  - Onde fica "Oz"?
 
 ### "há" + """ (2 occurrences)
 - Predicted: None
@@ -1615,26 +1763,40 @@ Accuracy: 99.88%
   - Sr. Perry, leia o parágrafo intitulado "Compreender a Poesia".
   - Tom escreveu um livro muito interessante intitulado "Flagrantes de minha Vida".
 
-### "leu" + """ (2 occurrences)
+### "jogar" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A Jane leu "O País das Neves" antes.
-  - Ela finalmente leu "Guerra e Paz".
+  - Acho que quero jogar "Eu Vejo".
+  - Por isso vamos jogar "Gatinho no Saco".
 
-### "li" + """ (2 occurrences)
+### "jogou" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Eu também não li "Guerra e Paz".
-  - Foi quando li "O Balanço do Barco", de Terence Mann.
+  - Dormindo, jogou "MahJong" o dia todo.
+  - Você já jogou "você não consegue rimar"?
 
-### "m" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
+### "jornal" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - Depois toquei no «m».
-  - Ouviu-se um clique quase impercetível, e apareceu um «m» a seguir ao «a».
+  - No jornal "Semana".
+  - Você leu no jornal "Semana", o setor Casa para uma família?
+
+### "mas" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Ele depende", mas "espica".
+  - Tá, mas "peraí".
+
+### "meio" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Todo esse amor deles é meio "plutônico".
+  - Venham caras, aqui está meio "excêntrico."
 
 ### "mencione" + """ (2 occurrences)
 - Predicted: None
@@ -1643,13 +1805,6 @@ Accuracy: 99.88%
   - A propósito, não importa o que diga, não mencione "Ronin de Hiroshima".
   - Só não mencione "cachorro-quente".
 
-### "mesmo" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - O nome dele é mesmo "Não Jogo"?
-  - És mesmo "mauzini".
-
 ### "meu" + "!" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1657,26 +1812,19 @@ Accuracy: 99.88%
   - Agora é meu !
   - O Sansão é meu !
 
-### "n" + "'" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Bacon, ovos, mortadela, rock'n'roll, motocicletas.
-  - O presente de Deus ao rock'n'roll.
-
-### "nas" + """ (2 occurrences)
+### "meus" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - E na certa os antepassados da bichinha também vieram nas "galeras", não é isso?
-  - Sim, nas "Pedras pretas".
+  - Por que não responde os meus "torpedos"?
+  - Vocês são meus "brothers."
 
-### "nenhum" + "»" (2 occurrences)
+### "na" + "Alemanha" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Guardei a expressão «não está em livro nenhum» na memória; nunca a tinha ouvido.
-  - «Não há regateio nenhum», respondi.
+  - Vá tomar no cu naAlemanha, você e o bigodudo.
+  - Vão achar trabalho naAlemanha?
 
 ### "ouvi" + """ (2 occurrences)
 - Predicted: None
@@ -1685,19 +1833,40 @@ Accuracy: 99.88%
   - Eu ouvi "The Night The Lights Went Out In Georgia".
   - Não acompanho os sucessos, e já ouvi "True Blue".
 
-### "pedir" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
+### "ouvindo" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «E agora tenho um favor a pedir», anunciou Michael.
-  - «Percebo o que estás a pedir», disse Arthur.
+  - E você está ouvindo "A noite ainda é jovem".
+  - Você está ouvindo "Levando Tudo em Conta", da NPR Notícias.
 
-### "peixe" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
+### "parte" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Em breve vou apanhar consideravelmente mais peixe», disse eu.
-  - «Há falta de peixe», anunciou.
+  - A parte "Gusteau"?
+  - Você ama muito "o" França ou há uma parte "do" França que você ama muito?
+
+### "pelo" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Desesperadamente eu procurei pelo "vaso de pedidos do Buda".
+  - Você tem que trocar o "ele" pelo "nós".
+
+### "perguntou" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Não, ele perguntou "Como você está?"
+  - Por que você perguntou "Onde"?
+
+### "pessoas" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - As pessoas "vestem" a própria história de vida no rosto.
+  - Você sentará em um sofá e perguntará às pessoas "como isso faz você se sentir?"
 
 ### "pilhas" + """ (2 occurrences)
 - Predicted: None
@@ -1706,89 +1875,61 @@ Accuracy: 99.88%
   - Vinte pilhas "C"?
   - Vinte pilhas "D".
 
-### "proprietário" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
+### "restaurante" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Bem, ainda não há propriamente um proprietário», disse Markofferson.
-  - «Vou chamar o proprietário», disse ela.
-
-### "quota" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Terei todo o gosto em vender-lhe uma quota», disse Christopher.
-  - «Uma quota», disse Johanna.
-
-### "razão" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Sim, ela tem razão», interveio Jill.
-  - «Tens razão», disse Dietrich.
+  - Casou-se com um policial, é garçonete no restaurante "Crimea".
+  - Mande um táxi para o restaurante "Salgueiro Chorão".
 
 ### "revista" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Gosto de ler a revista "La Ondo de Esperanto".
   - Li sobre eles na revista "Times".
+  - Para mim, a revista "Veja" me vem sem o plástico.
 
-### "rock" + "'" (2 occurrences)
+### "seis" + "centos" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Bacon, ovos, mortadela, rock'n'roll, motocicletas.
-  - O presente de Deus ao rock'n'roll.
+  - E mais seiscentos.
+  - Vinte bilhões e seiscentos.
 
-### "senhora" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Sim, minha senhora», respondeu Henrison.
-  - «É muito mais do que isso, minha senhora», respondeu ele.
-
-### "ser" + """ (2 occurrences)
+### "sendo" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - O rapaz deve ser "Sardar", por favor.
-  - Tem que ser "Frango no Espeto".
+  - Em inglês, continua sendo "Batman".
+  - Que garantia tenho de que continuarei sendo "eu"?
 
-### "serviço" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Tenho gente ao meu serviço», disse eu, «e pago-lhe.
-  - «A sério, estás sempre atenta quando estás ao meu serviço», disse eu.
-
-### "seu" + """ (2 occurrences)
+### "seus" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Como é o nome do seu "Bogart"?
-  - No seu "Eterno Retorno"!
+  - Cuidado, ou eu quebro seus "ovos” também!
+  - É por isso que sempre testava os seus "amigos próximos".
 
-### "sim" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - A resposta foi «sim».
-  - «Estava, sim», disse Williamson.
-
-### "somente" + """ (2 occurrences)
+### "soletrar" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Antes aqui estava escrito somente "rã".
-  - É somente "Desculpe-me" ou nem isso.
+  - Não sabe soletrar "guarda-costas"?
+  - O Tommy não sabe nem soletrar "Ranger".
 
-### "sozinho" + "(" (2 occurrences)
-- Predicted: Space
-- Actual: None
+### "suas" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - Eu não acho que posso fazer tudo sozinho(a).
-  - Eu não posso fazer tudo sozinho(a).
+  - Eram conhecidas como suas "Garotas Esplendorosas".
+  - Eu já vi vários amigos meus com suas "amadas".
+
+### "supostos" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Esses supostos "caras malvados" não passam de medíocres ultrapassados.
+  - Seja como for, estou me lixando para os seus supostos "direitos"!
 
 ### "tal" + """ (2 occurrences)
 - Predicted: None
@@ -1797,26 +1938,12 @@ Accuracy: 99.88%
   - E mande aos ucranianos a foto do careca, do tal "Tártaro".
   - Que tal "sentinelas"?
 
-### "tem" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Mas ele não tem "um" problema, ele tem muitos.
-  - O que é que tem "sim"?
-
 ### "tocar" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Ela queira tocar "A Vista de Qin Huai," por isso, foi morta.
   - Vamos tocar "Whiplash", pessoal.
-
-### "todos" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «O Sino chama-nos a todos», respondeu ele.
-  - «Quase todos», respondeu ele.
 
 ### "tudo" + """ (2 occurrences)
 - Predicted: None
@@ -1829,15 +1956,15 @@ Accuracy: 99.88%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Eu já vi "Star Wars" duas vezes.
+  - Eu vi "Arquivo X".
   - Que posso fazer, Sweetu, se eu nunca vi "Dil Chahta Hai"?
 
-### "vi" + "»" (2 occurrences)
-- Predicted: Space
-- Actual: None
+### "você" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Eu vi», sorri.
-  - «Não os vi», disse Sparhawk.
+  - De novo você "acha"?
+  - Quem é você "tio"?
 
 ### "ópera" + """ (2 occurrences)
 - Predicted: None
@@ -1846,30 +1973,31 @@ Accuracy: 99.88%
   - Essa é a ária de Baiser, da ópera "José".
   - Evoluiu a partir da antiga ópera "História da Querida."
 
-### "–" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
+### "—" + "disse" (2 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - "Na verdade eu não sou o Tom." – "Tanto faz."
-  - "Na verdade, eu não sou o Tom." – "Não importa."
+  - Sejam bem-vindos à Academia Stone —disse Lanceson.
+  - É mais fácil guardar um segredo quando você sabe exatamente qual é —disse ela.
 
-### """ + "!" (1 occurrences)
+### "—" + "eu" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Já quase aconteceu comigo, mais de uma vez —eu disse.
+  - Mas vamos chegar lá devagar, um passo de cada vez —eu disse.
+
+### "!" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - “Bora" !
+  - "Estou descansando! "
 
 ### """ + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Que horas são?" - "Eu não tenho um relógio."
-
-### """ + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - “Bora" , “bora" .
+  - "Posso ir com você?" - "Claro!"
 
 ### """ + "Anna Karina" (1 occurrences)
 - Predicted: None
@@ -1883,23 +2011,23 @@ Accuracy: 99.88%
 - Examples:
   - " C'est pire qu'em Algérie !"
 
+### """ + "Carter" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Eles iriam me chamar "Brush" Carter.
+
 ### """ + "Constant" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "Berlim não estará mais aqui," Constant disse.
 
-### """ + "Dois" (1 occurrences)
+### """ + "Cuzão" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Quantos filhos tu tens?" " Dois filhos e uma filha."
-
-### """ + "E" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Abracadabra!" E três pombas voaram para fora do chapéu.
+  - " Cuzão" , safado, rapaz.
 
 ### """ + "Edie" (1 occurrences)
 - Predicted: None
@@ -1907,11 +2035,11 @@ Accuracy: 99.88%
 - Examples:
   - Na bateria, o inigualável Clifton "Fou Fou" Edie!
 
-### """ + "Ela" (1 occurrences)
+### """ + "Espósito" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "O que eu devo fazer agora?" Ela disse para si própria.
+  - Diga-lhe que o "Marechal" Espósito está indo enchê-lo de porrada!
 
 ### """ + "Fiquem" (1 occurrences)
 - Predicted: None
@@ -1919,17 +2047,17 @@ Accuracy: 99.88%
 - Examples:
   - "A NOITE AMERICANA" Fiquem quietos e toquem direito.
 
-### """ + "Geum" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Mas continuou conhecida como "Bondosa" Geum-ja.
-
 ### """ + "Grupo" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "Agente Amarelo NÃO é Seguro" Grupo de cidadãos em forte protesto.
+
+### """ + "Howard W." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "O trabalho te liberta" Howard W.
 
 ### """ + "Imperial" (1 occurrences)
 - Predicted: None
@@ -1943,11 +2071,11 @@ Accuracy: 99.88%
 - Examples:
   - "Minha mãe," João de Deus.
 
-### """ + "Não" (1 occurrences)
+### """ + "Lampião" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Eu quero que algo aconteça" "Como o quê?" " Não sei".
+  - Vigo não vive no bando do meu "cumpade" Lampião!!
 
 ### """ + "Ok" (1 occurrences)
 - Predicted: None
@@ -1966,6 +2094,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - "Wolfsschanze" Quartel-General do Fuhrer.
+
+### """ + "Tour" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "TOUR OS INTOCÁVEIS" Tour Original dos Gângsters de Chicago.
 
 ### """ + "Wieland" (1 occurrences)
 - Predicted: None
@@ -2015,17 +2149,17 @@ Accuracy: 99.88%
 - Examples:
   - Era "Mont" alguma coisa.
 
-### """ + "and" (1 occurrences)
+### """ + "anteriormente" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Qual é a diferença entre "skill" and "ability" em inglês?
+  - Quando eu disse "Marnie" anteriormente, você ficou surpresa.
 
-### """ + "antes" (1 occurrences)
+### """ + "apontou" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A Jane leu "O País das Neves" antes.
+  - Meu "espelho" apontou.
 
 ### """ + "as" (1 occurrences)
 - Predicted: None
@@ -2033,11 +2167,17 @@ Accuracy: 99.88%
 - Examples:
   - E, ali, eu tento "desreprimir" as pessoas e a mim, também.
 
-### """ + "aí" (1 occurrences)
+### """ + "assim" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Esse "Kevo" aí era filho seu?
+  - Todo mundo escreveu "sebola" assim?
+
+### """ + "assustam" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Os "amigos de infância" assustam.
 
 ### """ + "basta" (1 occurrences)
 - Predicted: None
@@ -2057,17 +2197,23 @@ Accuracy: 99.88%
 - Examples:
   - A lei do "olho por olho" cega a todos.
 
+### """ + "chegaram" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Meus "matzohs" chegaram?
+
 ### """ + "chegou" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - O programa "Grandes Pensadores do Mundo, Albert Einstein" chegou ao fim.
 
-### """ + "comentei" (1 occurrences)
+### """ + "começa" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Aquela é uma rapariga bonita," comentei eu.
+  - "A Taberna" começa com uma ação.
 
 ### """ + "começou" (1 occurrences)
 - Predicted: None
@@ -2080,6 +2226,18 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - A palavra "peru" continua aí no meio, não é?
+
+### """ + "continuam" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - As palavras "a fase final" continuam me vindo à mente.
+
+### """ + "contra" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A Academia emitiu uma "ordem de expulção" contra você?
 
 ### """ + "cuidando" (1 occurrences)
 - Predicted: None
@@ -2099,17 +2257,17 @@ Accuracy: 99.88%
 - Examples:
   - Mas com "Papa Don't Preach" deixei de gostar.
 
+### """ + "demais" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tem "mar" demais até.
+
 ### """ + "dentro" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - E simultaneamente confinando "eu" dentro de limites estabelecidos.
-
-### """ + "deriva" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A palavra "híbrido" deriva do termo latino "hybrida".
 
 ### """ + "dessa" (1 occurrences)
 - Predicted: None
@@ -2141,6 +2299,12 @@ Accuracy: 99.88%
 - Examples:
   - Agora, o que "ela pensa" deveria significar?
 
+### """ + "difícil" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Madri havia se convertido em uma "praça" difícil, como dizem os taurinos.
+
 ### """ + "direito" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2159,11 +2323,23 @@ Accuracy: 99.88%
 - Examples:
   - "Perdi a paciência!" dizia ele.
 
-### """ + "dá" (1 occurrences)
+### """ + "dos" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Oscar de "Ainda Estou Aqui" dá ao Brasil uma alegria que a política sonega.
+  - É o Sonic Youth cantando "Superstar" dos The Carpenters.
+
+### """ + "duas" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Mas eles "previram" duas semanas na cadeia.
+
+### """ + "dura" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Havia uma "mangueira" dura.
 
 ### """ + "eBay" (1 occurrences)
 - Predicted: None
@@ -2177,17 +2353,35 @@ Accuracy: 99.88%
 - Examples:
   - Um ensurdecedor "Viva" ecoou.
 
+### """ + "escapou" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Estou ficando louco ou a palavra "penso" escapou dos seus lábios?
+
+### """ + "escrito" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tem "Sacred Princess Casino" escrito.
+
 ### """ + "esta" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Quer ir ao "Taksim" esta noite?
 
-### """ + "estalo" (1 occurrences)
+### """ + "estará" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - E levar um "grande" estalo.
+  - Um "Volvo" estará lá, com dois caras.
+
+### """ + "este" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ê, “mandadão" este comédia aí, compadre.
 
 ### """ + "esteve" (1 occurrences)
 - Predicted: None
@@ -2195,11 +2389,17 @@ Accuracy: 99.88%
 - Examples:
   - O "quatro olhos" esteve lá ontem.
 
-### """ + "falou" (1 occurrences)
+### """ + "estou" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "É claro que estou pronto para morrer pelos meus ideais," falou o presidente.
+  - "Eu" estou assustando?
+
+### """ + "extra" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Bota "moosarella" extra nessa merda de pizza.
 
 ### """ + "familiar" (1 occurrences)
 - Predicted: None
@@ -2207,23 +2407,11 @@ Accuracy: 99.88%
 - Examples:
   - Senti um "ar" familiar nele.
 
-### """ + "faz" (1 occurrences)
+### """ + "fez" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Só a palavra "decoração" faz-me sentir mal.
-
-### """ + "ficou" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Como "Jacky" ficou tão rico?
-
-### """ + "filha" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Por uma "branquela" filha da puta que nem me dava atenção.
+  - Esse "cara legal" fez um ótimo trabalho hoje.
 
 ### """ + "funciona" (1 occurrences)
 - Predicted: None
@@ -2231,11 +2419,23 @@ Accuracy: 99.88%
 - Examples:
   - A "Instamatic" funciona?
 
-### """ + "hoje" (1 occurrences)
+### """ + "garotas" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - O Fuhrer começou o "Clausewitz" hoje.
+  - Quando estava em Aubagne, ficava com "aquelas" garotas.
+
+### """ + "grandes" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Bumbos" grandes!
+
+### """ + "gritou" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Katasonych!" gritou o capitão.
 
 ### """ + "humanos" (1 occurrences)
 - Predicted: None
@@ -2243,17 +2443,17 @@ Accuracy: 99.88%
 - Examples:
   - "Extra" humanos.
 
-### """ + "há" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Não faço uma crítica ao "Gusteau's" há anos.
-
 ### """ + "impublicável" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Tudo o que eu ouvi é "porcaria" impublicável.
+
+### """ + "infantis" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Acha que tenho tempo pra "paixonites" infantis?
 
 ### """ + "leviosa" (1 occurrences)
 - Predicted: None
@@ -2261,23 +2461,53 @@ Accuracy: 99.88%
 - Examples:
   - "Vingardi" leviosa.
 
+### """ + "lhe" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "The New Yorker" lhe dá as boas-vindas.
+
+### """ + "livrou" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - O "Acadêmico" livrou-se do gelo.
+
+### """ + "maiúsculo" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Você está falando da verdade com "V" maiúsculo?
+
+### """ + "matou" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Despertando assim o ciúme da "mãe" e a "Mamãe" matou a garota.
+
+### """ + "melhor" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Você "vê" melhor com as orelhas.
+
 ### """ + "mesmo" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Às vezes digo "sim" mesmo querendo dizer "não".
+  - Meu Deus, você disse "músico sério" mesmo?
+
+### """ + "missão" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Nossa" missão?
 
 ### """ + "modernista" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Tem um "quê" modernista, assim.
-
-### """ + "morrerão" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Se o seu plano tiver sucesso muitos "Flying Daggers" morrerão.
 
 ### """ + "mostrará" (1 occurrences)
 - Predicted: None
@@ -2297,11 +2527,11 @@ Accuracy: 99.88%
 - Examples:
   - Então "Não, Mario" nada.
 
-### """ + "nele" (1 occurrences)
+### """ + "naquele" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Para dar um "código vermelho" nele.
+  - Guarde seu "oi" naquele lugar!
 
 ### """ + "nem" (1 occurrences)
 - Predicted: None
@@ -2309,23 +2539,29 @@ Accuracy: 99.88%
 - Examples:
   - Os "Mama Aiuto" nem têm dinheiro para a pintura.
 
-### """ + "nesta" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Tolera-se o "código vermelho" nesta base, certo?
-
 ### """ + "nisso" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - O que há de "tudo bem" nisso?
 
+### """ + "num" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ele tira você da rede, e você transforma o "Pinóquio" num menino de verdade?
+
 ### """ + "nunca" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Não usamos mapas de tesouro, e um "X" nunca marca o lugar certo.
+
+### """ + "obrigatória" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Logo sua "terapia" obrigatória terminará.
 
 ### """ + "originais" (1 occurrences)
 - Predicted: None
@@ -2339,23 +2575,23 @@ Accuracy: 99.88%
 - Examples:
   - Você "não ser" padre.
 
-### """ + "pai" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - O "Jorginho" pai foi descartado, portanto é a vez dele.
-
-### """ + "parece" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A capacidade de antever e prover da "natureza" parece insuperável.
-
 ### """ + "partiu" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - E o "Sr. Castorp" partiu de repente.
+
+### """ + "passa" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Deixa de "mais mais" passa pra cá o dinheiro.
+
+### """ + "pelo" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Você tem que trocar o "ele" pelo "nós".
 
 ### """ + "pelos" (1 occurrences)
 - Predicted: None
@@ -2375,23 +2611,23 @@ Accuracy: 99.88%
 - Examples:
   - "Pode ou não a ré avançar com uma ideia delirante?" pergunta o meu colega.
 
-### """ + "perguntei" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Como diabos é que deduziste isso?" perguntei eu.
-
 ### """ + "pergunto" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Ah, "como é que é" pergunto eu.
 
-### """ + "porque" (1 occurrences)
+### """ + "perguntou" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Era chamada "A Mulher que Canta" porque cantava o tempo todo.
+  - "O professor falou sobre o quê?" perguntou o aluno.
+
+### """ + "podem" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Você entrou nas Sombras, onde só os "Outros" podem ir.
 
 ### """ + "porra" (1 occurrences)
 - Predicted: None
@@ -2411,11 +2647,17 @@ Accuracy: 99.88%
 - Examples:
   - Mas ele não tem "um" problema, ele tem muitos.
 
-### """ + "qual" (1 occurrences)
+### """ + "pronta" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Percebo a "realidade" qual espelho da vida e morte de enganosas ilusões.
+  - Está "quase" pronta, disse a Aranha.
+
+### """ + "pronto" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Malware" pronto pra transferência.
 
 ### """ + "quanto" (1 occurrences)
 - Predicted: None
@@ -2428,6 +2670,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Ou, pelo menos, não "deve" queimar.
+
+### """ + "recapturou" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Contra todas as expectativas, o "Gusteau's" recapturou nossa atenção.
 
 ### """ + "relembrando" (1 occurrences)
 - Predicted: None
@@ -2447,17 +2695,17 @@ Accuracy: 99.88%
 - Examples:
   - "Felizarda" rima com "espingarda".
 
-### """ + "se" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ou seja, com "beber" se refere a álcool?
-
 ### """ + "seja" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Talvez "consciência" seja uma palavra melhor.
+
+### """ + "sem" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Como farei um filme chamado "O Velho Moinho" sem um moinho?
 
 ### """ + "sempre" (1 occurrences)
 - Predicted: None
@@ -2489,17 +2737,23 @@ Accuracy: 99.88%
 - Examples:
   - "Tudo sobre Eva" soa esquisito.
 
+### """ + "sob" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Penso em reescrever "Cachinhos Dourados" sob o ponto de vista dos ursos.
+
 ### """ + "sou" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - E esse "algum" sou eu, claro.
 
-### """ + "só" (1 occurrences)
+### """ + "subindo" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Não me chame de "meu amor" só para se desculpar, droga!
+  - É o "loco" subindo aí.
 
 ### """ + "talvez" (1 occurrences)
 - Predicted: None
@@ -2513,11 +2767,11 @@ Accuracy: 99.88%
 - Examples:
   - "Soundtrack" tecnologia.
 
-### """ + "tem" (1 occurrences)
+### """ + "teve" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - O filme "Clube da Luta" tem um final surpresa.
+  - Uma garota do "Mundo Real" teve.
 
 ### """ + "tinha" (1 occurrences)
 - Predicted: None
@@ -2537,17 +2791,17 @@ Accuracy: 99.88%
 - Examples:
   - "O" trunfo.
 
+### """ + "um" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Um "oi" um pro outro, de longe, às vezes.
+
 ### """ + "uma" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "Cafetar" uma bicicleta?
-
-### """ + "usados" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Chamava-os de "sinos distantes" usados para expandir.
 
 ### """ + "veio" (1 occurrences)
 - Predicted: None
@@ -2555,23 +2809,11 @@ Accuracy: 99.88%
 - Examples:
   - O "Irmãzinha" veio também?
 
-### """ + "vem" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A palavra "clichê" vem do francês.
-
 ### """ + "às" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "Não" às medidas de austeridade!
-
-### """ + "—" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Quem é ele?" — "Um soldado que lutará."
 
 ### """ + "“" (1 occurrences)
 - Predicted: None
@@ -2579,11 +2821,35 @@ Accuracy: 99.88%
 - Examples:
   - "Jackson, O Loquaz," “Ele não vai levar ninguém vivo para casa.”
 
+### "#" + "Evento" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Como você sabe, o meu Baile do Bem, o #EventoDeCaridadeDoAno está chegando.
+
+### "," + "," (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Essa eu não esperava, , você é um cafajeste!
+
+### "," + "«" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - «Quando vendermos cinquenta cotas», disse Johanna, «começamos a construção.»
+
+### "," + "–" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Seu apelido é "Narizinho Rebitado", – não é preciso dizer porque.
+
 ### "-" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Que horas são?" - "Eu não tenho um relógio."
+  - "Posso ir com você?" - "Claro!"
 
 ### "-" + "Adeus" (1 occurrences)
 - Predicted: None
@@ -2591,77 +2857,41 @@ Accuracy: 99.88%
 - Examples:
   - Adeus, cavaleiro- Adeus.
 
-### "-" + "a" (1 occurrences)
+### "-" + "dormir" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Brinque ou estude - a escolha é sua.
-
-### "-" + "diga" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Desisto - diga-me a resposta.
+  - E ela continuou a vê-lo dormir, - dormir e talvez sonhar.
 
 ### "-" + "e" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Precisamos de um plano - e rápido!
+  - É uma questão de forma - e de estilo.
 
-### "-" + "elas" (1 occurrences)
+### "-" + "fujo" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - As pessoas brilhantes têm um grande problema - elas não sabem perder.
+  - Deixe estar, - pensou ele um dia - fujo daqui e não volto mais.
 
-### "-" + "eles" (1 occurrences)
+### "-" + "o" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Leva o guarda-chuva - eles preveem chuva.
+  - Deus me perdoe - o dinheiro estaria na mesa amanhã.
 
-### "-" + "isso" (1 occurrences)
+### "-" + "pensou" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Bonito, inteligente e charmoso - isso descreve o que ele não é.
-
-### "-" + "me" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Deixe - me tomar um banho rápido.
-
-### "-" + "não" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Deixa-me avisar-te duma coisa - não mijes para o ar!
-
-### "-" + "preveem" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Leva o guarda-chuva - preveem chuva.
-
-### "-" + "qual" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Veja estas duas fotografias - qual é melhor?
-
-### "-" + "respira" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Todos os dias é um novo começo - respira fundo e começa de novo.
+  - Deixe estar, - pensou ele um dia - fujo daqui e não volto mais.
 
 ### "-" + "é" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Estêvão tem uma altura sobre-humana - é quase um gigante!
+  - Um demônio cujo cérebro - é preciso dar tempo para que desenvolva.
 
 ### "--" + "Calma" (1 occurrences)
 - Predicted: None
@@ -2669,11 +2899,23 @@ Accuracy: 99.88%
 - Examples:
   - E se a gente-- Calma!
 
+### "--" + "Magali" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Eu e a Mônica-- Magali!
+
 ### "--" + "Pela" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - E se a gente-- Pela, Cascão!
+
+### "--" + "isso" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ele é o meu único filho, e fui mole com ele -- isso o arruinou.
 
 ### "--" + "onde" (1 occurrences)
 - Predicted: None
@@ -2681,11 +2923,17 @@ Accuracy: 99.88%
 - Examples:
   - Aquele seu jovem colega-- onde posso encontrá-lo?
 
-### "." + "—" (1 occurrences)
+### "--" + "você" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Ele voltou com a ex. — É?!
+  - Então -- você também?
+
+### "Achei" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Achei "da hora".
 
 ### "Ahhh" + "!" (1 occurrences)
 - Predicted: None
@@ -2699,18 +2947,6 @@ Accuracy: 99.88%
 - Examples:
   - " C'est pire qu'em Algérie !"
 
-### "América" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - O que torna a América "América"?
-
-### "Antonio" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Quase disse «Antonio», mas isso não era da conta dele.
-
 ### "Aquela" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2722,18 +2958,6 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Aqueles "vermelhos" que nós vimos, vieram pelo ouro.
-
-### "Arroz" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Arroz», respondeu o tanoeiro Naismith.
-
-### "As" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - As "flores" daqui raramente podem ser chamadas de flores.
 
 ### "Asgar" + "!" (1 occurrences)
 - Predicted: None
@@ -2747,17 +2971,17 @@ Accuracy: 99.88%
 - Examples:
   - Asghar .!
 
-### "Asiático" + "?" (1 occurrences)
+### "Assisti" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Quais são as diferenças entre os elefantes Africano e Asiático ?
+  - Assisti "Desert Sun".
 
-### "Avó" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "Assistimos" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Avó», chamei.
+  - Assistimos "Caffe Muler".
 
 ### "BLClaudio" + "." (1 occurrences)
 - Predicted: None
@@ -2777,35 +3001,17 @@ Accuracy: 99.88%
 - Examples:
   - O Banco "Bernay e Bernay" está aqui para um seminário.
 
-### "Barlow" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «A do Barlow», respondeu Piotr.
-
-### "Barlow’s" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Só na Barlow’s», disse ele.
-
 ### "Bem" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Bem "realioso".
 
-### "Bringobble" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "Bota" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Vão estar do outro lado do mundo em relação a Bringobble», disse eu.
-
-### "Brunel" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Estou prestes a contar aqui ao Brunel», disse Sparhawk.
+  - Bota "moosarella" extra nessa merda de pizza.
 
 ### "Camarada" + """ (1 occurrences)
 - Predicted: None
@@ -2819,17 +3025,11 @@ Accuracy: 99.88%
 - Examples:
   - Cantando "venha para cá", "venha para cá" para o Sr. Chadda?
 
-### "Chefe" + "»" (1 occurrences)
+### "Caridade" + "Do" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - «Estou ansiosa por ver o contrato, Bibliotecário-Chefe», respondi.
-
-### "Chris" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Estamos a fazer isto por ti, Chris», repliquei.
+  - Como você sabe, o meu Baile do Bem, o #EventoDeCaridadeDoAno está chegando.
 
 ### "Clifton" + """ (1 occurrences)
 - Predicted: None
@@ -2837,17 +3037,17 @@ Accuracy: 99.88%
 - Examples:
   - Na bateria, o inigualável Clifton "Fou Fou" Edie!
 
-### "Clorinda" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «A cunhada do pai da Clorinda», acrescentou Michael.
-
 ### "Clube" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - O Clube "Metro" é onde fica a sede central.
+
+### "Colônia" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Colônia "Shipr".
 
 ### "Com" + """ (1 occurrences)
 - Predicted: None
@@ -2855,29 +3055,11 @@ Accuracy: 99.88%
 - Examples:
   - Com "W".
 
-### "Compras" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Compras», disse a Kat.
-
-### "Confirmo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Confirmo», respondeu a Curandeira Agatha.
-
 ### "Conhece" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Conhece "La Fontaine?"
-
-### "Consultei" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Consultei», respondi.
 
 ### "Cozinheiros" + """ (1 occurrences)
 - Predicted: None
@@ -2903,23 +3085,11 @@ Accuracy: 99.88%
 - Examples:
   - E como está com a Sra. Danvers ?
 
-### "Deixa" + "¡" (1 occurrences)
+### "De" + "Caridade" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Deixa¡ toda a esperança, vós que centrais na Quinta do Paraíso.
-
-### "Deixe" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Deixe - me tomar um banho rápido.
-
-### "Desisto" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Desisto - diga-me a resposta.
+  - Como você sabe, o meu Baile do Bem, o #EventoDeCaridadeDoAno está chegando.
 
 ### "Dhanbad" + "!" (1 occurrences)
 - Predicted: None
@@ -2927,23 +3097,23 @@ Accuracy: 99.88%
 - Examples:
   - Dhanbad !
 
-### "Diabo" + "―" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Eu nunca acreditei no Diabo―como nunca acreditei em Deus.
-
-### "Diretor" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Ofereço-me para lhes ensinar, Diretor», disse eu.
-
 ### "Dizer" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Dizer "sim" ao futuro era dizer "adeus" ao meu pai.
+
+### "Do" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Do "Não" se vende nada.
+
+### "Do" + "Ano" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Como você sabe, o meu Baile do Bem, o #EventoDeCaridadeDoAno está chegando.
 
 ### "Doutor" + "!" (1 occurrences)
 - Predicted: None
@@ -2963,35 +3133,11 @@ Accuracy: 99.88%
 - Examples:
   - Este é o EP "An Ideal for Living."
 
-### "Eles" + "(" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Eles(Tom e Mary) disseram quando estariam de volta?
-
-### "Elysios" + "―" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Instalei-me num palacete da avenida dos Campos-Elysios―e fui medonho.
-
 ### "Em" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Em "Silvia North Story".
-
-### "Entendo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Entendo», disse eu.
-
-### "Entre" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Entre», chamei.
 
 ### "Então" + """ (1 occurrences)
 - Predicted: None
@@ -2999,17 +3145,17 @@ Accuracy: 99.88%
 - Examples:
   - Então "Não, Mario" nada.
 
+### "Então" + "--" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Então -- você também?
+
 ### "Era" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Era "Mont" alguma coisa.
-
-### "Ernie" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Ernie», chamou Piotr, «clientes de Spencerport.»
 
 ### "Escutemos" + """ (1 occurrences)
 - Predicted: None
@@ -3023,17 +3169,17 @@ Accuracy: 99.88%
 - Examples:
   - Essa "Donzela do Tempo" era um tipo de xamã, certo?
 
-### "Esse" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Esse "Kevo" aí era filho seu?
-
 ### "Este" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Este "paraíso" não existe.
+
+### "Está" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Está "quase" pronta, disse a Aranha.
 
 ### "Eu" + """ (1 occurrences)
 - Predicted: None
@@ -3041,23 +3187,17 @@ Accuracy: 99.88%
 - Examples:
   - Eu "ordenifico" que algo mágico… aconteça!
 
+### "Evento" + "De" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Como você sabe, o meu Baile do Bem, o #EventoDeCaridadeDoAno está chegando.
+
 ### "Evite" + "¡" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Evite¡ um banho de esperma.
-
-### "Exactamente" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Exactamente», trovejou Chris.
-
-### "Fala" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Fala "cão"!
 
 ### "Feira" + ".." (1 occurrences)
 - Predicted: None
@@ -3065,35 +3205,11 @@ Accuracy: 99.88%
 - Examples:
   - Feira ..
 
-### "Ficção" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Nicholas terminara o seu livro, «Como Escrever Ficção».
-
-### "Fogo" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Fogo !
-
-### "Fogo" + "s" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Fogos particulares são proibidos em muitos países.
-
 ### "Globo" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Voz de Reginaldo Leme Comentarista da Globo "Acabou tudo."
-
-### "Goddard" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Bem-vindos a Goddard», disse.
 
 ### "Grande" + """ (1 occurrences)
 - Predicted: None
@@ -3101,35 +3217,11 @@ Accuracy: 99.88%
 - Examples:
   - Grande "badabum".
 
-### "Greaks" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Ou seria «Greaks»?
-
-### "Gémeos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Gémeos», disse Clorinda.
-
 ### "HONOLULU" + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - CIDADE DE HONOLULU …que é num terreno no nordeste da ilha.
-
-### "Harborview House" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Há a Harborview House», disse eu.
-
-### "IA" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Se a IA "pensa", ou se aproxima do pensamento, quem somos nós?
 
 ### "ISocorro" + "ILadrão" (1 occurrences)
 - Predicted: Space
@@ -3137,11 +3229,23 @@ Accuracy: 99.88%
 - Examples:
   - ParadoISocorroILadrão!
 
+### "Idiota" + "," (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Idiota , como você pode dizer isso?
+
 ### "Implante" + "¡" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Implante¡ a República!
+
+### "Incluindo" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Incluindo "Otelo", que você sabe que eu adorei, Edgar.
 
 ### "Inevita" + "velmente" (1 occurrences)
 - Predicted: Space
@@ -3149,11 +3253,11 @@ Accuracy: 99.88%
 - Examples:
   - Inevitavelmente perdido.
 
-### "James" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "JUSTIÇA" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - James», disse eu, «vais directamente para a Academia.
+  - IA NÃO É JUSTIÇA … Ligados ao celular dela na nuvem.
 
 ### "Jariya" + "!" (1 occurrences)
 - Predicted: None
@@ -3161,23 +3265,11 @@ Accuracy: 99.88%
 - Examples:
   - Jariya !
 
-### "Jerry" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "Joguei" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «E boa noite para ti também, Jerry», disse eu.
-
-### "Jill" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Jill», disse eu, «és amiga da Marika, não és?
-
-### "Jim" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Jim», disse eu, «como está a correr a limpeza do canal de descarga?»
+  - Joguei "terapia da arte" no Google e improvisei o resto.
 
 ### "Jules Verne" + "?" (1 occurrences)
 - Predicted: None
@@ -3185,53 +3277,23 @@ Accuracy: 99.88%
 - Examples:
   - Já leu Jules Verne ?
 
-### "K&K" + "—" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - O sujeito de Spencerport —reparou no galhardete do K&K— deve ser vosso amigo?
-
-### "Keith" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Keith», disse eu na viagem de regresso à vela, «há uma coisa que me intriga.
-
-### "Lamento" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Lamento», disse eu.
-
 ### "Laviron" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Em guarda Laviron !
 
+### "Laviron" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Poderia retirar suas coisas Sr Laviron ?
+
 ### "Lei" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - «Mas posso falar com o meu Leitor da Lei», continuei.
-
-### "Lemos" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Lemos "O Morro dos Ventos Uivantes" no curso de Inglês na escola secundária.
-
-### "Lena" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Lena», disse eu, «preciso de falar contigo.»
-
-### "Lieuwhon" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Venham ouvir palestras de visitantes de Lieuwhon» é uma denúncia e tanto.
+  - «Mas posso conversar com meu Leitor da Lei», continuei.
 
 ### "Loquaz" + """ (1 occurrences)
 - Predicted: None
@@ -3245,12 +3307,6 @@ Accuracy: 99.88%
 - Examples:
   - DOMINAR O MUNDO "Dominar o mundo" e pesquisar.
 
-### "Maisdotr" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «As bibliotecárias-associadas Jennifersdotr e Maisdotr», disse o Director.
-
 ### "Mas" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3262,6 +3318,12 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Menos "vagabunda".
+
+### "Meus" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Meus "matzohs" chegaram?
 
 ### "Meyer" + "?" (1 occurrences)
 - Predicted: None
@@ -3287,41 +3349,11 @@ Accuracy: 99.88%
 - Examples:
   - Move !
 
-### "Muito" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Muito», respondeu Kat.
-
-### "Mundo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Bem-vindos ao Albergue do Fim do Mundo», entoou Chiang.
-
 ### "Nagma" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Nagma !
-
-### "Nas" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Nas "Rochas pretas" como combinamos.
-
-### "Navio" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Navio», corrigiu Sparhawk.
-
-### "Navios" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Pode tratá-la por «Senhora dos Navios».
 
 ### "Negus" + "!" (1 occurrences)
 - Predicted: None
@@ -3352,12 +3384,6 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Olá !
-
-### "Olá" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Olá», chamei.
 
 ### "Operação" + """ (1 occurrences)
 - Predicted: None
@@ -3395,23 +3421,11 @@ Accuracy: 99.88%
 - Examples:
   - Então, nós precisamos do Paul "Pica-Gelo".
 
-### "Pavilion At The Shore" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Já comeu vezes suficientes no Pavilion At The Shore», acrescentei.
-
 ### "Pedro" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Pedro "Alves" quem descobriu o Brasil e fez a escada de pedra e de sangue.
-
-### "Percebo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Percebo», respondi.
 
 ### "Pesquisa" + """ (1 occurrences)
 - Predicted: None
@@ -3425,41 +3439,29 @@ Accuracy: 99.88%
 - Examples:
   - Pilhas "C"?
 
-### "Ponte" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Ponte» é um exagero.
-
-### "Porquê" + """ (1 occurrences)
+### "Pode" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Porquê "rosa"?
+  - Pode "bunda"?
 
-### "Porto" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Pode tratar-me por «Supervisor do Porto».
-
-### "Prigogine Works" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «É da Prigogine Works», disse eu.
-
-### "Procure" + """ (1 occurrences)
+### "Por" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Procure "Sobrevivência".
+  - Por "nós" eu não quero dizer você.
 
-### "Proprietária" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "Precisamos" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Sou o guarda-costas da Senhora-Proprietária», disse ele.
+  - Precisamos "fazer um flagrante" primeiro.
+
+### "Pro" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Pro "Reporter".
 
 ### "Quer" + """ (1 occurrences)
 - Predicted: None
@@ -3479,17 +3481,17 @@ Accuracy: 99.88%
 - Examples:
   - Quietos !
 
+### "R$" + "20" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - O estacionamento cobra R$20 por hora.
+
 ### "Rafael" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Rafael "Echevarren".
-
-### "Recnet" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Recnet», disse Vincent.
 
 ### "Responda" + """ (1 occurrences)
 - Predicted: None
@@ -3509,12 +3511,6 @@ Accuracy: 99.88%
 - Examples:
   - Rogue !
 
-### "Rory" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Rory», disse eu, «isto deve chegar para pagar o teu jantar.»
-
 ### "Rosto" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3533,17 +3529,11 @@ Accuracy: 99.88%
 - Examples:
   - Saudações .
 
-### "Sem" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Sem "para, mãe", já falei!
-
-### "Senhor" + "»" (1 occurrences)
+### "Ser" + "ei" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Ou «Senhor», se preferir.
+  - Serei o dublê de quem?
 
 ### "Seremos" + """ (1 occurrences)
 - Predicted: None
@@ -3593,29 +3583,17 @@ Accuracy: 99.88%
 - Examples:
   - Sim .
 
-### "Sim" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Sim», disse Kat.
-
-### "Sino" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Reunimo-nos ao toque do Sino», entoou a assistência.
-
 ### "Soletraram" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Soletraram "porcos".
 
-### "Somos" + """ (1 occurrences)
+### "Sou" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Somos "O Clique".
+  - Sou "papai" agora?
 
 ### "Sr." + """ (1 occurrences)
 - Predicted: None
@@ -3623,11 +3601,11 @@ Accuracy: 99.88%
 - Examples:
   - Sr. "Rufle!"
 
-### "Starlanding" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "Sua" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - O «Mundo de Starlanding».
+  - Sua "mulher com bolas" é demais para qualquer cavalheiro.
 
 ### "Sul" + """ (1 occurrences)
 - Predicted: None
@@ -3647,23 +3625,41 @@ Accuracy: 99.88%
 - Examples:
   - Sultan ..!
 
-### "Tatoeba" + "!" (1 occurrences)
+### "TVs" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Até que enfim completei cem frases no Tatoeba !
+  - A loja de conserto de TVs "Adolf Hennecke" fechou.
 
-### "Theodoro" + "―" (1 occurrences)
+### "Tatuamos" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tatuamos "não desiste, porra", e fomos lá e desistimos!
+
+### "Tchau" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tchau !
+
+### "Te" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Te "arrespeita", Santo safado!
+
+### "Tentei" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tentei "salvar" você.
+
+### "Ter" + "ei" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Eu chamo-me Theodoro―e fui amanuense do Ministério do Reino.
-
-### "Tim" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «É o Tim», ouvi a voz através da porta.
+  - Terei vivido em seu interior.
 
 ### "Tinha" + """ (1 occurrences)
 - Predicted: None
@@ -3677,17 +3673,17 @@ Accuracy: 99.88%
 - Examples:
   - Tio !
 
+### "Tipo" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tipo "ah, que bom que gostou do presente, mas a gente não tem mais nada."
+
 ### "Toque" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Toque "Mystification".
-
-### "Torfleet" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Sou o Capitão do Porto de Torfleet», respondeu ele.
 
 ### "Tricolor" + "!" (1 occurrences)
 - Predicted: None
@@ -3695,29 +3691,29 @@ Accuracy: 99.88%
 - Examples:
   - Regressarei com a Tricolor !
 
-### "Tropeçar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "Tá" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Tropeçar» é mesmo a palavra certa; não fui eu que encontrei a pergunta.
+  - Tá "falfitando".
 
-### "UniComp" + "»" (1 occurrences)
+### "Uma" + "vez" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - «Não tenho o UniComp», respondeu o meu convidado mais velho.
-
-### "Usados" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Dizia «Livros Usados» na tabuleta.
+  - Umavez, sua mãe disse a ele que, se ele pedisse, você viria.
 
 ### "Vai" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Vai "bem" com verde.
+
+### "Valeu" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Valeu !
 
 ### "Vamos" + "IOúltlmo" (1 occurrences)
 - Predicted: Space
@@ -3737,11 +3733,17 @@ Accuracy: 99.88%
 - Examples:
   - Vi "Apocalypse Now" no cinema.
 
-### "Você" + """ (1 occurrences)
+### "Visitar" + "emos" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Visitaremos nosso professor semana que vem.
+
+### "Viu" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Você "não ser" padre.
+  - Viu "Peter Pan"?
 
 ### "Vossa" + """ (1 occurrences)
 - Predicted: None
@@ -3749,23 +3751,17 @@ Accuracy: 99.88%
 - Examples:
   - Vossa "Princesa".
 
+### "Xabéu" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Oi, Xabéu !
+
 ### "YOUTUBE" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - HITLER DA TV DOMINA O YOUTUBE "Será que Adolf Hitler realmente está de volta?"
-
-### "Yu Arneson" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Vou perguntar ao pessoal do Yu Arneson», acrescentou Keith.
-
-### "Zorin" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Zorin», disse eu, «a conta e a gorjeta para Margrethe.»
 
 ### "a" + ""tivia" (1 occurrences)
 - Predicted: None
@@ -3773,17 +3769,17 @@ Accuracy: 99.88%
 - Examples:
   - Esta é a "tivia-row" Imperial.
 
-### "absurdo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Isso é absurdo», respondeu ela.
-
 ### "achou" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - A gente achou !
+
+### "adaptando" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Está adaptando "Primeiro Amor", de Turgenev.
 
 ### "agora" + """ (1 occurrences)
 - Predicted: None
@@ -3809,35 +3805,23 @@ Accuracy: 99.88%
 - Examples:
   - Há algum "ista" que não tenhamos venerado?
 
-### "amanhã" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Disse «amanhã» num rosnar de brincadeira.
-
-### "amarras" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Larguem todas as amarras», ordenei.
-
-### "ambicioso" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «É um projeto muito ambicioso», disse Jim.
-
-### "amigas" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Para as amigas», disse eu.
-
-### "and" + """ (1 occurrences)
+### "alguém" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Qual é a diferença entre "skill" and "ability" em inglês?
+  - Se a gente pudesse perguntar pra alguém .
+
+### "amigo" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Você é de longe o amigo "porção única" mais interessante que já conheci.
+
+### "amor" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Seryozha, o que é amor "plutônico"?
 
 ### "angústia" + """ (1 occurrences)
 - Predicted: None
@@ -3845,17 +3829,23 @@ Accuracy: 99.88%
 - Examples:
   - "Ela caiu num pranto de lágrimas de angústia "Atrás da chuva de cristal.
 
-### "aparecer" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Mas vamos construí-lo, e ele há de aparecer», acrescentou Johanna.
-
-### "apresentou" + """ (1 occurrences)
+### "antiga" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Lembra-se da primeira vez que apresentou "Adeus a minha concubina"?
+  - Senha antiga "Que droga!"
+
+### "anzol" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Você pode pegar Leviatã com um anzol "ou amarrar sua língua com uma corda?
+
+### "apaixonado" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - E ai está apaixonado ?
 
 ### "aquelas" + """ (1 occurrences)
 - Predicted: None
@@ -3863,35 +3853,11 @@ Accuracy: 99.88%
 - Examples:
   - Mas em todas aquelas "técnicas infalíveis".
 
-### "aquele" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Conheço aquele "ú"!
-
-### "aqui" + ".." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Doravante, se um único peixe é roubado aqui ..
-
 ### "aqui" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - O Sr. Li está aqui ?!
-
-### "armas" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Passei um mês a ensinar o povo deles a usar armas», disse Keith.
-
-### "as" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - E as "Rochas pretas"?
 
 ### "assinaram" + """ (1 occurrences)
 - Predicted: None
@@ -3911,65 +3877,17 @@ Accuracy: 99.88%
 - Examples:
   - Aquele que chorou assistindo "Caffe Muller".
 
-### "assunto" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "assobiando" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Tenho mais um assunto», disse eu.
+  - Ele estará assobiando "Mattinata Fiorentina".
 
-### "assuntos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "belo" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Temos outros assuntos», prosseguiu o Bibliotecário do Condado.
-
-### "aumentar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «As vendas de peixe estão a aumentar», anunciou Dietrich.
-
-### "ausente" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Ao amigo ausente», respondeu alguém.
-
-### "avançar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Preparem-se para avançar», ordenei.
-
-### "avô" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Tenho de perguntar ao avô», disse ela.
-
-### "azuis" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Os azuis», disse eu, «e os violetas, embora sejam um bocado caros.»
-
-### "baixar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Não param de baixar», disse ela.
-
-### "baixo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «É muito baixo», disse Kat.
-
-### "bar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Começa por fechar todas as contas grandes do bar», sugeri.
+  - Quando eu chamar seu nome, eu quero ouvir um belo "Aqui!"
 
 ### "bem" + "!" (1 occurrences)
 - Predicted: None
@@ -3983,11 +3901,11 @@ Accuracy: 99.88%
 - Examples:
   - Muito bem .
 
-### "bilhetes" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "berrou" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Os bilhetes», disse eu.
+  - Acontece que você berrou "acorde" no meu ouvido!
 
 ### "boca" + """ (1 occurrences)
 - Predicted: None
@@ -3995,17 +3913,23 @@ Accuracy: 99.88%
 - Examples:
   - Cala a boca "óclinhos".
 
-### "bom" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "bom" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Parece mesmo bom», disse eu.
+  - Tá bom !
 
-### "branco" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "botão" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Tenta encontrar alguém que apanhe peixe-branco», respondeu ela.
+  - Querida, esse botão "Enviar" é como um lançador de mísseis!
+
+### "breve" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Eu vou te dizer em breve "Ts-ss" e você vai calar a boca.
 
 ### "britânico" + ".." (1 occurrences)
 - Predicted: None
@@ -4013,35 +3937,11 @@ Accuracy: 99.88%
 - Examples:
   - Mas sem os trabalhos, nem britânico ..
 
-### "cabos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Botes para as amarras de estibordo e prendam os cabos», ordenei.
-
-### "cachivaches" + "!" (1 occurrences)
+### "campanha" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - São bastante feias, pobres cachivaches !
-
-### "cada" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Temos informações exatas de que cada "inocente" é inimigo da nação.
-
-### "caminho" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Não queremos desviá-lo do seu caminho», disse eu.
-
-### "canela" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Vou sentir a falta dos teus scones de canela», disse.
+  - René é um dos principais publicitários da exitosa campanha "Não".
 
 ### "cantar" + """ (1 occurrences)
 - Predicted: None
@@ -4055,41 +3955,17 @@ Accuracy: 99.88%
 - Examples:
   - Ela é boa, desde que não cante "Pandi-Panda".
 
-### "canção" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A canção "Fever Dog" é um grande passo para vocês.
-
 ### "carniceiros" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Todos os carniceiros ..
 
-### "carregado" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Na maior parte das vezes, as palavras lá dentro diziam «não carregado».
-
 ### "certeza" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Com certeza .
-
-### "certeza" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Com certeza», concordei.
-
-### "certo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Conheço o homem certo», respondeu.
 
 ### "chame" + """ (1 occurrences)
 - Predicted: None
@@ -4103,47 +3979,17 @@ Accuracy: 99.88%
 - Examples:
   - Embora me chamem "a Bovarinha", eu não sou a Bovarý, e muito menos Flaubert.
 
-### "charmoso" + "-" (1 occurrences)
+### "chorar" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Bonito, inteligente e charmoso - isso descreve o que ele não é.
-
-### "chocado" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Estou chocado, verdadeiramente chocado», disse Ehlers.
-
-### "cidade" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Eu amo esta cidade .
+  - Eu sou o único que enxerga isso e me dá vontade de chorar "Você está bem hoje?"
 
 ### "cidade" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - «A questão é a cidade», disse o capitão do porto.
-
-### "cidades" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - A «ida a pé até às cidades» demorou muito mais do que eu imaginava.
-
-### "cinzento" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - O céu está nublado e cinzento - um céu típico da estação das chuvas.
-
-### "cirurgião" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Temos um cirurgião», disse eu.
+  - «É uma questão da cidade», disse o Mestre do Porto.
 
 ### "citar" + """ (1 occurrences)
 - Predicted: None
@@ -4157,17 +4003,11 @@ Accuracy: 99.88%
 - Examples:
   - Ele disse claramente "verdadeiro engano".
 
-### "claro" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "codinome" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Um dóri de tábuas, claro», respondi.
-
-### "cobro" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Sou eu que as cobro», disse ele.
+  - O lugar da operação de codinome "Ave abatida".
 
 ### "coisa" + """ (1 occurrences)
 - Predicted: None
@@ -4175,23 +4015,23 @@ Accuracy: 99.88%
 - Examples:
   - Alguma coisa "química".
 
-### "coisa" + "-" (1 occurrences)
+### "colocar" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Deixa-me avisar-te duma coisa - não mijes para o ar!
+  - Tá, sabe que mais, vou só colocar "esportes" aqui.
 
-### "coisa" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "colou" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Há outra coisa», disse ela.
+  - Você copiou e colou "selva" e jogou no GPS?
 
-### "colunista" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "come" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Sou jornalista e colunista», disse Maurice.
+  - Só quem tem doutorado come "floresta negra"?
 
 ### "comem" + """ (1 occurrences)
 - Predicted: None
@@ -4199,59 +4039,23 @@ Accuracy: 99.88%
 - Examples:
   - Eles só comem "milheto".
 
-### "comer" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Quando é que nós vamos começar a comer ?
-
-### "começo" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Todos os dias é um novo começo - respira fundo e começa de novo.
-
-### "comida" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Mas servem comida», disse eu.
-
 ### "completamente" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Encontrei algo completamente "Atordoante" como dizia a sua mãe.
 
-### "comprar" + "»" (1 occurrences)
+### "comprador" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - «A pessoa que o vai comprar», disse.
+  - «Ainda não temos comprador», disse Christopher.
 
 ### "comungar" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Quer comungar ?
-
-### "concluídas" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «As reparações de emergência em Spencerport estão concluídas», disse Jill.
-
-### "concluído" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «O varrimento de ondas curtas do edifício está concluído», respondeu ele.
-
-### "concorrência" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - No fim, outra placa dizia «e a concorrência», com mais tiras por baixo.
 
 ### "confinando" + """ (1 occurrences)
 - Predicted: None
@@ -4265,23 +4069,11 @@ Accuracy: 99.88%
 - Examples:
   - De qualquer maneira, é muito bom conhecer "o resto de vocês".
 
-### "contigo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Tenho dinheiro contigo», disse eu.
-
 ### "contrário" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Durma ou do contrário "Habbad" virá.
-
-### "conversar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Precisamos de conversar», disse ela.
 
 ### "cooperativa" + """ (1 occurrences)
 - Predicted: None
@@ -4289,29 +4081,23 @@ Accuracy: 99.88%
 - Examples:
   - Criou a cooperativa "Taxi Russo".
 
-### "cooperativa" + "»" (1 occurrences)
+### "cota" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - «É uma cooperativa», disse Missy Marky.
+  - «Uma cota», disse Johanna.
 
-### "curta" + "»" (1 occurrences)
+### "cotas" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - A regra é seguir a «rota mais curta».
+  - «Quando vendermos cinquenta cotas», disse Johanna, «começamos a construção.»
 
-### "cutelos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "cérebro" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «A minha mulher tem vários cutelos», acrescentou Antonio.
-
-### "cá" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Talvez da próxima vez que vier cá», respondi.
+  - Um demônio cujo cérebro - é preciso dar tempo para que desenvolva.
 
 ### "dar" + """ (1 occurrences)
 - Predicted: None
@@ -4331,17 +4117,17 @@ Accuracy: 99.88%
 - Examples:
   - Jamais conseguirei dormir perto das ""cataratas do Niágara.""
 
-### "de" + "itar" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Agora é melhor ires-te deitar para estares fresca como uma rosa.
-
-### "declarou" + """ (1 occurrences)
+### "de" + ""Janet" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - O Estado do Rio de Janeiro declarou "estado de calamidade pública."
+  - Não vem com essa de "Janet", seu merda.
+
+### "decorou" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Você decorou "Whiplash"?
 
 ### "definitivamente" + """ (1 occurrences)
 - Predicted: None
@@ -4349,89 +4135,17 @@ Accuracy: 99.88%
 - Examples:
   - Será definitivamente "Frango no Espeto".
 
-### "dela" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Ouvi com atenção o relato dela», respondeu o construtor naval Markofferson.
-
-### "deles" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Consigo o melhor preço pela pesca deles», disse eu.
-
-### "delicadeza" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Acho que temos de abordar isto com alguma delicadeza», disse.
-
-### "depressa" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Mais depressa», respondi entre dentadas de fruta.
-
-### "depósitos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Desta vez, só temos um conjunto de depósitos», disse Kat.
-
-### "desatar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Estou a ver que há muitos nós para desatar», consegui dizer.
-
-### "descer" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Martina disse «descer» e eu estava aqui.
-
-### "desculpas" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «As minhas desculpas», dizia o bilhete na caixa do correio.
-
 ### "desfrutar" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Se ele quer desfrutar, deixá-lo desfrutar .
 
-### "desses" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "dia" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «O meu pai tinha livros desses», disse Kat.
-
-### "dia" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Casámos no mesmo dia», disse ela.
-
-### "dias" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Vamos experimentar durante três dias», disse eu.
-
-### "diferente" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Tem de haver uma palavra diferente», disse Arthur.
-
-### "diferentes" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Receio que usemos títulos diferentes», disse Saunders.
+  - Deixe estar, - pensou ele um dia - fujo daqui e não volto mais.
 
 ### "digas" + """ (1 occurrences)
 - Predicted: None
@@ -4439,23 +4153,17 @@ Accuracy: 99.88%
 - Examples:
   - Não me digas "sim amor"!
 
+### "digitou" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Você digitou "nome fictício pra mágico" no ChatGPT?
+
 ### "ding" + "eringeding" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Ding-ding-ding-ding-dingeringeding!
-
-### "direita" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Uma grande tatuagem azul de um sino na nádega direita», disse David.
-
-### "diria" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - E eu não diria "trocada".
 
 ### "diriam" + """ (1 occurrences)
 - Predicted: None
@@ -4463,35 +4171,17 @@ Accuracy: 99.88%
 - Examples:
   - Se dissesse "serei médico", diriam "é mentira".
 
-### "disseram" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Vocês disseram "beliscar".
-
-### "dito" + "»" (1 occurrences)
+### "disso" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - «Bem dito», conseguiu dizer.
+  - «Mas ele é vendido pelo dobro disso», disse Christopher.
 
-### "divertido" + "-" (1 occurrences)
+### "dizemos" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Esse feriado não está muito divertido - deveríamos ter ido para casa.
-
-### "dizem" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Eles dizem "muito melhor", nunca "mais melhor", querido.
-
-### "dizer" + "―" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Ia já a abrir a boca para dizer―«uma!»
+  - Em alemão, dizemos "Zum Wohle".
 
 ### "dizia" + ":" (1 occurrences)
 - Predicted: Space
@@ -4499,29 +4189,17 @@ Accuracy: 99.88%
 - Examples:
   - O ditado velho já dizia: quem com ferro fere, com ferro será ferido.
 
-### "dobro" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Mas vende-se pelo dobro», disse Christopher.
-
 ### "doce" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - O fruto proibido é o mais doce .
 
-### "dois" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Keith matou dois», disse David.
-
 ### "duram" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - «Os dóris duram», disse Christopher.
+  - «Dóris duram», disse Christopher.
 
 ### "dá" + """ (1 occurrences)
 - Predicted: None
@@ -4529,41 +4207,17 @@ Accuracy: 99.88%
 - Examples:
   - Há meses sem pagar, e nem me dá "bom dia".
 
-### "dúvida" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Sem dúvida», respondeu Chiang.
-
-### "e" + ""o" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Tom disse que só bebe nos dias terminados em "a" e "o".
-
-### "e" + "―" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Um estremecimento de membros por fim, uma agitação geral repentina, e―morta!
-
-### "ecrã" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Consegui dizer «teclado» e «ecrã», apontando para as partes certas do UniBook.
-
 ### "ela" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - E diga ela "sim" ou "não", deixe isso com ela.
 
-### "ele" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "ele" + "--" (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Quase tudo está de alguma forma ligado a ele», respondeu David.
+  - Ele é o meu único filho, e fui mole com ele -- isso o arruinou.
 
 ### "eles" + """ (1 occurrences)
 - Predicted: None
@@ -4571,71 +4225,23 @@ Accuracy: 99.88%
 - Examples:
   - Mas eles "previram" duas semanas na cadeia.
 
-### "eletricidade" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Não têm eletricidade», disse Arthur, «e nós não temos livros.
-
-### "elevada" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Metade é bastante elevada», disse eu.
-
-### "em" + ""a" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Tom disse que só bebe nos dias terminados em "a" e "o".
-
-### "embora" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Está mesmo na hora de irmos embora», disse-lhe.
-
-### "empatamos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Acho que empatamos», disse eu.
-
-### "empresa" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Vamos começar a empresa "Bagrov Brothers".
-
 ### "emprestado" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - «Está tudo emprestado», respondi.
 
-### "encalhar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "endereço" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Devagar, não quero encalhar», respondeu ele.
+  - Vou lhe dar um endereço ?..
 
-### "encantados" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "enorme" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Os acionistas devem estar encantados», disse Clark Laneson.
-
-### "endurecida" + "—" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - A terra está seca e endurecida—as enxadas e ancinhos levantam nuvens de poeira.
-
-### "enorme" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Vais ter uma casa enorme», disse ela.
+  - Sua vida inteira é uma enorme "situação".
 
 ### "ensurdecedor" + """ (1 occurrences)
 - Predicted: None
@@ -4643,17 +4249,17 @@ Accuracy: 99.88%
 - Examples:
   - Um ensurdecedor "Viva" ecoou.
 
-### "entra" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "entendi" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Amanda, entra», disse ele.
+  - Ela agradeceu, mas entendi "se manda".
 
-### "erro" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "entre" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Encontrámos o erro», disse.
+  - Há uma grande diferença entre "quase morto" e "completamente morto".
 
 ### "esclito" + """ (1 occurrences)
 - Predicted: None
@@ -4661,35 +4267,23 @@ Accuracy: 99.88%
 - Examples:
   - Eu vou colocar uma placa esclito "Vetelinálio".
 
-### "escrita" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "escreve" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - Expliquei-lhe o que queria dizer com «bem escrita».
+  - Como você escreve "longo"?
 
-### "escutas" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "escrevendo" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Não têm nenhuma lei contra escutas», disse Higginbotham.
+  - Por que fica escrevendo "Paz"?
 
 ### "espacial" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - O satélite principal foi projetado como uma nave espacial "TRMM".
-
-### "espaço" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Vou ter imenso espaço», disse eu.
-
-### "esperanto" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Como nós podemos divulgar a língua esperanto ?
 
 ### "esperança" + """ (1 occurrences)
 - Predicted: None
@@ -4709,47 +4303,29 @@ Accuracy: 99.88%
 - Examples:
   - Quais seriam esses "gastos operacionais"?
 
-### "este" + """ (1 occurrences)
+### "est" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - E este "emprego"?!
+  - Qu'est que c'est "caramujinho"?
 
-### "estelar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Factos novos como «como construir uma nave estelar»?
-
-### "estes" + """ (1 occurrences)
+### "estava" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - São bons rapazes, estes "franciús".
+  - Ele estava "tentando fugir"?
 
-### "estibordo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Retesem os cabos de estibordo», ordenei.
-
-### "estrelas" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Pode trazer a mácula das estrelas», disse Lanceson, com gravidade.
-
-### "estude" + "-" (1 occurrences)
+### "estilo" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Brinque ou estude - a escolha é sua.
+  - Ele é do estilo "faça o que eu digo, não o que eu faço".
 
-### "estão" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "estádio" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Não estão», respondeu Piotr.
+  - Quanto tempo é preciso para ir ao estádio ?
 
 ### "eu" + "!" (1 occurrences)
 - Predicted: None
@@ -4763,35 +4339,35 @@ Accuracy: 99.88%
 - Examples:
   - Espere, eu "espique", "espique".
 
-### "eu" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Sim, fui eu», disse.
-
 ### "evidências" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Serão as evidências "A" e "B" da defesa.
 
+### "exibindo" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Hoje estão exibindo "Autumn Marathon".
+
 ### "expressão" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Qual é o significado da expressão "uma vida de cão"?
+  - A expressão "político honesto" é um oximoro.
 
-### "facilmente" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Isso resolve-se facilmente», disse Vincent.
-
-### "falam" + """ (1 occurrences)
+### "falando" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Até papagaios falam "sim"!
+  - Fica falando "num pode isso, num pode aquilo".
+
+### "falar" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Se você falar "cacholo", eu acho que elas vão perceber.
 
 ### "falassem" + """ (1 occurrences)
 - Predicted: None
@@ -4811,17 +4387,11 @@ Accuracy: 99.88%
 - Examples:
   - Aqui estamos nas famosas ""Cataratas do Niágara.""
 
-### "fazer" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Tenho várias maneiras de o fazer», respondeu o Bibliotecário.
-
-### "fazia" + """ (1 occurrences)
+### "faríamos" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Ele disse aos legisladores que a ideia de guerra o fazia "recuar de horror".
+  - Você não me disse que faríamos "gato" na rede elétrica.
 
 ### "feiticeiro" + "." (1 occurrences)
 - Predicted: None
@@ -4829,11 +4399,17 @@ Accuracy: 99.88%
 - Examples:
   - Esse homem é um feiticeiro .
 
-### "fica" + """ (1 occurrences)
+### "fez" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Onde fica "Oz"?
+  - O que me interessa é o que você fez "sim".
+
+### "ficou" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Não ficou "arretado", não?
 
 ### "filho" + """ (1 occurrences)
 - Predicted: None
@@ -4853,35 +4429,41 @@ Accuracy: 99.88%
 - Examples:
   - Padre fixo ..
 
-### "fotografias" + "-" (1 occurrences)
+### "foder" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Veja estas duas fotografias - qual é melhor?
+  - Vai se foder "um dos nossos".
 
-### "funcionar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "forma" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Estava a perguntar-me como é que isso ia funcionar», disse Maurice.
+  - É uma questão de forma - e de estilo.
 
-### "fôlego" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "frases" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Recupere o fôlego», disse eu.
+  - Não repare, mas pus umas frases "errôneas" nele.
+
+### "ganharam" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Bem, senhor, nossos esforços ganharam "jorros" de elogios.
+
+### "garota" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Será que vão raptar qualquer garota ..
 
 ### "gente" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Olha o que a gente "encontlou" aqui, hein?
-
-### "gente" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Tivera, por sua conta, a mesma ideia que eu de «revistar toda a gente».
 
 ### "graaande" + ""hole" (1 occurrences)
 - Predicted: None
@@ -4895,17 +4477,11 @@ Accuracy: 99.88%
 - Examples:
   - Por favor, comam esse grande "laddoo", por favor.
 
-### "gratos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Pelo que estamos profundamente gratos», disse Maurice.
-
-### "graça" + "-" (1 occurrences)
+### "grande" + ""Ego" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Esse feriado está muito sem graça - deveríamos ter voltado para casa.
+  - O apetite está vindo e ele vai ter um grande "Ego".
 
 ### "gritam" + """ (1 occurrences)
 - Predicted: None
@@ -4919,17 +4495,41 @@ Accuracy: 99.88%
 - Examples:
   - Eles gritam .
 
+### "gritando" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Eu não quero ninguém gritando "Beije a noiva".
+
+### "gritar" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Quando vai gritar "estupro"?
+
+### "gritava" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ele gritava "Tá tudo bem" e dormíamos como tolos.
+
+### "gritei" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Eu só gritei "uhuu!"
+
 ### "grupo" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - O grupo "Mamma Aiuto" disse que não poderia vir hoje.
 
-### "guerreiam" + "-" (1 occurrences)
+### "havia" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Dois guerreiam - um terceiro lucra.
+  - Não disse que havia "coisa" aí dentro?
 
 ### "história" + """ (1 occurrences)
 - Predicted: None
@@ -4943,35 +4543,11 @@ Accuracy: 99.88%
 - Examples:
   - Quem temos hoje ?
 
-### "holograma" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «É um holograma», explicou Vincent.
-
-### "homem" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «É um bom homem», disse Agatha.
-
 ### "homens" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "Namorava para esmagar o amor-próprio de alguns homens "e de algumas mulheres.
-
-### "homicídio" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «A outra tentativa de homicídio», disse Keith.
-
-### "horror" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Resgatei-as às duas das garras da megera do horror», anunciou Piotr.
 
 ### "hotel" + """ (1 occurrences)
 - Predicted: None
@@ -4979,23 +4555,11 @@ Accuracy: 99.88%
 - Examples:
   - Eu moro no hotel "Atlântico", aqui pertinho.
 
-### "humana" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Estêvão tem uma altura sobre-humana - é quase um gigante!
-
 ### "idiota" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Ele está em pé aqui médico idiota !
-
-### "imenso" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Repetem-se imenso», disse Maurice.
 
 ### "infame" + """ (1 occurrences)
 - Predicted: None
@@ -5009,29 +4573,11 @@ Accuracy: 99.88%
 - Examples:
   - Para trás infiel !
 
-### "inventar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - O que queria dizer «inventar» o zero?
-
 ### "ir" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Mas ela queria ir "onde a irmãzona está".
-
-### "ir" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Mas temos de ir», disse ele.
-
-### "ires" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «A primeira fornada sai do forno antes de ires», anunciou.
 
 ### "isso" + """ (1 occurrences)
 - Predicted: None
@@ -5039,23 +4585,17 @@ Accuracy: 99.88%
 - Examples:
   - Sim, mas enquanto isso "vamos escoltá-los, é mais seguro."
 
-### "jogar" + """ (1 occurrences)
+### "jipe" + "??" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Por isso vamos jogar "Gatinho no Saco".
+  - Se você não precisa do jipe ??..
 
-### "jogou" + """ (1 occurrences)
+### "julgar" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Dormindo, jogou "MahJong" o dia todo.
-
-### "jornal" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - No jornal "Semana".
+  - Você vai julgar "A Próxima Top Model do Paquistão" ou algo assim?
 
 ### "já" + """ (1 occurrences)
 - Predicted: None
@@ -5063,41 +4603,17 @@ Accuracy: 99.88%
 - Examples:
   - Aquele já "Elvis".
 
-### "já" + "»" (1 occurrences)
+### "kashubianos" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - «O jantar será servido já», anunciei.
+  - Alemães, poloneses, kashubianos— todos vivemos juntos em paz.
 
-### "lado" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «A profundidade é de três metros em todo o lado», disse Louise.
-
-### "largura" + "―" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Mas a toda a largura―nem uma asa de pomba palpitava.
-
-### "latim" + """ (1 occurrences)
+### "lembra" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - O pronome "eu" da língua portuguesa proveio do latim "ego".
-
-### "latino" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A palavra "híbrido" deriva do termo latino "hybrida".
-
-### "lemos" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Nós lemos "O Monte dos Vendavais" nas aulas de Inglês na escola secundária.
+  - Olhe pra ele, me lembra "Silêncio dos Inocentes".
 
 ### "lendárias" + """ (1 occurrences)
 - Predicted: None
@@ -5111,35 +4627,17 @@ Accuracy: 99.88%
 - Examples:
   - Como indicado no mapa as letras "H" e "M".
 
-### "leão" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Não tenho apanhado muitos peixes-leão», acrescentei.
-
-### "lhe" + """ (1 occurrences)
+### "li" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Eles jogam de calças e chamam-lhe "críquete".
+  - Foi quando li "O Balanço do Barco", de Terence Mann.
 
-### "lhes" + """ (1 occurrences)
+### "lindo" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Chamam-lhes "as irmãs."
-
-### "limpas" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «As fraturas das pernas são limpas», anunciou Agatha.
-
-### "limpeza" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Eu trato da limpeza», anunciou.
+  - Um lindo "muffin" para uma linda moça.
 
 ### "lindos" + """ (1 occurrences)
 - Predicted: None
@@ -5147,35 +4645,23 @@ Accuracy: 99.88%
 - Examples:
   - É forte como um jumento e tem lindos "músculos".
 
-### "lista" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Tenho uma lista», disse Kat.
-
-### "livrarias" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Eastport não tem negócio que chegue para duas livrarias», disse ele.
-
 ### "livro" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Estou com vontade de ler o livro "A culpa é das Estrelas".
+  - Dez dias após a publicação de seu livro "O ESCAFANDRO E A BORBOLETA".
 
 ### "lo" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - «Já estão a selá-lo», disse Victorson.
+  - «A pessoa que vai comprá-lo», eu disse.
 
-### "lá" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "língua" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Vou buscar a lenha lá», disse ela.
+  - Mas seus colegas liberais insistiram em se livrar da língua "morta".
 
 ### "mais" + """ (1 occurrences)
 - Predicted: None
@@ -5183,41 +4669,11 @@ Accuracy: 99.88%
 - Examples:
   - Sinto muito, não oferecemos mais "Serviços de Desculpas".
 
-### "mal" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Não faz mal», disse Jill.
-
-### "maluca" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Mordi a língua em vez de acrescentar «esta gente é maluca».
-
-### "mamar" + "―" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Aprender é tão preciso como mamar―concluiu numa prosa que é mesmo poesia.
-
-### "manhã" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «É mais do que consigo apanhar durante a manhã», respondi.
-
-### "mar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Como peixes no mar», respondeu Vincent.
-
-### "mas" + """ (1 occurrences)
+### "marcial" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Ele depende", mas "espica".
+  - Foi a arte marcial "tênis"?
 
 ### "matador" + """ (1 occurrences)
 - Predicted: None
@@ -5231,29 +4687,23 @@ Accuracy: 99.88%
 - Examples:
   - Não matei de uma vez, não mato "dotra".
 
-### "meia" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - E o que queres dizer com «por tuta e meia»?
-
-### "melhor" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «A tua talvez tenha sido melhor», respondi.
-
-### "mergulhei" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Eu mergulhei», anunciei, depois de sair da água da baía.
-
-### "meu" + """ (1 occurrences)
+### "melhor" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - É o meu "look" Anna Karina.
+  - Ou é melhor "mamãe"?
+
+### "mentira" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Isso é uma mentira "Seu riso e seu prejuízo".
+
+### "mesmo" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - O nome dele é mesmo "Não Jogo"?
 
 ### "meu" + "." (1 occurrences)
 - Predicted: None
@@ -5261,35 +4711,17 @@ Accuracy: 99.88%
 - Examples:
   - Acabei de comprar meu .
 
-### "meu" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «O teu mundo não é igual ao meu», disse Arthur.
-
 ### "mim" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Pode confiar em mim !
 
-### "mim" + "." (1 occurrences)
+### "mim" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - O meu pai enviou uma mensagem ele tem vergonha de mim .
-
-### "minha" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Lamento que não tenha podido ir à minha "Árvore do Mahler", em Londres.
-
-### "minutos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Vamos precisar de alguns minutos», disse.
+  - E apesar de não ser importante pra mim "Tudo bem, por que não?"
 
 ### "misturo" + """ (1 occurrences)
 - Predicted: None
@@ -5303,29 +4735,17 @@ Accuracy: 99.88%
 - Examples:
   - Farelo servlço mllitaremRoma.
 
-### "moedas" + "—" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "morangos" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - Todos os mendigos pedem moedas—mas este tinha um propósito muito especial!
-
-### "montras" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Estamos só a ver montras», respondi.
+  - Eu adoro os morangos !
 
 ### "movimento" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Membro do movimento "Volksfrei" da Alemanha Ocidental.
-
-### "muitos" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Se o seu plano tiver sucesso muitos "Flying Daggers" morrerão.
 
 ### "mulher" + """ (1 occurrences)
 - Predicted: None
@@ -5339,35 +4759,29 @@ Accuracy: 99.88%
 - Examples:
   - Eu vejo o mundo "sem sair de Beijing."
 
-### "mundo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "mão" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Este é o vosso mundo», explicou o Capitão da Nave Gunther.
+  - Usando minha mão "ruim".
 
-### "máquina" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "navio" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - Sabia que se chamava «escrever à máquina», mas nunca o tinha visto fazê-lo.
+  - Você tem certeza que ele é do navio "Mikhail Svietlov"?
 
-### "na" + "Alemanha" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "necessariamente" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - Vão achar trabalho naAlemanha?
+  - E "legal" não é necessariamente "sem graça".
 
-### "navios" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "negócios" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Estou à procura de livros sobre navios», disse eu.
-
-### "negar" + "―" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Não pude negar―que era pouco.
+  - "Meu primo Paulo tinha sido encarregado dos negócios "de Portugal em Roma.
 
 ### "nenhum" + """ (1 occurrences)
 - Predicted: None
@@ -5385,7 +4799,7 @@ Accuracy: 99.88%
 - Predicted: Space
 - Actual: None
 - Examples:
-  - «De maneira nenhuma», respondi.
+  - «Não tem pechincha nenhuma», respondi.
 
 ### "nesse" + """ (1 occurrences)
 - Predicted: None
@@ -5399,35 +4813,11 @@ Accuracy: 99.88%
 - Examples:
   - Não vai fazer ninguém "pagar"!
 
-### "nisso" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Tenho de pensar nisso», disse ele.
-
-### "nomeada" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A nova ponte foi nomeada "Ponte do Arco-íris".
-
-### "noroeste" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Tem aumentado gradualmente, vindo de noroeste», respondeu Jennifer.
-
 ### "nossa" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Vamos pesar a nossa "bundamizade".
-
-### "nosso" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Este é Pavlos, nosso "faz-tudo".
 
 ### "nova" + """ (1 occurrences)
 - Predicted: None
@@ -5441,17 +4831,11 @@ Accuracy: 99.88%
 - Examples:
   - Acho que gostei do seu novo "eu".
 
-### "novo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "numa" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - Há pouco falaste em «novo».
-
-### "novos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Livros novos»?
+  - Eu estou morando numa "pensãozinha", pertinho do restaurante.
 
 ### "nunca" + """ (1 occurrences)
 - Predicted: None
@@ -5465,59 +4849,35 @@ Accuracy: 99.88%
 - Examples:
   - Oh, não ?
 
-### "não" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Oh, não», respondeu ela.
-
 ### "nós" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Quem eles querem que nós "apaguemos"?
 
-### "nós" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "o" + ""Padre" (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Somos sobretudo nós», disse Missy Marky.
+  - Não se queira ensinar o "Padre-Nosso" ao vigário.
 
-### "o" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "o" + ""às" (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - Os lábios de Sparhawk formaram um pequeno «o».
+  - Nosso chefe foi o mais jovem comissário de polícia do país, era o "às" de Busan.
 
-### "ocupada" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "o" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Estou mesmo muito ocupada», respondeu ela.
-
-### "ocupado" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Deu-me trabalho que chegue para me manter ocupado», disse ele.
+  - É melhor dizer onde tá o .
 
 ### "ontem" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "Mas nada me podia afastar do seu olhar descoberto ontem "e sonhado hoje.
-
-### "onze" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Tinham ouvido a Kay dizer «o preço é onze» e, de certeza, não acreditavam nela.
-
-### "oportunidade" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Já ouvi queixumes suficientes para adivinhar qual é a «oportunidade» dela.
 
 ### "opções" + """ (1 occurrences)
 - Predicted: None
@@ -5543,6 +4903,18 @@ Accuracy: 99.88%
 - Examples:
   - Tomando umas e outras .
 
+### "outro" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tony, você vai ter que botar um outro "s" aqui, garoto.
+
+### "outro" + ""X" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Vai ser outro "X" na minha ficha, né?
+
 ### "ouve" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5555,17 +4927,17 @@ Accuracy: 99.88%
 - Examples:
   - Pensei ter ouvido "os quatro".
 
+### "ovo" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Então me devolva o ovo "Faberge".
+
 ### "pais" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Tenho em minha posse pais ..
-
-### "papel" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Nunca ouvi falar de testes em papel», respondi.
 
 ### "para" + "?" (1 occurrences)
 - Predicted: None
@@ -5573,29 +4945,23 @@ Accuracy: 99.88%
 - Examples:
   - Ainda não está pronto para ?
 
+### "parada" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Fique parada "querrida", porque eu sou seu salvador.
+
 ### "parece" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Na gravação, ele não parece "frágil".
 
-### "parece" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Não me parece», disse ele.
-
-### "parte" + """ (1 occurrences)
+### "parecia" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A parte "Gusteau"?
-
-### "partido" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Primeiro, a sociedade juridicamente autónoma, em seguida, o partido "Gadar".
+  - Você diz que ele parecia "exaurido".
 
 ### "partir" + """ (1 occurrences)
 - Predicted: None
@@ -5603,11 +4969,11 @@ Accuracy: 99.88%
 - Examples:
   - Então, Adèle, recomece a partir "desse vício", por favor.
 
-### "passados" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "passando" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Cabos de proa passados», chamou Paulson, «e recolhidos.»
+  - Está passando "O Poderoso Chefão" na cidade inteira.
 
 ### "passou" + """ (1 occurrences)
 - Predicted: None
@@ -5621,17 +4987,17 @@ Accuracy: 99.88%
 - Examples:
   - Mas pedir "I Ran" para um músico sério é ir longe demais.
 
-### "pelo" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "pedir" + "feijão" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - Desesperadamente eu procurei pelo "vaso de pedidos do Buda".
+  - Nós vamos ter que pedirfeijão fiado pro meu pai de novo?
 
-### "pensar" + """ (1 occurrences)
+### "pensando" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Parece tudo muito à toa e faz-nos pensar "porquê eles e não nós?"
+  - Você já acordou pensando "que merda eu fiz com a minha vida"?
 
 ### "pensariam" + """ (1 occurrences)
 - Predicted: None
@@ -5644,18 +5010,6 @@ Accuracy: 99.88%
 - Actual: Space
 - Examples:
   - Eu adoraria uma pequena "poesia" depois do jantar.
-
-### "pequenino" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A não ser por um óbvio e pequenino "porém".
-
-### "percebi" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Já percebi», disse eu.
 
 ### "perdoe" + "-" (1 occurrences)
 - Predicted: None
@@ -5675,53 +5029,23 @@ Accuracy: 99.88%
 - Examples:
   - Valerka, por que não se deve perguntar "aonde vai"?
 
-### "perguntar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Terás de lhe perguntar», disse Piotr.
-
-### "perigosos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «São criminosos muito perigosos», sublinhou Saunders.
-
-### "pescadora" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Sou pescadora», anunciei.
-
-### "pescar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Com sorte, em breve conseguirão pescar», respondi.
-
-### "pessoas" + """ (1 occurrences)
+### "perigosos" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - As pessoas "vestem" a própria história de vida no rosto.
+  - Prendendo velhos gangsters, maconheiros e outros elementos perigosos !
 
-### "pessoas" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "pintura" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - Também digo às pessoas», continuou Clyde, «o que ouvi aqui.
+  - Chefe, onde está a pintura "A garota lavando o cabelo"?
 
 ### "plano" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Será o plano "A", de "asno".
-
-### "plano" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Precisamos de um plano - e rápido!
 
 ### "plantar" + """ (1 occurrences)
 - Predicted: None
@@ -5741,29 +5065,23 @@ Accuracy: 99.88%
 - Examples:
   - E eu sei a posição "ha".
 
-### "pra" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - E o remédio é pra "frigião" aguda infantil!
-
-### "prancha" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Mandei os homens de reforço da prancha», interrompeu Henrison.
-
 ### "praça" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Na praça "Vostania".
 
-### "presos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "prefeito" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Cabos passados e presos», chamou ele por fim.
+  - Faço bom preço, prefeito "Kochie".
+
+### "prefiro" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Bom, pra ser sincero, eu prefiro "Depeche Mode".
 
 ### "pressionando" + """ (1 occurrences)
 - Predicted: None
@@ -5771,17 +5089,11 @@ Accuracy: 99.88%
 - Examples:
   - Por favor, confirme se recebeu pressionando "um".
 
-### "primeiro" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Tu primeiro», disse Nicholas, apontando para Vincent.
-
-### "problema" + "-" (1 occurrences)
+### "procurar" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - As pessoas brilhantes têm um grande problema - elas não sabem perder.
+  - Se procurar "otário" na Wikipédia, sabe o que aparece?
 
 ### "procure" + """ (1 occurrences)
 - Predicted: None
@@ -5795,24 +5107,6 @@ Accuracy: 99.88%
 - Examples:
   - O programa "Grandes Pensadores do Mundo, Albert Einstein" chegou ao fim.
 
-### "pronome" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - O pronome "eu" da língua portuguesa proveio do latim "ego".
-
-### "pronto" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «A pronto», disse ele.
-
-### "prontos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Cabrestantes da popa armados, guarnecidos e prontos», veio a resposta de baixo.
-
 ### "pronunciado" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5825,77 +5119,23 @@ Accuracy: 99.88%
 - Examples:
   - Iniciando o protocolo "Anular o SAL-P-C-T".
 
-### "puder" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Apanharei o que puder», respondi.
-
-### "puro" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Saíam mais baratos se fossem tecidos com cobre puro», gemeu Yu.
-
-### "pária" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Ainda assim, eu não me considerava sombriamente um «pária».
-
-### "pé" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Pode começar por a pôr de pé», respondi.
-
-### "pés" + "―" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Senti tremer o Globo sob os meus pés―e cerrei um momento os olhos.
-
-### "pólvora" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - O mais comum é a «pólvora».
-
 ### "quadro" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - O quadro "Maino".
 
-### "qualidade" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Peixe de qualidade para gente de qualidade» era o lema deles.
-
 ### "quatro" + "centos" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Na verdade, tinha quase quatrocentos mil disponíveis, obrigada.
+  - Eu tinha quase quatrocentos mil à mão, obrigada.
 
-### "que" + "brar" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "quer" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - Permitam-me apresentar-lhes o Oskar, um velho amigo que canta até quebrar vidro.
-
-### "queixas" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Tenho ouvido queixas», disse Clyde Rogerson.
-
-### "quem" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - As máquinas não são «quem», e só as pessoas pensam.
+  - Ele relacionou isso com Kostrov, e você quer "dar um aperto"?
 
 ### "queriam" + """ (1 occurrences)
 - Predicted: None
@@ -5903,59 +5143,17 @@ Accuracy: 99.88%
 - Examples:
   - Parece que queriam "limpar" o prédio todo.
 
-### "queriam" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Estavam a começar a dizer-me o que queriam», disse eu.
-
-### "querida" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Amanda, querida», respondeu Keith, «um ladrão teria atacado na rua.
-
 ### "quero" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Percebi que não quero "recomeçar".
 
-### "questão" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Há outra questão», anunciou William Williamson.
-
-### "questões" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «E depois podemos discutir as suas questões», acrescentei.
-
-### "quilos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Pelo menos uns vinte e cinco quilos», respondeu.
-
-### "quotas" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Quando vendermos cinquenta quotas», disse Johanna, «começamos a construir.»
-
 ### "quê" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - O quê "agora"?
-
-### "rabeiras" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - É p'r'as «rabeiras».
 
 ### "rapaz" + """ (1 occurrences)
 - Predicted: None
@@ -5969,23 +5167,17 @@ Accuracy: 99.88%
 - Examples:
   - Só recite "Vande Mantram".
 
-### "relação" + """ (1 occurrences)
+### "reescrever" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A relação "A ama B" não é reflexiva, transitiva ou simétrica.
+  - Penso em reescrever "Cachinhos Dourados" sob o ponto de vista dos ursos.
 
-### "reparações" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "regeu" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «De facto, parecia precisar de algumas reparações», disse ele.
-
-### "resolver" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Acabou de os resolver», respondeu ele.
+  - Você regeu "The Rite of Spring" no Met Gala ano passado.
 
 ### "responder" + """ (1 occurrences)
 - Predicted: None
@@ -5999,30 +5191,6 @@ Accuracy: 99.88%
 - Examples:
   - As palavras ficaram presas na garganta de Bill e ele respondeu "Weh".
 
-### "resposta" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Ela tem direito a essa resposta», interveio Pavelson.
-
-### "restaurante" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Mande um táxi para o restaurante "Salgueiro Chorão".
-
-### "resto" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Como tudo o resto», respondi.
-
-### "ritmo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Abrande o ritmo», ordenei por fim.
-
 ### "romance" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6035,17 +5203,11 @@ Accuracy: 99.88%
 - Examples:
   - Pa-rou !
 
-### "sabe" + "»" (1 occurrences)
+### "rápida" + ":" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - «Talvez um dia, quem sabe», respondeu ele.
-
-### "safar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Desta vez não te vais safar», anunciou.
+  - Uma pergunta rápida: você vem ou não?
 
 ### "saiu" + """ (1 occurrences)
 - Predicted: None
@@ -6053,53 +5215,23 @@ Accuracy: 99.88%
 - Examples:
   - Foi daí que saiu "Canto Geral".
 
-### "saldos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «É por isso que é uma feira de saldos», respondeu ele.
-
 ### "salsicha" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Quem quer salsicha ?
 
-### "sandice" + "―" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - A esta sandice―fez-se um silêncio.
-
-### "se" + "param" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - E, se houver uma mistura, as faixas de cor separam-se, como aconteceu com esta.
-
-### "secreto" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Está bem, chegou a altura de revelar o meu plano secreto», disse eu.
-
-### "segurança" + ".." (1 occurrences)
+### "se" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Se a menina não chegar a casa em segurança ..
+  - Diga isso baixinho e suma-se !
 
-### "sei" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "se" + ""funfi" (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Isso também não sei», respondeu Nicholas.
-
-### "seis" + "centos" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - E mais seiscentos.
+  - Ele fazem a burrada, e a gente que se "funfi", né?!
 
 ### "seja" + """ (1 occurrences)
 - Predicted: None
@@ -6107,29 +5239,23 @@ Accuracy: 99.88%
 - Examples:
   - Por favor, não seja "Diabólico" também!
 
-### "seja" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Mais vale que seja», disse eu.
-
-### "sempre" + "." (1 occurrences)
+### "senha" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Eles são cuidadosos sempre .
+  - Mas o outro também disse a senha "Que droga!"
 
-### "senado" + "»" (1 occurrences)
+### "sepultura" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Não haverá lápide na minha sepultura "nem meu nome será gravado.
+
+### "ser" + "feliz" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - As ideias de «senado» e «tarifa» eram ambas novas para mim.
-
-### "senhor" + "―" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - É, sim senhor―emendou a Helena.
+  - Ninguém pode serfeliz enquanto seu povo caminha pro abismo.
 
 ### "seria" + """ (1 occurrences)
 - Predicted: None
@@ -6143,12 +5269,6 @@ Accuracy: 99.88%
 - Examples:
   - Não será "apenas nós dois".
 
-### "sete" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Os «sete», claro, excluíam James e Janet.
-
 ### "setor" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6161,47 +5281,17 @@ Accuracy: 99.88%
 - Examples:
   - Vou pedir para que Inbe no Akita seja o seu "Nome-Pai".
 
-### "seus" + """ (1 occurrences)
+### "simplesmente" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - É por isso que sempre testava os seus "amigos próximos".
+  - Diga simplesmente "alô"!
 
-### "si" + "." (1 occurrences)
+### "soltar" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Eu confio em si .
-
-### "siglas" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - O que significam as siglas "NTT"?
-
-### "sincero" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Devo ser modestamente sincero», disse Saunders.
-
-### "sino" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Estamos reunidos ao som do sino», entoou o Bibliotecário do Condado.
-
-### "situação" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Fez o melhor que podia naquela situação», disse ele ao aproximar-se.
-
-### "soberbo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Estava soberbo», respondi.
+  - Você devia avisar antes de soltar "pum".
 
 ### "som" + """ (1 occurrences)
 - Predicted: None
@@ -6209,35 +5299,17 @@ Accuracy: 99.88%
 - Examples:
   - Que som "horrorendo" é esse?
 
-### "sou" + """ (1 occurrences)
+### "somente" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Faça isso por mim, já que sou "exilada".
+  - É somente "Desculpe-me" ou nem isso.
 
-### "stock" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Como lidámos com o «não temos nada em stock»?
-
-### "sua" + """ (1 occurrences)
+### "sucesso" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Eu vi a sua "missão especial".
-
-### "sucedida" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Os meus parabéns pela vossa viagem bem-sucedida», disse eu.
-
-### "suficiente" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Disseram-me que uma noite poderá ser suficiente», respondeu Saunders.
+  - Você conseguiu repetir seu sucesso "acidental"!
 
 ### "sugiro" + """ (1 occurrences)
 - Predicted: None
@@ -6257,23 +5329,11 @@ Accuracy: 99.88%
 - Examples:
   - Eu também !
 
-### "também" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Estes dois também», disse Keith.
-
-### "tanto" + """ (1 occurrences)
+### "também" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Em Latim, "gallus" significa tanto "galo" como "francês".
-
-### "tarifa" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - As ideias de «senado» e «tarifa» eram ambas novas para mim.
+  - Então os ataques de Hitler à Polônia e Rússia, foram também "preventivos".
 
 ### "tchau" + "!" (1 occurrences)
 - Predicted: None
@@ -6281,23 +5341,23 @@ Accuracy: 99.88%
 - Examples:
   - Tchau, tchau !
 
-### "te" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Temos um favor a pedir-te», disse Clorinda por fim.
-
-### "teclado" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Consegui dizer «teclado» e «ecrã», apontando para as partes certas do UniBook.
-
 ### "tema" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Vamos combinar que o tema "judeus" não é engraçado.
+
+### "tenha" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Talvez ela tenha "vazado" e deixado o país.
+
+### "tenho" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Não tenho "olho gordo".
 
 ### "tento" + """ (1 occurrences)
 - Predicted: None
@@ -6305,11 +5365,11 @@ Accuracy: 99.88%
 - Examples:
   - E, ali, eu tento "desreprimir" as pessoas e a mim, também.
 
-### "tentámos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "teremos" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Já tentámos», respondeu Jacob Williamson.
+  - Na semana que vem teremos "The Clash" ao vivo no estúdio.
 
 ### "terminar" + """ (1 occurrences)
 - Predicted: None
@@ -6329,17 +5389,17 @@ Accuracy: 99.88%
 - Examples:
   - Fica lá com o teu "olá".
 
-### "teu" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «As despesas são assunto de família, não teu», respondeu ela.
-
 ### "texto" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Eles deixaram notas com o texto "Expropriadas dos inimigos do povo".
+
+### "ti" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Perdoa, boa Emilia, ter-me esquecido de ti !
 
 ### "tinha" + """ (1 occurrences)
 - Predicted: None
@@ -6353,11 +5413,17 @@ Accuracy: 99.88%
 - Examples:
   - De onde tirou "meigo"?
 
-### "todos" + "―" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "tiver" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - Voltaram-se todos―«que era?»
+  - É mulher de qualquer um se tiver "cinqüentinha" , rapaz.
+
+### "todos" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Vocês são todos "Steves" e eu sou a merda do Gomer Pyle, cara!
 
 ### "toque" + """ (1 occurrences)
 - Predicted: None
@@ -6365,17 +5431,17 @@ Accuracy: 99.88%
 - Examples:
   - Semion, toque "Danila Kupor"!
 
-### "trabalhar" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "trabalho" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Quem quer comer, tem de trabalhar», anunciei.
+  - Só trabalho "ao vivo".
 
-### "troca" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "triângulo" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Aceitaríamos arroz em troca», disse Kat.
+  - Olha a sanfona esquentando, a zabumba batendo, é o triângulo "trianglando".
 
 ### "tu" + """ (1 occurrences)
 - Predicted: None
@@ -6383,17 +5449,11 @@ Accuracy: 99.88%
 - Examples:
   - Pois era bem feito tu "robarze-a".
 
-### "tu" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "tá" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Tanto como tu», respondi.
-
-### "tudo" + "―" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Como o tempo rendia, jogaram tudo―a pocinha, o fito, as necas, a bilharda.
+  - E você tá "desficultando".
 
 ### "uma" + ""Pola" (1 occurrences)
 - Predicted: None
@@ -6401,17 +5461,23 @@ Accuracy: 99.88%
 - Examples:
   - Portanto, mesmo se eu tivesse uma "Pola".
 
+### "usa" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Sabe, do cara que usa "rabo-de-cavalo"?
+
 ### "usam" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Não, Majestade, os escoceses não usam saias, usam "kilts".
 
-### "usar" + """ (1 occurrences)
+### "valeu" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - De qualquer forma, por favor pare de usar "lindo" ao descrever um homem.
+  - Tchau, valeu !
 
 ### "vamos" + """ (1 occurrences)
 - Predicted: None
@@ -6419,23 +5485,17 @@ Accuracy: 99.88%
 - Examples:
   - Mas antes vamos "relaxar".
 
-### "vela" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "velho" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Viemos à vela», disse Kat.
+  - Então esta deixando o bom e velho "nós ensinamos".
 
-### "velhos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "vendo" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Respeita os mais velhos», respondeu ela.
-
-### "vender" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Temos todo o género de coisas para vender», disse Kat.
+  - Que merda, estou vendo "Os Garotos Perdidos".
 
 ### "vento" + """ (1 occurrences)
 - Predicted: None
@@ -6449,41 +5509,17 @@ Accuracy: 99.88%
 - Examples:
   - Agora, vamos ver "branco".
 
-### "ver" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Amanda, também fico contente por te ver», respondeu ele.
-
-### "vez" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Tenho a lista de reparações da última vez», disse eu.
-
-### "vida" + "-" (1 occurrences)
+### "verdadeiro" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Os homens procuram apenas uma coisa na vida - o seu prazer.
+  - Ou talvez nunca tenha havido um verdadeiro "eu", pra começar.
 
-### "vigiada" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "verá" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Tem de ser vigiada», disse o Bibliotecário do Condado.
-
-### "vigias" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Perguntei aos vigias», disse Henrison.
-
-### "vila" + "―" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Venho enriquecer uma vila―e a turba tumultuosa apedreja-me!
+  - Agora você verá "Il Matto" com o desempenho sem igual dele!
 
 ### "virou" + "!" (1 occurrences)
 - Predicted: None
@@ -6491,17 +5527,17 @@ Accuracy: 99.88%
 - Examples:
   - O jogo virou !
 
-### "visita" + "»" (1 occurrences)
+### "virá" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - «Esta é a nossa segunda visita», disse eu.
+  - «Mas vamos construir, e ele virá», acrescentou Johanna.
 
-### "visto" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "viu" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - «Lieuwhon não tem… ah, bem visto», concordou Saunders.
+  - Você viu "Quarto de Mima"?
 
 ### "vocabulário" + """ (1 occurrences)
 - Predicted: None
@@ -6509,23 +5545,17 @@ Accuracy: 99.88%
 - Examples:
   - O vocabulário "caminho" não quer dizer "caminho".
 
+### "você" + "»" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - «Terei prazer em vender uma cota para você», disse Christopher.
+
 ### "vocês" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Eu vou dar o lanche favorito de vocês "gol gappas".
-
-### "volta" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Vamos buscá-los de volta», anunciei.
-
-### "vos" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Não estou a tentar despachar-vos», disse ele.
 
 ### "¡" + "a" (1 occurrences)
 - Predicted: None
@@ -6533,17 +5563,17 @@ Accuracy: 99.88%
 - Examples:
   - Implante¡ a República!
 
-### "¡" + "toda" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Deixa¡ toda a esperança, vós que centrais na Quinta do Paraíso.
-
 ### "¡" + "um" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Evite¡ um banho de esperma.
+
+### "à" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Só estou indo à "bomboniere".
 
 ### "àquela" + """ (1 occurrences)
 - Predicted: None
@@ -6551,65 +5581,17 @@ Accuracy: 99.88%
 - Examples:
   - Mas tudo se resume àquela "coisa".
 
-### "água" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Nunca passaram tempo na água», disse Michael.
-
 ### "álbum" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - É verdade que saiu um novo álbum "Yablokitai"?
 
-### "ó" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Achas que vais encontrar o teu pai nos livros, ó "João"?
-
-### "ó" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Kat fez um pequeno «ó» com a boca.
-
-### "óleo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Um candeeiro a óleo», disse Arthur.
-
-### "órbita" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Tentámos contactar a vossa comnét a partir da órbita», disse Arthur.
-
-### "ótimo" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - «Borrego e couve parece-me ótimo», concordei.
-
-### "—" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Quem é ele?" — "Um soldado que lutará."
-
-### "—" + "as" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - A terra está seca e endurecida—as enxadas e ancinhos levantam nuvens de poeira.
-
 ### "—" + "explicou" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - É esse o problema —explicou a avó, com toda a delicadeza.
+  - É justamente esse o problema —explicou Granny, com toda a educação.
 
 ### "—" + "expliquei" (1 occurrences)
 - Predicted: Space
@@ -6617,89 +5599,11 @@ Accuracy: 99.88%
 - Examples:
   - Se a notícia se espalhar, podem matar pessoas —expliquei.
 
-### "—" + "interrompeu" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - É ilegal haver moedas-padrão de Rubricum em Starlanding —interrompeu David.
-
-### "—" + "mas" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Todos os mendigos pedem moedas—mas este tinha um propósito muito especial!
-
-### "—" + "reparou" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - O sujeito de Spencerport —reparou no galhardete do K&K— deve ser vosso amigo?
-
-### "—" + "respondeu" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - A história não é assim tão absurda —respondeu Sparhawk.
-
 ### "—" + "respondi" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Nunca me teria ocorrido a maioria destas ideias —respondi.
-
-### "―" + "a" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Como o tempo rendia, jogaram tudo―a pocinha, o fito, as necas, a bilharda.
-
-### "―" + "como" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Eu nunca acreditei no Diabo―como nunca acreditei em Deus.
-
-### "―" + "concluiu" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Aprender é tão preciso como mamar―concluiu numa prosa que é mesmo poesia.
-
-### "―" + "concluíram" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Thomé,―concluíram alguns do grupo, conciliadores.
-
-### "―" + "emendou" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - É, sim senhor―emendou a Helena.
-
-### "―" + "fez" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - A esta sandice―fez-se um silêncio.
-
-### "―" + "morta" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Um estremecimento de membros por fim, uma agitação geral repentina, e―morta!
-
-### "―" + "nem" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Mas a toda a largura―nem uma asa de pomba palpitava.
-
-### "―" + "que" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Não pude negar―que era pouco.
+  - Eu nunca teria pensado na maioria dessas ideias —respondi.
 
 ### "”" + "Já" (1 occurrences)
 - Predicted: Space

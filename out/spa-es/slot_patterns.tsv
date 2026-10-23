@@ -1,7 +1,7 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-dar algo	filled	8637	12	12	1.00	yes		
-ser alguien	filled	5182	7	12	0.58	no	"El paraíso es esto."	es … esto
-dar algo	clitic	415	11	12	0.92	yes	Lo que le da sentido a la vida.	Lo … da
+dar algo	filled	8656	12	12	1.00	yes		
+ser alguien	filled	5197	7	12	0.58	no	"El paraíso es esto."	es … esto
+dar algo	clitic	418	11	12	0.92	yes	Lo que le da sentido a la vida.	Lo … da
 necesito su ayuda	clitic	95	12	12	1.00	yes		
 su gracia	filled	54	4	12	0.33	no	Al contrario, muchas gracias a usted.	gracias … usted
 a sus pies	clitic	25	11	12	0.92	yes	Agárrate a mi pie y dame la mano Yo te ayudaré.	a … mi … pie
