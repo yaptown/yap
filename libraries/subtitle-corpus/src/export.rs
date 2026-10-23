@@ -25,7 +25,7 @@ use serde_json::json;
 use sha2::{Digest, Sha256};
 use unicode_normalization::UnicodeNormalization;
 
-use crate::clip_exclusions::{read_clip_plan, ClipExclusions};
+use crate::clip_exclusions::read_clip_plan;
 use crate::clips::{
     clips_path, read_file as read_clips_with_provenance, subtitle_sentences, Clip, Provenance,
 };
@@ -259,22 +259,6 @@ pub async fn export_clips(
     let missing = alignment_cache_failures.load(Ordering::Relaxed);
     if missing > 0 {
         eprintln!("warning: {missing} expected phoneme alignments omitted due to missing or invalid cached responses");
-    }
-
-    // The index is rebuilt from the sidecars on every run, so resumed and
-    // partial runs still leave it whole.
-    let exclusions = ClipExclusions::load()?;
-    for lang in queue
-        .iter()
-        .filter_map(|m| m.course(&out).map(|l| l.corpus_code()))
-        .collect::<std::collections::BTreeSet<_>>()
-    {
-        let lang_dir = dest.join(lang);
-        // A language whose films all failed or passed nothing still gets its
-        // (empty) index: the queue named it, so the served listing must too.
-        std::fs::create_dir_all(&lang_dir)?;
-        let n = write_index(&lang_dir, &clip_dirs(&lang_dir, lang, &exclusions)?)?;
-        println!("index: {lang} {n} clips");
     }
     Ok(ExportOutcome { valid, failed })
 }
@@ -739,15 +723,25 @@ fn film_id(id: &str) -> &str {
     id.split('-').next().unwrap_or_default()
 }
 
-/// The clip dirs a language serves: every exported clip on disk (orphans stay
-/// served until a reviewed prune) except those of films in the clip
-/// exclusions. Enrichment, the index and the upload all take this one list.
-fn clip_dirs(lang_dir: &Path, code: &str, exclusions: &ClipExclusions) -> Result<Vec<PathBuf>> {
+/// Whether publish serves clip `id`: it passes now, or its film's remap or
+/// export failed this run, so which of its clips pass is unknown and its last
+/// good clips stay up. Everything else on disk is an orphan, kept until prune.
+fn served(id: &str, valid: &HashSet<String>, failed: &HashSet<String>) -> bool {
+    valid.contains(id) || failed.contains(film_id(id))
+}
+
+/// The clip dirs a language serves. Enrichment, the index and the upload all
+/// take this one list.
+fn clip_dirs(
+    lang_dir: &Path,
+    valid: &HashSet<String>,
+    failed: &HashSet<String>,
+) -> Result<Vec<PathBuf>> {
     let mut dirs = Vec::new();
     for entry in std::fs::read_dir(lang_dir)? {
         let entry = entry?;
         if entry.file_type()?.is_dir()
-            && exclusions.allows(code, film_id(&entry.file_name().to_string_lossy()))
+            && served(&entry.file_name().to_string_lossy(), valid, failed)
             && entry.path().join("meta.json").is_file()
         {
             dirs.push(entry.path());
@@ -757,7 +751,7 @@ fn clip_dirs(lang_dir: &Path, code: &str, exclusions: &ClipExclusions) -> Result
     Ok(dirs)
 }
 
-/// Clip ids no longer valid, excluding films with an operational failure.
+/// Clip ids on disk or in the bucket that publish does not serve.
 fn orphan_ids(
     present: impl IntoIterator<Item = String>,
     valid: &HashSet<String>,
@@ -765,7 +759,7 @@ fn orphan_ids(
 ) -> Vec<String> {
     let mut ids: Vec<_> = present
         .into_iter()
-        .filter(|id| !valid.contains(id) && !failed.contains(film_id(id)))
+        .filter(|id| !served(id, valid, failed))
         .collect();
     ids.sort();
     ids.dedup();
@@ -824,13 +818,15 @@ pub async fn publish(
             .filter_map(|e| e.file_name().into_string().ok())
             .collect(),
     };
-    let exclusions = ClipExclusions::load()?;
+    let empty = HashSet::new();
     let mut selected = BTreeMap::new();
     println!("=== posters and content ratings ===");
     for code in &codes {
         let lang_dir = dest.join(code);
+        // A language whose films all failed or passed nothing still gets its
+        // (empty) index: the served listing must not keep a stale one.
         std::fs::create_dir_all(&lang_dir)?;
-        let dirs = clip_dirs(&lang_dir, code, &exclusions)?;
+        let dirs = clip_dirs(&lang_dir, valid.get(code).unwrap_or(&empty), &failed)?;
         enrichment::enrich_language(&dirs).await?;
         let n = write_index(&lang_dir, &dirs)?;
         selected.insert(code.clone(), dirs);
@@ -845,7 +841,6 @@ pub async fn publish(
             .to_string(),
         ..Default::default()
     };
-    let empty = HashSet::new();
     for code in codes {
         let lang_dir = dest.join(&code);
         let r2_ids = upload_lang(&lang_dir, &selected[&code], &code, &r2).await?;
@@ -1281,31 +1276,27 @@ mod tests {
     }
 
     #[test]
-    fn excluded_films_leave_the_index_but_stay_on_disk() {
+    fn the_index_serves_passing_clips_and_failed_films_only() {
         let root = tempfile::tempdir().unwrap();
         let lang = root.path().join("fra");
-        let ids = ["tt17009710-a-0", "tt2-current-0", "tt3-orphan-0"];
+        let ids = ["tt1-orphan-0", "tt2-current-0", "tt4-transient-0"];
         for id in ids {
             let dir = lang.join(id);
             std::fs::create_dir_all(&dir).unwrap();
             std::fs::write(dir.join("meta.json"), json!({"id": id}).to_string()).unwrap();
         }
-        let exclusions = ClipExclusions::parse(
-            r#"{"language":"fra","imdb_id":"tt17009710","reason":"fixture hardsubs"}"#,
-        )
-        .unwrap();
-        let dirs = clip_dirs(&lang, "fra", &exclusions).unwrap();
+        let valid = HashSet::from([ids[1].to_owned()]);
+        let failed = HashSet::from(["tt4".to_owned()]);
+        let dirs = clip_dirs(&lang, &valid, &failed).unwrap();
         assert_eq!(write_index(&lang, &dirs).unwrap(), 2);
         let index = std::fs::read_to_string(lang.join("index.jsonl")).unwrap();
-        // Orphans stay served until a reviewed prune; exclusions do not.
         assert!(index.contains(ids[1]) && index.contains(ids[2]));
         assert!(!index.contains(ids[0]));
+        // The orphan stays on disk for prune, and is exactly what is not served.
         assert!(lang.join(ids[0]).join("meta.json").exists());
-        // The excluded film's clips are never valid, so prune can collect them.
-        let valid = HashSet::from([ids[1].to_owned()]);
         assert_eq!(
-            orphan_ids(ids.map(str::to_owned), &valid, &HashSet::new()),
-            [ids[0], ids[2]]
+            orphan_ids(ids.map(str::to_owned), &valid, &failed),
+            [ids[0]]
         );
     }
 

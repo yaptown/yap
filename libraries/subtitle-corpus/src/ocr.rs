@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use anyhow::{bail, Context, Result};
+use language_utils::Language;
 use movie_subtitles::llm_segment::batch_jobs::SMALL_BATCH_THRESHOLD;
 use serde::{Deserialize, Serialize};
 use tysm::chat_completions::{ChatClient, ChatMessage, ChatMessageContent, ImageUrl, Role};
@@ -21,6 +22,13 @@ same capitalisation, same line breaks (as \\n). Do not translate, correct,
 paraphrase, or add commentary. Subtitles often begin with a dash for a new
 speaker; keep it. If the image contains no readable text, return an empty
 string.";
+
+/// Japanese discs often print furigana over kanji. Yap adds readings from its
+/// own pipeline, so OCR must not transcribe them as an extra line of dialogue.
+const JAPANESE_PROMPT: &str = "\
+These are Japanese subtitles. Some print furigana: small kana set above or
+beside kanji to show their reading. Leave furigana out and transcribe only the
+full-size text; readings are added separately later.";
 
 /// What the model gives back for one cue image.
 #[derive(Debug, Serialize, Deserialize, schemars::JsonSchema)]
@@ -59,13 +67,14 @@ pub fn readable(text: &str) -> bool {
 pub async fn retry_unreadable(
     fallback_client: &ChatClient,
     png: &[u8],
+    language: Language,
     transcription: Transcription,
 ) -> (Result<Transcription>, bool) {
     if readable(&transcription.text) {
         return (Ok(transcription), false);
     }
 
-    let result = transcribe(fallback_client, png)
+    let result = transcribe(fallback_client, png, language)
         .await
         .context("fallback OCR request failed")
         .and_then(|fallback| {
@@ -92,6 +101,7 @@ pub struct ReadLines {
 pub async fn read_lines<E>(
     fallback_client: &ChatClient,
     images: &[CueImage],
+    language: Language,
     results: Vec<std::result::Result<Transcription, E>>,
 ) -> ReadLines {
     let mut read = ReadLines {
@@ -103,7 +113,8 @@ pub async fn read_lines<E>(
         let Ok(transcription) = result else {
             continue;
         };
-        let (result, did_retry) = retry_unreadable(fallback_client, &img.png, transcription).await;
+        let (result, did_retry) =
+            retry_unreadable(fallback_client, &img.png, language, transcription).await;
         read.retried += usize::from(did_retry);
         let Ok(transcription) = result else {
             continue;
@@ -118,11 +129,15 @@ pub async fn read_lines<E>(
 }
 
 /// The request for one cue image.
-pub fn messages_for(png: &[u8]) -> Vec<ChatMessage> {
+pub fn messages_for(png: &[u8], language: Language) -> Vec<ChatMessage> {
     use base64::Engine;
     let b64 = base64::engine::general_purpose::STANDARD.encode(png);
+    let prompt = match language {
+        Language::Japanese => format!("{SYSTEM_PROMPT}\n{JAPANESE_PROMPT}"),
+        _ => SYSTEM_PROMPT.to_string(),
+    };
     vec![
-        ChatMessage::system(SYSTEM_PROMPT),
+        ChatMessage::system(prompt),
         ChatMessage::new(
             Role::User,
             vec![ChatMessageContent::ImageUrl {
@@ -138,8 +153,14 @@ pub fn messages_for(png: &[u8]) -> Vec<ChatMessage> {
 /// Transcribe one cue image with a live request.
 ///
 /// Used by the fallback model to retry corrupt batch responses.
-pub async fn transcribe(client: &ChatClient, png: &[u8]) -> Result<Transcription> {
-    Ok(client.chat_with_messages(messages_for(png)).await?)
+pub async fn transcribe(
+    client: &ChatClient,
+    png: &[u8],
+    language: Language,
+) -> Result<Transcription> {
+    Ok(client
+        .chat_with_messages(messages_for(png, language))
+        .await?)
 }
 
 /// Pull a movie's bitmap subtitle track out to a `.sup`.
@@ -224,11 +245,21 @@ pub fn to_srt(lines: &[(u32, u32, String)]) -> String {
         let (h, m, s, milli) = (ms / 3_600_000, ms / 60_000 % 60, ms / 1000 % 60, ms % 1000);
         format!("{h:02}:{m:02}:{s:02},{milli:03}")
     }
-    let mut out = String::new();
-    for (i, (start, end, text)) in lines.iter().enumerate() {
+    // Some discs redraw a held line every second or so; each redraw decodes as
+    // its own cue image. One line on screen is one cue, so touching repeats
+    // of the same text merge back into it.
+    let mut cues: Vec<(u32, u32, String)> = Vec::new();
+    for (start, end, text) in lines {
         // The OCR model sometimes returns a two-line cue with a literal
         // backslash-n; in SRT a line break is a real newline.
         let text = text.trim().replace("\\n", "\n");
+        match cues.last_mut() {
+            Some(last) if last.2 == text && *start <= last.1 => last.1 = last.1.max(*end),
+            _ => cues.push((*start, *end, text)),
+        }
+    }
+    let mut out = String::new();
+    for (i, (start, end, text)) in cues.iter().enumerate() {
         out.push_str(&format!(
             "{}\n{} --> {}\n{}\n\n",
             i + 1,
@@ -247,12 +278,30 @@ pub fn sup_path(out: &Path, imdb_id: &str) -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use super::readable;
+    use super::{readable, to_srt};
 
     #[test]
     fn readable_rejects_controls_but_allows_subtitle_whitespace() {
         assert!(readable("répétition\nsérieuse\r\n\t"));
         assert!(!readable("r\0e9pétition"));
         assert!(!readable("sérieuse\u{000e}9"));
+    }
+
+    #[test]
+    fn a_redrawn_line_is_one_cue() {
+        let line = |start, end, text: &str| (start, end, text.to_string());
+        let srt = to_srt(&[
+            line(1000, 2000, "生きる"),
+            line(2000, 3000, "生きる"),
+            // A gap means the line was shown again, not held.
+            line(3500, 4000, "生きる"),
+            line(4000, 5000, "次の台詞"),
+        ]);
+        assert_eq!(
+            srt,
+            "1\n00:00:01,000 --> 00:00:03,000\n生きる\n\n\
+             2\n00:00:03,500 --> 00:00:04,000\n生きる\n\n\
+             3\n00:00:04,000 --> 00:00:05,000\n次の台詞\n\n"
+        );
     }
 }

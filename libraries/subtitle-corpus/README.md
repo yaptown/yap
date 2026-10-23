@@ -9,10 +9,18 @@ per line, keyed by corpus code. It's read at runtime, so edits need no rebuild.
 `inventory`/`refresh` print each entry; one naming a film not in the library is
 an error.
 
-An excluded film skips clip mapping and video export, and publish leaves its
-clips out of the index and upload. They become orphan candidates for `prune`.
-Its subtitle still feeds the course text. Entries are keyed by film, not
-release, so remove one by hand once a replacement release is checked clean.
+An excluded film skips clip mapping and video export, so none of its clips
+pass and publish stops serving them (see below). Its subtitle still feeds the
+course text. Entries are keyed by film, not release, so remove one by hand once
+a replacement release is checked clean.
+
+## What publish serves
+
+Each language's `index.jsonl` lists exactly the clips that pass this run, plus
+every clip of a film whose re-map or export failed (its passing set is unknown,
+so its last good clips stay up). Every other clip dir on disk or in the bucket
+is an orphan: unlisted, kept until `prune --apply` deletes it. Only publish
+writes the index; `export` just renders clips.
 
 `subtitle-corpus training-export` is how film clips reach lexide training.
 

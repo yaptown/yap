@@ -1751,6 +1751,7 @@ async fn ocr_one(
     let Source::DiscBitmap { index, codec } = &movie.source else {
         bail!("not a bitmap source");
     };
+    let language = movie.course(out).context("unmapped language")?;
     // A film seen for the first time has no corpus directory yet; nothing
     // upstream of OCR creates one for a bitmap source.
     std::fs::create_dir_all(out.join(&movie.imdb_id))?;
@@ -1783,7 +1784,7 @@ async fn ocr_one(
     // never resubmitted.
     let requests: Vec<_> = images
         .iter()
-        .map(|img| ocr::messages_for(&img.png))
+        .map(|img| ocr::messages_for(&img.png, language))
         .collect();
     let results = client
         .batch_chat_with_messages::<ocr::Transcription>(requests, |_| {})
@@ -1794,7 +1795,7 @@ async fn ocr_one(
         lines,
         retried,
         rescued,
-    } = ocr::read_lines(fallback_client, &images, results).await;
+    } = ocr::read_lines(fallback_client, &images, language, results).await;
 
     if lines.is_empty() {
         bail!("no text recovered from {} cues", images.len());
