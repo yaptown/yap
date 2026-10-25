@@ -395,6 +395,7 @@ mod tests {
                                     .map(|meaning| TargetToNativeWord {
                                         native: (*meaning).into(),
                                         note: None,
+                                        note_is_curated: false,
                                         example_sentence_target_language: String::new(),
                                         example_sentence_native_language: String::new(),
                                         cognate: false,
@@ -699,6 +700,7 @@ mod translation_sense_tests {
                             definitions: vec![TargetToNativeWord {
                                 native: "meaning".into(),
                                 note: None,
+                                note_is_curated: false,
                                 example_sentence_target_language: String::new(),
                                 example_sentence_native_language: String::new(),
                                 cognate: false,

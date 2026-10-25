@@ -30,7 +30,7 @@ fn course_language(language: Language) -> &'static str {
         Language::ChineseTraditional => "Mandarin Chinese (Traditional script)",
         // Standard varieties share sources; routing them to dialect courses is
         // separate from rejecting an unusable subtitle (YAP-113).
-        _ => language.prompt_name(),
+        _ => language.frozen_prompt_name(),
     }
 }
 

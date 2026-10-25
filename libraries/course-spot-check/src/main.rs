@@ -103,7 +103,7 @@ Output format:
     "4. issues": ["list", "of", "specific", "issues", "if", "any"],
     "5. corrected_sentence": "corrected version if there are minor typographical issues, otherwise null"
 }}"#,
-        language = language.prompt_name()
+        language = language.frozen_prompt_name()
     );
 
     let user_prompt = format!("Sentence: {sentence}");
@@ -140,7 +140,7 @@ Output format:
     "1. thoughts": "Brief analysis of what multiword terms might be missing",
     "2. missing_multiword_terms": ["list", "of", "missing", "multiword", "terms"]
 }}"#,
-        language = language.prompt_name()
+        language = language.frozen_prompt_name()
     );
 
     let user_prompt = format!(

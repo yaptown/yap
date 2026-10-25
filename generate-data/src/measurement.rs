@@ -3,7 +3,7 @@ use anyhow::{Context, Result};
 use language_utils::COURSES;
 use serde_json::json;
 use std::collections::BTreeSet;
-use std::io::{BufRead, Write};
+use std::io::Write;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -603,20 +603,7 @@ async fn later_stages(
         return Ok(());
     };
     {
-        let mut custom = BTreeMap::<
-            language_utils::Heteronym<String>,
-            language_utils::DictionaryDefinition,
-        >::new();
-        let custom_path = data.join("custom_definitions.jsonl");
-        if custom_path.exists() {
-            for line in std::io::BufReader::new(std::fs::File::open(custom_path)?).lines() {
-                let line = line?;
-                if !line.is_empty() {
-                    let (key, value) = serde_json::from_str(&line)?;
-                    custom.insert(key, value);
-                }
-            }
-        }
+        let custom = crate::custom_definitions::load(&data, course)?;
         let dictionary: BTreeMap<_, _> = dictionary
             .into_iter()
             .filter_map(|(heteronym, mut definition)| {

@@ -178,7 +178,7 @@ async fn placeholder_hints(
         shared_instructions,
         format!(
             "Language: {}\nList the placeholder expressions.",
-            language.prompt_name()
+            language.frozen_prompt_name()
         ),
     );
 
@@ -200,8 +200,8 @@ async fn placeholder_hints(
         .collect();
     let mut samples =
         crate::corpus_samples::SampleCache::load(output_dir.join("slot_hint_examples.jsonl"))?;
-    samples.refresh_with(&(), &pool, |survivors, pool| {
-        crate::corpus_samples::select_evenly(survivors, pool, GROUNDING_SAMPLE_SIZE)
+    samples.refresh_with(&(), &pool, |pool| {
+        crate::corpus_samples::select_evenly(pool, GROUNDING_SAMPLE_SIZE)
     });
     samples.save()?;
     let sampled = samples.get(&());
@@ -218,7 +218,7 @@ async fn placeholder_hints(
                          appears in any of them, quoting the lemma forms exactly as they \
                          appear in the sample. Also report placeholder expressions you know \
                          the language uses even if absent from this sample.",
-                    language = language.prompt_name()
+                    language = language.frozen_prompt_name()
                 ),
                 format!("Terms:\n{}", sampled.join("\n")),
             )
@@ -313,7 +313,7 @@ For each candidate placeholder token in the citation form, decide:
 3. clitic_pronoun_lemmas: which clitic/weak pronoun lemmas can fill this slot in real sentences. For French: dative slots ("à quelqu'un") -> ["me","te","lui","nous","vous","leur","se"]; direct-object slots -> ["le","la","les","me","te","nous","vous","se"]; inanimate "de X" -> ["en"]; inanimate "à X" -> ["y"]; possessive "de quelqu'un" -> possessive determiner lemmas ["mon","ton","son","notre","votre","leur"]. Other languages: use that language's clitic/weak pronoun system, or an empty list if the language has no such pronouns for this slot. Use the lemma forms a UD lemmatizer would output. Empty list if pronominalization is impossible or would destroy the idiom, and always empty for infinitive_complement slots.
 
 Only report tokens that are placeholder candidates (indefinite pronouns / "quelque chose"-type phrases / dummy verbs heading a verbal placeholder). Report the index of the HEAD token of the placeholder phrase (e.g. "chose" in "quelque chose", but "faire" in "faire quelque chose")."#,
-        language = language.prompt_name()
+        language = language.frozen_prompt_name()
     );
 
     let progress = indicatif::ProgressBar::new(candidates.len() as u64);
@@ -687,7 +687,7 @@ pub struct GradeRequest {
     pub term: String,
     pub realization: SlotRealization,
     pub match_count: usize,
-    pub sample: Vec<SlotMatch>,
+    pub sample: Vec<(String, Vec<String>)>,
 }
 
 pub type MatchSamples =
@@ -707,24 +707,14 @@ impl GradeRequest {
             .iter()
             .map(|m| (m.sentence.clone(), m.matched_words.clone()))
             .collect();
-        samples.refresh_with(&key, &pool, |survivors, pool| {
-            crate::corpus_samples::select_evenly(survivors, pool, GRADE_SAMPLE_SIZE)
+        samples.refresh_with(&key, &pool, |pool| {
+            crate::corpus_samples::select_evenly(pool, GRADE_SAMPLE_SIZE)
         });
         Self {
             term,
             realization,
             match_count: matches.len(),
-            sample: samples
-                .get(&key)
-                .iter()
-                .map(|(sentence, words)| {
-                    ordered
-                        .iter()
-                        .find(|m| &m.sentence == sentence && &m.matched_words == words)
-                        .unwrap()
-                        .clone()
-                })
-                .collect(),
+            sample: samples.get(&key).to_vec(),
         }
     }
 }
@@ -773,11 +763,11 @@ fn grade_user_prompt(request: &GradeRequest) -> String {
         .sample
         .iter()
         .enumerate()
-        .map(|(i, m)| {
+        .map(|(i, (sentence, words))| {
             format!(
                 "{i}. {}\n   (the term matched these words: {})",
-                m.sentence,
-                m.matched_words
+                sentence,
+                words
                     .iter()
                     .map(|w| format!("\"{w}\""))
                     .collect::<Vec<_>>()
@@ -844,7 +834,7 @@ pub async fn grade_patterns(requests: &[GradeRequest]) -> anyhow::Result<Vec<Gra
                         .into_iter()
                         .filter_map(|v| {
                             let m = request.sample.get(v.index)?;
-                            Some((m.sentence.clone(), m.matched_words.clone(), v.uses_idiom))
+                            Some((m.0.clone(), m.1.clone(), v.uses_idiom))
                         })
                         .collect()
                 })
@@ -916,7 +906,10 @@ mod tests {
                 term: "term".into(),
                 realization: SlotRealization::Filled,
                 match_count: pool.len(),
-                sample: sample_matches(&pool, GRADE_SAMPLE_SIZE),
+                sample: sample_matches(&pool, GRADE_SAMPLE_SIZE)
+                    .into_iter()
+                    .map(|m| (m.sentence, m.matched_words))
+                    .collect(),
             };
             let actual =
                 GradeRequest::new("term".into(), SlotRealization::Filled, &pool, &mut samples);
@@ -928,12 +921,12 @@ mod tests {
             let current =
                 GradeRequest::new("term".into(), SlotRealization::Filled, &pool, &mut samples);
             assert_eq!(grade_user_prompt(&current), grade_user_prompt(&actual));
-            assert!(
-                current
-                    .sample
-                    .iter()
-                    .all(|item| item.matched_token_indices == [999])
-            );
+            if !pool.is_empty() {
+                pool.clear();
+                let removed =
+                    GradeRequest::new("term".into(), SlotRealization::Filled, &pool, &mut samples);
+                assert_eq!(grade_user_prompt(&removed), grade_user_prompt(&actual));
+            }
         }
     }
 

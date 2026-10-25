@@ -846,8 +846,8 @@ async fn autograde_transcription(
 
     let target_language = request.course.target_language;
     let native_language = request.course.native_language;
-    let target_language_name = target_language.prompt_name();
-    let native_language_name = native_language.prompt_name();
+    let target_language_name = target_language.frozen_prompt_name();
+    let native_language_name = native_language.frozen_prompt_name();
 
     let language_specific_phonetic_note = match target_language {
         Language::Korean => {

@@ -81,28 +81,24 @@ pub(super) fn forced(
         .map(|e| (e.reading.clone(), e.missing_meaning.clone()))
         .collect();
     let key = (gram.clone(), universe);
-    cache.forced.refresh_with(&key, &pool, |survivors, _| {
-        let remaining: Vec<_> = escapes
-            .iter()
-            .filter(|e| !survivors.contains(&Forced::from(*e)))
-            .cloned()
-            .collect();
-        survivors
-            .iter()
-            .cloned()
-            .chain(
-                forced_examples(&remaining)
-                    .into_iter()
-                    .take(20usize.saturating_sub(survivors.len()))
-                    .map(Forced::from),
-            )
+    cache.forced.refresh_with(&key, &pool, |_| {
+        forced_examples(escapes)
+            .into_iter()
+            .map(Forced::from)
             .collect()
     });
+    let occurrences: Vec<_> = escapes.iter().map(|e| e.occurrence.clone()).collect();
     cache
         .forced
         .get(&key)
         .iter()
-        .map(|id| escapes[pool.iter().position(|live| live == id).unwrap()].clone())
+        .map(|id| Escape {
+            occurrence: id.occurrence.occurrence(&occurrences),
+            // Proposed readings are diagnostic only; repair prompts use the guarded reading.
+            proposed_reading: id.reading.clone().unwrap_or_default(),
+            reading: id.reading.clone(),
+            missing_meaning: id.missing_meaning.clone(),
+        })
         .collect()
 }
 
@@ -112,7 +108,7 @@ pub(super) fn attested(
     pool: &[Attested],
 ) -> Vec<Attested> {
     let Some(cache) = cache else {
-        return cover(&[], pool);
+        return cover(pool);
     };
     let universe: BTreeSet<_> = pool.iter().flat_map(|e| &e.choices).cloned().collect();
     let key = (gram.clone(), universe);
@@ -120,9 +116,9 @@ pub(super) fn attested(
     cache.attested.get(&key).to_vec()
 }
 
-fn cover(survivors: &[Attested], pool: &[Attested]) -> Vec<Attested> {
-    let mut covered: BTreeSet<_> = survivors.iter().flat_map(|e| &e.choices).cloned().collect();
-    let mut selected = survivors.to_vec();
+fn cover(pool: &[Attested]) -> Vec<Attested> {
+    let mut covered = BTreeSet::new();
+    let mut selected = Vec::new();
     for example in pool {
         let previous = covered.len();
         covered.extend(example.choices.iter().cloned());
@@ -208,11 +204,11 @@ mod tests {
         let stable = forced(Some(&mut cache), &gram, &pool);
         assert_eq!(render(&stable), expected);
         assert!(stable.iter().all(|e| e.occurrence.gram_index == 17));
-        // Stale witnesses refill without moving the surviving prefix.
+        // Removed witnesses remain verbatim prompt context.
         let removed = selected[0].occurrence.text.clone();
         pool.retain(|e| e.occurrence.text != removed);
         let repaired = forced(Some(&mut cache), &gram, &pool);
-        assert_eq!(&render(&repaired)[..19], &expected[1..]);
+        assert_eq!(render(&repaired), expected);
         pool.push(escape(999, "new reading"));
         assert!(
             forced(Some(&mut cache), &gram, &pool)
@@ -260,7 +256,7 @@ mod tests {
         let first = changed[0].clone();
         pool.retain(|e| e != &first);
         let repaired = attested(Some(&mut cache), &gram, &pool);
-        assert_eq!(repaired[0], changed[1]);
+        assert_eq!(repaired, changed);
         assert_eq!(
             repaired
                 .iter()

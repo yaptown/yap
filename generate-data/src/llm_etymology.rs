@@ -286,18 +286,12 @@ fn language_specific_notes(language: Language) -> &'static str {
     }
 }
 
-/// Deterministically pick up to 20 multi-morpheme example entries from the
-/// golden set to show the LLM, retaining surviving examples in their saved order.
-fn select_examples(
-    survivors: &[(String, String)],
-    pool: &[(String, String)],
-) -> Vec<(String, String)> {
-    let remaining = crate::corpus_samples::remaining_items(pool, survivors);
-    let count = 20usize.saturating_sub(survivors.len());
-    let mut sampled = sample_to_target(remaining, count * 3 / 2, |e| e.0.clone());
+/// Deterministically pick up to 20 multi-morpheme golden examples.
+fn select_examples(pool: &[(String, String)]) -> Vec<(String, String)> {
+    let mut sampled = sample_to_target(pool.to_vec(), 30, |e| e.0.clone());
     sampled.sort_by(|a, b| a.0.cmp(&b.0));
-    sampled.truncate(count);
-    survivors.iter().cloned().chain(sampled).collect()
+    sampled.truncate(20);
+    sampled
 }
 
 /// Render one morpheme the way the LLM is asked to render its output:
@@ -393,7 +387,7 @@ Here are {n} real examples:
 
 {examples_block}
 "#,
-        language = language.prompt_name(),
+        language = language.frozen_prompt_name(),
         n = examples.len(),
     );
 
@@ -535,7 +529,7 @@ mod example_tests {
                 .filter(|e| e.segments.len() >= 2)
                 .map(|e| (e.word.clone(), format_example(e)))
                 .collect();
-            let actual = select_examples(&[], &pool)
+            let actual = select_examples(&pool)
                 .into_iter()
                 .map(|(_, text)| text)
                 .collect::<Vec<_>>()

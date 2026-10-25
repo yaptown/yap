@@ -109,7 +109,9 @@ pub enum AnkiNote {
         word: String,
         /// `word` in Anki's furigana markup; see [`furigana`].
         word_furigana: String,
-        definition: String,
+        /// As the app's flashcard shows them: each meaning with its note and
+        /// example sentence.
+        senses: Vec<yap_frontend_reducers::DefinitionSense>,
         audio: String,
         source: Option<AnkiSource>,
         clip: Option<AnkiClip>,
@@ -357,10 +359,10 @@ fn word_note(
     token: &str,
     bundled: &mut Vec<AnkiBundledMedia>,
 ) -> AnkiNote {
-    let definition = pack
+    let senses = pack
         .gram_definitions
         .get(&gram)
-        .map(definition)
+        .map(|def| crate::definition_view(def.clone()).senses)
         .unwrap_or_default();
     let audio = if pack
         .human_audio
@@ -413,7 +415,7 @@ fn word_note(
             pack.readings_for_sense(gram).next(),
             course.target_language,
         ),
-        definition,
+        senses,
         audio,
         source: None,
         clip: None,
@@ -1703,6 +1705,7 @@ mod tests {
                             definitions: vec![TargetToNativeWord {
                                 native: "meaning".into(),
                                 note: None,
+                                note_is_curated: false,
                                 example_sentence_target_language: String::new(),
                                 example_sentence_native_language: String::new(),
                                 cognate: false,
@@ -1755,6 +1758,7 @@ mod tests {
                 definitions: vec![TargetToNativeWord {
                     native: format!("meaning of {word}"),
                     note: None,
+                    note_is_curated: false,
                     example_sentence_target_language: String::new(),
                     example_sentence_native_language: String::new(),
                     cognate: false,

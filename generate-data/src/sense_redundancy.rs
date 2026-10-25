@@ -75,9 +75,9 @@ pub async fn find_redundant_senses(
         We would like you to group the members whose rows would be redundant. The test is: if the learner already knows one member's row, would another member's row teach them anything new? If not, they belong in the same set. Read each member as it appears on the card, front text included: a verb glossed 'is' on a card whose front reads «il est» means 'he is' there, so it teaches nothing beyond a phrase glossed 'he is'. A member can list several definitions; compare its whole meaning, not one overlapping gloss. A row does teach something new when its meaning differs, or when it is a pattern the learner has to learn on its own, such as an imperative, a tag question, an auxiliary use, a standalone answer, or a term of address.\n\n\
         A worked example, from French with English glosses, on the front «il est»: the phrase 'he is', the verb 'is', and the verb 'is (in a question)' are one set, since a question made by intonation uses the very same verb. The auxiliary 'has' (as in «il est parti», 'he has left') stays separate, because using être to form the past tense is something new to learn. Another, from Japanese: の tagged as an adposition and as a particle, both glossed 'of; 's', are one set.\n\n\
         Report disjoint sets of two or more member numbers; any member you leave out stands alone. We pick which member of a set to show ourselves, so there is no need to name one.",
-        course.target_language.prompt_name(),
-        course.native_language.prompt_name(),
-        course.target_language.prompt_name()
+        course.target_language.frozen_prompt_name(),
+        course.native_language.frozen_prompt_name(),
+        course.target_language.frozen_prompt_name()
     );
     let mut groups: BTreeMap<String, Vec<(Entry, String)>> = BTreeMap::new();
     for entry in frequencies {
@@ -187,6 +187,7 @@ mod tests {
         let definition = |native: &str| language_utils::TargetToNativeWord {
             native: native.into(),
             note: Some(format!("note for {native}")),
+            note_is_curated: false,
             example_sentence_target_language: format!("example for {native}"),
             example_sentence_native_language: format!("translation for {native}"),
             cognate: false,

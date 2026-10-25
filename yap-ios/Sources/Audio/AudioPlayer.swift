@@ -68,11 +68,7 @@ import Observation
             try Task.checkCancellation()
             guard expected == generation else { return }
             try activate(speech: true)
-            let bytes: [UInt8]
-            do { bytes = try audio_for_native_playback(bytes: result.bytes) }
-            catch { throw PlaybackError.unreadable(String(describing: error), bytes: result.bytes.count) }
-            try Task.checkCancellation()
-            guard expected == generation else { return }
+            let bytes = result.bytes
             let container = Self.container(of: bytes)
             let audio: AVAudioPlayer
             do { audio = try AVAudioPlayer(data: Data(bytes), fileTypeHint: container.hint) }
@@ -136,11 +132,10 @@ import Observation
         }
         withExtendedLifetime(delegate) {}
     }
-    /// The cache stores WAV, MP3 and (remuxed) CAF under one extension; the
+    /// The cache stores WAV and MP3 under one extension; the
     /// hint spares CoreAudio from guessing the parser from the bytes.
     private static func container(of bytes: [UInt8]) -> (name: String, hint: String?) {
         if bytes.starts(with: Array("RIFF".utf8)) { return ("wav", AVFileType.wav.rawValue) }
-        if bytes.starts(with: Array("caff".utf8)) { return ("caf", AVFileType.caf.rawValue) }
         if bytes.starts(with: Array("ID3".utf8)) || bytes.first == 0xFF { return ("mp3", AVFileType.mp3.rawValue) }
         return ("unknown", nil)
     }

@@ -112,8 +112,8 @@ Output JSON format:
     "learner_native_language_translation": "concise translation here",
     "description": null or "brief explanation if needed"
 }}"#,
-        native_language = native_language.prompt_name(),
-        target_language = target_language.prompt_name()
+        native_language = native_language.frozen_prompt_name(),
+        target_language = target_language.frozen_prompt_name()
     );
     let mut samples = crate::corpus_samples::SampleCache::load(
         crate::pipeline::course_dirs(&course)?
@@ -121,8 +121,8 @@ Output JSON format:
             .join("proper_noun_sentences.jsonl"),
     )?;
     for (noun, pool) in &proper_noun_to_sentences {
-        samples.refresh_with(noun, pool, |survivors, pool| {
-            crate::corpus_samples::select_first(survivors, pool, 3)
+        samples.refresh_with(noun, pool, |pool| {
+            crate::corpus_samples::select_first(pool, 3)
         });
     }
     samples.save()?;

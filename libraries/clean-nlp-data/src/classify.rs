@@ -10753,7 +10753,7 @@ Hyphenated words should usually be split into three separate tokens. For example
 Review the analysis carefully. If you find errors, correct them. If the analysis is already correct, return it unchanged. In either case, you will return all tokens in the sentence. You are the ultimate authority on the correct analysis of the sentence, and your response should stand alone.{language_tips}
 
 Think through your analysis, and finally provide the corrected token list. Remember, the provided analysis likely has errors. If it was likely to be good, we would not need you!"#,
-        language = language.prompt_name()
+        language = language.frozen_prompt_name()
     );
 
     // Convert DocTokens to SimplifiedTokens for the prompt
@@ -10832,7 +10832,7 @@ The analysis consists of tokens, where each token has:
 }}
 
 Specific concerns about the current analysis are listed alongside the sentence. Please review those concerns carefully and correct the analysis if needed. Return all tokens, not just the changed ones. The text of each token must remain exactly as it appears in the original sentence. The goal is that you can concatenate the tokens + whitespace in the order they appear in your output to get the original sentence.{language_tips}"#,
-        language = language.prompt_name()
+        language = language.frozen_prompt_name()
     );
 
     let simplified_tokens: Vec<PromptToken<'_>> = tokens
@@ -10925,7 +10925,7 @@ Important rules:
 - The dependency structure should form a valid tree
 
 Think through the sentence structure, then provide the dependency analysis for each token."#,
-        language = language.prompt_name()
+        language = language.frozen_prompt_name()
     );
 
     // Build the indexed token list

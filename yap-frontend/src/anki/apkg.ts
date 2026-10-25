@@ -1,7 +1,7 @@
 import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import { strToU8, zipSync } from "fflate";
-import type { AnkiDeckPlan, AnkiMediaSource, AnkiNote } from "../../../yap-frontend-rs/pkg";
+import type { AnkiDeckPlan, AnkiMediaSource, AnkiNote, DefinitionSense } from "../../../yap-frontend-rs/pkg";
 import { languageToLangAttr } from "../lib/pure";
 
 import { fetchMedia, type MediaProgress } from "./media";
@@ -64,6 +64,18 @@ const css = `
 .card ul.glosses li { display: contents; }
 .glosses .term { text-align: right; font-weight: 600; text-decoration: none; color: inherit; }
 .glosses .gloss { text-align: left; color: var(--yap-muted); }
+.card ol.senses {
+  display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 420px;
+  margin: 0; padding: 0; list-style: none;
+}
+.senses .meaning { font-size: 20px; }
+.senses .note { margin-top: 2px; font-size: 14px; color: var(--yap-muted); }
+.senses .example {
+  display: flex; flex-direction: column; gap: 2px; margin-top: 8px; padding: 8px 12px;
+  border-radius: 10px; background: var(--yap-chip); font-size: 15px;
+}
+.senses .example b { font-weight: inherit; color: var(--yap-accent); }
+.senses .example-native { font-size: 14px; color: var(--yap-muted); }
 .names { margin: 0; padding: 0; list-style: none; font-size: 14px; color: var(--yap-muted); }
 .names .name { color: var(--yap-fg); font-weight: 600; }
 .scene {
@@ -184,7 +196,7 @@ function wordTemplate(lang: string, furigana: boolean, back: boolean): string {
   // Same shape as the sentence cards: the recording plays on both sides.
   return card(
     `<div class="sentence word prompt"><span lang="${lang}">${filtered("Word", furigana, back)}</span>{{AudioBundled}}</div>`,
-    "Subtitles", "Word", back ? '<div class="translation">{{Definition}}</div>' : undefined,
+    "Subtitles", "Word", back ? '<ol class="senses">{{Definition}}</ol>' : undefined,
   );
 }
 
@@ -204,6 +216,24 @@ function audioFilename(filename: string, bytes: Uint8Array): string {
   return filename.replace(/\.[^.]+$/, `.${ext}`);
 }
 
+// Like the app's flashcard: each meaning, then its note if a person wrote it,
+// and an example with the word picked out.
+function senses(list: DefinitionSense[], word: string, lang: string): string {
+  return list.map(({ meaning, note, note_is_curated, example }) => {
+    let target = "";
+    if (example) {
+      const at = example.target.indexOf(word);
+      target = at < 0 || !word ? escapeHtml(example.target) : escapeHtml(example.target.slice(0, at))
+        + `<b>${escapeHtml(word)}</b>` + escapeHtml(example.target.slice(at + word.length));
+    }
+    return `<li><div class="meaning">${escapeHtml(meaning)}</div>`
+      + (note && note_is_curated ? `<div class="note">${escapeHtml(note)}</div>` : "")
+      + (example ? `<div class="example"><span lang="${lang}">${target}</span>`
+        + `<span class="example-native">${escapeHtml(example.native)}</span></div>` : "")
+      + "</li>";
+  }).join("");
+}
+
 function sourceFor(note: AnkiNote): string {
   return note.source ? (note.source.poster_filename ? `<img src="${escapeHtml(note.source.poster_filename)}" alt="">` : "")
     + `<span>${escapeHtml(note.source.title)}${note.source.year ? ` · ${note.source.year}` : ""}</span>` : "";
@@ -215,7 +245,7 @@ function fieldsFor(
   const audio = (filename: string) => { const file = bundled(filename); return file ? `[sound:${file}]` : ""; };
   if (note.type === "Word") {
     return {
-      Word: escapeHtml(note.word_furigana), Definition: escapeHtml(note.definition), AudioBundled: audio(note.audio),
+      Word: escapeHtml(note.word_furigana), Definition: senses(note.senses, note.word, lang), AudioBundled: audio(note.audio),
       Source: sourceFor(note), ClipUrl: escapeHtml(note.clip?.mp4 ?? ""),
       Subtitles: captions(note.subtitles ?? undefined), ClipWebmUrl: escapeHtml(note.clip?.webm ?? ""),
       ClipPosterUrl: escapeHtml(note.clip?.poster ?? ""), ClipAspect: String(note.clip?.aspect_ratio ?? ""),
@@ -335,5 +365,7 @@ export async function buildApkg(
   }
   files.media = strToU8(JSON.stringify(media));
   // Media is deliberately bounded by the planner; an in-memory ZIP is enough for v1.
-  return new Blob([zipSync(files, { level: 0 })], { type: "application/zip" });
+  // Not application/zip: Android's download manager trusts the type over the
+  // filename and saves the deck as .apkg.zip, which Anki won't open.
+  return new Blob([zipSync(files, { level: 0 })], { type: "application/octet-stream" });
 }

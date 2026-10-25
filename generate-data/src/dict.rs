@@ -30,7 +30,7 @@ impl DictionaryPolicy {
     fn for_language(language: language_utils::Language) -> Self {
         use language_utils::Language;
         let historical = Self {
-            name: language.prompt_name(),
+            name: language.frozen_prompt_name(),
             variety: "",
             revised: false,
         };
@@ -240,7 +240,7 @@ The word may be inflected. Translate the form itself, without adding a subject: 
 Leave pronunciation, IPA, part of speech, gender, and conjugation out of the entry, unless a note truly needs them.
 
 Write the notes in {native_language}.{variety}"#,
-        native_language = native_language.prompt_name(),
+        native_language = native_language.frozen_prompt_name(),
         target_language = policy.name,
         variety = policy.variety,
     );
@@ -426,7 +426,7 @@ Don't capitalize the first letter of the meaning unless it makes sense (e.g. eng
 The example sentences are only for you to decide what to write; the learner never sees them, so don't mention or quote them in the entry.
 
 Of course, their native language is {native_language}, so you should write the meaning and additional notes in {native_language}.{example_guidance}"#,
-        native_language = native_language.prompt_name(),
+        native_language = native_language.frozen_prompt_name(),
         target_language = policy.name,
         meanings_rule = policy.meanings_rule(),
         example_guidance = policy.example_guidance()
@@ -473,6 +473,7 @@ Of course, their native language is {native_language}, so you should write the m
                 target_language_multi_word_term: entry.target_language_multi_word_term,
                 meaning: entry.meanings.first().cloned().unwrap_or_default(),
                 additional_notes: entry.additional_notes,
+                note_is_curated: false,
                 target_language_example: entry.target_language_example,
                 native_language_example: entry.native_language_example,
                 informal: entry.informal,
@@ -505,11 +506,11 @@ Of course, their native language is {native_language}, so you should write the m
     }
     let retry_messages = |(term, entry): &(&Term, PhrasebookDefinitionEntry)| {
         let previous_json = serde_json::to_string(entry).unwrap_or_default();
-        let target_language = target_language.prompt_name();
+        let target_language = target_language.frozen_prompt_name();
         vec![
             ChatMessage::system(format!(
                 "You are a {target_language} phrasebook entry generator for {native_language} speakers.",
-                native_language = native_language.prompt_name()
+                native_language = native_language.frozen_prompt_name()
             )),
             ChatMessage::user(format!(
                 "I asked you to generate a phrasebook entry for the {target_language} multi-word term `{gram_text}`, and you gave me this response:\n\n{previous_json}\n\nHowever, your target_language_example `{example}` does not contain the exact term `{gram_text}`. Please regenerate the entire response with the same format, making sure target_language_example contains the exact term `{gram_text}`. Here are some example sentences for inspiration that use the term:\n{examples_text}",
@@ -552,14 +553,9 @@ fn refresh_sense_examples(
     samples: &mut SampleCache<language_utils::TaggedGram<Gram<String>>>,
     gram: &language_utils::TaggedGram<Gram<String>>,
     anchors: &[String],
-    witnesses: &[&str],
 ) {
-    let mut pool: Vec<_> = witnesses.iter().map(|s| (*s).to_owned()).collect();
-    // Anchors can witness forms absent from the encoded stream. Union by
-    // maximum multiplicity, not addition, and preserve the old first picks.
-    pool.extend(crate::corpus_samples::remaining_items(anchors, &pool));
-    samples.refresh_with(gram, &pool, |survivors, _| {
-        crate::corpus_samples::select_first(survivors, anchors, 5)
+    samples.refresh_with(gram, anchors, |pool| {
+        crate::corpus_samples::select_first(pool, 5)
     });
 }
 
@@ -578,7 +574,7 @@ pub async fn create_sense_definitions(
     let system = format!(
         "Generate a dictionary or phrasebook entry for a beginner learning {} whose native language is {}. The input identifies one pedagogical sense (a meaning, construction, or conversational formula) and gives examples of that sense. Describe this sense only, not other meanings of the same spelling. Respect the supplied surface form, lemma, and part of speech. Write one concise native-language equivalent and note, and one example sentence that illustrates this sense and uses the supplied surface form. Follow the response schema. Morphology, etymology, and pronunciation are supplied separately.{}",
         policy.name,
-        course.native_language.prompt_name(),
+        course.native_language.frozen_prompt_name(),
         policy.example_guidance(),
     );
     let mut samples = SampleCache::load(
@@ -601,7 +597,7 @@ pub async fn create_sense_definitions(
                 .collect();
             anchors.sort_by_key(|anchor| !anchor.gold);
             let preferred: Vec<_> = anchors.iter().map(|a| a.sentence.clone()).collect();
-            refresh_sense_examples(&mut samples, gram, &preferred, corpus.sense_witnesses(gram));
+            refresh_sense_examples(&mut samples, gram, &preferred);
             let examples = samples
                 .get(gram)
                 .iter()
@@ -699,57 +695,27 @@ mod tests {
     use language_utils::Language;
 
     #[test]
-    fn sense_examples_validate_against_full_membership_not_truncated_anchors() {
+    fn sense_examples_remain_fixed_when_anchors_change() {
         let dir = tempfile::tempdir().unwrap();
         let mut samples = SampleCache::load(dir.path().join("senses.jsonl")).unwrap();
         let gram = language_utils::TaggedGram {
             gram: Gram(Vec::new()),
             sense: std::num::NonZeroU32::new(1),
         };
-        let original: Vec<_> = ["b", "b", "a", "c", "d", "e"].map(String::from).into();
-        refresh_sense_examples(
-            &mut samples,
-            &gram,
-            &original,
-            &["a", "b", "b", "c", "d", "e"],
-        );
+        let original = ["b", "b", "a", "c", "d", "e"].map(String::from);
+        refresh_sense_examples(&mut samples, &gram, &original);
         assert_eq!(samples.get(&gram), ["b", "b", "a", "c", "d"]);
-        let changed: Vec<_> = ["c", "d", "e", "f", "g"].map(String::from).into();
-        refresh_sense_examples(
-            &mut samples,
-            &gram,
-            &changed,
-            &["a", "b", "b", "c", "d", "e", "f", "g"],
-        );
-        assert_eq!(
-            samples.get(&gram),
-            ["b", "b", "a", "c", "d"],
-            "still-live witnesses survive leaving the anchor subset"
-        );
-        // Both b occurrences really leave this sense, not merely its anchors.
-        refresh_sense_examples(
-            &mut samples,
-            &gram,
-            &changed,
-            &["a", "c", "d", "e", "f", "g"],
-        );
-        assert_eq!(samples.get(&gram), ["a", "c", "d", "e", "f"]);
-        // Current anchors can witness a form absent from encoded membership.
-        let other = language_utils::TaggedGram {
-            gram: gram.gram.clone(),
-            sense: std::num::NonZeroU32::new(2),
-        };
-        refresh_sense_examples(&mut samples, &other, &original, &[]);
-        assert_eq!(samples.get(&other), ["b", "b", "a", "c", "d"]);
+        refresh_sense_examples(&mut samples, &gram, &["new".into()]);
+        refresh_sense_examples(&mut samples, &gram, &[]);
+        assert_eq!(samples.get(&gram), ["b", "b", "a", "c", "d"]);
         let empty = language_utils::TaggedGram {
             gram: gram.gram,
-            sense: std::num::NonZeroU32::new(3),
+            sense: std::num::NonZeroU32::new(2),
         };
-        refresh_sense_examples(&mut samples, &empty, &[], &["a", "b"]);
-        assert!(
-            samples.get(&empty).is_empty(),
-            "first population still uses only original anchors"
-        );
+        refresh_sense_examples(&mut samples, &empty, &[]);
+        assert!(samples.get(&empty).is_empty());
+        refresh_sense_examples(&mut samples, &empty, &original);
+        assert_eq!(samples.get(&empty), ["b", "b", "a", "c", "d"]);
     }
 
     #[test]
@@ -763,7 +729,7 @@ mod tests {
             );
             assert_eq!(policy.revised, revised);
             if !revised {
-                assert_eq!(policy.name, language.prompt_name());
+                assert_eq!(policy.name, language.frozen_prompt_name());
                 assert_eq!(policy.example_guidance(), "");
             }
         }

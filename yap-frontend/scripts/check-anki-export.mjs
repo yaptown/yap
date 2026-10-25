@@ -192,7 +192,16 @@ async function writeFixtures(buildApkg, output) {
         ...identity(0),
         word: `Mot 仕事 ${hostileText}`,
         word_furigana: `Mot 仕事 ${hostileText}`,
-        definition: hostileText,
+        senses: [
+          {
+            meaning: hostileText,
+            note: hostileText,
+            note_is_curated: true,
+            example: { target: `Le Mot 仕事 ${hostileText} ici.`, native: hostileText },
+          },
+          // A generated note stays off the card.
+          { meaning: "work", note: "Generated.", note_is_curated: false, example: null },
+        ],
         source: sentence(2, "").source,
         clip: sentence(2, "").clip,
         audio: "human.wav",
@@ -210,7 +219,7 @@ async function writeFixtures(buildApkg, output) {
         ...identity(1),
         word: `Autre ${hostileText}`,
         word_furigana: `Autre ${hostileText}`,
-        definition: hostileText,
+        senses: [],
         audio: "word.mp3",
         tags: [
           "yap",

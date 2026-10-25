@@ -170,7 +170,7 @@ fn prompt_for(lines: &[SubtitleLine], index: usize, language: Language) -> Strin
             )
         })
     };
-    let mut out = format!("Language: {}\n", language.prompt_name());
+    let mut out = format!("Language: {}\n", language.frozen_prompt_name());
     if from < index {
         out.push_str("\nCues before the focus cue:\n");
         for (i, line) in lines.iter().enumerate().take(index).skip(from) {

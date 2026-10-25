@@ -125,7 +125,7 @@ fn language_policy(language: Language) -> &'static str {
 }
 
 pub(super) fn hierarchy_system_prompt(language: Language) -> String {
-    let name = language.prompt_name();
+    let name = language.frozen_prompt_name();
     format!(
         "We are building a {name} course for a language-learning app. Its sentences \
         are segmented into vocabulary items, called grams, which can be a word or a \
@@ -406,7 +406,7 @@ fn occurrence_value(
             serde_json::json!({"sense":sense.index,"gloss":sense.gloss,"readings":readings})
         })
         .collect();
-    serde_json::json!({"language":language.prompt_name(),"surface":&occurrence.text[occurrence.bytes.0..occurrence.bytes.1],"sentence":occurrence.marked(),"hierarchy":senses})
+    serde_json::json!({"language":language.frozen_prompt_name(),"surface":&occurrence.text[occurrence.bytes.0..occurrence.bytes.1],"sentence":occurrence.marked(),"hierarchy":senses})
 }
 
 pub(super) fn occurrence_prompt(

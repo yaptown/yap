@@ -225,7 +225,7 @@ private struct SenseView: View {
                     Text(morphology).font(.caption).italic().foregroundStyle(Color.yapMuted).multilineTextAlignment(.trailing)
                 }
             }
-            if showsNote, let note = sense.note { Text(note).font(.footnote).foregroundStyle(Color.yapMuted) }
+            if showsNote || sense.note_is_curated, let note = sense.note { Text(note).font(.footnote).foregroundStyle(Color.yapMuted) }
             if let example = sense.example {
                 HStack(alignment: .top, spacing: 4) {
                     AudioButton(request: AudioRequest(request: TtsRequest(text: example.target, language: host.deck.get_target_language(), is_ssml: false,
@@ -242,7 +242,7 @@ private struct SenseView: View {
 /// the meaning, the example quoted with a small play button beside it.
 struct DefinitionBoxesView: View {
     let definition: DefinitionView
-    /// Flashcards leave the note out, like the web.
+    /// Flashcards leave generated notes out, like the web; curated ones show.
     var showsNotes = true
 
     var body: some View {

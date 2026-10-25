@@ -932,6 +932,7 @@ mod listening_candidate_tests {
                     .map(|meaning| DefinitionSense {
                         meaning: (*meaning).into(),
                         note: None,
+                        note_is_curated: false,
                         example: None,
                     })
                     .collect(),

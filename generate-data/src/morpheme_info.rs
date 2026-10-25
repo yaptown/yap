@@ -188,14 +188,8 @@ pub fn invert_segmentations(
     out
 }
 
-fn select_example_words(survivors: &[String], pool: &[String]) -> Vec<String> {
-    let mut selected = survivors.to_vec();
-    let remaining = crate::corpus_samples::remaining_items(pool, survivors);
-    selected.extend(pick_example_words(
-        &remaining,
-        10usize.saturating_sub(selected.len()),
-    ));
-    selected
+fn select_example_words(pool: &[String]) -> Vec<String> {
+    pick_example_words(pool, 10)
 }
 
 /// Pick a stable sample of up to `n` words from `words`.
@@ -372,7 +366,7 @@ Return null for `entry` if the morpheme doesn't cleanly correspond to a single d
 
 Worked examples for {language}:
 {examples}"#,
-        language = language.prompt_name()
+        language = language.frozen_prompt_name()
     );
     let tag_line = segment
         .tag
@@ -425,8 +419,8 @@ fn define_messages(
 Write the gloss in {native_language}.
 
 Return null for the `definition` field if the morpheme has no useful synchronic meaning (e.g. English "cran-" in "cranberry" is a historical relic with no independent meaning today)."#,
-        language = language.prompt_name(),
-        native_language = native_language.prompt_name()
+        language = language.frozen_prompt_name(),
+        native_language = native_language.frozen_prompt_name()
     );
     let tag_line = segment
         .tag
@@ -472,7 +466,7 @@ Reference classifications for {language}:
 {examples_block}
 
 You'll receive a morpheme plus a small sample of words it appears in. Pick the single best category."#,
-        language = language.prompt_name()
+        language = language.frozen_prompt_name()
     );
 
     // Phase 1: classify every morpheme.
@@ -628,6 +622,12 @@ You'll receive a morpheme plus a small sample of words it appears in. Pick the s
     );
     pb.set_position(classified.len() as u64);
     pb.finish_with_message(format!("{:.2}", define_client.cost().unwrap_or(0.0)));
+    // Saved words remain prompt context, not examples shipped to learners.
+    for result in &mut results {
+        result
+            .example_words
+            .retain(|word| morpheme_to_words[&result.segment].contains(word));
+    }
     results.sort_by(|a, b| a.segment.cmp(&b.segment));
     results
 }
@@ -637,7 +637,7 @@ mod example_tests {
     use super::*;
 
     #[test]
-    fn persisted_first_words_match_original_and_refill_keeps_order() {
+    fn persisted_first_words_match_original() {
         for size in [0, 1, 10, 11, 100] {
             let pool: Vec<_> = (0..size).rev().map(|i| format!("word {i}")).collect();
             let mut expected = if pool.len() <= 10 {
@@ -647,16 +647,7 @@ mod example_tests {
             };
             expected.sort();
             expected.truncate(10);
-            assert_eq!(select_example_words(&[], &pool), expected);
+            assert_eq!(select_example_words(&pool), expected);
         }
-        assert_eq!(
-            select_example_words(&["a".into()], &["a".into(), "a".into()]),
-            ["a", "a"]
-        );
-        let survivors = vec!["z".into(), "a".into()];
-        assert_eq!(
-            select_example_words(&survivors, &["a".into(), "b".into(), "z".into()]),
-            ["z", "a", "b"]
-        );
     }
 }

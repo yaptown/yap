@@ -94,6 +94,9 @@ pub struct SenseExample {
 pub struct DefinitionSense {
     pub meaning: String,
     pub note: Option<String>,
+    /// Written by a person rather than generated, so flashcards show it too;
+    /// otherwise only the dictionary does.
+    pub note_is_curated: bool,
     pub example: Option<SenseExample>,
 }
 
@@ -125,6 +128,7 @@ pub fn definition_view(definition: GramDefinition) -> DefinitionView {
                 .map(|sense| DefinitionSense {
                     meaning: sense.native,
                     note: sense.note.filter(|note| !note.is_empty()),
+                    note_is_curated: sense.note_is_curated,
                     example: example(
                         sense.example_sentence_target_language,
                         sense.example_sentence_native_language,
@@ -138,8 +142,10 @@ pub fn definition_view(definition: GramDefinition) -> DefinitionView {
             morphology_label: String::new(),
             senses: vec![DefinitionSense {
                 meaning: entry.meaning,
-                // The canonical web presentation ignores phrasebook additional_notes.
-                note: None,
+                // Generated additional_notes are left out everywhere; curated
+                // ones are written to be shown.
+                note: entry.note_is_curated.then_some(entry.additional_notes),
+                note_is_curated: entry.note_is_curated,
                 example: example(entry.target_language_example, entry.native_language_example),
             }],
         },
@@ -193,6 +199,7 @@ mod tests {
                 language_utils::TargetToNativeWord {
                     native: "speak".into(),
                     note: Some("a note".into()),
+                    note_is_curated: false,
                     example_sentence_target_language: "Je parle.".into(),
                     example_sentence_native_language: "I speak.".into(),
                     cognate: false,
@@ -201,6 +208,7 @@ mod tests {
                 language_utils::TargetToNativeWord {
                     native: "talk".into(),
                     note: Some(String::new()),
+                    note_is_curated: false,
                     example_sentence_target_language: String::new(),
                     example_sentence_native_language: "Native alone is not an example".into(),
                     cognate: false,
@@ -229,6 +237,7 @@ mod tests {
                     DefinitionSense {
                         meaning: "speak".into(),
                         note: Some("a note".into()),
+                        note_is_curated: false,
                         example: Some(SenseExample {
                             target: "Je parle.".into(),
                             native: "I speak.".into()
@@ -237,6 +246,7 @@ mod tests {
                     DefinitionSense {
                         meaning: "talk".into(),
                         note: None,
+                        note_is_curated: false,
                         example: None
                     },
                 ],
@@ -263,6 +273,7 @@ mod tests {
             target_language_multi_word_term: "tout à fait".into(),
             meaning: "absolutely".into(),
             additional_notes: "Not displayed by the canonical web presentation".into(),
+            note_is_curated: false,
             target_language_example: "Tout à fait !".into(),
             native_language_example: String::new(),
             informal: false,
@@ -280,6 +291,7 @@ mod tests {
                 senses: vec![DefinitionSense {
                     meaning: "absolutely".into(),
                     note: None,
+                    note_is_curated: false,
                     example: Some(SenseExample {
                         target: "Tout à fait !".into(),
                         native: String::new()

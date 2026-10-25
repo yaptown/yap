@@ -197,6 +197,14 @@ impl std::fmt::Display for PartOfSpeech {
 pub struct TargetToNativeWord {
     pub native: String,
     pub note: Option<String>,
+    /// The note was written to be shown on flashcards, not just in the
+    /// dictionary: by hand in `custom_definitions.jsonl`, or by the
+    /// `curated_notes` stage for an early word that needs explaining. Out of
+    /// the schema and absent from JSON when false, so prompts and their cache
+    /// keys don't change.
+    #[schemars(skip)]
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub note_is_curated: bool,
     pub example_sentence_target_language: String,
     pub example_sentence_native_language: String,
     pub cognate: bool,
@@ -222,6 +230,10 @@ pub struct PhrasebookDefinitionEntry {
     pub target_language_multi_word_term: String,
     pub meaning: String,
     pub additional_notes: String,
+    /// As [`TargetToNativeWord::note_is_curated`], for `additional_notes`.
+    #[schemars(skip)]
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub note_is_curated: bool,
     pub target_language_example: String,
     pub native_language_example: String,
     pub informal: bool,
@@ -3566,10 +3578,12 @@ impl Language {
         }
     }
 
-    /// The name used in LLM prompts. Frozen to preserve cached linguistic data;
-    /// dialects share it independently of their speech voices and audio identity.
-    /// See [`Self::tts_name`] for synthesis and audio cache keys.
-    pub fn prompt_name(&self) -> &'static str {
+    /// The name existing LLM prompts use. Frozen, because the prompt is the
+    /// cache key: changing it would invalidate their cached answers. It drops
+    /// the variety (both Portuguese courses read "Portuguese"), so new prompts
+    /// use [`Self::prompt_name`]. See [`Self::tts_name`] for synthesis and
+    /// audio cache keys.
+    pub fn frozen_prompt_name(&self) -> &'static str {
         match self {
             Language::French => "French",
             Language::English => "English",
@@ -3587,8 +3601,30 @@ impl Language {
         }
     }
 
+    /// The name for new LLM prompts, naming the variety: a note written for
+    /// "Portuguese (Portugal)" shouldn't reach for você.
+    pub fn prompt_name(&self) -> &'static str {
+        match self {
+            Language::French => "French",
+            Language::English => "English",
+            Language::SpanishLatinAmerican => "Spanish (Latin America)",
+            Language::SpanishPeninsular => "Spanish (Spain)",
+            Language::Korean => "Korean",
+            Language::German => "German",
+            Language::ChineseSimplified => "Chinese (Simplified)",
+            Language::ChineseTraditional => "Chinese (Traditional)",
+            Language::Japanese => "Japanese",
+            Language::Russian => "Russian",
+            Language::PortugueseBrazilian => "Portuguese (Brazil)",
+            Language::PortugueseEuropean => "Portuguese (Portugal)",
+            Language::Italian => "Italian",
+            Language::Hindi => "Hindi",
+            Language::Thai => "Thai",
+        }
+    }
+
     /// The name used in TTS cache keys and model pronunciation instructions,
-    /// independent of [`Self::prompt_name`]. Changing one re-synthesizes
+    /// independent of [`Self::frozen_prompt_name`]. Changing one re-synthesizes
     /// every cached clip for that language, so change it exactly when that
     /// language's voices or accent instructions change — otherwise the
     /// cache keeps serving the old voice.
@@ -4798,23 +4834,7 @@ pub fn pronunciation_challenge_spoken_text(
 
 impl std::fmt::Display for Language {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Language::French => write!(f, "French"),
-            Language::English => write!(f, "English"),
-            Language::SpanishLatinAmerican => write!(f, "Spanish (Latin America)"),
-            Language::SpanishPeninsular => write!(f, "Spanish (Spain)"),
-            Language::Korean => write!(f, "Korean"),
-            Language::German => write!(f, "German"),
-            Language::ChineseSimplified => write!(f, "Chinese (Simplified)"),
-            Language::ChineseTraditional => write!(f, "Chinese (Traditional)"),
-            Language::Japanese => write!(f, "Japanese"),
-            Language::Russian => write!(f, "Russian"),
-            Language::PortugueseBrazilian => write!(f, "Portuguese (Brazil)"),
-            Language::PortugueseEuropean => write!(f, "Portuguese (Portugal)"),
-            Language::Italian => write!(f, "Italian"),
-            Language::Hindi => write!(f, "Hindi"),
-            Language::Thai => write!(f, "Thai"),
-        }
+        f.write_str(self.prompt_name())
     }
 }
 
@@ -6663,7 +6683,7 @@ mod dialect_tests {
         assert_eq!(language.to_string(), "Spanish (Latin America)");
         assert_eq!(language.code(), "spa");
         assert_eq!(language.dictionary_name(), "spanish");
-        assert_eq!(language.prompt_name(), "Spanish");
+        assert_eq!(language.frozen_prompt_name(), "Spanish");
         assert_eq!(
             language.google_tts_voice(),
             ("es-US", "es-US-Chirp3-HD-Achernar")
@@ -6709,7 +6729,7 @@ mod dialect_tests {
         ];
         assert_eq!(expected.len(), LANGUAGES.len());
         for (language, name) in expected {
-            assert_eq!(language.prompt_name(), name);
+            assert_eq!(language.frozen_prompt_name(), name);
         }
     }
 
@@ -6783,7 +6803,7 @@ mod dialect_tests {
             assert_eq!(inherited.corpus_code(), corpus);
             assert_eq!(new.corpus_code(), corpus);
             assert_ne!(inherited.google_tts_voice(), new.google_tts_voice());
-            assert_eq!(inherited.prompt_name(), new.prompt_name());
+            assert_eq!(inherited.frozen_prompt_name(), new.frozen_prompt_name());
             assert_ne!(
                 pronunciation_challenge_tts_instructions(inherited),
                 pronunciation_challenge_tts_instructions(new)

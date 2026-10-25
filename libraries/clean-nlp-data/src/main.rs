@@ -470,7 +470,7 @@ For each token, provide:
 CRITICAL: when you concatenate all tokens' text + whitespace in order, you MUST exactly reproduce the original sentence. Every character must be accounted for.
 
 The lemma should be the form a learner would look up in a dictionary.{tips}"#,
-            language = language.prompt_name()
+            language = language.frozen_prompt_name()
         );
 
         let pb = ProgressBar::new(uncached.len() as u64);

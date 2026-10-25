@@ -1620,7 +1620,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1837,7 +1837,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "778e2ac28f6c47af28e4907f13ffd1e1ddbd400980a9abd7c8df189bf578a5ad"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3985,7 +3985,7 @@ dependencies = [
 [[package]]
 name = "model-prices"
 version = "0.1.1"
-source = "git+https://github.com/anchpop/tysm.git?rev=24c5b3c1fddd30e303d10cdd056c98f9f84f8adc#24c5b3c1fddd30e303d10cdd056c98f9f84f8adc"
+source = "git+https://github.com/anchpop/tysm.git?rev=3b21a9b51d32b9c8d018787064cb7abd959887c0#3b21a9b51d32b9c8d018787064cb7abd959887c0"
 
 [[package]]
 name = "monostate"
@@ -4206,7 +4206,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -5748,7 +5748,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -5828,7 +5828,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -6754,7 +6754,7 @@ dependencies = [
  "getrandom 0.4.2",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -7194,7 +7194,7 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 [[package]]
 name = "tysm"
 version = "0.22.0"
-source = "git+https://github.com/anchpop/tysm.git?rev=24c5b3c1fddd30e303d10cdd056c98f9f84f8adc#24c5b3c1fddd30e303d10cdd056c98f9f84f8adc"
+source = "git+https://github.com/anchpop/tysm.git?rev=3b21a9b51d32b9c8d018787064cb7abd959887c0#3b21a9b51d32b9c8d018787064cb7abd959887c0"
 dependencies = [
  "base64 0.22.1",
  "dashmap",
@@ -7827,7 +7827,7 @@ version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0978bf7171b3d90bac376700cb56d606feb40f251a475a5d6634613564460b22"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

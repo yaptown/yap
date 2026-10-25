@@ -304,6 +304,10 @@ const Sense = ({
       )}
     </div>
 
+    {sense.note_is_curated && sense.note && (
+      <p className="text-sm text-muted-foreground">{sense.note}</p>
+    )}
+
     {sense.example && (
       <div className="flex items-start gap-2 text-sm">
         <div

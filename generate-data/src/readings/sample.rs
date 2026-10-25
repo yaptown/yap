@@ -23,6 +23,21 @@ impl From<&Occurrence> for Identity {
         }
     }
 }
+impl Identity {
+    // Only text and byte bounds enter hierarchy prompts. Live metadata is useful
+    // when present, but absent prompt witnesses must never become corpus labels.
+    pub(super) fn occurrence(&self, pool: &[Occurrence]) -> Occurrence {
+        pool.iter()
+            .find(|o| o.text == self.sentence && o.bytes == self.bytes)
+            .cloned()
+            .unwrap_or_else(|| Occurrence {
+                text: self.sentence.clone(),
+                bytes: self.bytes,
+                gram_index: usize::MAX,
+                spans: Vec::new(),
+            })
+    }
+}
 pub(super) type Cache = SampleCache<Gram<String>, Identity>;
 
 pub(super) async fn persistent_select(
@@ -35,19 +50,14 @@ pub(super) async fn persistent_select(
     let Some(cache) = cache else {
         return select(occurrences, language, store).await;
     };
-    let pool: Vec<_> = occurrences.iter().map(Identity::from).collect();
-    let survivors: Vec<_> = cache
-        .get(gram)
-        .iter()
-        .filter_map(|id| pool.iter().position(|live| live == id))
-        .collect();
-    if !cache.needs_refresh(gram, &pool) {
-        return survivors
-            .into_iter()
-            .map(|i| occurrences[i].clone())
+    if !cache.needs_refresh(gram) {
+        return cache
+            .get(gram)
+            .iter()
+            .map(|id| id.occurrence(occurrences))
             .collect();
     }
-    extend(occurrences, language, store, &survivors).await
+    select(occurrences, language, store).await
 }
 
 pub(super) fn remember(
@@ -59,7 +69,7 @@ pub(super) fn remember(
     cache.refresh_with(
         gram,
         &pool.iter().map(Identity::from).collect::<Vec<_>>(),
-        |_, _| selected.iter().map(Identity::from).collect(),
+        |_| selected.iter().map(Identity::from).collect(),
     );
 }
 
@@ -81,12 +91,7 @@ fn context(o: &Occurrence) -> (Option<char>, Option<char>) {
 
 /// Seed at the most central point, then maximize distance from the nearest
 /// selected point. Cached occurrence vectors are normalized means of token vectors.
-#[cfg(test)]
 fn farthest(vectors: &[(usize, Vec<f32>)], count: usize) -> Vec<usize> {
-    farthest_from(vectors, count, &[])
-}
-
-fn farthest_from(vectors: &[(usize, Vec<f32>)], count: usize, survivors: &[usize]) -> Vec<usize> {
     if vectors.is_empty() {
         return vec![];
     }
@@ -98,30 +103,11 @@ fn farthest_from(vectors: &[(usize, Vec<f32>)], count: usize, survivors: &[usize
                 .then_with(|| b.cmp(&a))
         })
         .unwrap();
-    let mut chosen: BTreeSet<_> = vectors
-        .iter()
-        .enumerate()
-        .filter_map(|(i, (id, _))| survivors.contains(id).then_some(i))
-        .collect();
+    let mut chosen = BTreeSet::new();
     let mut result = Vec::new();
     let mut nearest = vec![f32::NEG_INFINITY; vectors.len()];
-    for &selected in &chosen {
-        for (i, (_, v)) in vectors.iter().enumerate() {
-            nearest[i] = nearest[i].max(dot(v, &vectors[selected].1));
-        }
-    }
-    let mut next = if chosen.is_empty() {
-        seed
-    } else {
-        let Some(next) = (0..vectors.len())
-            .filter(|i| !chosen.contains(i))
-            .min_by(|&a, &b| nearest[a].total_cmp(&nearest[b]).then_with(|| a.cmp(&b)))
-        else {
-            return result;
-        };
-        next
-    };
-    for _ in 0..count.min(vectors.len().saturating_sub(chosen.len())) {
+    let mut next = seed;
+    for _ in 0..count.min(vectors.len()) {
         chosen.insert(next);
         result.push(vectors[next].0);
         for (i, (_, v)) in vectors.iter().enumerate() {
@@ -143,19 +129,8 @@ pub(super) async fn select(
     language: Language,
     store: &osmo::Store,
 ) -> Vec<Occurrence> {
-    extend(occurrences, language, store, &[]).await
-}
-
-async fn extend(
-    occurrences: &[Occurrence],
-    language: Language,
-    store: &osmo::Store,
-    survivors: &[usize],
-) -> Vec<Occurrence> {
     if occurrences.len() <= EXAMPLES {
-        let mut chosen = survivors.to_vec();
-        chosen.extend((0..occurrences.len()).filter(|i| !survivors.contains(i)));
-        return chosen.into_iter().map(|i| occurrences[i].clone()).collect();
+        return occurrences.to_vec();
     }
     let vectors: Vec<_> =
         futures::stream::iter(occurrences.iter().enumerate().map(|(index, o)| async move {
@@ -167,12 +142,7 @@ async fn extend(
         .filter_map(|v| async { v })
         .collect()
         .await;
-    let mut chosen = survivors.to_vec();
-    chosen.extend(farthest_from(
-        &vectors,
-        EXAMPLES.saturating_sub(chosen.len()),
-        survivors,
-    ));
+    let mut chosen = farthest(&vectors, EXAMPLES);
     let mut present: BTreeSet<_> = chosen.iter().copied().collect();
     let mut random: Vec<_> = (0..occurrences.len()).collect();
     random.sort_by_key(|&i| (random_key(&occurrences[i]), i));
@@ -336,7 +306,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn persistence_growth_staleness_and_live_occurrence_mapping() {
+    async fn persistence_keeps_prompt_bytes_after_growth_removal_and_reordering() {
         let dir = tempfile::tempdir().unwrap();
         let store = osmo::Store::open(dir.path().join("vectors"));
         let mut cache = Cache::load(dir.path().join("examples.jsonl")).unwrap();
@@ -364,18 +334,20 @@ mod tests {
             persistent_select(Some(&cache), &gram, &pool, Language::Japanese, &store).await;
         assert_eq!(
             repaired.iter().map(|o| &o.text).collect::<Vec<_>>(),
-            [&pool[0].text, &pool[1].text]
+            initial.iter().map(|o| &o.text).collect::<Vec<_>>()
+        );
+        assert_eq!(
+            super::super::prompts::numbered_examples(&repaired),
+            super::super::prompts::numbered_examples(&initial)
+        );
+        let empty = persistent_select(Some(&cache), &gram, &[], Language::Japanese, &store).await;
+        assert_eq!(
+            super::super::prompts::numbered_examples(&empty),
+            super::super::prompts::numbered_examples(&initial)
         );
         // Sample mode ignores persistent choices.
         let bypass = persistent_select(None, &gram, &pool, Language::Japanese, &store).await;
         assert_eq!(bypass.len(), pool.len());
-    }
-
-    #[test]
-    fn diversity_refill_starts_from_survivors_not_the_center() {
-        let vectors = vec![(0, vec![1., 0.]), (1, vec![1., 0.]), (2, vec![-1., 0.])];
-        assert_eq!(farthest_from(&vectors, 1, &[2]), [0]);
-        assert_eq!(farthest_from(&vectors, 1, &[0]), [2]);
     }
 
     #[test]

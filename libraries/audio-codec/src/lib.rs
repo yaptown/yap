@@ -1,13 +1,8 @@
 //! Decode and encode provider containers to f32/i16 PCM, plus signal sanity checks.
 //! Provider-agnostic audio helpers.
 
-#[cfg(all(test, feature = "full"))]
-use anyhow::Context;
 #[cfg(any(feature = "full", feature = "mp3-encode"))]
 use anyhow::Result;
-
-mod ogg_caf;
-pub use ogg_caf::ogg_opus_to_caf;
 
 // --- audio defect detection -------------------------------------------------
 
@@ -151,81 +146,6 @@ pub fn encode_mp3(samples: &[i16], sample_rate: u32) -> Result<Vec<u8>> {
     bytes.reserve(7200);
     encoder.flush_to_vec::<FlushGap>(&mut bytes)?;
     Ok(bytes)
-}
-
-/// Legacy encoder used to test native playback of existing Ogg packs.
-#[cfg(all(test, feature = "full"))]
-pub fn encode_ogg_opus(samples: &[i16], sample_rate: u32) -> Result<Vec<u8>> {
-    use ogg::writing::{PacketWriteEndInfo, PacketWriter};
-
-    let mut encoder =
-        opus::Encoder::new(sample_rate, opus::Channels::Mono, opus::Application::Voip)
-            .map_err(|e| anyhow::anyhow!("opus encoder init: {e:?}"))?;
-    // The encoder delays its output by its lookahead. Decoders drop that
-    // many samples from the front (OpusHead's pre-skip, in 48 kHz units) and
-    // trim the end to the final granule position, so the input has to be
-    // followed by at least a lookahead of silence for its tail to come out.
-    let lookahead = encoder
-        .get_lookahead()
-        .map_err(|e| anyhow::anyhow!("opus lookahead: {e:?}"))? as usize;
-    let to_48k = |n: usize| (n as u64) * 48_000 / sample_rate as u64;
-    let pre_skip = to_48k(lookahead);
-    let frame = (sample_rate / 50) as usize; // 20 ms
-    let frame_48k = to_48k(frame);
-
-    let mut head = Vec::with_capacity(19);
-    head.extend_from_slice(b"OpusHead");
-    head.push(1); // version
-    head.push(1); // channels
-    head.extend_from_slice(&(pre_skip as u16).to_le_bytes());
-    head.extend_from_slice(&sample_rate.to_le_bytes());
-    head.extend_from_slice(&0i16.to_le_bytes()); // output gain
-    head.push(0); // channel mapping family
-
-    let vendor = b"yap audio-codec";
-    let mut tags = Vec::new();
-    tags.extend_from_slice(b"OpusTags");
-    tags.extend_from_slice(&(vendor.len() as u32).to_le_bytes());
-    tags.extend_from_slice(vendor);
-    tags.extend_from_slice(&0u32.to_le_bytes());
-
-    let serial = 0x7961_7000; // "yap"
-    let mut writer = PacketWriter::new(Vec::new());
-    writer
-        .write_packet(head, serial, PacketWriteEndInfo::EndPage, 0)
-        .context("ogg: writing OpusHead")?;
-    writer
-        .write_packet(tags, serial, PacketWriteEndInfo::EndPage, 0)
-        .context("ogg: writing OpusTags")?;
-
-    let mut padded: Vec<i16> = Vec::with_capacity(samples.len() + lookahead + frame);
-    padded.extend_from_slice(samples);
-    padded.resize(
-        (samples.len() + lookahead).div_ceil(frame).max(1) * frame,
-        0,
-    );
-    let frames = padded.len() / frame;
-    let mut packet = vec![0u8; 4000];
-    for (i, chunk) in padded.chunks_exact(frame).enumerate() {
-        let len = encoder
-            .encode(chunk, &mut packet)
-            .map_err(|e| anyhow::anyhow!("opus encode: {e:?}"))?;
-        let last = i + 1 == frames;
-        // Granule positions count every decoded sample, pre-skip included;
-        // the final one trims the padding so exactly the input plays.
-        let (granule, end) = if last {
-            (
-                pre_skip + to_48k(samples.len()),
-                PacketWriteEndInfo::EndStream,
-            )
-        } else {
-            ((i as u64 + 1) * frame_48k, PacketWriteEndInfo::NormalPacket)
-        };
-        writer
-            .write_packet(packet[..len].to_vec(), serial, end, granule)
-            .context("ogg: writing audio packet")?;
-    }
-    Ok(writer.into_inner())
 }
 
 // --- audio decoders ---------------------------------------------------------

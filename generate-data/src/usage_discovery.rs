@@ -861,7 +861,7 @@ struct PolysemyProbeResponse {
 }
 
 fn probe_system_prompt(language: Language) -> String {
-    let language = language.prompt_name();
+    let language = language.frozen_prompt_name();
     format!(
         "We are building a course for {language} learners, and we split each \
         vocabulary word into distinct \"usages\" so we can introduce them to the \
@@ -932,7 +932,7 @@ async fn probe_words(language: Language) -> Result<Vec<ProbeWord>> {
 }
 
 fn adjudication_system_prompt(language: Language) -> String {
-    let language = language.prompt_name();
+    let language = language.frozen_prompt_name();
     format!(
         "You are auditing a language-learning vocabulary built from a {language} \
         sentence corpus. What we have done is taken all the known occurrences of a \
@@ -1095,8 +1095,8 @@ const RANDOM_SECTION: usize = usize::MAX;
 /// labels and expression extractions can cite them.
 struct KeyPrompt {
     display: String,
-    /// (global line number, cluster index, occurrence index, marked line)
-    lines: Vec<(usize, usize, usize, String)>,
+    /// (global line number, cluster index, live occurrence index, marked line)
+    lines: Vec<(usize, usize, Option<usize>, String)>,
 }
 
 type AdjudicationSamples = crate::corpus_samples::SampleCache<(Gram<String>, usize), Occurrence>;
@@ -1105,7 +1105,6 @@ fn key_prompt(
     prop: &KeyProposal,
     gram: &Gram<String>,
     occs: &[Occurrence],
-    vectors: &[Vec<f32>],
     display: String,
     samples: &mut AdjudicationSamples,
 ) -> KeyPrompt {
@@ -1113,51 +1112,15 @@ fn key_prompt(
     for (cluster, c) in prop.clusters.iter().enumerate() {
         let key = (gram.clone(), cluster);
         let pool: Vec<_> = c.members.iter().map(|&i| occs[i].clone()).collect();
-        samples.refresh_with(&key, &pool, |survivors, _| {
-            if survivors.is_empty() {
-                return c.exemplars.iter().map(|&i| occs[i].clone()).collect();
-            }
-            let refs: Vec<_> = vectors.iter().collect();
-            let centroids: Vec<_> = prop
-                .clusters
-                .iter()
-                .map(|c| {
-                    mean_normalized(&c.members.iter().map(|&i| &vectors[i]).collect::<Vec<_>>())
-                })
-                .collect();
-            let own = &centroids[cluster];
-            let other = centroids
-                .iter()
-                .enumerate()
-                .filter(|(i, _)| *i != cluster)
-                .max_by(|a, b| dot(own, a.1).total_cmp(&dot(own, b.1)))
-                .unwrap()
-                .1;
-            let remaining: Vec<_> = c
-                .members
-                .iter()
-                .copied()
-                .filter(|&i| !survivors.contains(&occs[i]))
-                .collect();
-            survivors
-                .iter()
-                .cloned()
-                .chain(
-                    cluster_exemplars(&refs, &remaining, own, other)
-                        .into_iter()
-                        .take(
-                            (EXEMPLARS_CENTRAL + EXEMPLARS_SPREAD).saturating_sub(survivors.len()),
-                        )
-                        .map(|i| occs[i].clone()),
-                )
-                .collect()
+        samples.refresh_with(&key, &pool, |_| {
+            c.exemplars.iter().map(|&i| occs[i].clone()).collect()
         });
         for occurrence in samples.get(&key) {
-            let i = occs.iter().position(|live| live == occurrence).unwrap();
-            lines.push((lines.len(), cluster, i, mark_occurrence(&occs[i])));
+            let i = occs.iter().position(|live| live == occurrence);
+            lines.push((lines.len(), cluster, i, mark_occurrence(occurrence)));
         }
     }
-    let shown: HashSet<usize> = lines.iter().map(|(_, _, i, _)| *i).collect();
+    let shown: HashSet<usize> = lines.iter().filter_map(|(_, _, i, _)| *i).collect();
     let pool: Vec<_> = occs
         .iter()
         .enumerate()
@@ -1165,19 +1128,17 @@ fn key_prompt(
         .map(|(_, o)| o.clone())
         .collect();
     let key = (gram.clone(), RANDOM_SECTION);
-    samples.refresh_with(&key, &pool, |survivors, pool| {
-        let remaining = crate::corpus_samples::remaining_items(pool, survivors);
-        let count = RANDOM_SAMPLE_LINES.saturating_sub(survivors.len());
-        let stride = remaining.len().div_ceil(count.max(1)).max(1);
-        survivors
-            .iter()
+    samples.refresh_with(&key, &pool, |pool| {
+        let stride = pool.len().div_ceil(RANDOM_SAMPLE_LINES).max(1);
+        pool.iter()
+            .step_by(stride)
+            .take(RANDOM_SAMPLE_LINES)
             .cloned()
-            .chain(remaining.into_iter().step_by(stride).take(count))
             .collect()
     });
     for occurrence in samples.get(&key) {
-        let i = occs.iter().position(|live| live == occurrence).unwrap();
-        lines.push((lines.len(), RANDOM_SECTION, i, mark_occurrence(&occs[i])));
+        let i = occs.iter().position(|live| live == occurrence);
+        lines.push((lines.len(), RANDOM_SECTION, i, mark_occurrence(occurrence)));
     }
     KeyPrompt { display, lines }
 }
@@ -1223,7 +1184,7 @@ struct OpacityJudgeResponse {
 }
 
 fn opacity_system_prompt(language: Language) -> String {
-    let language = language.prompt_name();
+    let language = language.frozen_prompt_name();
     format!(
         "You are curating multiword entries for a {language} vocabulary-learning \
         app. Each request shows a candidate multiword expression mined from a \
@@ -1286,7 +1247,7 @@ struct ParadigmResponse {
 }
 
 fn paradigm_system_prompt(language: Language) -> String {
-    let language = language.prompt_name();
+    let language = language.frozen_prompt_name();
     format!(
         "You are curating multiword entries for a {language} vocabulary-learning \
         app. Each request shows one expression mined from a sentence corpus, with \
@@ -1897,8 +1858,8 @@ async fn expand_paradigms(
                     .collect::<Vec<Atom<String>>>(),
             );
             let pool: Vec<_> = matches.iter().map(|s| s.to_string()).collect();
-            samples.refresh_with(&gram, &pool, |survivors, pool| {
-                crate::corpus_samples::select_first(survivors, pool, 5)
+            samples.refresh_with(&gram, &pool, |pool| {
+                crate::corpus_samples::select_first(pool, 5)
             });
             let examples = samples.get(&gram).to_vec();
             discovered.push((
@@ -2218,7 +2179,6 @@ pub async fn discover(
                 p,
                 &arena.grams[p.key as usize],
                 &mining.occs,
-                &mining.vectors,
                 arena.display(p.key, language),
                 &mut adjudication_samples,
             )
@@ -2303,7 +2263,7 @@ pub async fn discover(
         for e in &resp.expressions {
             let Some((ids, surface)) = e.line_numbers.iter().find_map(|&n| {
                 let (_, _, occ_idx, _) = prompt.lines.iter().find(|(ln, _, _, _)| *ln == n)?;
-                let occ = &km.occs[*occ_idx];
+                let occ = &km.occs[(*occ_idx)?];
                 let sent = index.get(&occ.text)?;
                 let (first, last) = snap_to_words(sent, &occ.text, &e.verbatim)?;
                 let ids = sent.atom_seq.get(first..=last)?.to_vec();
@@ -2342,8 +2302,8 @@ pub async fn discover(
                         .collect::<Vec<Atom<String>>>(),
                 );
                 let pool: Vec<_> = matches.iter().map(|s| s.to_string()).collect();
-                samples.refresh_with(&gram, &pool, |survivors, pool| {
-                    crate::corpus_samples::select_first(survivors, pool, 5)
+                samples.refresh_with(&gram, &pool, |pool| {
+                    crate::corpus_samples::select_first(pool, 5)
                 });
                 let examples = samples.get(&gram).to_vec();
                 (
@@ -2378,7 +2338,7 @@ pub async fn discover(
                 .lines
                 .iter()
                 .find(|(ln, _, _, _)| *ln == n)
-                .map(|(_, _, occ, _)| *occ)
+                .and_then(|(_, _, occ, _)| *occ)
         };
         struct ProtoClass<'r> {
             /// `None` marks an extracted-expression absorber.
@@ -3220,15 +3180,20 @@ mod tests {
         let mut lines = Vec::new();
         for (cluster, c) in prop.clusters.iter().enumerate() {
             for &i in &c.exemplars {
-                lines.push((lines.len(), cluster, i, mark_occurrence(&occs[i])));
+                lines.push((lines.len(), cluster, Some(i), mark_occurrence(&occs[i])));
             }
         }
-        let shown: HashSet<_> = lines.iter().map(|(_, _, i, _)| *i).collect();
+        let shown: HashSet<_> = lines.iter().filter_map(|(_, _, i, _)| *i).collect();
         let unshown: Vec<_> = (0..occs.len()).filter(|i| !shown.contains(i)).collect();
         if !unshown.is_empty() {
             let stride = unshown.len().div_ceil(8).max(1);
             for &i in unshown.iter().step_by(stride).take(8) {
-                lines.push((lines.len(), RANDOM_SECTION, i, mark_occurrence(&occs[i])));
+                lines.push((
+                    lines.len(),
+                    RANDOM_SECTION,
+                    Some(i),
+                    mark_occurrence(&occs[i]),
+                ));
             }
         }
         KeyPrompt {
@@ -3280,7 +3245,7 @@ mod tests {
             let expected = original_prompt(&prop, &occs);
             let mut cache =
                 AdjudicationSamples::load(dir.path().join(format!("{count}.jsonl"))).unwrap();
-            let actual = key_prompt(&prop, &gram, &occs, &vectors, "test".into(), &mut cache);
+            let actual = key_prompt(&prop, &gram, &occs, "test".into(), &mut cache);
             assert_eq!(
                 adjudication_user_prompt(&actual),
                 adjudication_user_prompt(&expected)
@@ -3290,7 +3255,7 @@ mod tests {
     }
 
     #[test]
-    fn adjudication_growth_remaps_live_indices_and_revalidates_current_slots() {
+    fn adjudication_keeps_prompt_bytes_and_only_resolves_live_indices() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("samples.jsonl");
         let mut cache = AdjudicationSamples::load(path.clone()).unwrap();
@@ -3303,7 +3268,6 @@ mod tests {
             &proposal(&original, &vectors),
             &gram,
             &original,
-            &vectors,
             "test".into(),
             &mut cache,
         );
@@ -3324,61 +3288,29 @@ mod tests {
             .map(|i| vec![1.0, i as f32 / 148.0])
             .collect();
         let prop = proposal(&grown, &vectors);
-        let stable = key_prompt(&prop, &gram, &grown, &vectors, "test".into(), &mut cache);
+        let stable = key_prompt(&prop, &gram, &grown, "test".into(), &mut cache);
         assert_eq!(
             adjudication_user_prompt(&stable),
             adjudication_user_prompt(&first)
         );
         for (before, after) in first.lines.iter().zip(&stable.lines) {
-            assert_eq!(original[before.2], grown[after.2]);
+            assert_eq!(original[before.2.unwrap()], grown[after.2.unwrap()]);
         }
-        let removed = stable.lines[0].2;
-        let clusters = prop
-            .clusters
-            .iter()
-            .map(|c| {
-                (
-                    c.members
-                        .iter()
-                        .copied()
-                        .filter(|&i| i != removed)
-                        .collect(),
-                    "kmeans",
-                )
-            })
-            .collect();
-        let changed = finish_proposal(0, &vectors, clusters, None, None).unwrap();
-        let refreshed = key_prompt(&changed, &gram, &grown, &vectors, "test".into(), &mut cache);
-        let cluster: Vec<_> = refreshed
-            .lines
-            .iter()
-            .filter(|(_, c, _, _)| *c == 0)
-            .collect();
-        assert!(!cluster.iter().any(|(_, _, i, _)| *i == removed));
+        let removed = stable.lines[0].2.unwrap();
+        grown.remove(removed);
+        let vectors = vectors[..grown.len()].to_vec();
+        let changed = proposal(&grown, &vectors);
+        let refreshed = key_prompt(&changed, &gram, &grown, "test".into(), &mut cache);
         assert_eq!(
-            cluster
-                .iter()
-                .take(7)
-                .map(|line| &line.3)
-                .collect::<Vec<_>>(),
-            stable.lines[1..8]
-                .iter()
-                .map(|line| &line.3)
-                .collect::<Vec<_>>()
+            adjudication_user_prompt(&refreshed),
+            adjudication_user_prompt(&stable)
         );
-        let shown: HashSet<_> = refreshed
-            .lines
-            .iter()
-            .filter(|(_, c, _, _)| *c != RANDOM_SECTION)
-            .map(|(_, _, i, _)| i)
-            .collect();
-        assert!(
-            refreshed
-                .lines
-                .iter()
-                .filter(|(_, c, _, _)| *c == RANDOM_SECTION)
-                .all(|(_, _, i, _)| !shown.contains(i))
-        );
+        assert_eq!(refreshed.lines[0].2, None);
+        for (_, _, live, marked) in &refreshed.lines {
+            if let Some(i) = live {
+                assert_eq!(mark_occurrence(&grown[*i]), *marked);
+            }
+        }
     }
 
     #[test]

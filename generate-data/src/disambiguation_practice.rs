@@ -176,8 +176,8 @@ Output format:
         ... (30 pairs total)
     ]
 }}"#,
-        native_language = native_language.prompt_name(),
-        target_language = target_language.prompt_name()
+        native_language = native_language.frozen_prompt_name(),
+        target_language = target_language.frozen_prompt_name()
     );
     let practice_data = chat_client
         .batch_chat_with_system_prompt_fn::<_, _, HomophonePracticeThoughts>(

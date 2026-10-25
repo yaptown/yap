@@ -4881,18 +4881,6 @@ impl From<audio::FetchedAudio> for AudioResult {
     }
 }
 
-/// Remux cached Ogg Opus into CAF for Apple's native players. No audio is
-/// decoded, re-encoded, or written back to the cache; WAV/MP3 pass through.
-#[bridgerton::bridge]
-pub fn audio_for_native_playback(bytes: Vec<u8>) -> Result<Vec<u8>, bridgerton::Error> {
-    if audio_mime_type(&bytes) == "audio/ogg" {
-        audio_codec::ogg_opus_to_caf(&bytes)
-            .map_err(|error| bridgerton::Error::new(error.to_string()))
-    } else {
-        Ok(bytes)
-    }
-}
-
 #[bridgerton::bridge]
 pub async fn get_audio(
     request: AudioRequest,

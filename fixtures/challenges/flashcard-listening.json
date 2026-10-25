@@ -54,6 +54,7 @@
                         {
                           "meaning": "your",
                           "note": "informal singular; used before a feminine singular noun",
+                          "note_is_curated": false,
                           "example": {
                             "target": "Ta voiture est rouge.",
                             "native": "Your car is red."
@@ -69,6 +70,7 @@
                         {
                           "meaning": "your",
                           "note": "Informal singular; used before a feminine singular noun beginning with a consonant.",
+                          "note_is_curated": false,
                           "example": {
                             "target": "Où est ta voiture ?",
                             "native": "Where is your car?"
@@ -103,6 +105,7 @@
                         {
                           "meaning": "pile, heap",
                           "note": null,
+                          "note_is_curated": false,
                           "example": {
                             "target": "Il y a un tas de vêtements sur le lit.",
                             "native": "There’s a pile of clothes on the bed."
@@ -111,6 +114,7 @@
                         {
                           "meaning": "a lot of",
                           "note": "Common in the phrase « un tas de + noun » (informal).",
+                          "note_is_curated": false,
                           "example": {
                             "target": "On a un tas de choses à faire aujourd’hui.",
                             "native": "We have a lot of things to do today."

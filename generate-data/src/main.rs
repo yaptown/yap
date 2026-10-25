@@ -493,28 +493,8 @@ async fn main() -> anyhow::Result<()> {
             .map(|h| h.word.clone())
             .collect();
 
-        let custom_definitions = {
-            let path = source_data_path.join("custom_definitions.jsonl");
-            let lines = if path.exists() {
-                BufReader::new(File::open(&path).context("Failed to open custom definitions file")?)
-                    .lines()
-                    .collect::<Result<Vec<_>, _>>()?
-            } else {
-                Vec::new()
-            };
-            lines
-                .into_iter()
-                .filter(|line| !line.is_empty())
-                .map(|line| serde_json::from_str(&line))
-                .collect::<Result<
-                    BTreeMap<
-                        language_utils::Heteronym<String>,
-                        language_utils::DictionaryDefinition,
-                    >,
-                    serde_json::Error,
-                >>()
-                .context("Failed to parse custom definitions")?
-        };
+        let custom_definitions =
+            generate_data::custom_definitions::load(source_data_path, *course)?;
 
         let morphology_stage = async {
             // Compute morphology up-front so etymology can see what grammatical
@@ -1208,6 +1188,19 @@ async fn main() -> anyhow::Result<()> {
             generate_data::StageTimer::run("sense redundancy", redundancy_stage),
             generate_data::StageTimer::run("homophone practice + NLP", homophone_stage),
         )?;
+        // Last of the dictionary steps: it rewrites notes that the stages above
+        // put into their prompts.
+        generate_data::StageTimer::run(
+            "curated notes",
+            generate_data::curated_notes::curate(
+                *course,
+                &gram_frequencies,
+                &mut gram_keyed_dictionary,
+                &mut phrasebook,
+                &native_specific_dir.join("curated_notes.jsonl"),
+            ),
+        )
+        .await?;
 
         // Write all NLP sentences to file (now that we have both main and homophone sentences)
         let target_language_nlp_file = corpus_dir.join("target_language_sentences_nlp.jsonl");
@@ -1651,6 +1644,7 @@ async fn main() -> anyhow::Result<()> {
                 let examples: Vec<language_utils::ShowcaseExampleSentence> = gram_sentences
                     .get(&gram.gram)
                     .iter()
+                    .filter(|s| kept_sentences.contains(s.as_str()))
                     .filter_map(|s| {
                         let native = translations_map.get(s.as_str())?.first()?;
                         Some(language_utils::ShowcaseExampleSentence {

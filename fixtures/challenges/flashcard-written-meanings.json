@@ -128,6 +128,7 @@
                       {
                         "meaning": "he is",
                         "note": null,
+                        "note_is_curated": false,
                         "example": {
                           "target": "Il est très fatigué aujourd'hui.",
                           "native": "He is very tired today."
@@ -168,6 +169,7 @@
                       {
                         "meaning": "is",
                         "note": null,
+                        "note_is_curated": false,
                         "example": {
                           "target": "La réponse est oui.",
                           "native": "The answer is yes."
@@ -208,6 +210,7 @@
                       {
                         "meaning": "has",
                         "note": null,
+                        "note_is_curated": false,
                         "example": {
                           "target": "Il est parti tôt ce matin.",
                           "native": "He has left early this morning."

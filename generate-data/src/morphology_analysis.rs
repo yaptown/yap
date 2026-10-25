@@ -111,7 +111,7 @@ mod llm_morphology {
     }
 
     fn user_prompt(language: Language, heteronym: &Heteronym<String>) -> String {
-        let language_name = language.prompt_name();
+        let language_name = language.frozen_prompt_name();
         let pos = heteronym.pos;
         format!(
             "{language_name} word: {} (lemma: {}) (POS: {pos:?})",
@@ -120,7 +120,7 @@ mod llm_morphology {
     }
 
     fn tense_prompt(language: Language) -> String {
-        let language_name = language.prompt_name();
+        let language_name = language.frozen_prompt_name();
         format!(
             r#"Determine the tense of the provided {language_name} word.
 Think about whether this word has a fixed tense. Options are:
@@ -173,7 +173,7 @@ If one of these options is applicable, provide it. If the tense varies or is not
         heteronyms: &[Heteronym<String>],
         chat_client: &ChatClient,
     ) -> anyhow::Result<BTreeMap<Heteronym<String>, Vec<Morphology>>> {
-        let language_name = language.prompt_name();
+        let language_name = language.frozen_prompt_name();
 
         // One batch per feature across all applicable words.
         let gender_future = batch_feature(

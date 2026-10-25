@@ -673,7 +673,7 @@ pub(super) fn force_into(request: &mut HierarchyRequest, escapes: &[Escape]) {
         let index = request
             .examples
             .iter()
-            .position(|e| e.text == o.text && e.gram_index == o.gram_index)
+            .position(|e| e.text == o.text && e.bytes == o.bytes)
             .unwrap_or_else(|| {
                 request.examples.push(o.clone());
                 request.examples.len() - 1
@@ -1375,6 +1375,47 @@ mod tests {
             request.prompt["occurrence_escapes"][0]["missing_meaning"],
             "別の意味"
         );
+    }
+
+    #[test]
+    fn removed_repair_witnesses_deduplicate_by_saved_byte_bounds() {
+        let g = gram("猫");
+        let c = candidates(&g, Language::Japanese, &BTreeMap::new());
+        let examples: Vec<_> = [(0, 3), (3, 6)]
+            .into_iter()
+            .map(|bytes| Occurrence {
+                text: "猫猫".into(),
+                bytes,
+                gram_index: usize::MAX,
+                spans: vec![],
+            })
+            .collect();
+        let mut request = HierarchyRequest {
+            prompt: prompts::hierarchy_prompt(&g, &c, Language::Japanese),
+            gram: g,
+            candidates: c,
+            examples: examples.clone(),
+        };
+        let escapes: Vec<_> = examples
+            .into_iter()
+            .map(|occurrence| Escape {
+                occurrence,
+                proposed_reading: "ねこ".into(),
+                reading: Some("ねこ".into()),
+                missing_meaning: None,
+            })
+            .collect();
+        force_into(&mut request, &escapes);
+        assert_eq!(request.examples.len(), 2);
+        assert_eq!(
+            request.prompt["examples"],
+            serde_json::json!([
+                {"index":0,"sentence":"«猫»猫"},
+                {"index":1,"sentence":"猫«猫»"}
+            ])
+        );
+        assert_eq!(request.prompt["occurrence_escapes"][0]["example_index"], 0);
+        assert_eq!(request.prompt["occurrence_escapes"][1]["example_index"], 1);
     }
 
     #[test]

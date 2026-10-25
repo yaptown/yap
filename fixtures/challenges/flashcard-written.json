@@ -134,6 +134,7 @@
                       {
                         "meaning": "I have a",
                         "note": null,
+                        "note_is_curated": false,
                         "example": {
                           "target": "J'ai une question à vous poser.",
                           "native": "I have a question to ask you."

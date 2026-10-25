@@ -7,6 +7,7 @@ use std::path::Path;
 struct Override {
     meaning: Option<String>,
     additional_notes: Option<String>,
+    note_is_curated: Option<bool>,
     target_language_example: Option<String>,
     native_language_example: Option<String>,
 }
@@ -14,7 +15,8 @@ struct Override {
 /// Files live beside custom_definitions.jsonl, but are scoped to the native
 /// language: custom_phrasebook_for_eng.jsonl contains English glosses only.
 /// Each line is ["display text", {"meaning": "...", "additional_notes": "..."}],
-/// with all fields optional. Examples can also be replaced via
+/// with all fields optional. `"note_is_curated": true` shows the notes on
+/// flashcards too. Examples can also be replaced via
 /// target_language_example and native_language_example when a corrected gloss
 /// needs a different example. All grams sharing the display text are updated.
 pub fn apply(
@@ -56,6 +58,9 @@ fn apply_jsonl(
                 if let Some(notes) = &patch.additional_notes {
                     entry.additional_notes.clone_from(notes);
                 }
+                if let Some(curated) = patch.note_is_curated {
+                    entry.note_is_curated = curated;
+                }
                 if let Some(example) = &patch.target_language_example {
                     entry.target_language_example.clone_from(example);
                 }
@@ -92,6 +97,7 @@ mod tests {
             target_language_multi_word_term: "je dois".into(),
             meaning: "owe, must".into(),
             additional_notes: "Original notes".into(),
+            note_is_curated: false,
             target_language_example: "Je dois partir.".into(),
             native_language_example: "I must leave.".into(),
             informal: false,

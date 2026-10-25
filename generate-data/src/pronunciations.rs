@@ -103,7 +103,7 @@ Output format:
     "1. thoughts": "Brief analysis of the pronunciation options",
     "2. selected_pronunciation": "The chosen IPA pronunciation",
 }}"#,
-        target_language = target_language.prompt_name()
+        target_language = target_language.frozen_prompt_name()
     );
 
     let mut selected = words_with_pronunciations

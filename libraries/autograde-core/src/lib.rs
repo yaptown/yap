@@ -148,8 +148,8 @@ pub async fn grade_translation(
         });
     }
 
-    let target_language_name = target_language.prompt_name();
-    let native_language_name = native_language.prompt_name();
+    let target_language_name = target_language.frozen_prompt_name();
+    let native_language_name = native_language.frozen_prompt_name();
 
     // Build the literals list with indices for gradable words, _ for ungradable
     // Track which literal positions have gradable words (for mapping indices back)
