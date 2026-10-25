@@ -4,14 +4,12 @@ import { supabase } from "@/lib/supabase";
 import type { PasskeyListItem } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { KeyRound, Trash2 } from "lucide-react";
 import {
   canCreatePasskey,
@@ -21,10 +19,9 @@ import {
 import { useEmailConfirmed } from "@/hooks/use-email-confirmed";
 
 export function PasskeySettings() {
-  const [open, setOpen] = useState(false);
   // Supabase only allows passkey registration for confirmed, non-anonymous
-  // users, so hide the dialog entirely until the email is confirmed. The
-  // hook is live (onAuthStateChange), so the item appears the moment the
+  // users, so hide the section entirely until the email is confirmed. The
+  // hook is live (onAuthStateChange), so the section appears the moment the
   // email gets confirmed — even from another tab — without a reload.
   const emailConfirmed = useEmailConfirmed();
   const [canCreate, setCanCreate] = useState(false);
@@ -36,24 +33,23 @@ export function PasskeySettings() {
     canCreatePasskey().then(setCanCreate);
   }, []);
 
-  const refresh = useCallback(async () => {
-    const { data, error } = await supabase.auth.passkey.list();
-    if (error) {
-      setError(error.message);
-      setPasskeys([]);
-    } else {
-      setPasskeys(data);
-    }
-  }, []);
+  const refresh = useCallback(
+    () =>
+      supabase.auth.passkey.list().then(({ data, error }) => {
+        if (error) {
+          setError(error.message);
+          setPasskeys([]);
+        } else {
+          setPasskeys(data);
+        }
+      }),
+    [],
+  );
 
-  const handleOpenChange = (nextOpen: boolean) => {
-    setOpen(nextOpen);
-    if (nextOpen) {
-      setError(null);
-      setPasskeys(null);
-      refresh();
-    }
-  };
+  const shown = canCreate && emailConfirmed;
+  useEffect(() => {
+    if (shown) refresh();
+  }, [shown, refresh]);
 
   const handleRegister = async () => {
     setError(null);
@@ -83,81 +79,73 @@ export function PasskeySettings() {
     setBusy(false);
   };
 
-  if (!canCreate || !emailConfirmed) {
+  if (!shown) {
     return null;
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-          <KeyRound className="mr-2 h-4 w-4" />
-          {t("passkey-settings-passkeys")}
-        </DropdownMenuItem>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{t("passkey-settings-passkeys")}</DialogTitle>
-          <DialogDescription>
-            {t(
-              "passkey-settings-sign-in-with-your-fingerprint-face-or-security-key",
-            )}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          {passkeys === null ? (
-            <p className="text-muted-foreground text-center">
-              {t("common-loading")}
-            </p>
-          ) : passkeys.length === 0 ? (
-            <p className="text-muted-foreground text-center text-sm">
-              {t("passkey-settings-no-passkeys-registered-yet")}
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {passkeys.map((pk) => (
-                <div
-                  key={pk.id}
-                  className="flex items-center gap-3 rounded-md border p-3"
-                >
-                  <KeyRound className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {pk.friendly_name || t("passkey-settings-passkey")}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {pk.last_used_at
-                        ? t("settings-passkey-dates", {
-                            date: dateLabel(pk.created_at),
-                            last_used: dateLabel(pk.last_used_at),
-                          })
-                        : t("settings-passkey-added", {
-                            date: dateLabel(pk.created_at),
-                          })}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(pk.id)}
-                    disabled={busy}
-                    title={t("passkey-settings-remove-passkey")}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("passkey-settings-passkeys")}</CardTitle>
+        <CardDescription>
+          {t(
+            "passkey-settings-sign-in-with-your-fingerprint-face-or-security-key",
           )}
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button onClick={handleRegister} disabled={busy} className="w-full">
-            {busy
-              ? t("auth-dialog-working")
-              : t("passkey-settings-add-a-passkey")}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {passkeys === null ? (
+          <p className="text-muted-foreground text-center">
+            {t("common-loading")}
+          </p>
+        ) : passkeys.length === 0 ? (
+          <p className="text-muted-foreground text-center text-sm">
+            {t("passkey-settings-no-passkeys-registered-yet")}
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {passkeys.map((pk) => (
+              <div
+                key={pk.id}
+                className="flex items-center gap-3 rounded-md border p-3"
+              >
+                <KeyRound className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {pk.friendly_name || t("passkey-settings-passkey")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {pk.last_used_at
+                      ? t("settings-passkey-dates", {
+                          date: dateLabel(pk.created_at),
+                          last_used: dateLabel(pk.last_used_at),
+                        })
+                      : t("settings-passkey-added", {
+                          date: dateLabel(pk.created_at),
+                        })}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDelete(pk.id)}
+                  disabled={busy}
+                  title={t("passkey-settings-remove-passkey")}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button onClick={handleRegister} disabled={busy} className="w-full">
+          {busy
+            ? t("auth-dialog-working")
+            : t("passkey-settings-add-a-passkey")}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 

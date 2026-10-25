@@ -17,6 +17,7 @@ import { AcceptInvite } from "@/pages/accept-invite";
 import { ForgotPassword } from "@/pages/forgot-password";
 import { Connect } from "../pages/connect";
 import { UserProfilePage } from "@/pages/user-profile";
+import { SettingsPage } from "@/pages/settings";
 import { AboutPage } from "@/pages/about";
 import { PrivacyPage } from "@/pages/privacy";
 import { TermsPage } from "@/pages/terms";
@@ -95,6 +96,7 @@ const router = createBrowserRouter([
               ]
             : []),
           { path: "user/id/:id", element: <UserProfilePage /> },
+          { path: "settings", element: <SettingsPage /> },
           { path: "*", element: <NotFoundPage /> },
         ],
       },

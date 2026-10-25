@@ -4,25 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ModeToggle } from "@/browse/mode-toggle";
 import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { NotificationSettings } from "@/browse/notification-settings";
-import { PasskeySettings } from "@/browse/passkey-settings";
-import { DeleteAccountSettings } from "@/browse/delete-account-settings";
-import { LogOut, AlertTriangle, ArrowLeft, User } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { AlertTriangle, ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 import { SyncStatusDialog } from "@/browse/sync-status-dialog";
 import type { UserInfo } from "@/app/context";
 import { useAuthDialog } from "@/auth/auth-dialog-provider";
 
 interface HeaderProps {
   userInfo: UserInfo | undefined;
-  onSignOut: () => void;
   showSignupNag?: boolean;
   backButton?: {
     label: string;
@@ -34,14 +23,12 @@ interface HeaderProps {
 
 export function Header({
   userInfo,
-  onSignOut,
   showSignupNag = false,
   backButton,
   title = "Yap.Town",
   dailyGoalPercent,
 }: HeaderProps) {
   const { openSignIn, openSignUp } = useAuthDialog();
-  const navigate = useNavigate();
   const copy = account_copy();
 
   return (
@@ -81,32 +68,16 @@ export function Header({
         </div>
         <div className="flex items-center gap-2">
           {userInfo ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="text-sm text-muted-foreground hover:text-foreground animate-fade-in-delayed gap-2"
-                >
-                  {userInfo.displayName || userInfo.email}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <NotificationSettings />
-                <PasskeySettings />
-                <DropdownMenuItem
-                  onClick={() => navigate(`/user/id/${userInfo.id}`)}
-                >
-                  <User className="mr-2 h-4 w-4" />
-                  {t("home-profile")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {t("header-sign-out")}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DeleteAccountSettings />
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              asChild
+              variant="ghost"
+              className="text-sm text-muted-foreground hover:text-foreground animate-fade-in-delayed"
+              title={t("common-settings")}
+            >
+              <Link to="/settings">
+                {userInfo.displayName || userInfo.email}
+              </Link>
+            </Button>
           ) : (
             <Button variant="ghost" size="sm" onClick={openSignIn}>
               {copy.sign_in_action}

@@ -17,7 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Trash2 } from "lucide-react";
 
 export function DeleteAccountSettings() {
@@ -49,13 +48,10 @@ export function DeleteAccountSettings() {
   return (
     <Dialog onOpenChange={() => setFailed(false)}>
       <DialogTrigger asChild>
-        <DropdownMenuItem
-          variant="destructive"
-          onSelect={(e) => e.preventDefault()}
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
+        <Button variant="ghost" className="justify-start text-destructive">
+          <Trash2 />
           {copy.delete_account_action}
-        </DropdownMenuItem>
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

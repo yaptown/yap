@@ -3,14 +3,12 @@ import { Button } from "@/components/ui/button";
 import { useOneSignalNotifications } from "@/hooks/use-onesignal-notifications";
 import { Bell } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
@@ -180,26 +178,14 @@ export function NotificationSettings() {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-          <Bell className="mr-2 h-4 w-4" />
-          {t("notification-settings-notifications")}
-        </DropdownMenuItem>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>
-            {t("notification-settings-push-notifications")}
-          </DialogTitle>
-          <DialogDescription>
-            {t(
-              "notification-settings-get-reminded-when-it-s-time-to-study-your",
-            )}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="py-4">{renderContent()}</div>
-      </DialogContent>
-    </Dialog>
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("notification-settings-push-notifications")}</CardTitle>
+        <CardDescription>
+          {t("notification-settings-get-reminded-when-it-s-time-to-study-your")}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>{renderContent()}</CardContent>
+    </Card>
   );
 }

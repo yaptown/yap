@@ -19,7 +19,6 @@ import { LANGUAGES, detectBrowserLanguage } from "@/lib/languages";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AnimatePresence, motion } from "framer-motion";
 import { Moon, MoreVertical, Volume2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { APP_STORE_URL, IS_IOS } from "@/lib/ios-app";
 import { mountFx, type OrbitGeometry } from "@/lib/landing-fx";
@@ -830,11 +829,7 @@ export function LandingPage() {
     <div className="landing landing-night relative z-10 -mb-4 ml-[calc(50%-50vw)] w-screen overflow-hidden">
       <div className="absolute inset-x-0 top-0 z-20 px-2 text-foreground">
         <div className="mx-auto max-w-2xl py-2">
-          <Header
-            userInfo={userInfo}
-            onSignOut={() => supabase.auth.signOut()}
-            showSignupNag={false}
-          />
+          <Header userInfo={userInfo} showSignupNag={false} />
         </div>
       </div>
       <Hero corpus={corpus} />
