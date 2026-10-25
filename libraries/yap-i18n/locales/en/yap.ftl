@@ -255,6 +255,7 @@ challenge-then-tap-to-see-if-you-re-right = Then, tap to see if you're right!
 challenge-use-arrow-keys = Use the arrow keys
 challenge-verb = Verb
 challenge-were-you-right = Were you right?
+challenge-grammar-tip = Grammar tip
 command-command-palette = Command Palette
 command-search-for-a-command-to-run = Search for a command to run...
 common-about = About

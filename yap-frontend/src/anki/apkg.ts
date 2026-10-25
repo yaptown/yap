@@ -69,13 +69,18 @@ const css = `
   margin: 0; padding: 0; list-style: none;
 }
 .senses .meaning { font-size: 20px; }
-.senses .note { margin-top: 2px; font-size: 14px; color: var(--yap-muted); }
 .senses .example {
   display: flex; flex-direction: column; gap: 2px; margin-top: 8px; padding: 8px 12px;
   border-radius: 10px; background: var(--yap-chip); font-size: 15px;
 }
 .senses .example b { font-weight: inherit; color: var(--yap-accent); }
 .senses .example-native { font-size: 14px; color: var(--yap-muted); }
+.tip {
+  display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 420px; box-sizing: border-box;
+  padding: 12px 14px; border: 1px solid var(--yap-line); border-radius: 12px; text-align: left; font-size: 15px;
+}
+.tip-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--yap-accent); }
+.tip p { margin: 0; }
 .names { margin: 0; padding: 0; list-style: none; font-size: 14px; color: var(--yap-muted); }
 .names .name { color: var(--yap-fg); font-weight: 600; }
 .scene {
@@ -196,7 +201,7 @@ function wordTemplate(lang: string, furigana: boolean, back: boolean): string {
   // Same shape as the sentence cards: the recording plays on both sides.
   return card(
     `<div class="sentence word prompt"><span lang="${lang}">${filtered("Word", furigana, back)}</span>{{AudioBundled}}</div>`,
-    "Subtitles", "Word", back ? '<ol class="senses">{{Definition}}</ol>' : undefined,
+    "Subtitles", "Word", back ? "{{Definition}}" : undefined,
   );
 }
 
@@ -216,10 +221,11 @@ function audioFilename(filename: string, bytes: Uint8Array): string {
   return filename.replace(/\.[^.]+$/, `.${ext}`);
 }
 
-// Like the app's flashcard: each meaning, then its note if a person wrote it,
-// and an example with the word picked out.
-function senses(list: DefinitionSense[], word: string, lang: string): string {
-  return list.map(({ meaning, note, note_is_curated, example }) => {
+// Like the app's flashcard: each meaning with an example that picks out the
+// word, then the curated notes as a grammar tip.
+function definition(list: DefinitionSense[], word: string, lang: string): string {
+  if (list.length === 0) return "";
+  const senses = list.map(({ meaning, example }) => {
     let target = "";
     if (example) {
       const at = example.target.indexOf(word);
@@ -227,11 +233,14 @@ function senses(list: DefinitionSense[], word: string, lang: string): string {
         + `<b>${escapeHtml(word)}</b>` + escapeHtml(example.target.slice(at + word.length));
     }
     return `<li><div class="meaning">${escapeHtml(meaning)}</div>`
-      + (note && note_is_curated ? `<div class="note">${escapeHtml(note)}</div>` : "")
       + (example ? `<div class="example"><span lang="${lang}">${target}</span>`
         + `<span class="example-native">${escapeHtml(example.native)}</span></div>` : "")
       + "</li>";
   }).join("");
+  const tips = list.filter(({ note, note_is_curated }) => note && note_is_curated).map(({ meaning, note }) =>
+    `<p>${list.length > 1 ? `<b>${escapeHtml(meaning)}:</b> ` : ""}${escapeHtml(note!)}</p>`).join("");
+  return `<ol class="senses">${senses}</ol>`
+    + (tips ? `<div class="tip"><span class="tip-label">Grammar tip</span>${tips}</div>` : "");
 }
 
 function sourceFor(note: AnkiNote): string {
@@ -245,7 +254,7 @@ function fieldsFor(
   const audio = (filename: string) => { const file = bundled(filename); return file ? `[sound:${file}]` : ""; };
   if (note.type === "Word") {
     return {
-      Word: escapeHtml(note.word_furigana), Definition: senses(note.senses, note.word, lang), AudioBundled: audio(note.audio),
+      Word: escapeHtml(note.word_furigana), Definition: definition(note.senses, note.word, lang), AudioBundled: audio(note.audio),
       Source: sourceFor(note), ClipUrl: escapeHtml(note.clip?.mp4 ?? ""),
       Subtitles: captions(note.subtitles ?? undefined), ClipWebmUrl: escapeHtml(note.clip?.webm ?? ""),
       ClipPosterUrl: escapeHtml(note.clip?.poster ?? ""), ClipAspect: String(note.clip?.aspect_ratio ?? ""),

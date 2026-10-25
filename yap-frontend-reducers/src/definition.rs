@@ -94,8 +94,8 @@ pub struct SenseExample {
 pub struct DefinitionSense {
     pub meaning: String,
     pub note: Option<String>,
-    /// Written by a person rather than generated, so flashcards show it too;
-    /// otherwise only the dictionary does.
+    /// Curated rather than generated, so flashcards show it too, as a grammar
+    /// tip; otherwise only the dictionary does.
     pub note_is_curated: bool,
     pub example: Option<SenseExample>,
 }

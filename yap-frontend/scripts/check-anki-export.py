@@ -183,16 +183,21 @@ def check_sql(package, plan, directory):
             if note["type"] == "Word":
                 assert html.unescape(fields["Word"]) == note["word_furigana"]
                 expected_senses = ""
+                tips = ""
                 for sense in note["senses"]:
                     expected_senses += f'<li><div class="meaning">{html.escape(sense["meaning"])}</div>'
                     if sense["note"] and sense["note_is_curated"]:
-                        expected_senses += f'<div class="note">{html.escape(sense["note"])}</div>'
+                        meaning = f'<b>{html.escape(sense["meaning"])}:</b> ' if len(note["senses"]) > 1 else ""
+                        tips += f'<p>{meaning}{html.escape(sense["note"])}</p>'
                     if example := sense["example"]:
                         before, word, after = example["target"].partition(note["word"])
                         target = html.escape(before) + (f"<b>{html.escape(word)}</b>" if word else "") + html.escape(after)
                         expected_senses += f'<div class="example"><span lang="fr">{target}</span><span class="example-native">{html.escape(example["native"])}</span></div>'
                     expected_senses += "</li>"
-                assert fields["Definition"] == expected_senses
+                expected = f'<ol class="senses">{expected_senses}</ol>' if note["senses"] else ""
+                if tips:
+                    expected += f'<div class="tip"><span class="tip-label">Grammar tip</span>{tips}</div>'
+                assert fields["Definition"] == expected
                 wanted_ordinals = [0]
             else:
                 assert html.unescape(fields["Sentence"]) == note["sentence_furigana"]

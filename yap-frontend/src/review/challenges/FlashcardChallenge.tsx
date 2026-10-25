@@ -5,11 +5,19 @@ import {
   type DefinitionSense,
   type DefinitionView,
   type FlashcardView,
+  type GrammarTip,
   type Language,
   type Literal,
   type Rating,
 } from "../../../../yap-frontend-rs/pkg";
-import { ArrowLeft, ArrowRight, ArrowDown, Check, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowDown,
+  Check,
+  Lightbulb,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -264,6 +272,22 @@ const CardBack = ({
     .exhaustive();
 };
 
+/// Curated explanations of the card's meanings, in their own panel under the card.
+const GrammarTips = ({ tips, label }: { tips: GrammarTip[]; label: string }) => (
+  <Card variant="light" className="gap-3 p-4 animate-fade-in">
+    <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
+      <Lightbulb className="h-4 w-4" />
+      {label}
+    </span>
+    {tips.map((tip, i) => (
+      <p key={i} className="text-sm leading-relaxed">
+        {tip.meaning && <span className="font-semibold">{tip.meaning}: </span>}
+        {tip.text}
+      </p>
+    ))}
+  </Card>
+);
+
 const MeaningLabel = ({ children }: { children: React.ReactNode }) => (
   <span className="self-start text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
     {children}
@@ -303,10 +327,6 @@ const Sense = ({
         </span>
       )}
     </div>
-
-    {sense.note_is_curated && sense.note && (
-      <p className="text-sm text-muted-foreground">{sense.note}</p>
-    )}
 
     {sense.example && (
       <div className="flex items-start gap-2 text-sm">
@@ -733,6 +753,10 @@ export const FlashcardChallenge = function FlashcardChallenge({
             </div>
           </Card>
         </motion.div>
+
+        {showAnswer && view.grammar_tips.length > 0 && (
+          <GrammarTips tips={view.grammar_tips} label={view.grammar_tip_label} />
+        )}
 
         {/* Breakdown (morphemes or words), shown after the card is revealed */}
         {showAnswer &&

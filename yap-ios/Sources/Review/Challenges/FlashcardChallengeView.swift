@@ -83,6 +83,9 @@ struct FlashcardChallengeView: View {
             .accessibilityAction(named: revealed ? L("flashcard-challenge-view-hide-answer") : L("flashcard-challenge-view-reveal-answer")) { toggle() }
             .swipeToGrade(enabled: canGrade && !actions.submitting, againLabel: againLabel,
                           rememberedLabel: rememberedLabel, rate: rate)
+            if revealed, !view.grammar_tips.isEmpty {
+                GrammarTips(tips: view.grammar_tips, label: view.grammar_tip_label).fadeIn(duration: 0.3)
+            }
             // Like the web, the breakdown sits under the card rather than inside it.
             if revealed, case let .Gram(_, _, _, breakdown, _) = flashcard.content, let breakdown, !breakdown.isEmpty {
                 MorphemeBreakdownView(parts: breakdown, alignment: .center, revealDelay: 1.5).padding(.top, 12)
@@ -225,7 +228,7 @@ private struct SenseView: View {
                     Text(morphology).font(.caption).italic().foregroundStyle(Color.yapMuted).multilineTextAlignment(.trailing)
                 }
             }
-            if showsNote || sense.note_is_curated, let note = sense.note { Text(note).font(.footnote).foregroundStyle(Color.yapMuted) }
+            if showsNote, let note = sense.note { Text(note).font(.footnote).foregroundStyle(Color.yapMuted) }
             if let example = sense.example {
                 HStack(alignment: .top, spacing: 4) {
                     AudioButton(request: AudioRequest(request: TtsRequest(text: example.target, language: host.deck.get_target_language(), is_ssml: false,
@@ -283,5 +286,25 @@ private struct FlashcardAnswer: View, Equatable {
                 }
             }
         }
+    }
+}
+
+/// Curated explanations of the card's meanings, in their own panel under the card.
+private struct GrammarTips: View {
+    let tips: [GrammarTip]
+    let label: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(label.uppercased(), systemImage: "lightbulb")
+                .font(.caption.weight(.semibold)).tracking(1).foregroundStyle(Color.yapAccent)
+            ForEach(Array(tips.enumerated()), id: \.offset) { _, tip in
+                Group {
+                    if let meaning = tip.meaning { Text("\(Text(meaning).fontWeight(.semibold)): \(tip.text)") } else { Text(tip.text) }
+                }
+                .font(.subheadline).foregroundStyle(Color.yapText).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading).padding(16)
+        .cardSurface()
     }
 }

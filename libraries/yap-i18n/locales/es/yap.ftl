@@ -258,6 +258,7 @@ challenge-then-tap-to-see-if-you-re-right = ¡Luego toca para ver si acertaste!
 challenge-use-arrow-keys = Usa las flechas del teclado
 challenge-verb = Verbo
 challenge-were-you-right = ¿Acertaste?
+challenge-grammar-tip = Consejo de gramática
 command-command-palette = Paleta de comandos
 command-search-for-a-command-to-run = Busca un comando...
 common-about = Acerca de

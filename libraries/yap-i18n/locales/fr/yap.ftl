@@ -268,6 +268,7 @@ challenge-then-tap-to-see-if-you-re-right = Ensuite, touche pour voir si tu as r
 challenge-use-arrow-keys = Utilise les flèches du clavier
 challenge-verb = Verbe
 challenge-were-you-right = Tu avais raison ?
+challenge-grammar-tip = Astuce de grammaire
 command-command-palette = Palette de commandes
 command-search-for-a-command-to-run = Chercher une commande…
 common-about = À propos

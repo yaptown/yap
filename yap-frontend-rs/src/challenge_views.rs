@@ -39,6 +39,43 @@ pub struct FlashcardView {
     pub again_rest_label: Option<String>,
     pub remembered_rest_label: Option<String>,
     pub continue_label: Option<String>,
+    /// Hand-curated explanations of the card's meanings, shown together in
+    /// their own panel under the revealed card.
+    pub grammar_tips: Vec<GrammarTip>,
+    pub grammar_tip_label: String,
+}
+
+/// A curated explanation of one meaning.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct GrammarTip {
+    /// The meaning it explains, when the card shows more than one.
+    pub meaning: Option<String>,
+    pub text: String,
+}
+
+fn grammar_tips(content: &CardContent) -> Vec<GrammarTip> {
+    let senses: Vec<_> = match content {
+        CardContent::Gram { meanings, .. } => meanings
+            .iter()
+            .flat_map(|meaning| &meaning.definition.senses)
+            .collect(),
+        CardContent::Listening { possible_grams } => possible_grams
+            .iter()
+            .flat_map(|(_, _, definitions)| definitions)
+            .flat_map(|definition| &definition.senses)
+            .collect(),
+    };
+    senses
+        .iter()
+        .filter(|sense| sense.note_is_curated)
+        .filter_map(|sense| {
+            Some(GrammarTip {
+                meaning: (senses.len() > 1).then(|| sense.meaning.clone()),
+                text: sense.note.clone()?,
+            })
+        })
+        .collect()
 }
 
 fn grade_labels(is_new: bool) -> (String, String) {
@@ -116,6 +153,7 @@ pub fn flashcard_view(
     } else {
         grade_labels(if multiple { all_new } else { is_new })
     };
+    let grammar_tips = grammar_tips(&flashcard.content);
     let (subtitle, tutorial, reveal_label, listening_header, cant_listen_label) =
         match flashcard.content {
             CardContent::Gram { gram, .. } => (
@@ -186,6 +224,8 @@ pub fn flashcard_view(
             }
         }),
         continue_label: multiple.then(|| yap_i18n::tr!("common-continue")),
+        grammar_tips,
+        grammar_tip_label: yap_i18n::tr!("challenge-grammar-tip"),
     }
 }
 
@@ -416,6 +456,47 @@ mod tests {
             Language::French,
             Language::English,
         )
+    }
+
+    #[test]
+    fn grammar_tips_are_the_curated_notes() {
+        let sense = |meaning: &str, note: &str, curated| crate::DefinitionSense {
+            meaning: meaning.into(),
+            note: Some(note.into()),
+            note_is_curated: curated,
+            example: None,
+        };
+        let mut content = gram(false);
+        let CardContent::Gram { meanings, .. } = &mut content else {
+            unreachable!()
+        };
+        meanings[0].definition.senses = vec![sense("hello", "Used all day.", true)];
+        let view = flash(content.clone(), true, 1, 0);
+        assert_eq!(view.grammar_tip_label, "Grammar tip");
+        assert_eq!(
+            view.grammar_tips,
+            [GrammarTip {
+                meaning: None,
+                text: "Used all day.".into()
+            }]
+        );
+
+        // With several meanings, a tip names the one it explains, and a
+        // generated note stays off the card.
+        let CardContent::Gram { meanings, .. } = &mut content else {
+            unreachable!()
+        };
+        meanings[0]
+            .definition
+            .senses
+            .push(sense("good day", "Generated.", false));
+        assert_eq!(
+            flash(content, true, 1, 0).grammar_tips,
+            [GrammarTip {
+                meaning: Some("hello".into()),
+                text: "Used all day.".into()
+            }]
+        );
     }
 
     #[test]

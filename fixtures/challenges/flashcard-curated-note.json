@@ -1,0 +1,118 @@
+{
+  "screen": "Review",
+  "view": {
+    "show_account_prompt": false,
+    "native_language": "English",
+    "target_language": "French",
+    "step": {
+      "type": "Challenge",
+      "view": {
+        "challenge": {
+          "type": "FlashCardReview",
+          "indicator": {
+            "type": "WrittenGram",
+            "gram": {
+              "gram": [
+                {
+                  "Tok": {
+                    "text": "en",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "en",
+                      "lemma": "en",
+                      "pos": "PRON"
+                    }
+                  }
+                }
+              ],
+              "sense": null
+            }
+          },
+          "flashcard": {
+            "content": {
+              "type": "Gram",
+              "gram": [
+                {
+                  "word": {
+                    "text": "en",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "en",
+                      "lemma": "en",
+                      "pos": "PRON"
+                    }
+                  },
+                  "whitespace": ""
+                }
+              ],
+              "prefix": null,
+              "breakdown": [],
+              "meanings": [
+                {
+                  "cards": [
+                    {
+                      "type": "WrittenGram",
+                      "gram": {
+                        "gram": [
+                          {
+                            "Tok": {
+                              "text": "en",
+                              "word_type": {
+                                "type": "Heteronym",
+                                "word": "en",
+                                "lemma": "en",
+                                "pos": "PRON"
+                              }
+                            }
+                          }
+                        ],
+                        "sense": null
+                      }
+                    }
+                  ],
+                  "label": "Pronoun",
+                  "is_new": true,
+                  "definition": {
+                    "headword": "en",
+                    "is_phrase": false,
+                    "morphology_label": "",
+                    "senses": [
+                      {
+                        "meaning": "of it, of them; about it, about them",
+                        "note": "To avoid repeating a thing you just mentioned, French uses en to replace de (\"of\" or \"about\") plus that thing. While English puts \"about it\" or \"of them\" at the end of the sentence, French puts en right before the action word. For example, Je parle du film means \"I'm talking about the movie,\" and J'en parle means \"I'm talking about it.\"",
+                        "note_is_curated": true,
+                        "example": {
+                          "target": "Tu as du pain ? Oui, j'en ai.",
+                          "native": "Do you have bread? Yes, I have some."
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "audio": {
+              "request": {
+                "text": "en",
+                "language": "French",
+                "is_ssml": false,
+                "speed": 1.0
+              },
+              "provider": "Google"
+            }
+          },
+          "is_new": true,
+          "times_type_seen": 57
+        },
+        "transcription": null,
+        "translation": null
+      }
+    },
+    "progress": 0.0,
+    "total_reviews": 0,
+    "total_count": 0,
+    "keyboard_tip": "Enable the French keyboard on your device to easily type accented characters",
+    "offer_engagement": false,
+    "online": true
+  }
+}

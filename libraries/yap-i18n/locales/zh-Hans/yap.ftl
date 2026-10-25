@@ -251,6 +251,7 @@ challenge-then-tap-to-see-if-you-re-right = 然后轻点一下，看看你答对
 challenge-use-arrow-keys = 使用方向键
 challenge-verb = 动词
 challenge-were-you-right = 你答对了吗？
+challenge-grammar-tip = 语法提示
 command-command-palette = 命令面板
 command-search-for-a-command-to-run = 搜索要运行的命令…
 common-about = 关于
