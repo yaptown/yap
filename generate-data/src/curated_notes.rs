@@ -250,4 +250,3 @@ Japanese は, "(topic marker)": Japanese sentences often start by naming what th
 French en, "some (of it)": when French talks about an amount of something already mentioned, it can't just leave it out the way English can; it puts en before the verb. « Tu as du pain ? — Oui, j'en ai. » means "Do you have bread? — Yes, I have some." Without en, the answer would sound unfinished."#
     )
 }
-
