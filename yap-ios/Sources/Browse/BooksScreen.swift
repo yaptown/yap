@@ -428,7 +428,9 @@ private struct ChapterPages: View {
 }
 
 /// UIKit supplies a flexible sheet on iPhone and a centre-spined spread on iPad.
-/// TextKit remains responsible for pagination and reading anchors.
+/// TextKit remains responsible for pagination and reading anchors. The curl is
+/// always double-sided: a single page carries a blank reverse in the theme's
+/// paper, since UIKit otherwise backs it with a whitened mirror of the front.
 private struct CurlPages: UIViewControllerRepresentable {
     let pagination: Pagination?
     let layout: ReaderLayout
@@ -445,7 +447,7 @@ private struct CurlPages: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIPageViewController {
         let controller = UIPageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal,
             options: [.spineLocation: NSNumber(value: layout.columns == 2 ? UIPageViewController.SpineLocation.mid.rawValue : UIPageViewController.SpineLocation.min.rawValue)])
-        controller.isDoubleSided = layout.columns == 2
+        controller.isDoubleSided = true
         controller.dataSource = context.coordinator
         controller.delegate = context.coordinator
         for recognizer in controller.gestureRecognizers where recognizer is UITapGestureRecognizer { recognizer.isEnabled = false }
@@ -477,7 +479,9 @@ private struct CurlPages: UIViewControllerRepresentable {
 
     final class Leaf: UIHostingController<AnyView> {
         let index: Int
-        init(index: Int, content: AnyView) { self.index = index; super.init(rootView: content) }
+        /// The reverse of page `index` in single-page mode.
+        let back: Bool
+        init(index: Int, back: Bool, content: AnyView) { self.index = index; self.back = back; super.init(rootView: content) }
         @MainActor required dynamic init?(coder: NSCoder) { fatalError() }
     }
     final class Coordinator: NSObject, UIPageViewControllerDataSource, UIPageViewControllerDelegate, UIGestureRecognizerDelegate {
@@ -493,7 +497,7 @@ private struct CurlPages: UIViewControllerRepresentable {
             let current = (controller.viewControllers?.first as? Leaf)?.index
             guard changed || current != first else { return }
             pagination = nextPagination
-            let leaves = (0..<Int(parent.layout.columns)).map { leaf(first + $0) }
+            let leaves = parent.layout.columns == 2 ? [leaf(first), leaf(first + 1)] : [leaf(first), leaf(first, back: true)]
             turning = true
             controller.setViewControllers(leaves, direction: first >= (current ?? 0) ? .forward : .reverse,
                                           animated: !changed && current != nil && !parent.reduceMotion) { [weak self, weak controller] _ in
@@ -503,8 +507,8 @@ private struct CurlPages: UIViewControllerRepresentable {
                 render(controller)
             }
         }
-        func leaf(_ index: Int) -> Leaf {
-            let content = AnyView(Group {
+        func leaf(_ index: Int, back: Bool = false) -> Leaf {
+            let content = back ? AnyView(parent.paper.background) : AnyView(Group {
                 if let pagination, pagination.containers.indices.contains(index) {
                     PageCanvas(pagination: pagination, page: index)
                         .frame(width: parent.layout.page_width, height: parent.layout.page_height)
@@ -514,19 +518,22 @@ private struct CurlPages: UIViewControllerRepresentable {
                 .padding(.top, parent.layout.top)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .background(parent.paper.background))
-            let leaf = Leaf(index: index, content: content)
+            let leaf = Leaf(index: index, back: back, content: content)
             leaf.view.backgroundColor = UIColor(parent.paper.background)
             return leaf
         }
+        // In single-page mode UIKit walks front, back, front, back.
         func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-            guard let index = (viewController as? Leaf)?.index else { return nil }
+            guard let current = viewController as? Leaf else { return nil }
+            if current.back { return leaf(current.index) }
             let minimum = parent.hasPrevious ? -Int(parent.layout.columns) : 0
-            return index > minimum ? leaf(index - 1) : nil
+            return current.index > minimum ? leaf(current.index - 1, back: parent.layout.columns == 1) : nil
         }
         func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
-            guard let index = (viewController as? Leaf)?.index, let pagination else { return nil }
+            guard let current = viewController as? Leaf, let pagination else { return nil }
+            if parent.layout.columns == 1 && !current.back { return leaf(current.index, back: true) }
             let limit = (pagination.spreads(parent.layout) + (parent.hasNext ? 1 : 0)) * Int(parent.layout.columns)
-            return index + 1 < limit ? leaf(index + 1) : nil
+            return current.index + 1 < limit ? leaf(current.index + 1) : nil
         }
         func pageViewController(_ pageViewController: UIPageViewController, willTransitionTo pendingViewControllers: [UIViewController]) { turning = true }
         func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
