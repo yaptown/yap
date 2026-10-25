@@ -1,4 +1,4 @@
-/* The landing page: a night station outside, a pale page inside.
+/* The landing page: a little world by day or by night, a pale page inside.
    Fixed palette regardless of the app theme, but every colour sits on
    the app's own hue (oklch hue 328.6, the magenta of the theme tokens). */
 
@@ -6,7 +6,7 @@
   --night: #120711;
   --paper: #f7eff6;
   --ink: #300030;
-  --lamp: #e273df;
+  --pink: #e273df;
   font-family: var(--font-sans);
   font-weight: 400;
   font-variant-numeric: tabular-nums lining-nums;
@@ -14,15 +14,15 @@
 }
 
 /* Each section sets its own ground and foreground scale so children can use
-   the same token names on either. Themed sections follow the app: the hero
-   is a daytime station on paper in light mode and the night one in dark
-   mode, and the section showing the app's own card takes the app's ground so
+   the same token names on either. Themed sections follow the app: the hero's
+   world sits on paper in light mode and in a starry night in dark mode,
+   and the section showing the app's own card takes the app's ground so
    the card's tokens sit on the surface they were designed for. */
 .landing-night,
 .dark .landing-themed {
   --bg: var(--night);
   --fg: var(--paper);
-  --lamp: #e273df;
+  --pink: #e273df;
   --fg-soft: #e6dae5;
   --fg-dim: #c9b7c7;
   --rule: rgba(247, 239, 246, 0.24);
@@ -34,8 +34,8 @@
 .landing-themed {
   --bg: var(--paper);
   --fg: var(--ink);
-  /* The lamp's pink is a light on the night; on paper it needs more ink. */
-  --lamp: #b93cb6;
+  /* The pink glows on the night; on paper it needs more ink. */
+  --pink: #b93cb6;
   --fg-soft: #4c2f4a;
   --fg-dim: #654b63;
   --rule: rgba(48, 0, 48, 0.24);
@@ -44,12 +44,9 @@
   color: var(--fg);
 }
 
-/* The hero's lamp is off by day, lit by night; the snow shader reads this. */
-.landing-hero {
-  --fx-lamp: 0;
-}
+/* The hero's world is drawn on a canvas; this tells it which sky it is in. */
 .dark .landing-hero {
-  --fx-lamp: 1;
+  --fx-night: 1;
 }
 
 .landing a {
@@ -57,7 +54,7 @@
   text-decoration: none;
 }
 .landing a:hover {
-  color: var(--lamp);
+  color: var(--pink);
 }
 
 .landing-disp {
@@ -79,15 +76,14 @@
   text-decoration: underline;
   text-decoration-thickness: 1.5px;
   text-underline-offset: 0.22em;
-  text-decoration-color: var(--lamp);
+  text-decoration-color: var(--pink);
 }
 
-/* The app's film grain, laid over the full-bleed photos so they read as
-   part of the app and not as stock images dropped into it. Same texture as
-   the shader background; blended as the app does by night (the texture
-   inverted and multiplied in), which over a near-white daytime sky is also
-   the only blend that shows at all, so it is used by day as well, lightly.
-   The app's night fog texture is left off: the night photo has its own. */
+/* The app's film grain, laid over the full-bleed sections so they read as
+   part of the app. Same texture as the shader background; blended as the
+   app does by night (the texture inverted and multiplied in), which over a
+   pale ground is also the only blend that shows at all, so it is used by
+   day as well, lightly. The app's night fog texture is left off. */
 .landing-grain {
   position: absolute;
   inset: 0;

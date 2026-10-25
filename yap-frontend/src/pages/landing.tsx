@@ -1,6 +1,13 @@
 import { t } from "@/lib/i18n";
 import { LanguageIcon } from "@/components/LanguageIcon";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import {
   get_showcase_data,
@@ -21,7 +28,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Moon, MoreVertical, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { APP_STORE_URL, IS_IOS } from "@/lib/ios-app";
-import { mountFx, type OrbitGeometry } from "@/lib/landing-fx";
+import { mountGlobe, type Landmark } from "@/lib/landing-globe";
 import type { AppContextType } from "@/app/context";
 import { useDeckSelection } from "@/core/useDeck";
 import "./landing.css";
@@ -29,20 +36,6 @@ import "./landing.css";
 // ---------------------------------------------------------------------------
 // Content. The copy is a placeholder from the design; the sentences are real
 // corpus lines.
-
-/** The station photos: their shape, how they are cropped into the hero, and
- *  where the lamp post sits, all as fractions of the photo. The day and night
- *  photos share the framing, so one measurement serves both. */
-const ORBIT: OrbitGeometry = {
-  aspect: 3072 / 2048,
-  position: [0.72, 0.3],
-  postTop: [0.781, 0.16],
-  postBottom: [0.782, 0.79],
-  postHalfWidth: [0.0025, 0.0035],
-  head: [0.747, 0.173],
-  headRadius: [0.032, 0.014],
-  count: 28000,
-};
 
 // ---------------------------------------------------------------------------
 // Building blocks
@@ -52,19 +45,59 @@ const GRID = "grid gap-3 md:grid-cols-[220px_minmax(0,1fr)] md:gap-10";
 /** Horizontal page margins. */
 const GUTTER = "px-5 sm:px-10 xl:px-[120px]";
 
-/** The hero's snowfall over its photo. */
-function SnowCanvas({ className }: { className?: string }) {
+/** The bare cutouts from the icon set, by icon id. */
+const CUTOUTS = Object.fromEntries(
+  Object.entries(
+    import.meta.glob<string>("../assets/language-icons/*-bare.svg", {
+      eager: true,
+      query: "?url",
+      import: "default",
+    }),
+  ).map(([path, url]) => [path.slice(path.lastIndexOf("/") + 1, -9), url]),
+);
+
+/** Where each course's landmark stands, as [lat, lon] in degrees. */
+const LANDMARKS: Landmark[] = Object.entries({
+  "deu.neuschwanstein": [47.56, 10.75],
+  "eng.liberty": [40.69, -74.04],
+  "fra.eiffel": [48.86, 2.29],
+  "hin.tajmahal": [27.17, 78.04],
+  "ita.pisa": [43.72, 10.4],
+  "jpn.torii": [34.3, 132.32],
+  "kor.gyeongbokgung": [37.58, 126.98],
+  "por-pt.tram": [38.72, -9.14],
+  "por.cristo": [-22.95, -43.21],
+  "rus.basil": [55.75, 37.62],
+  "spa-es.sagrada": [41.4, 2.17],
+  "spa.calavera": [19.43, -99.13],
+  "tha.elephant": [13.75, 100.5],
+  "zho-hans.panda": [30.66, 104.06],
+  "zho-hant.boba": [25.03, 121.56],
+}).map(([id, [lat, lon]]) => ({ url: CUTOUTS[id], lat, lon }));
+
+/** The hero's little spinning world. The canvas covers the hero; the world
+ *  itself sits in `slot`. */
+function WorldCanvas({
+  slot,
+  className,
+}: {
+  slot: RefObject<HTMLElement | null>;
+  className?: string;
+}) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = ref.current;
-    if (!canvas) return;
-    return mountFx(canvas, ORBIT);
-  }, []);
+    if (!canvas || !slot.current) return;
+    return mountGlobe(canvas, slot.current, LANDMARKS);
+  }, [slot]);
   return (
     <canvas
       ref={ref}
       aria-hidden
-      className={cn("pointer-events-none block", className)}
+      className={cn(
+        "block touch-pan-y opacity-0 transition-opacity duration-700 data-ready:opacity-100",
+        className,
+      )}
     />
   );
 }
@@ -72,7 +105,7 @@ function SnowCanvas({ className }: { className?: string }) {
 function Wordmark({ className }: { className?: string }) {
   return (
     <Link to="/" className={cn("landing-disp leading-none", className)}>
-      Yap<span className="text-(--lamp)">.</span>Town
+      Yap<span className="text-(--pink)">.</span>Town
     </Link>
   );
 }
@@ -105,47 +138,6 @@ function CallToAction({ className }: { className?: string }) {
         {t("ios-app-get-started-in-browser")}
       </Link>
     </div>
-  );
-}
-
-/** The full-bleed station photo, in whichever of its two sizes suits the
- *  screen. Both sizes are cut from the same frame. */
-function Photo({
-  name,
-  contrast,
-  className,
-  onLoad,
-}: {
-  name: string;
-  /** A plainer photo for people who ask for more contrast. */
-  contrast?: string;
-  className?: string;
-  onLoad?: () => void;
-}) {
-  const srcSet = (n: string) =>
-    `/landing/${n}-1400.webp 1400w, /landing/${n}-2800.webp 2800w`;
-  return (
-    <picture>
-      {contrast && (
-        <source
-          media="(prefers-contrast: more)"
-          srcSet={srcSet(contrast)}
-          sizes="100vw"
-        />
-      )}
-      <img
-        src={`/landing/${name}-1400.webp`}
-        srcSet={srcSet(name)}
-        sizes="100vw"
-        alt=""
-        fetchPriority="high"
-        onLoad={onLoad}
-        className={cn("absolute inset-0 h-full w-full object-cover", className)}
-        style={{
-          objectPosition: `${ORBIT.position[0] * 100}% ${ORBIT.position[1] * 100}%`,
-        }}
-      />
-    </picture>
   );
 }
 
@@ -184,43 +176,28 @@ function RotatingWord({ words }: { words: string[] }) {
 
 function Hero({ corpus }: { corpus: Corpus }) {
   const people = useMemo(() => peopleOf(corpus?.targets), [corpus]);
-  // A hidden <img> still downloads, so render only this theme's photo, and
-  // let the snow in once it has arrived rather than over an empty hero.
-  const night = useShaderTheme() !== "light";
-  const [photoLoaded, setPhotoLoaded] = useState(false);
+  const slot = useRef<HTMLDivElement>(null);
   return (
     <div className="landing-hero landing-themed relative flex min-h-svh flex-col overflow-hidden">
-      {/* The same station by day and by night, same framing, so the orbit
-          geometry measured on the night photo holds for both. */}
-      {night ? (
-        <Photo name="platform" onLoad={() => setPhotoLoaded(true)} />
-      ) : (
-        <Photo
-          name="platform-day"
-          contrast="platform-day-contrast"
-          onLoad={() => setPhotoLoaded(true)}
-        />
-      )}
+      <WorldCanvas slot={slot} className="absolute inset-0 h-full w-full" />
       <div className="landing-grain" />
-      <SnowCanvas
-        className={cn(
-          "absolute inset-0 h-full w-full transition-opacity duration-700",
-          !photoLoaded && "opacity-0",
-        )}
+      {/* Where the world sits: under the copy on narrow screens, beside it
+          on wide ones. */}
+      <div
+        ref={slot}
+        className="pointer-events-none aspect-square w-full md:absolute md:top-[54%] md:left-[77%] md:w-[min(48vw,91svh)] md:-translate-1/2"
       />
 
       <div
         className={cn(
-          "relative z-[1] flex flex-1 flex-col items-start justify-center gap-7 py-24 md:gap-9",
+          "relative z-[1] flex flex-col items-start gap-7 pt-24 max-md:-order-1 md:pointer-events-none md:flex-1 md:justify-center md:gap-9 md:py-24 md:*:pointer-events-auto",
           GUTTER,
         )}
       >
-        <h1 className="landing-disp m-0 text-[clamp(38px,6.3vw,92px)] leading-[0.98]">
-          <span className="md:whitespace-nowrap">
-            {t("landing-hero.before")}
-            <br className="md:hidden" />
-            <RotatingWord words={people} />
-          </span>
+        <h1 className="landing-disp m-0 text-[clamp(38px,5.2vw,80px)] leading-[0.98]">
+          {t("landing-hero.before")}
+          <br />
+          <RotatingWord words={people} />
           <br />
           {t("landing-hero.after")}
         </h1>
@@ -282,7 +259,7 @@ function Product() {
               description={t(
                 "landing-learn-words-in-context-from-real-films-books-and",
               )}
-              titleClassName="text-(--lamp)"
+              titleClassName="text-(--pink)"
             />
           </Pin>
           <Pin anchor="--phrase" area="right">
@@ -355,7 +332,7 @@ function FeatureCard({
 }
 
 function MockFlashcard() {
-  const wordClass = "border-b-2 border-dotted border-(--lamp) pb-0.5";
+  const wordClass = "border-b-2 border-dotted border-(--pink) pb-0.5";
   return (
     <Card className="w-fit max-w-xl rotate-[5deg] gap-5 p-5 text-left text-foreground">
       <div className="flex items-center justify-between px-2">
@@ -415,7 +392,7 @@ function HighlightPhrase({ text, phrase }: { text: string; phrase: string }) {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="rounded-sm bg-(--lamp)/25 px-0.5 text-(--fg)">
+      <mark className="rounded-sm bg-(--pink)/25 px-0.5 text-(--fg)">
         {text.slice(idx, idx + phrase.length)}
       </mark>
       {text.slice(idx + phrase.length)}
@@ -608,7 +585,7 @@ function RecallChart() {
                 y1="0"
                 x2={x(sg.day)}
                 y2="100"
-                stroke="var(--lamp)"
+                stroke="var(--pink)"
                 strokeOpacity="0.75"
                 vectorEffect="non-scaling-stroke"
               />
@@ -644,7 +621,7 @@ function RecallChart() {
         {REVIEWS.map((r) => (
           <div
             key={r.day}
-            className="absolute top-0 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-(--lamp)"
+            className="absolute top-0 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-(--pink)"
             style={{ left: `${x(r.day)}%` }}
           />
         ))}
@@ -659,7 +636,7 @@ function RecallChart() {
           <div
             key={r.day}
             className={cn(
-              "absolute top-2 text-[15px] leading-none whitespace-nowrap text-(--lamp)",
+              "absolute top-2 text-[15px] leading-none whitespace-nowrap text-(--pink)",
               i > 0 && "-translate-x-1/2",
               i % 2 === 1 && "max-xl:top-7",
             )}
@@ -718,7 +695,7 @@ function Coda() {
         <div>
           <div className={GRID}>
             <div className="flex flex-col gap-3">
-              <div className="text-[22px] leading-none text-(--lamp)">
+              <div className="text-[22px] leading-none text-(--pink)">
                 se souvenir
               </div>
               <div className="landing-tag leading-snug text-(--fg-soft)">

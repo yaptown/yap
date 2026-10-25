@@ -74,6 +74,11 @@ alongside the licence texts.
   and
   [Corina Rainer](https://unsplash.com/photos/white-cotton-on-white-textile-jZc5eTXnYLU)
   on Unsplash.
+- The coastlines on the home page's globe are from
+  [Natural Earth](https://www.naturalearthdata.com) (public domain), via
+  [world-atlas](https://github.com/topojson/world-atlas), and its relief
+  from NOAA's [ETOPO1](https://www.ncei.noaa.gov/products/etopo-global-relief-model)
+  (public domain).
 
 ## Code
 
