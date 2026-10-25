@@ -274,7 +274,7 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
         Korean => LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
-            status: CourseMaturity::Alpha,
+            status: CourseMaturity::Beta,
             icon: "kor.gyeongbokgung".into(),
             native_name: "한국어".into(),
             english_name: yap_i18n::tr!("language-name.full", language = language.code()),

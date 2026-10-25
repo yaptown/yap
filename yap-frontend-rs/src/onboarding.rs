@@ -345,7 +345,7 @@ pub fn onboarding_reduce(
 pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
     use OnboardingContent::*;
     let metadata = get_language_metadata(state.target_language);
-    let language = &metadata.native_name;
+    let language = &metadata.common_name;
     let step = state.step().clone();
     let is_new = state.selections.experience_level == Some(ExperienceLevel::New);
     let mut primary = Some(OnboardingPrimary {
@@ -886,14 +886,14 @@ mod tests {
             }]
         ));
         assert!(s.heard_about.is_none());
-        assert_eq!(view(&s).title, "Why are you learning Français?");
+        assert_eq!(view(&s).title, "Why are you learning French?");
         choose(
             &mut s,
             OnboardingChoice::Motivation {
                 value: crate::deck_selection::Motivation::JustForFun,
             },
         );
-        assert_eq!(view(&s).title, "How much Français do you know?");
+        assert_eq!(view(&s).title, "How much French do you know?");
         choose(
             &mut s,
             OnboardingChoice::Experience {
@@ -989,7 +989,7 @@ mod tests {
         else {
             panic!()
         };
-        assert_eq!(body, "We'll build your Français foundation step by step.");
+        assert_eq!(body, "We'll build your French foundation step by step.");
         assert!(start_fresh_label.is_none());
         let effects = next(&mut s);
         let [OnboardingEffect::Complete { selections }] = &effects[..] else {
@@ -1085,7 +1085,7 @@ mod tests {
         };
         assert_eq!(
             body,
-            "Since you already know some Español, we can skip ahead to where you belong."
+            "Since you already know some Spanish, we can skip ahead to where you belong."
         );
         assert_eq!(start_fresh_label.as_deref(), Some("Start from scratch"));
         assert!(

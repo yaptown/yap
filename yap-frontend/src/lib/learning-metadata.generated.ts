@@ -234,7 +234,7 @@ export const LANGUAGE_METADATA = {
   Korean: {
     isoCode: 'kor',
     iso6391: 'ko',
-    status: 'alpha',
+    status: 'beta',
     icon: 'kor.gyeongbokgung',
     nativeName: '한국어',
     englishName: 'Korean',
