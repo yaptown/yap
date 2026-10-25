@@ -414,6 +414,7 @@ fn word_note(
             word,
             pack.readings_for_sense(gram).next(),
             course.target_language,
+            pack,
         ),
         senses,
         audio,
@@ -549,8 +550,8 @@ fn sentence_glosses(
 /// Anki's furigana markup, ` 漢字[かんじ]`: `{{furigana:…}}` renders it as
 /// ruby and `{{kanji:…}}` strips the readings. Both filters consume the space
 /// before a base, which stops the base from swallowing the text before it.
-fn furigana(text: &str, reading: Option<&str>, language: Language) -> String {
-    let segments = crate::ruby::word_ruby(text, reading, language);
+fn furigana(text: &str, reading: Option<&str>, language: Language, pack: &LanguagePack) -> String {
+    let segments = crate::ruby::word_ruby(text, reading, language, &pack.ruby_segmentations);
     ruby_furigana(text, &segments)
 }
 

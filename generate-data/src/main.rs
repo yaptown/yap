@@ -185,11 +185,6 @@ async fn main() -> anyhow::Result<()> {
                         .await
                         .context("Failed to get target sentences")?
                 };
-                let targets: Vec<String> = sentence_corpus
-                    .app_sentences
-                    .iter()
-                    .map(|(target, _, _)| target.clone())
-                    .collect();
                 let translator = Translator::new(
                     course.target_language, // translate from target to native
                     course.native_language,
@@ -204,6 +199,12 @@ async fn main() -> anyhow::Result<()> {
                 )
                 .await
                 .context("Failed to create translator")?;
+                let targets: Vec<String> = sentence_corpus
+                    .app_sentences
+                    .iter()
+                    .filter(|(target, _, _)| translator.needs_translation(target))
+                    .map(|(target, _, _)| target.clone())
+                    .collect();
                 let translator = tokio::spawn(async move {
                     translator.prime(&targets).await?;
                     println!(
@@ -274,6 +275,18 @@ async fn main() -> anyhow::Result<()> {
         );
         // Retention is the last mutation of the translation input. Sense
         // assignment mutates only the NLP maps, so these branches are disjoint.
+        let translation_token_counts = nlp_sentences
+            .iter()
+            .filter(|_| course.target_language == language_utils::Language::Japanese)
+            .map(|(text, info)| {
+                (
+                    text.clone(),
+                    generate_data::translation_review::token_count(
+                        &info.decode_words(&interners, course.target_language),
+                    ),
+                )
+            })
+            .collect();
         let (inventories, translations_map) = tokio::try_join!(
             generate_data::StageTimer::run(
                 "sense assignment",
@@ -290,9 +303,14 @@ async fn main() -> anyhow::Result<()> {
                 let translator = translator
                     .await
                     .context("Translation cache warmup task failed")??;
-                generate_data::pipeline::translate_sentences(course, &sentence_corpus, translator)
-                    .await
-                    .context("Failed to translate sentences")
+                generate_data::pipeline::translate_sentences(
+                    course,
+                    &sentence_corpus,
+                    translator,
+                    &translation_token_counts,
+                )
+                .await
+                .context("Failed to translate sentences")
             }),
         )?;
         let generate_data::pipeline::CourseDirs {
@@ -1799,8 +1817,13 @@ async fn main() -> anyhow::Result<()> {
             pronunciation_audio,
         };
 
-        let language_pack =
+        let mut language_pack =
             language_utils::language_pack::LanguagePack::new(consolidated_data, *course);
+        if course.target_language == language_utils::Language::Japanese {
+            generate_data::readings::furigana::Segmenter::load()
+                .await?
+                .populate(&mut language_pack);
+        }
 
         // Split into core/sentences halves and write both archives + the
         // hash metadata file.

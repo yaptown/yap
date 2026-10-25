@@ -330,6 +330,7 @@ impl ReviewInfo {
                     .trim(),
                 language_pack.readings_for_sense(gram).next(),
                 deck.context.course.target_language,
+                &language_pack.ruby_segmentations,
             ),
             gram: literals,
             prefix,

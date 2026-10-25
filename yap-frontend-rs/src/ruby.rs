@@ -4,9 +4,19 @@ use language_utils::{
 };
 use lasso::Spur;
 
-pub(crate) fn word_ruby(text: &str, reading: Option<&str>, language: Language) -> Vec<RubySegment> {
+pub(crate) fn word_ruby(
+    text: &str,
+    reading: Option<&str>,
+    language: Language,
+    segmentations: &std::collections::BTreeMap<(String, String), Vec<RubySegment>>,
+) -> Vec<RubySegment> {
     let segments = reading
-        .map(|reading| language_utils::readings::ruby_segments(text, reading, language))
+        .map(|reading| {
+            segmentations
+                .get(&(text.to_owned(), reading.to_owned()))
+                .cloned()
+                .unwrap_or_else(|| language_utils::readings::ruby_segments(text, reading, language))
+        })
         .unwrap_or_default();
     if segments.iter().any(|segment| segment.ruby.is_some()) {
         segments
@@ -47,6 +57,7 @@ pub(crate) fn sentence_ruby_groups<'a>(
                 &text,
                 gram.reading.map(|s| pack.string_rodeo.resolve(&s)),
                 language,
+                &pack.ruby_segmentations,
             );
             SentenceRubyGroup {
                 literals,
@@ -136,6 +147,31 @@ fn distribute(words: &[(&str, &str)], segments: Vec<RubySegment>) -> Vec<Vec<Rub
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn word_ruby(text: &str, reading: Option<&str>, language: Language) -> Vec<RubySegment> {
+        super::word_ruby(text, reading, language, &Default::default())
+    }
+    #[test]
+    fn split_reading_survives_literal_projection() {
+        let segments = vec![
+            RubySegment {
+                base: "東".into(),
+                ruby: Some("とう".into()),
+            },
+            RubySegment {
+                base: "京".into(),
+                ruby: Some("きょう".into()),
+            },
+        ];
+        let lookup = std::collections::BTreeMap::from([(
+            ("東京".into(), "とうきょう".into()),
+            segments.clone(),
+        )]);
+        let ruby = super::word_ruby("東京", Some("とうきょう"), Language::Japanese, &lookup);
+        assert_eq!(
+            distribute(&[("東", ""), ("京", "")], ruby),
+            vec![vec![segments[0].clone()], vec![segments[1].clone()]]
+        );
+    }
     #[test]
     fn literals_okurigana_and_whitespace() {
         let words = [("食べる", " "), ("猫", "")];

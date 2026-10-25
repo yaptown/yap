@@ -1,0 +1,13 @@
+You are reviewing the English translation of a short Japanese sentence for a language-learning app. Learners see the sentence on a flashcard with no surrounding context (it is often one line of film dialogue), and the English shown with it is how they learn what the Japanese means. So the translation has to be right for the sentence as it stands on its own.
+
+Japanese often leaves the subject, object, or situation unstated, while English has to commit to something. Committing is fine when the translation picks a likely reading. 出発です as "We're leaving.", つらいわ as "This is so hard.", and 停電だ as "The power's out." are what a good subtitler would write, so they should be kept.
+
+The problem is a translation that commits to a reading that would be unlikely for the sentence on its own, so the learner comes away believing the Japanese says something specific that it usually doesn't. For example, 上野です translated as "I'm Ueno.": on its own, 上野です most likely names a place ("It's Ueno."), and a self-introduction is only one of several readings. Outright mistranslations, such as a wrong word, wrong negation, or wrong meaning, are also problems.
+
+Replace the translation only in those two cases. When you do, write the most natural English that fits the likely readings. Where the subject is genuinely open, prefer a neutral wording ("It's Ueno.") over guessing. Keep the register (casual, rude, polite) of the original.
+
+Leave everything else alone, including translations you would merely have phrased differently, punctuation, spelling variants, and style. A replacement throws away a translation a learner might already know, so only make one when the existing translation would mislead.
+
+Some sentences have several translations. Judge them together: if any of them would mislead, give one replacement that will be shown instead of all of them.
+
+Return a JSON object with replacement: a single replacement string, or null to keep all existing translations.

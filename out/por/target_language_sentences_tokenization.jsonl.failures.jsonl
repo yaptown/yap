@@ -73,7 +73,7 @@
 {"sentence":"Comei e bebei o que quiserdes!","failure_count":3}
 {"sentence":"Como \"mais\"?","failure_count":3}
 {"sentence":"Como é que tu está, mulher?","failure_count":3}
-{"sentence":"Concedei-lhe alguma paz de espírito.","failure_count":2}
+{"sentence":"Concedei-lhe alguma paz de espírito.","failure_count":3}
 {"sentence":"Creakle's.","failure_count":3}
 {"sentence":"Cumprimente o doutor.","failure_count":3}
 {"sentence":"Cumprimente, cumprimente!","failure_count":3}
@@ -88,7 +88,7 @@
 {"sentence":"Duas mil e trezentas.","failure_count":3}
 {"sentence":"E \"amonto\" bem, que já fui vaqueiro.","failure_count":3}
 {"sentence":"E como parece diferente, mas já estávamos em guerra.","failure_count":3}
-{"sentence":"E estávamos a comer torradas com doce de abóbora, muito bom.","failure_count":2}
+{"sentence":"E estávamos a comer torradas com doce de abóbora, muito bom.","failure_count":3}
 {"sentence":"E eu fui despejada.","failure_count":3}
 {"sentence":"Educação é aprender aquilo que você nem sabia que não sabia.","failure_count":3}
 {"sentence":"Ei!..","failure_count":3}
@@ -134,6 +134,7 @@
 {"sentence":"Fazal Khan está morto!","failure_count":3}
 {"sentence":"Fliora, Fliora, Eu choquei você, pequeno Fliora!?","failure_count":3}
 {"sentence":"Fliora, Fliora, eu choquei você, pequeno Fliora!?","failure_count":3}
+{"sentence":"Fora isso, muito repouso.","failure_count":3}
 {"sentence":"Gooooooool!","failure_count":3}
 {"sentence":"Graças a Deus está aqui.","failure_count":3}
 {"sentence":"Graças a Deus pode dizer isso.","failure_count":3}
@@ -153,7 +154,7 @@
 {"sentence":"Graças a ele, teremos que dormir aqui agora.","failure_count":3}
 {"sentence":"Graças a este telescóplo, uns poucos metros.","failure_count":3}
 {"sentence":"Graças a isto me livrei do serviço militar.","failure_count":3}
-{"sentence":"Graças a si, Padre Dinis.","failure_count":2}
+{"sentence":"Graças a si, Padre Dinis.","failure_count":3}
 {"sentence":"Graças a ti, eu sinto-me muito melhor.","failure_count":3}
 {"sentence":"Graças a uma necessidade urgente, ele não poderá vir.","failure_count":3}
 {"sentence":"Graças a você conseguimos terminar este trabalho a tempo.","failure_count":3}
@@ -203,7 +204,7 @@
 {"sentence":"Lazzaro, você descarrega!","failure_count":3}
 {"sentence":"Lembro da Costa do Marfim.","failure_count":1}
 {"sentence":"Ligarei para ele antes dele sair.","failure_count":3}
-{"sentence":"Livra!","failure_count":1}
+{"sentence":"Livra!","failure_count":2}
 {"sentence":"Mas como você deu, é como um presente para mim.","failure_count":1}
 {"sentence":"Mas estávamos felizes em ter um motorista jovem e divertido também.","failure_count":3}
 {"sentence":"Mas fora isso que ele prometera.","failure_count":3}
@@ -223,7 +224,7 @@
 {"sentence":"Na primeira sílaba, \"Ca\" o A está no início, ou no fim da sílaba?","failure_count":3}
 {"sentence":"Nenê num \"té\", nenê num \"té\"!","failure_count":3}
 {"sentence":"No me gustan los padres pero esse está haciendo um buen servicio.","failure_count":3}
-{"sentence":"Não lhe é destinada, mas acho que é altura de saber que vida amargurada é a sua.","failure_count":2}
+{"sentence":"Não lhe é destinada, mas acho que é altura de saber que vida amargurada é a sua.","failure_count":3}
 {"sentence":"Não me diga que não tem papel de parede.","failure_count":1}
 {"sentence":"Não me importo com o \"sonoros\", mas essa história de \"perus\" não dá.","failure_count":3}
 {"sentence":"Não me lembro do que estávamos fazendo naquele momento.","failure_count":3}
@@ -265,12 +266,12 @@
 {"sentence":"Passei o endereço para o motorista e ele me trouxe..","failure_count":3}
 {"sentence":"Pegem ele.","failure_count":3}
 {"sentence":"Pena, estávamos nos dando tão bem.","failure_count":3}
-{"sentence":"Pensas como um homem.","failure_count":2}
+{"sentence":"Pensas como um homem.","failure_count":3}
 {"sentence":"Pensas demais.","failure_count":3}
 {"sentence":"Pensas que eu não sei o que está acontecendo?","failure_count":3}
-{"sentence":"Pensas que isto é uma pensão?","failure_count":2}
+{"sentence":"Pensas que isto é uma pensão?","failure_count":3}
 {"sentence":"Pensas que não sei o que está acontecendo?","failure_count":3}
-{"sentence":"Pensas que se afundará sozinho?","failure_count":2}
+{"sentence":"Pensas que se afundará sozinho?","failure_count":3}
 {"sentence":"Pensas que tenho que fazer isso, não é?","failure_count":3}
 {"sentence":"Pensas que és o único que consegues fazer isso?","failure_count":3}
 {"sentence":"Perdão, Nessa.","failure_count":3}
@@ -278,7 +279,7 @@
 {"sentence":"Perkovic.","failure_count":3}
 {"sentence":"Pode entrar? Entre!","failure_count":1}
 {"sentence":"Por acaso tu sabe onde fica a China?","failure_count":3}
-{"sentence":"Por causa dele, a freguesia aumentou e hasta foi fotografiada.","failure_count":2}
+{"sentence":"Por causa dele, a freguesia aumentou e hasta foi fotografiada.","failure_count":3}
 {"sentence":"Por esta razão estávamos lá.","failure_count":3}
 {"sentence":"Por este motivo estávamos lá.","failure_count":3}
 {"sentence":"Por favor, confira se seu nome de usuário e sua senha estão corretos.","failure_count":1}
@@ -287,6 +288,7 @@
 {"sentence":"Portanto, \"auto,\" de si, e \"kratia,\" de governo, poder.","failure_count":3}
 {"sentence":"Pouca gente sabe o que a palavra \"hipster\" quer dizer.","failure_count":3}
 {"sentence":"Poucos fogem!","failure_count":3}
+{"sentence":"Poupa-me trabalho.","failure_count":1}
 {"sentence":"Pra onde é que você vai, ÁIvaro?","failure_count":3}
 {"sentence":"Pra que era aquela cerca Daniel..?","failure_count":3}
 {"sentence":"Pra que que você veio comigo?","failure_count":3}
@@ -305,7 +307,7 @@
 {"sentence":"Sanjec'ka, tenho que sair um minuto.","failure_count":3}
 {"sentence":"Schenck.","failure_count":3}
 {"sentence":"Se eu emprestasse dinheiro para o navio, a coisa complicar-se-ia muito depressa.","failure_count":3}
-{"sentence":"Se eu fosse mais novo, eu partia-te os cornos!","failure_count":2}
+{"sentence":"Se eu fosse mais novo, eu partia-te os cornos!","failure_count":3}
 {"sentence":"Se precisar de mais, então me dizer eu vou..","failure_count":3}
 {"sentence":"Se tivese estudado.","failure_count":3}
 {"sentence":"Sem julgamento, mas tipo, o que é mais importante para vocês..","failure_count":3}
@@ -313,6 +315,7 @@
 {"sentence":"Senhora!..","failure_count":3}
 {"sentence":"Seus argumentos eventualmente terminararam empatados.","failure_count":3}
 {"sentence":"Sofra, mas não renegue a vida.","failure_count":3}
+{"sentence":"Sofre de PMD.","failure_count":3}
 {"sentence":"Sofre pelo choque com a realidade.","failure_count":3}
 {"sentence":"Sofre, mas tem que sentir prazer sofrendo.","failure_count":3}
 {"sentence":"Sofre, sim, Ema.","failure_count":3}
@@ -367,6 +370,7 @@
 {"sentence":"Tomem banho de um minuto.","failure_count":3}
 {"sentence":"Tomem precauções imediatas.","failure_count":3}
 {"sentence":"Trouxemos carne.","failure_count":3}
+{"sentence":"Trouxemos este.","failure_count":3}
 {"sentence":"Trouxemos o Anel até aqui.","failure_count":3}
 {"sentence":"Trouxemos todos para baixo.","failure_count":3}
 {"sentence":"Trouxemos-lhe a roupa do seu filho completamente ensanguentada.","failure_count":3}
@@ -401,13 +405,13 @@
 {"sentence":"Você não é a primeiro a sugerir isso.","failure_count":3}
 {"sentence":"Você é a razão dele está em apuros.","failure_count":3}
 {"sentence":"Você é diplomática.","failure_count":3}
-{"sentence":"Você é um cara meigo.","failure_count":2}
+{"sentence":"Você é um cara meigo.","failure_count":3}
 {"sentence":"Volte para a Índia.","failure_count":1}
-{"sentence":"Vossemecê bebeu vinho e tá-me a deitar água pelos olhos?","failure_count":1}
-{"sentence":"Vossemecê hoje está a falar bem mas olhe que ainda não percebi nada!","failure_count":1}
-{"sentence":"Vossemecê não se quer tratar!","failure_count":1}
+{"sentence":"Vossemecê bebeu vinho e tá-me a deitar água pelos olhos?","failure_count":2}
+{"sentence":"Vossemecê hoje está a falar bem mas olhe que ainda não percebi nada!","failure_count":2}
+{"sentence":"Vossemecê não se quer tratar!","failure_count":2}
 {"sentence":"Vossemecê que tem?","failure_count":3}
-{"sentence":"Vossemecê é capaz de me fazer um grande favorzinho?","failure_count":1}
+{"sentence":"Vossemecê é capaz de me fazer um grande favorzinho?","failure_count":2}
 {"sentence":"ÁIvaro, fica aqui!","failure_count":3}
 {"sentence":"É Isso, né?","failure_count":3}
 {"sentence":"É a partir desta colônia..?","failure_count":3}

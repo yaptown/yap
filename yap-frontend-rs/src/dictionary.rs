@@ -163,6 +163,7 @@ impl Deck {
             &display_text,
             language_pack.readings_for_sense(primary_gram).next(),
             target_language,
+            &language_pack.ruby_segmentations,
         );
         Some(DictionaryWord {
             ruby,

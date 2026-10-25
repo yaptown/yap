@@ -79,7 +79,12 @@ struct TranslationResponse {
     translation: String,
 }
 
+fn valid_braces(source: &str, translation: &str) -> bool {
+    source.contains(['{', '}']) || !translation.contains(['{', '}'])
+}
+
 pub struct Translator {
+    decisions: crate::translation_review::Decisions,
     backend: Backend,
     source_language: Language,
     target_language: Language,
@@ -135,12 +140,40 @@ pub fn report_translation_failure(error: anyhow::Error) -> anyhow::Result<()> {
 }
 
 impl Translator {
+    pub fn needs_translation(&self, text: &str) -> bool {
+        self.decisions.override_for(text).is_none()
+    }
+
+    pub fn override_for(&self, text: &str) -> Option<&[String]> {
+        self.decisions.override_for(text)
+    }
+
+    pub fn into_decisions(self) -> crate::translation_review::Decisions {
+        self.decisions
+    }
+    pub fn review_client(&self) -> ChatClient {
+        let model = match &self.backend {
+            Backend::OpenAi { client, .. } => client.model.as_str(),
+            Backend::Google { .. } => "gpt-6-luna",
+        };
+        crate::apply_cache_only(crate::base_chat_client(model).with_reasoning_effort("low"))
+    }
     pub async fn new(
         source_language: Language,
         target_language: Language,
         store: osmo::Store,
         backend: TranslationBackend,
     ) -> anyhow::Result<Self> {
+        let decisions = crate::translation_review::Decisions::load(
+            std::path::Path::new(&format!(
+                "generate-data/data/{}",
+                source_language.corpus_code()
+            )),
+            language_utils::Course {
+                target_language: source_language,
+                native_language: target_language,
+            },
+        )?;
         let backend = match backend {
             TranslationBackend::Google => {
                 let creds_path = std::env::var("GOOGLE_APPLICATION_CREDENTIALS")
@@ -197,6 +230,7 @@ impl Translator {
         );
 
         Ok(Self {
+            decisions,
             backend,
             source_language,
             target_language,
@@ -491,7 +525,37 @@ impl Translator {
         }
     }
 
+    /// Finalize one sentence, with human decisions taking precedence over both
+    /// machine output and a paired native sentence.
+    pub async fn sentence_translations(
+        &self,
+        text: &str,
+        paired: Option<&str>,
+    ) -> anyhow::Result<indexmap::IndexSet<String>> {
+        if let Some(translations) = self.override_for(text) {
+            return Ok(translations.iter().cloned().collect());
+        }
+        let mut translations = indexmap::IndexSet::new();
+        match self.translate(text).await {
+            Ok(t) if !t.trim().is_empty() => {
+                translations.insert(t);
+            }
+            Ok(_) => {}
+            Err(error) => report_translation_failure(error.context(format!("translate {text:?}")))?,
+        }
+        if let Some(paired) = paired {
+            translations.insert(paired.into());
+        }
+        // Machine translation can reintroduce the corpus's XProtect tripwire.
+        translations.retain(|t| !crate::target_sentences::contains_xprotect_tripwire(t));
+        translations.retain(|t| valid_braces(text, t));
+        Ok(translations)
+    }
+
     pub async fn translate(&self, text: &str) -> anyhow::Result<String> {
+        if let Some(translations) = self.override_for(text) {
+            return Ok(translations.first().cloned().unwrap_or_default());
+        }
         if let Some(t) = self.cached(text).await {
             return Ok(t);
         }
@@ -546,7 +610,7 @@ impl Translator {
         let mut hits = 0;
         let mut cached_output_bytes = 0;
         for text in texts {
-            if !seen.insert(self.primary_hash(text)) {
+            if !self.needs_translation(text) || !seen.insert(self.primary_hash(text)) {
                 continue;
             }
             if let Some(translation) = self.cached(text).await {
@@ -587,7 +651,7 @@ impl Translator {
         let mut seen = std::collections::HashSet::new();
         let mut pending: Vec<&str> = Vec::new();
         for t in texts {
-            if self.cached(t).await.is_some() {
+            if !self.needs_translation(t) || self.cached(t).await.is_some() {
                 continue;
             }
             if seen.insert(self.primary_hash(t)) {
@@ -744,6 +808,96 @@ mod tests {
 
     const SMOKE_MODEL: &str = "gpt-6-luna";
 
+    fn offline_translator(path: &std::path::Path) -> Translator {
+        Translator {
+            decisions: Default::default(),
+            backend: Backend::OpenAi {
+                client: Box::new(ChatClient::new("unused", SMOKE_MODEL).with_cached_only()),
+                recorded_micro: std::sync::Mutex::new(0),
+            },
+            source_language: Language::French,
+            target_language: Language::English,
+            source_code: "fr".into(),
+            target_code: "en".into(),
+            cache: DashMap::new(),
+            store: osmo::Store::open(path),
+            api_calls: AtomicU64::new(0),
+            spent_micro: AtomicU64::new(0),
+            global_threshold_micro: 0,
+            per_language_budget_micro: 0,
+            budget_warned: AtomicBool::new(false),
+        }
+    }
+
+    #[test]
+    fn brace_validation_is_source_aware() {
+        for translation in ["broken { output", "broken } output"] {
+            assert!(!valid_braces("bonjour", translation));
+            assert!(valid_braces("bonjour {", translation));
+            assert!(valid_braces("bonjour }", translation));
+        }
+        assert!(valid_braces("bonjour", "Hello."));
+    }
+
+    #[tokio::test]
+    async fn overrides_bypass_warmup_and_live_requests_for_each_native_language() {
+        let directory = tempfile::tempdir().unwrap();
+        std::fs::write(
+            directory.path().join("translation_overrides.jsonl"),
+            "[\"Olá\",{\"English\":[\"Hello\",\"Hi\"],\"French\":[\"Bonjour\"]}]",
+        )
+        .unwrap();
+        for (source_language, native_language) in [
+            (Language::PortugueseBrazilian, Language::English),
+            (Language::PortugueseBrazilian, Language::French),
+            (Language::English, Language::French),
+        ] {
+            let mut translator = offline_translator(directory.path());
+            translator.source_language = source_language;
+            translator.target_language = native_language;
+            translator.source_code = source_language.iso_639_1().into();
+            translator.target_code = native_language.iso_639_1().into();
+            translator.decisions = crate::translation_review::Decisions::load(
+                directory.path(),
+                language_utils::Course {
+                    target_language: source_language,
+                    native_language,
+                },
+            )
+            .unwrap();
+            translator
+                .store(translator.primary_hash("Olá"), "{corrupt cache}")
+                .await;
+            assert!(!translator.needs_translation("Olá"));
+            assert!(translator.needs_translation("other"));
+            translator.prime(&["Olá".into()]).await.unwrap();
+            let expected = if native_language == Language::English {
+                "Hello"
+            } else {
+                "Bonjour"
+            };
+            assert_eq!(translator.translate("Olá").await.unwrap(), expected);
+            let finalized = translator
+                .sentence_translations("Olá", Some("wrong paired native"))
+                .await
+                .unwrap();
+            let expected_set: Vec<&str> = if native_language == Language::English {
+                vec!["Hello", "Hi"]
+            } else {
+                vec!["Bonjour"]
+            };
+            assert_eq!(
+                finalized.iter().map(String::as_str).collect::<Vec<_>>(),
+                expected_set
+            );
+            assert_eq!(
+                translator.api_calls(),
+                0,
+                "neither warmup nor live may construct a request"
+            );
+        }
+    }
+
     #[test]
     fn billing_errors_propagate_through_context_but_flex_does_not() {
         for (kind, code, fatal) in [
@@ -818,23 +972,7 @@ mod tests {
     #[tokio::test]
     async fn openai_falls_back_to_legacy_google_cache() {
         let cache_dir = tempfile::tempdir().unwrap();
-        let translator = Translator {
-            backend: Backend::OpenAi {
-                client: Box::new(ChatClient::new("unused", SMOKE_MODEL).with_cached_only()),
-                recorded_micro: std::sync::Mutex::new(0),
-            },
-            source_language: Language::French,
-            target_language: Language::English,
-            source_code: "fr".into(),
-            target_code: "en".into(),
-            cache: DashMap::new(),
-            store: osmo::Store::open(cache_dir.path()),
-            api_calls: AtomicU64::new(0),
-            spent_micro: AtomicU64::new(0),
-            global_threshold_micro: 0,
-            per_language_budget_micro: 0,
-            budget_warned: AtomicBool::new(false),
-        };
+        let translator = offline_translator(cache_dir.path());
 
         let text = "Une phrase qui n'existe que dans ce test.";
         translator
@@ -858,23 +996,7 @@ mod tests {
     #[tokio::test]
     async fn openai_falls_back_to_previous_model_cache() {
         let cache_dir = tempfile::tempdir().unwrap();
-        let translator = Translator {
-            backend: Backend::OpenAi {
-                client: Box::new(ChatClient::new("unused", SMOKE_MODEL).with_cached_only()),
-                recorded_micro: std::sync::Mutex::new(0),
-            },
-            source_language: Language::French,
-            target_language: Language::English,
-            source_code: "fr".into(),
-            target_code: "en".into(),
-            cache: DashMap::new(),
-            store: osmo::Store::open(cache_dir.path()),
-            api_calls: AtomicU64::new(0),
-            spent_micro: AtomicU64::new(0),
-            global_threshold_micro: 0,
-            per_language_budget_micro: 0,
-            budget_warned: AtomicBool::new(false),
-        };
+        let translator = offline_translator(cache_dir.path());
 
         let text = "Une phrase traduite par le modèle précédent.";
         let previous = PREVIOUS_OPENAI_MODELS[0];

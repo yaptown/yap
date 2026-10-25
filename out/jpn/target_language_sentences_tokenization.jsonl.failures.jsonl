@@ -55,6 +55,7 @@
 {"sentence":"”手”の出番だ！","failure_count":3}
 {"sentence":"…かなぁうっ…","failure_count":3}
 {"sentence":"…キューバでの経済的存在感…時代によって異なる","failure_count":3}
+{"sentence":"△…ムーッ・・・","failure_count":2}
 {"sentence":"〈“有名だよ みんな知ってる”〉","failure_count":3}
 {"sentence":"〈僕は先を行き過ぎてる〉","failure_count":3}
 {"sentence":"〈正気とは思えん〉","failure_count":3}
@@ -133,6 +134,7 @@
 {"sentence":"〝漢江で 上半身の一部を発見〞 試合の中継は？","failure_count":3}
 {"sentence":"あ あ あ…あ あ あ あ…","failure_count":3}
 {"sentence":"あ ありがとうございます","failure_count":3}
+{"sentence":"あ いやいや ヒマだから何か手伝おうかなぁ・・・なんてな","failure_count":2}
 {"sentence":"あ いや～ 小林さんとこの… 大ちゃん？","failure_count":3}
 {"sentence":"あ… あっ！","failure_count":1}
 {"sentence":"あ… これ せっかくなんでパンだけでも→","failure_count":3}
@@ -140,10 +142,15 @@
 {"sentence":"あ、それじゃ君も来たまえ","failure_count":3}
 {"sentence":"あ〜 ハ・・・","failure_count":3}
 {"sentence":"あぁ きれいな艇！ おじいちゃん きれいね。","failure_count":1}
+{"sentence":"ああ ああっ・・・ キャー！","failure_count":2}
 {"sentence":"ああ なんということでしょう","failure_count":3}
 {"sentence":"ああ エルフィー あなたがいないと どうやってやっていけばいい？","failure_count":3}
 {"sentence":"ああ… 入れない!?","failure_count":3}
+{"sentence":"ああああああっ！","failure_count":2}
 {"sentence":"あああああッ！ →","failure_count":3}
+{"sentence":"あああああーっ！","failure_count":2}
+{"sentence":"あああああー！","failure_count":2}
+{"sentence":"あああ・・・","failure_count":2}
 {"sentence":"ああそうそう思い出した。","failure_count":3}
 {"sentence":"ああっ…！","failure_count":1}
 {"sentence":"ああっ・・・","failure_count":3}
@@ -151,7 +158,9 @@
 {"sentence":"ああ・・・ここまでだ","failure_count":3}
 {"sentence":"ああ・・・はい","failure_count":3}
 {"sentence":"ああ・・・本当にごめんなさい！","failure_count":3}
+{"sentence":"ああ・・・！","failure_count":2}
 {"sentence":"ああ？ お前だってダサいだろ陽菜ちゃんだっけ？","failure_count":3}
+{"sentence":"ああ･･･ 入れない!?","failure_count":2}
 {"sentence":"あいつが僕のことを「ばかなやつ」っていったんだよ。","failure_count":3}
 {"sentence":"あいつが扉を開けたの!?","failure_count":3}
 {"sentence":"あいつの馬鹿さ加減には、もう、あきれちゃうよ。","failure_count":1}
@@ -168,13 +177,19 @@
 {"sentence":"あたしただ こんなもん作ってるだけよ","failure_count":3}
 {"sentence":"あたしも 気になってたんですよ","failure_count":3}
 {"sentence":"あたしも店を閉めにくくってね","failure_count":3}
+{"sentence":"あたしも店を閉めにくくてね","failure_count":2}
 {"sentence":"あたしゃ知らないよ 何にも持ってないよ。","failure_count":1}
 {"sentence":"あたしらんとこには よこさないでおくれ","failure_count":3}
 {"sentence":"あたしんとこなんか二間に三家族","failure_count":3}
 {"sentence":"あちらは 監督のアダム·ケシャーマネージャーの ロバート·スミス","failure_count":3}
+{"sentence":"あっははははっ！","failure_count":2}
+{"sentence":"あっははははははは！","failure_count":2}
 {"sentence":"あっら～！","failure_count":1}
 {"sentence":"あっ・・・","failure_count":3}
+{"sentence":"あっ・・・!","failure_count":2}
 {"sentence":"あっ！ ソフィーの髪の毛 星の光に染まってるね。","failure_count":1}
+{"sentence":"あつ… なつ!?","failure_count":2}
+{"sentence":"あつ・・・","failure_count":2}
 {"sentence":"あとでホテルに電話を下さい。","failure_count":1}
 {"sentence":"あとはあなたがたと、菜っ葉をうまくとりあわせて、まっ白なお皿にのせるだけです。","failure_count":3}
 {"sentence":"あなた、海辺のパヴィリオンには何度も食事に来てるでしょう。","failure_count":3}
@@ -209,6 +224,7 @@
 {"sentence":"あなたはチェスがしたいのかもしれないと思ってました。","failure_count":3}
 {"sentence":"あなたはトムの友達なんですよね。","failure_count":3}
 {"sentence":"あなたは一彼の正体を今まで 知らなかったのね","failure_count":3}
+{"sentence":"あなたは何をおびえているのまるで迷子のキツネリスのようになにいっ！","failure_count":2}
 {"sentence":"あなたは否でも応でも行かなければならない。","failure_count":3}
 {"sentence":"あなたは子供のころどうしても歯医者へ行こうとしなかった。","failure_count":3}
 {"sentence":"あなたは彼が仮病を使っていただけだと思いますか。","failure_count":3}
@@ -222,18 +238,28 @@
 {"sentence":"あなた何なの！？","failure_count":3}
 {"sentence":"あなた宛に僕を雇ってくれるようにグストーなら","failure_count":3}
 {"sentence":"あなた宛の手紙よ。","failure_count":3}
+{"sentence":"あの そろそろ河西さんを お送りする時間ですがそれどころじゃああるまい","failure_count":2}
 {"sentence":"あの 俺…なんか おかしなことばっか 言ってて今日一日 すみません","failure_count":3}
 {"sentence":"あの 俺…なんか おかしなことばっか言ってて今日一日 すみません","failure_count":3}
+{"sentence":"あのお方も是非…","failure_count":2}
 {"sentence":"あのこんな時間におらんくなって どんだけ心配したか","failure_count":3}
 {"sentence":"あのこんな時間におらんくなって どんだけ心配したかまあまあ無事やったんやし","failure_count":3}
+{"sentence":"あのなあ君は帰らないと 家族が心配するだろう!?","failure_count":2}
+{"sentence":"あのねそれは・・・ それは少し その エチケットですよ え？","failure_count":2}
+{"sentence":"あのガキ 村のこと心配だ心配だっつうて自分の娘のことしか考えてねえだ","failure_count":2}
 {"sentence":"あのコートは高かったかもしれませんが、それだけの値うちはある。","failure_count":3}
 {"sentence":"あのデパートはブランド品のバーゲン中です。","failure_count":1}
 {"sentence":"あのブドウは酸っぱいよ。","failure_count":1}
 {"sentence":"あの・・・","failure_count":3}
+{"sentence":"あの・・・――あの･･･ すみません あの お願いします！","failure_count":2}
+{"sentence":"あの・・・→み み… 水 水 水！","failure_count":2}
+{"sentence":"あの・・・あの なぜあなたは…いえ","failure_count":2}
 {"sentence":"あの・・・ここで はたらかせてください","failure_count":3}
+{"sentence":"あの・・・ーどこ… どこへですか? ―","failure_count":2}
 {"sentence":"あの二人、元に戻すつもりなんて更々ないみたいだし・・・。","failure_count":3}
 {"sentence":"あの人と仲良くなればどうにかできるかもしれない","failure_count":3}
 {"sentence":"あの人にはどちらかというと難しいでしょう。","failure_count":3}
+{"sentence":"あの人に限って そんな・・・","failure_count":2}
 {"sentence":"あの人ははっきりした個性を持った人だ。","failure_count":3}
 {"sentence":"あの人は日本史に詳しそうです。","failure_count":3}
 {"sentence":"あの人心臓発作を起こすわよ。","failure_count":3}
@@ -248,6 +274,7 @@
 {"sentence":"あの娘が何かを考えてお前の心に入いってこようとしたらその時は反対側に逃げるんだ","failure_count":3}
 {"sentence":"あの子 お母さんの病院に 行ったんじゃないかしら!?","failure_count":3}
 {"sentence":"あの子 わたしの友だちなの","failure_count":3}
+{"sentence":"あの子 今日も探しさ行ってらった鈴芽のお母さん 知りませんか!?","failure_count":2}
 {"sentence":"あの子、魅力的なんだけど、ちょっとおしゃべりなのよね。","failure_count":3}
 {"sentence":"あの店 通ってくれて いるんですよね？","failure_count":3}
 {"sentence":"あの店で美人の店員が僕に着いてくれた。","failure_count":3}
@@ -257,10 +284,13 @@
 {"sentence":"あの泳いでいる少年を見なさい。","failure_count":1}
 {"sentence":"あの男の話なんか何もかも嘘っぱちよ","failure_count":3}
 {"sentence":"あの男は裏切りもしかねない。","failure_count":3}
+{"sentence":"あの皿は・・・ 異変？","failure_count":2}
 {"sentence":"あの美しい木々を銀の枝に 黄金のくき白き玉の実の何と美しいことよ！","failure_count":3}
 {"sentence":"あの義体の中にいるのが何んなのか、どうしても確かめないといけないの","failure_count":3}
 {"sentence":"あの若夫婦は今でも親におんぶに抱っこだ。","failure_count":3}
 {"sentence":"あははは、ほんっと、隠し事するのが苦手なんだね～。","failure_count":3}
+{"sentence":"あはははっ・・・","failure_count":2}
+{"sentence":"あははははっ・・・","failure_count":2}
 {"sentence":"あはははははは","failure_count":3}
 {"sentence":"あまりしっかりうなぎを握ると、かえって逃げられる。","failure_count":1}
 {"sentence":"あまりの偶然と幸運に 様々な噂がささやかれた","failure_count":3}
@@ -279,9 +309,11 @@
 {"sentence":"あるやらないやらわからぬメタル。","failure_count":3}
 {"sentence":"ある日、その男たちが彼の村に到着した。","failure_count":1}
 {"sentence":"ある日マイクとジェインは町へ買物をしに行きました。","failure_count":3}
+{"sentence":"あれって･･･ 草太さん!?","failure_count":2}
 {"sentence":"あれは何て呼ぶ？","failure_count":3}
 {"sentence":"あんた いいかげんにしなさい ハウルは来ないのよ。","failure_count":1}
 {"sentence":"あんた その変装 やめたほうがいいよ。","failure_count":1}
+{"sentence":"あんたっかなめいし みかずにささないの？","failure_count":2}
 {"sentence":"あんたなど どうとでもなる","failure_count":3}
 {"sentence":"あんたの行くとこの その先だよ。","failure_count":1}
 {"sentence":"あんたの造った飛行艇を オノで壊すのは やめた。","failure_count":1}
@@ -289,24 +321,51 @@
 {"sentence":"あんたは毎日 この教会に来てる白人の信者は黒人を 木に吊るしてるんだぞ","failure_count":3}
 {"sentence":"あんたは男としてってゆうか人間として最低だ～！！","failure_count":3}
 {"sentence":"あんたもしかして⸺いままでも 後ろ戸が開いた場所に 案内してくれてたの!?","failure_count":3}
+{"sentence":"あんたもしかしてーいままでも 後ろ戸が開いた場所に 案内してくれてたの!?","failure_count":2}
 {"sentence":"あんたも含め 全部がニセ物だ","failure_count":3}
 {"sentence":"あんたも魔法の何かだろう","failure_count":3}
+{"sentence":"あんたんとこが一番罪が深いぜ","failure_count":2}
 {"sentence":"あんたンとこは一人か","failure_count":3}
+{"sentence":"あんた方を助け出すにゃ 斬るほかなかったんでね","failure_count":2}
 {"sentence":"あんなに朝早くから来なくてもよかったのに。","failure_count":3}
 {"sentence":"あんなのないよ","failure_count":3}
+{"sentence":"あんなの人に向けるなんて","failure_count":2}
 {"sentence":"あんなの人に向けるなんて 殺してたかもしれないじゃん","failure_count":3}
 {"sentence":"あんなの人に向けるなんて殺してたかもしれないじゃん","failure_count":3}
 {"sentence":"あんなの未麻りんじゃないとか言ってたりしてな","failure_count":3}
 {"sentence":"あッち 行ってらっしゃい!","failure_count":3}
+{"sentence":"あッ・・・","failure_count":2}
 {"sentence":"あ・・・","failure_count":3}
-{"sentence":"あ・・・ い・・・ いらっしゃいませ","failure_count":1}
+{"sentence":"あ・・・ あ・・・","failure_count":2}
+{"sentence":"あ・・・ い・・・ いらっしゃいませ","failure_count":3}
+{"sentence":"あ・・・ うう・・・","failure_count":2}
+{"sentence":"あ・・・ これ せっかくなんでパンだけでも→","failure_count":2}
+{"sentence":"あ・・・ そ？","failure_count":2}
+{"sentence":"あ・・・ てか これあんまし 見たくないかもだけど…","failure_count":2}
+{"sentence":"あ・・・ はっ！","failure_count":2}
+{"sentence":"あ・・・ 雨？","failure_count":2}
 {"sentence":"あ・・・→","failure_count":3}
+{"sentence":"あ・・・→ごめん またメールする →","failure_count":2}
 {"sentence":"あ・・・→そんな顔しないでよ 西宮 →","failure_count":3}
 {"sentence":"あ・・・→全然 大丈夫→","failure_count":3}
+{"sentence":"あ・・・→全然 大丈夫→あ〜 俺 行かなきゃ パンじゃあ また","failure_count":2}
+{"sentence":"あ・・・あ","failure_count":2}
+{"sentence":"あ・・・あつ","failure_count":2}
+{"sentence":"あ・・・あつ…あああっ…","failure_count":2}
+{"sentence":"あ・・・あの・・・実はん？","failure_count":2}
+{"sentence":"あ・・・すみませんでした","failure_count":2}
+{"sentence":"あ・・・何でもや… 「やーしょー」?","failure_count":2}
+{"sentence":"あ・・・太極に太極を取り込んだのか","failure_count":2}
+{"sentence":"あ・・・要石になって常世に…そうか","failure_count":2}
+{"sentence":"あ・・・調べたいことがあるんだ","failure_count":2}
+{"sentence":"あ・・・飛べない？","failure_count":2}
+{"sentence":"あ・・・！","failure_count":2}
+{"sentence":"あ・・・？","failure_count":2}
 {"sentence":"あ～～～！","failure_count":1}
 {"sentence":"あ･･･→聞きたいことが ➞小学校の時 一緒だった・・・→佐原さん？ ➡","failure_count":3}
 {"sentence":"いいあんばいに ここにゃ 物知りらしい坊さんもいるこった","failure_count":3}
 {"sentence":"いいかげんにして。","failure_count":3}
+{"sentence":"いいかげんにしな","failure_count":2}
 {"sentence":"いいかげんにしねえと 小屋が飛んじまうぞ！","failure_count":1}
 {"sentence":"いいかげんにしねえと小屋が飛んじまうぞ","failure_count":3}
 {"sentence":"いいかげんにしろ","failure_count":3}
@@ -318,8 +377,10 @@
 {"sentence":"いいや、恋したのは手だけ彼女は脚の悪い売春婦だった","failure_count":3}
 {"sentence":"いい加減になかなおりをしたらどうだ。","failure_count":3}
 {"sentence":"いえいえ彼女はとてもいたずらっぽいです。","failure_count":3}
+{"sentence":"いえねこの人は男はみんな自分と同じ 道楽者と決めてるんだからねえ 光男さん","failure_count":2}
 {"sentence":"いかがわしい魔法使いや魔女を 野放しにはできません。","failure_count":1}
 {"sentence":"いかにもアメリカン","failure_count":3}
+{"sentence":"いかに申す 雨露しのぐ屋根もなく鈍感愚物の男なり","failure_count":2}
 {"sentence":"いくにはなぁ いけるだろうがなぁ・・・かえりがなぁ・・・","failure_count":3}
 {"sentence":"いくら ゆばーばさまのおっしゃりでも それは・・・にんげんは こまります","failure_count":3}
 {"sentence":"いくらでも かわりは おるわい","failure_count":3}
@@ -332,6 +393,7 @@
 {"sentence":"いっそ 口噛み酒をいっぱい造ってさ東京行きの資金にしたら？","failure_count":3}
 {"sentence":"いったい今までずっと何をしていたのですか。","failure_count":1}
 {"sentence":"いったい今まで何をしていたのですか。","failure_count":3}
+{"sentence":"いっぱい走ってみなに変わりはないかな？","failure_count":2}
 {"sentence":"いつお目にかかれますか。","failure_count":1}
 {"sentence":"いつかいっしょにゲームしましょう。","failure_count":3}
 {"sentence":"いつかトムも分かってくれるさ。","failure_count":1}
@@ -346,6 +408,7 @@
 {"sentence":"いのしし そんな事も忘れてしまったのか 猪ども","failure_count":1}
 {"sentence":"いのししがみ くだ 巨大な猪神の骨を砕き 肉を腐らせつぶて タタリ神にした僕です","failure_count":1}
 {"sentence":"いばるな！ お前達だって シータを狙ってるじゃないか！","failure_count":1}
+{"sentence":"いまからたくさんひとがしぬどうしてそんなことするの!?","failure_count":2}
 {"sentence":"いまさら嘆いても、それこそ、後の祭だよ。","failure_count":3}
 {"sentence":"いません →","failure_count":3}
 {"sentence":"いまはおちぶれているがスミスさんは昔、たいしたものだったんだ。","failure_count":3}
@@ -356,7 +419,10 @@
 {"sentence":"いや 何とかかって…","failure_count":1}
 {"sentence":"いや 俺はいいよ行こうぜ","failure_count":3}
 {"sentence":"いや 子供は寝かしておけ","failure_count":3}
+{"sentence":"いや… でもなんだか 口がさきにくくなっちゃったな","failure_count":2}
+{"sentence":"いや…これから・・・ あの 今日の派遣先 なんで？","failure_count":2}
 {"sentence":"いや、このシャツは 借りもので、萎んでる、 どうしたら？","failure_count":3}
+{"sentence":"いやあ 鬼神のごときとは まさにあれだな","failure_count":2}
 {"sentence":"いやいや いやいや いやいやー わあ〜ん","failure_count":3}
 {"sentence":"いやァ こんなとこァ 若いモンの 来るところじゃそうですなあ","failure_count":3}
 {"sentence":"いや行って――行って 行って 行って行ってエルファバ 行って","failure_count":3}
@@ -369,67 +435,99 @@
 {"sentence":"うあ うあ・・・うあー","failure_count":3}
 {"sentence":"うあ・・・","failure_count":1}
 {"sentence":"うあ・・・うう","failure_count":3}
+{"sentence":"ううう・・・ううふっ！","failure_count":2}
 {"sentence":"ううおおぉおぉ！","failure_count":1}
 {"sentence":"ううっ…。","failure_count":1}
 {"sentence":"うう・・・","failure_count":3}
 {"sentence":"うう・・・ うああ","failure_count":3}
 {"sentence":"うう・・・ううう","failure_count":3}
+{"sentence":"うお うおう うほ ウハハハハッ","failure_count":2}
+{"sentence":"うぐ・・・","failure_count":2}
 {"sentence":"うちに いて貰ったって なんにも して上げられないしねえ","failure_count":3}
 {"sentence":"うちのおばあちゃんってさ、今でも俺のこと「秀ちゃん」っていうんだ。","failure_count":3}
 {"sentence":"うちら そんな ”お通し”なかったけど！","failure_count":3}
 {"sentence":"うっ…おなか すいちゃって…クッキーか何か ありますか？","failure_count":3}
+{"sentence":"うっ・・・","failure_count":2}
 {"sentence":"うるさいな・・・","failure_count":3}
 {"sentence":"うれしくてな ホモ野郎 もう一方の手を無理だ","failure_count":3}
 {"sentence":"うわ～！ すごい お師匠様 広いですね！","failure_count":1}
 {"sentence":"うん 伝説っていわれてたけど 僕の父さんは見たんだ。","failure_count":1}
 {"sentence":"うんときつく 結んじゃったの","failure_count":3}
 {"sentence":"うんときつく 結んじゃったの手がふるえてはぁー","failure_count":3}
-{"sentence":"うんとは申さん","failure_count":1}
+{"sentence":"うんとは申さん","failure_count":3}
+{"sentence":"うんとキツく 結んじゃったの手が震えて・・・","failure_count":2}
 {"sentence":"うッ","failure_count":3}
+{"sentence":"うッ うう…→","failure_count":2}
+{"sentence":"うッ ううう…→お前 西宮の母親か？","failure_count":2}
 {"sentence":"うッ!","failure_count":3}
 {"sentence":"うッ…","failure_count":3}
+{"sentence":"うッ！","failure_count":2}
 {"sentence":"うッ･･･→","failure_count":3}
+{"sentence":"うツ・・・→","failure_count":2}
 {"sentence":"う・・・","failure_count":3}
+{"sentence":"う・・・ うう！","failure_count":2}
+{"sentence":"うーがあ うう","failure_count":2}
 {"sentence":"うーん・・・","failure_count":3}
 {"sentence":"う～ うぅ～…。","failure_count":3}
 {"sentence":"え… っとに・・・ 西宮","failure_count":3}
 {"sentence":"えいっ！ 来い！ 閣下に続け！","failure_count":1}
+{"sentence":"えええええっ!?!!?","failure_count":2}
 {"sentence":"ええと結論は・・・","failure_count":3}
 {"sentence":"ええよ そんなに きちんと座らんでも","failure_count":3}
+{"sentence":"ええ・・・課長","failure_count":2}
 {"sentence":"えっ その ポンコっていうのは？","failure_count":3}
+{"sentence":"えっ その ポンコツっていうのは？","failure_count":2}
 {"sentence":"えっ 新幹線で行くの!?","failure_count":3}
 {"sentence":"えっ… ほんとに!?","failure_count":3}
+{"sentence":"えっ… 昼間なのに!?","failure_count":2}
 {"sentence":"えっ・・・","failure_count":3}
 {"sentence":"えッ・・・","failure_count":3}
 {"sentence":"え・・・","failure_count":3}
+{"sentence":"え・・・ えっ 何すか？","failure_count":2}
 {"sentence":"え・・・ 何これ→","failure_count":3}
 {"sentence":"え・・・?","failure_count":3}
 {"sentence":"え・・・いえ","failure_count":3}
+{"sentence":"え・・・ええ","failure_count":2}
 {"sentence":"え・・・えっ 何すか？","failure_count":3}
+{"sentence":"え・・・っとに… 西宮う… う… やっぱ それ あんまし→見ないほうがああ…","failure_count":2}
+{"sentence":"え・・・店の人に断ってさ一日ぐらいいいじゃない","failure_count":2}
+{"sentence":"え・・・！","failure_count":2}
 {"sentence":"え・・・？","failure_count":3}
 {"sentence":"おい あのままにも しとけないよ","failure_count":3}
+{"sentence":"おい 何とか言えよ","failure_count":2}
 {"sentence":"おいおい、みんな、止めろよ！ 何時だと思ってるんだ！？","failure_count":3}
 {"sentence":"おいちゃんと聞けもし他人から 金を奪ったら-殺してやる","failure_count":3}
 {"sentence":"おい何とか言えよ","failure_count":3}
 {"sentence":"おぉ～っ！","failure_count":1}
+{"sentence":"おお・・・","failure_count":2}
 {"sentence":"おかあさん なんともないの！？","failure_count":3}
 {"sentence":"おかしいな・・・","failure_count":3}
+{"sentence":"おかしいのよジェフったら猫のヌイグルミがーすっかり気に入っちゃって離さないのよ","failure_count":2}
 {"sentence":"おかしいんだよ 何て言うか…話し方も 何もかもどう おかしい？","failure_count":3}
 {"sentence":"おけいこの方は首尾よう 進んでおられますかな？","failure_count":3}
 {"sentence":"おごってくれるんなら、飲むよ。","failure_count":3}
 {"sentence":"おじいさんお・・・ はく きが ついたか・・・","failure_count":3}
+{"sentence":"おつゆ飲み終わるまで 丼 持ったまんまだー","failure_count":2}
 {"sentence":"おばさんともういやや","failure_count":1}
+{"sentence":"おまえ ほんとにブジなしかし 一晩でこれが本気で探偵でも やってみないか？","failure_count":2}
+{"sentence":"おまえが背中を押したんだそれで住人を 人形に写し変えた","failure_count":2}
+{"sentence":"おまえに!?","failure_count":2}
 {"sentence":"おまえの職場はどこにでもあるし俺たちが好きな場所に決められるわかるだろ","failure_count":3}
+{"sentence":"おまえは 今ので 決めるべきだったんだ","failure_count":2}
 {"sentence":"おまえはもう若くないのだから将来のことを考えなければならない。","failure_count":3}
+{"sentence":"おまえェどんだけ努力してんのか 知ってんのかっ","failure_count":2}
 {"sentence":"おめえだのせいで ミユキが死んだのは違わねえだろや","failure_count":3}
+{"sentence":"おめえ達を焚きつけやがって変だとは思わねえのか","failure_count":2}
 {"sentence":"おもしろい話しのほとんどがこっけいな場面を基にしている。","failure_count":3}
 {"sentence":"おもちゃか何かイリーナ ちょっと見ててわめかないでちょうだい","failure_count":3}
 {"sentence":"おら せっかくだから","failure_count":1}
 {"sentence":"おら十人は仕方がねえと 思っていただよ","failure_count":1}
+{"sentence":"おら反対したどもふん おら十人は仕方がねぇと 思っていただよ","failure_count":2}
 {"sentence":"おら反対したどもふん おら十人は仕方がねえと 思っていただよ","failure_count":3}
 {"sentence":"おれなんか さっきからだよ","failure_count":3}
 {"sentence":"お・・・","failure_count":3}
 {"sentence":"お・・・ おはよ みんな","failure_count":3}
+{"sentence":"お・・・ 置いていくなよぉ～","failure_count":2}
 {"sentence":"お二人で ゆっくり話を大勢の人が訪ねてくる前に…準備を…お会いできてよかったわ","failure_count":3}
 {"sentence":"お互い気に入ってるみたいね。","failure_count":3}
 {"sentence":"お会いできとてもうれしく思います。","failure_count":3}
@@ -437,6 +535,8 @@
 {"sentence":"お別れを・・・さあ 早く私が育てて･･･アーモアーモ？","failure_count":3}
 {"sentence":"お前 すげえ遠くにいるからあ… でも どうやって？","failure_count":3}
 {"sentence":"お前 やけになってんじゃねえか？","failure_count":3}
+{"sentence":"お前 何言って・・・空にいるはずなんです！","failure_count":2}
+{"sentence":"お前…あ・・・","failure_count":2}
 {"sentence":"お前が履いてる靴って、俺んのじゃない？","failure_count":3}
 {"sentence":"お前が生まれ 苦労したなんて たためにそりゃ産んでくれたことは 感謝するわ","failure_count":3}
 {"sentence":"お前さんがエルシーに あげたのと同じだ","failure_count":3}
@@ -452,12 +552,14 @@
 {"sentence":"お宅のフォアグラは 絶品だが―何か新作を新作をと！","failure_count":3}
 {"sentence":"お寺に入る時は、帽子をとりなさい。","failure_count":3}
 {"sentence":"お寿司には紅ショウガが付いてくることが多いです。","failure_count":3}
+{"sentence":"お待さんが来ただだぞ","failure_count":2}
 {"sentence":"お急ぎでなかったら、お茶か何かいかがですか。","failure_count":3}
 {"sentence":"お急ぎでなければ、お茶でもいかがですか？","failure_count":3}
 {"sentence":"お手洗はありませんでした。","failure_count":3}
 {"sentence":"お母さん ふとっても おられたし やっぱり 急に来たんだよ","failure_count":3}
 {"sentence":"お母さんが私の誕生日ケーキを作ってくれてる。","failure_count":3}
 {"sentence":"お母さーんっ！","failure_count":3}
+{"sentence":"お母ちゃん。。。","failure_count":2}
 {"sentence":"お母ちゃんまたきついこと言うたんちゃうの？","failure_count":3}
 {"sentence":"お父さん お家 ボロだから つぶれちゃうよ。","failure_count":1}
 {"sentence":"お父さんが・・・いずれは私が殺してたわ","failure_count":3}
@@ -472,7 +574,9 @@
 {"sentence":"お茶でもいかが？","failure_count":3}
 {"sentence":"お金に関する法律のこと。","failure_count":3}
 {"sentence":"お金を稼ぐのは時間がかかるが、使うのはあっという間だ。","failure_count":3}
+{"sentence":"お願いだからあ･･･永東くん…","failure_count":2}
 {"sentence":"お願いだから・・・","failure_count":3}
+{"sentence":"お願いパズーもそうしろってワッハハハハハ…","failure_count":2}
 {"sentence":"お～い 鈴芽ちゃーん！","failure_count":1}
 {"sentence":"かえりがなぁ・・・","failure_count":3}
 {"sentence":"かぐやちゃん ゲームも歌もうまいよね","failure_count":3}
@@ -483,6 +587,7 @@
 {"sentence":"かわいそうにその老婦人はお金を奪われた。","failure_count":3}
 {"sentence":"かんないが手薄になった隙をつかれました","failure_count":3}
 {"sentence":"かんべんしてくれ！","failure_count":3}
+{"sentence":"か・・・","failure_count":2}
 {"sentence":"がやがやがやがや、もうなにがなんだかわからなくなりました。","failure_count":3}
 {"sentence":"き… 消える… ああっ…。","failure_count":1}
 {"sentence":"きしん いやぁ 鬼神のごときとは まさにあれだな","failure_count":3}
@@ -498,6 +603,7 @@
 {"sentence":"こいつが勢力を伸ばしてるモリツィオさんが―話し合いを呼びかけてるがー無視している","failure_count":3}
 {"sentence":"こいつは俺の小さないとこだ","failure_count":3}
 {"sentence":"こいつ何がしたいの!?","failure_count":3}
+{"sentence":"こえ・・・→こえ とってッ→","failure_count":2}
 {"sentence":"ここ 瀧くんは…とはいえどうせ君はデートなんて したことないでしょうから","failure_count":3}
 {"sentence":"ここが… 常世なの!?","failure_count":3}
 {"sentence":"ここがリビングこの応接セットなんかも―本物の家具職人が作ったらしいわ","failure_count":3}
@@ -506,6 +612,7 @@
 {"sentence":"ここではない どこかへ","failure_count":3}
 {"sentence":"ここではない どこかへかた苦しい都など抜け出して ともに参りましょう","failure_count":3}
 {"sentence":"ここで配達をやっとると 聞いたんだが…あ はい お届けものですか？","failure_count":3}
+{"sentence":"ここで配達をやっとると聞いたんだが…","failure_count":2}
 {"sentence":"ここで配達をやっとると聞いたんだが…えっ あっ… はい お届け物ですか？","failure_count":3}
 {"sentence":"ここには数日間しかいない。","failure_count":3}
 {"sentence":"ここに激痛があります。","failure_count":1}
@@ -527,6 +634,7 @@
 {"sentence":"こないだうち 東京へ 行ったりして 疲れたんが いけなんだんかのう?","failure_count":3}
 {"sentence":"このあと 取材アポがあんだけど","failure_count":3}
 {"sentence":"このとおり 空気に触れるとすぐにただの石になってしまうが光ってる…?","failure_count":3}
+{"sentence":"このところ ほとんど水っ腹でななあに 一杯やって飯が食えるだけ ありゃいい","failure_count":2}
 {"sentence":"このところほのかな不安感がある。","failure_count":3}
 {"sentence":"このはこの外は緑だが中は赤である。","failure_count":1}
 {"sentence":"このふろはさ よごれたおきゃく せんもんなんだよこびりついてて とれやしねえ","failure_count":3}
@@ -567,6 +675,7 @@
 {"sentence":"この弓は張りが強いです。","failure_count":3}
 {"sentence":"この戸がどうしても開かないんだ。","failure_count":3}
 {"sentence":"この手荷物をすぐに部屋へ持っていってもらいたい。","failure_count":3}
+{"sentence":"この数じゃ 画になんないよお","failure_count":2}
 {"sentence":"この文はなんという意味ですか。","failure_count":3}
 {"sentence":"この暑さでは何をする気にもなれません。","failure_count":3}
 {"sentence":"この服は私にはあまりにも大きすぎる。","failure_count":3}
@@ -585,6 +694,7 @@
 {"sentence":"この窓がどうしても開かないんだ。","failure_count":3}
 {"sentence":"この絵の中で、どれか気に入ったものはある？","failure_count":3}
 {"sentence":"この自転車、私のみたい。","failure_count":3}
+{"sentence":"この菊千代というのがお前か？","failure_count":2}
 {"sentence":"この計算書 すごいわ。","failure_count":1}
 {"sentence":"この警官は数カ所噛まれ","failure_count":3}
 {"sentence":"この辺りは何て所だっけ？","failure_count":3}
@@ -654,6 +764,7 @@
 {"sentence":"こんな美しい夕焼けは見たことがない。","failure_count":3}
 {"sentence":"こんばんは 女房を引き取ってくれ捨てても戻ってきちまう","failure_count":3}
 {"sentence":"こん男がうちに来ちょったやつ？","failure_count":3}
+{"sentence":"こ・・・この子は！","failure_count":2}
 {"sentence":"ごめんね 私のせいで パズーをひどい目にあわせて。","failure_count":1}
 {"sentence":"ごめんね… 私 グズだから。","failure_count":1}
 {"sentence":"ごめんよ。","failure_count":1}
@@ -673,12 +784,14 @@
 {"sentence":"さて例の教育に関しての本題に戻るとしよう。","failure_count":3}
 {"sentence":"されちゃったらしくて","failure_count":1}
 {"sentence":"ざ…ま…を…み…る…ん…だね！？","failure_count":3}
+{"sentence":"しかし あの青侍の面は覚えたいずれ手土産にして出直すぜ","failure_count":2}
 {"sentence":"しかし あんたんとこは ええわ","failure_count":3}
 {"sentence":"しかしその明日はヒメにも捨丸にも やっては来ませんでした","failure_count":3}
 {"sentence":"しかしそれだけの人間は なかなかいませんよ","failure_count":3}
 {"sentence":"しかしですねあすこまでやるということはですね結果から見て どうだったんですかね","failure_count":3}
 {"sentence":"しかし今日は実に楽しくそのでも映画のクライマックスで いびきかいてたわよ","failure_count":3}
 {"sentence":"しかし他のことも考慮に入れなければならなくなるだろう。","failure_count":3}
+{"sentence":"しかし君 あれよりもっと 驚いたことがある","failure_count":2}
 {"sentence":"しかし君あれよりもっと 驚いたことがある","failure_count":3}
 {"sentence":"しかし我が国は国民を守るべき 自前の軍隊を有しておりません","failure_count":3}
 {"sentence":"しかし犯人がそう考えるかどうか 分かりません","failure_count":3}
@@ -691,6 +804,7 @@
 {"sentence":"しょうがないべ","failure_count":3}
 {"sentence":"しょうのねえ爺いだ","failure_count":3}
 {"sentence":"しょっちゅう発行され、一度に千ページにもなり、しかも何誌もある。","failure_count":3}
+{"sentence":"しょーちゃん ゆづちゃん 上に来てるよ→","failure_count":2}
 {"sentence":"しょーちゃん ゆづちゃん 上に来てるよ➡","failure_count":3}
 {"sentence":"しようのねえ爺いだ","failure_count":3}
 {"sentence":"じいさんは片手を高くあげて、でんしんばしらの列の方を向いて叫びました。","failure_count":3}
@@ -729,6 +843,8 @@
 {"sentence":"せっかくだが時間がない","failure_count":3}
 {"sentence":"せっかく来たので 少しだけでも何が必要かとかあなたも留学希望?","failure_count":3}
 {"sentence":"せんの ばかが せっかくの もうけを ふいに しちまって・・・","failure_count":3}
+{"sentence":"そ… そんなに!?","failure_count":2}
+{"sentence":"そ…それでもよければ お入りください","failure_count":2}
 {"sentence":"そいつは俺の 小さないとこだぜ お前ら","failure_count":3}
 {"sentence":"そういう時は 妙に物悲しくて目覚めたくないと 思ったり・・・","failure_count":3}
 {"sentence":"そういう言い方は ねえんじゃないですか","failure_count":3}
@@ -768,10 +884,13 @@
 {"sentence":"そして友人でもある","failure_count":3}
 {"sentence":"そして忘れられては ならぬはずの物が失われ・・・歴史は伝承となった","failure_count":3}
 {"sentence":"そして画かきはじぶんの右足の靴をぬいでその中に鉛筆を削りはじめました。","failure_count":3}
+{"sentence":"そそそそ… そんな急にわつ わたわたわた…","failure_count":2}
 {"sentence":"そちらには、お客さんはどれぐらいいらっしゃいますか？","failure_count":3}
+{"sentence":"そっ…う・・・ほ ほらーっ すごいでしょー?","failure_count":2}
 {"sentence":"そなたの うちなる かぜと みずの なにおいて ときはなて","failure_count":3}
 {"sentence":"そなたの うちなる かぜと みずの なにおいて ときはなてたって！","failure_count":3}
 {"sentence":"その おきゃくさんって・・・せんもこい","failure_count":3}
+{"sentence":"その…しかし 公園を作るということはこの計画書のように簡単には いかんのでしてね","failure_count":2}
 {"sentence":"その…そう考えたものですから その…おとなしく縛につけ","failure_count":3}
 {"sentence":"その…ゲーム屋はもっと先だここは小さな長方形の","failure_count":3}
 {"sentence":"その…気になってのぉ…?","failure_count":3}
@@ -861,6 +980,7 @@
 {"sentence":"それがせめてもの慰めです","failure_count":3}
 {"sentence":"それがどれほど難しいか知っている それらを読みのは？","failure_count":3}
 {"sentence":"それがまたあたし達のせいかどうか何もかもまだ分かっちゃ いないんじゃないの","failure_count":3}
+{"sentence":"それが消えて後ろ戸が開いてしまった場所が戸締まりしながら 東京に戻るよ","failure_count":2}
 {"sentence":"それじゃ打ち合わせになんないでしょうが","failure_count":3}
 {"sentence":"それだけ北朝鮮は（中国も）狡猾なんです。","failure_count":3}
 {"sentence":"それって合法的なんだろうか？","failure_count":3}
@@ -883,6 +1003,7 @@
 {"sentence":"それにより状況が変る。","failure_count":3}
 {"sentence":"それに銀行じゃー何かと記入が必要だがー俺の場合 その面倒はない","failure_count":3}
 {"sentence":"それは、たとえ間違いをおかしたとしても、一生懸命に頑張るということです。","failure_count":3}
+{"sentence":"それはそれはで 脚本はどうだった？","failure_count":2}
 {"sentence":"それはちょっとひどいんじゃないでしょうか。","failure_count":3}
 {"sentence":"それは大事なものなのだから 返しなさい","failure_count":3}
 {"sentence":"それは大変だねえ・・・。","failure_count":3}
@@ -899,8 +1020,10 @@
 {"sentence":"それよりもっと小さいものはありませんか？","failure_count":3}
 {"sentence":"それを何とかしてくれるのが 市民課じゃないのかい","failure_count":3}
 {"sentence":"それを見きわめたいのだ","failure_count":3}
+{"sentence":"それ保育園に持っていくの!?","failure_count":2}
 {"sentence":"そんなかに穴があるだ。","failure_count":3}
 {"sentence":"そんなことが気になってしまうのが人の性ですね・・・。","failure_count":1}
+{"sentence":"そんなことっだってぇ みみずがおちるよ?","failure_count":2}
 {"sentence":"そんなことっだってぇ みみずがおちるよ？","failure_count":3}
 {"sentence":"そんなとこに座ってないで 両親と一緒に踊るんだ","failure_count":3}
 {"sentence":"そんなに楽しい歌を聞こうとは、夢にも思いませんでした。","failure_count":3}
@@ -910,6 +1033,7 @@
 {"sentence":"そんなのでは分からんな。","failure_count":3}
 {"sentence":"そんなのないわ","failure_count":3}
 {"sentence":"そんなの自分で決めるよ ➡","failure_count":3}
+{"sentence":"そんなの自分で決めるよ→","failure_count":2}
 {"sentence":"そんなの自慢になんないよ。","failure_count":3}
 {"sentence":"そんなんじゃない、何となく、 不吉な予感がするが、でも、少し安くないですか？","failure_count":3}
 {"sentence":"そんな・・・","failure_count":3}
@@ -927,6 +1051,7 @@
 {"sentence":"そッ 君の友達→いるのかい?","failure_count":1}
 {"sentence":"そッ 君の友達いるのかい？","failure_count":3}
 {"sentence":"そーっと 優しくちゃんと持て！","failure_count":3}
+{"sentence":"た… 確かに そうかもしれませんがあ・・・","failure_count":2}
 {"sentence":"たこ あなたの凪ならまだ間に合うかもしれない","failure_count":1}
 {"sentence":"たしかに言われてみると、そんな気もする。","failure_count":3}
 {"sentence":"ただ、聴いても好きになれないの","failure_count":3}
@@ -946,6 +1071,7 @@
 {"sentence":"だから お願い 連れてって 役に立つから。","failure_count":1}
 {"sentence":"だから わしは カーチスを雇うの反対したろ。","failure_count":1}
 {"sentence":"だからお父さんしかし どう考えても分かんないな","failure_count":3}
+{"sentence":"だからさ 同じ人形なら 私がいなくても――――同じように 次の段階に進むだろう","failure_count":2}
 {"sentence":"だから何でしょう？","failure_count":1}
 {"sentence":"だから俺は貴様に一目置いてたんだぜ","failure_count":3}
 {"sentence":"だから偶然そこにあったなどと 言うな","failure_count":3}
@@ -960,12 +1086,14 @@
 {"sentence":"だが当時はこの言葉は 無かった：\"政治への幻滅\"…","failure_count":3}
 {"sentence":"だが舳先へさきと艫ともの間に 収まる夢だ","failure_count":3}
 {"sentence":"だけど・・・私たちはガンダルフの旦那の 望んだ通りやりましたよね？","failure_count":3}
+{"sentence":"だったら あの口調は…死んでしまった彼の為に無意識に行なっている 代償行為さ","failure_count":2}
 {"sentence":"だったら養子を相手が出来たら考えも変わる","failure_count":3}
 {"sentence":"だって あたし なんかどうしてしかししかしその君は","failure_count":3}
 {"sentence":"だって おきゃくさんだと おもったから･・・","failure_count":3}
 {"sentence":"だって こうしているまに はくが しんじゃうかも しれない","failure_count":3}
 {"sentence":"だって 女の子はあすこに…?","failure_count":3}
 {"sentence":"だって 陽菜さん 本物の晴れ女なんですよね？","failure_count":3}
+{"sentence":"だってこれは 私の映画でもあるんだから！","failure_count":2}
 {"sentence":"だれしも、楽しい青春を平穏無事な時期として想い起こす。","failure_count":3}
 {"sentence":"だれにでも気に入ってもらえますよ。","failure_count":3}
 {"sentence":"だ･れ･だ","failure_count":3}
@@ -973,7 +1101,10 @@
 {"sentence":"ちひろか・・・","failure_count":3}
 {"sentence":"ちゃんと読んどいてくださいよ","failure_count":3}
 {"sentence":"ちゃーんと見てただによ","failure_count":3}
+{"sentence":"ちゅ・・・ き","failure_count":2}
+{"sentence":"ちょ…あ・・・","failure_count":2}
 {"sentence":"ちょうど朝ごはんを食べたとこだよ。","failure_count":3}
+{"sentence":"ちょちょちょちょ・・・ええ・・・","failure_count":2}
 {"sentence":"ちょっとこれ 持ってっておいて","failure_count":3}
 {"sentence":"ちょっとウィルキンスまたその犬が 中庭にウンチしたら-どうなるか覚悟しといで","failure_count":3}
 {"sentence":"ちょっとバタバタしてての…","failure_count":3}
@@ -983,6 +1114,7 @@
 {"sentence":"つまり––君は私に借りができたのだ","failure_count":3}
 {"sentence":"つまり･･..","failure_count":3}
 {"sentence":"つまんなくなってきた？","failure_count":3}
+{"sentence":"つらがろうがの","failure_count":2}
 {"sentence":"てっきりあなたが我々といっしょに来られるものと思っていました。","failure_count":3}
 {"sentence":"てめえ 何人も男くわえてるくせに 人の取りやがって好美に援交させたのもお前だろ","failure_count":3}
 {"sentence":"で あれは何て呼ぶ？ 盆石？","failure_count":3}
@@ -998,11 +1130,13 @@
 {"sentence":"でも また金曜に 出かける約束をさせられた","failure_count":3}
 {"sentence":"でも もし会えたら どうしよう？","failure_count":3}
 {"sentence":"でも もし何か見つけたら中央委員会に 良い友人ができるだろうな","failure_count":3}
+{"sentence":"でも 何も証拠が 残ってないってのも…すぐに消えちゃうんだって","failure_count":2}
 {"sentence":"でも 何も証拠が 残ってないってのも・・・すぐに消えちゃうんだって","failure_count":3}
 {"sentence":"でも 光や物質だけでなくもっと多くのものを 消費しているようにも見える","failure_count":3}
 {"sentence":"でも 夢はあるわそら 夢はあるかもしらんけどうん そうよ ねっ そうしよ?","failure_count":3}
 {"sentence":"でも 子供も 大きゅうなると 変るもんじゃのう","failure_count":3}
 {"sentence":"でも 私はそれを認めるわけには行かない","failure_count":3}
+{"sentence":"でも 違った→俺も ずっと 西宮と同じこと考えてたけど→それでも…→やっぱり →","failure_count":2}
 {"sentence":"でも…あなたのご主人について もう少し知らないと楽にして長居できないの","failure_count":3}
 {"sentence":"でも、そういうキミはそれを気に入っているのだろう。","failure_count":3}
 {"sentence":"でも、それではいつまでたっても終わりがない。","failure_count":3}
@@ -1017,6 +1151,7 @@
 {"sentence":"でももし 今 パクが入ってきたら 戸を開けて？","failure_count":1}
 {"sentence":"でも人で焚くオーブンなんて 見たこともない","failure_count":3}
 {"sentence":"でも僕・・・じゃ 寝なくてもいいから お部屋 行きましょう ね?","failure_count":3}
+{"sentence":"でも僕・・・じゃ 寝なくてもいいから お部屋 行きましょう ね？","failure_count":2}
 {"sentence":"でも公共施設の サイネージ広告などまだまだ やりたいことだらけなんだ","failure_count":3}
 {"sentence":"でも君は―得意だだろ？","failure_count":3}
 {"sentence":"でも完治したとまだ憂うつに見えるか？","failure_count":3}
@@ -1027,6 +1162,7 @@
 {"sentence":"でも買えるものはほかにもある。","failure_count":3}
 {"sentence":"で引退 つーか 追放？ されちゃったらしくて","failure_count":1}
 {"sentence":"で引退っつーか 追放？ されちゃったらしくて","failure_count":1}
+{"sentence":"で引退つーか 追放？ されちゃったらしくてああ・・・","failure_count":2}
 {"sentence":"と そう わしゃ おもうたんじゃ","failure_count":3}
 {"sentence":"というのはいいもんでなどんな苦しいことでも 話をすると少しは楽になる","failure_count":3}
 {"sentence":"ときどきお立ちよりください。","failure_count":3}
@@ -1035,6 +1171,8 @@
 {"sentence":"ところによりにわか雨が降る。","failure_count":3}
 {"sentence":"とにかくですねその熱心さというものは少し 常識はずれなほどうん","failure_count":3}
 {"sentence":"とりあえずここの新聞を 読めば十分だ","failure_count":3}
+{"sentence":"と・・・ 友達だよ","failure_count":2}
+{"sentence":"とーってもこわいよ","failure_count":2}
 {"sentence":"と～っても怖いよ！","failure_count":3}
 {"sentence":"どいつもこいつも","failure_count":3}
 {"sentence":"どいつもこいつも ラモンの話ばかりだな","failure_count":3}
@@ -1044,6 +1182,7 @@
 {"sentence":"どいつもこいつも不平ばかり言いやがって。","failure_count":1}
 {"sentence":"どういうわけであの人が急にあんなどうも分からねえな","failure_count":3}
 {"sentence":"どういう理由で泣いたの？","failure_count":1}
+{"sentence":"どうかどうかどうか！","failure_count":2}
 {"sentence":"どうかどうか顔を上げてください","failure_count":3}
 {"sentence":"どうか情けを 私たちはまだ小さな子供パパは厳しすぎる","failure_count":3}
 {"sentence":"どうしたの!?","failure_count":3}
@@ -1065,6 +1204,7 @@
 {"sentence":"どけ！ 待っていたぞ ブタ野郎。","failure_count":1}
 {"sentence":"どこか 心の隅で 何かを 待ってるんです","failure_count":3}
 {"sentence":"どこで すンのさァ!","failure_count":3}
+{"sentence":"どこで女の子を見たの!?","failure_count":2}
 {"sentence":"どこにそんな…どこにリスクが…こんな車と交換するなんて損したのは向こうだ","failure_count":3}
 {"sentence":"どこにでもあるよ。","failure_count":3}
 {"sentence":"どっこいしょ・・・重い・・・","failure_count":3}
@@ -1074,8 +1214,11 @@
 {"sentence":"どんな具合？","failure_count":1}
 {"sentence":"どんな奴だって たまには殴られる","failure_count":3}
 {"sentence":"どんな小さな可能性でも 粗末にはできんのです","failure_count":3}
+{"sentence":"ど・・・ どうでしょう","failure_count":2}
+{"sentence":"ど・・・どうしたら君のようにだって あたし ただ働いて食べてそ… それから？","failure_count":2}
 {"sentence":"ど・・・どうぞ","failure_count":3}
 {"sentence":"な ようあやまって あすこへ置いてもらい","failure_count":3}
+{"sentence":"な ようあやまって あすこへ置いてもらいすんませんでした","failure_count":2}
 {"sentence":"なすがままだ","failure_count":3}
 {"sentence":"なぜ あんないい席に？","failure_count":3}
 {"sentence":"なぜあなたがそれを手放したがっているのかどうしても分からない。","failure_count":3}
@@ -1093,14 +1236,18 @@
 {"sentence":"なにか御用でしょうか","failure_count":3}
 {"sentence":"なにか知ってたら教えてくれ。","failure_count":3}
 {"sentence":"なにか私にできることがありましたらお知らせ下さい。","failure_count":3}
+{"sentence":"なにか薬とか注射とか注射いや","failure_count":2}
 {"sentence":"なにか薬とか注射とか注射いやや","failure_count":3}
 {"sentence":"なにか食べ物ください。","failure_count":3}
+{"sentence":"なにが・・・ なにがご案内だコノヤロウ！","failure_count":2}
 {"sentence":"なにしてるんだい","failure_count":3}
 {"sentence":"なにしてるんだ？","failure_count":3}
 {"sentence":"なにしてる？","failure_count":3}
 {"sentence":"なにしてる？!","failure_count":3}
 {"sentence":"なにしろ、もう陸地からは見えないほど離れていたから、逃げ場などなかったのだ。","failure_count":3}
 {"sentence":"なになに","failure_count":3}
+{"sentence":"なになになに〜!?","failure_count":2}
+{"sentence":"なになになになに〜!?","failure_count":2}
 {"sentence":"なになになになに～!","failure_count":3}
 {"sentence":"なになになになに～!?","failure_count":3}
 {"sentence":"なになに！","failure_count":3}
@@ -1110,14 +1257,17 @@
 {"sentence":"なまりからみてあの男はスコットランド人と思う。","failure_count":3}
 {"sentence":"ならそれを取りにいこう","failure_count":3}
 {"sentence":"なるほど彼は、金持ちだがけちん坊だ。","failure_count":1}
+{"sentence":"なん… だと…?","failure_count":2}
 {"sentence":"なんか 風邪ひいたって メールか何かでよ","failure_count":3}
 {"sentence":"なんだろうねぇ…?","failure_count":3}
+{"sentence":"なんて生存本能なの!?","failure_count":2}
 {"sentence":"なんで よりによって 人生最後っちゅうときに松田まつだ聖子せいこやったんやろ","failure_count":3}
 {"sentence":"なんでみんないつもそんなこと言うの？","failure_count":3}
 {"sentence":"なんでも自分で手がけると、いとおしくなるものです。","failure_count":3}
 {"sentence":"なんでアタシに付きまとうのよ 友だちはいないの？","failure_count":3}
 {"sentence":"なんでトムはいつもサングラスをかけているの？","failure_count":1}
 {"sentence":"なんで・・・","failure_count":3}
+{"sentence":"なんというかこういう子なのよ","failure_count":2}
 {"sentence":"なんというか彼らは恍惚状態だった","failure_count":3}
 {"sentence":"なんということ","failure_count":3}
 {"sentence":"なんということ、未来は捨てられてしまった。","failure_count":3}
@@ -1131,6 +1281,7 @@
 {"sentence":"なんにもないわ","failure_count":3}
 {"sentence":"なんにも遊んでるの","failure_count":3}
 {"sentence":"なんのために行くのか・・・私にも分かりません","failure_count":3}
+{"sentence":"なんの因果で あんなシケた奴らとつるまにゃいかんのだ","failure_count":2}
 {"sentence":"なんやら 今 ふらッとして","failure_count":3}
 {"sentence":"なんやわからんけど 急がんといかんのやろ!?","failure_count":3}
 {"sentence":"ぬのひき 布引の近くの墓地行ったことあるやろ","failure_count":3}
@@ -1142,16 +1293,22 @@
 {"sentence":"ねえやがすっかり怯えたので","failure_count":3}
 {"sentence":"ねぎらいの言葉をありがとうございます。","failure_count":1}
 {"sentence":"ねずみが動いた。","failure_count":1}
+{"sentence":"ね・・・","failure_count":2}
 {"sentence":"のぞきの警戒のぞかれなかった？","failure_count":3}
+{"sentence":"はぁ・・・","failure_count":2}
 {"sentence":"はあ… 馬にされてる気分なんですけどっ!?","failure_count":3}
+{"sentence":"はあい ん!?","failure_count":2}
+{"sentence":"はあ・・・！","failure_count":2}
 {"sentence":"はく製なら鳥が一番さ","failure_count":3}
 {"sentence":"はく製にするのが趣味でね","failure_count":3}
 {"sentence":"はく製のように無害な人さ","failure_count":3}
 {"sentence":"はしご貸りてもいい？","failure_count":3}
 {"sentence":"はっ… 何してる!?","failure_count":3}
 {"sentence":"はつ のどかなもんだ","failure_count":3}
+{"sentence":"ははははっ・・・","failure_count":2}
 {"sentence":"はようどか・・・ほしくない","failure_count":3}
-{"sentence":"は・・・","failure_count":1}
+{"sentence":"はわわわわわわ…","failure_count":2}
+{"sentence":"は・・・","failure_count":3}
 {"sentence":"ひとかどの侍なら打たれはせぬ","failure_count":3}
 {"sentence":"ひとがいっぱいしぬね","failure_count":3}
 {"sentence":"ひと休みしませんか。","failure_count":1}
@@ -1159,12 +1316,13 @@
 {"sentence":"ひと言をひと言って？","failure_count":3}
 {"sentence":"ひどいよ！ お願い！ クーだけでも 連れてって！","failure_count":3}
 {"sentence":"ひどくかっとなりやすい。","failure_count":3}
-{"sentence":"ひまわりの家のだからいいんです","failure_count":1}
+{"sentence":"ひまわりの家のだからいいんです","failure_count":3}
 {"sentence":"ひゅうひゅうひゅう、ひゅひゅう。","failure_count":3}
 {"sentence":"ひょっ子","failure_count":1}
 {"sentence":"ひよっ子は引っ込んでな","failure_count":3}
 {"sentence":"ひらがなって手書きできる？","failure_count":3}
 {"sentence":"ふぁ～…。","failure_count":1}
+{"sentence":"ふう・・・","failure_count":2}
 {"sentence":"ふたりはいかにも辛そうに、いっしょにこたえました。","failure_count":3}
 {"sentence":"ふつうホットケーキは粉砂糖、バター、時にはシロップとともに出されます。","failure_count":3}
 {"sentence":"ふと思うのだが、私は君を誤解していたかもしれない。","failure_count":3}
@@ -1173,6 +1331,9 @@
 {"sentence":"ふ・・・","failure_count":3}
 {"sentence":"ぶっちゃけた話、これっていくらぐらいしたの？","failure_count":3}
 {"sentence":"へっ・・・","failure_count":3}
+{"sentence":"へへ・・・","failure_count":2}
+{"sentence":"へ・・・","failure_count":2}
+{"sentence":"へ・・・?","failure_count":2}
 {"sentence":"ほうっておきなさい！","failure_count":3}
 {"sentence":"ほぇー…?","failure_count":3}
 {"sentence":"ほっとけば帰るわ どこまでだっけ？","failure_count":3}
@@ -1180,6 +1341,7 @@
 {"sentence":"ほとんどの子供が 一度はここに来てるだろ？","failure_count":3}
 {"sentence":"ほとんど一文無しの孤児たちは、学校にとって財政上の悩みの種なのだろう。","failure_count":3}
 {"sentence":"ほな 一足先に 壕に行かしてもらうからね","failure_count":3}
+{"sentence":"ほな 一足先に墓に行かしてもらうからね","failure_count":2}
 {"sentence":"ほな 一足先に壊しに行かしてもらうからね","failure_count":3}
 {"sentence":"ほな 取ってきたげるわ","failure_count":3}
 {"sentence":"ほのかな光が俺のねじれた視界を幻影に変えてゆく。","failure_count":3}
@@ -1198,11 +1360,13 @@
 {"sentence":"ぼっちゃん 静かに おやすみなさいね","failure_count":3}
 {"sentence":"まあ 何とかやってみるよ","failure_count":3}
 {"sentence":"まあ 何とかやってみるよ→期待に応えたい→","failure_count":3}
+{"sentence":"まあ 恐らく あっさり返すでしょう","failure_count":2}
 {"sentence":"まあ、それは…みんながお金のため だけに来てるのであればね。","failure_count":3}
 {"sentence":"まあ、何とも言えんね","failure_count":3}
 {"sentence":"まあ、直ぐになれますわよ。","failure_count":3}
 {"sentence":"まあ今どきは 何もかものスピードが速いんですわ","failure_count":3}
 {"sentence":"まあ今どきは何もかものスピードが速いですねぇ","failure_count":3}
+{"sentence":"まさか そこでまあ コーヒーでも飲んでこい","failure_count":2}
 {"sentence":"まさか サイバー犯罪とかじゃないですよね","failure_count":3}
 {"sentence":"まさに・・・ごめん、ちょっと待ってね","failure_count":3}
 {"sentence":"ましてその石は人の手が作り出したものその…気になってのぉ…?","failure_count":3}
@@ -1246,6 +1410,8 @@
 {"sentence":"みんなだって 僕と同じ事をするさ","failure_count":3}
 {"sentence":"みんなは、こんどはなんにももたないで、ぞろぞろ森の方へ行きました。","failure_count":3}
 {"sentence":"みんな一しょにおどりましょう。","failure_count":3}
+{"sentence":"みんな迷惑してんだろ!?","failure_count":2}
+{"sentence":"みんな逃げろシシ神が首を取り戻そうと追ってきたんだあのドロドロに触ると死ぬぞ","failure_count":2}
 {"sentence":"めそめそしてたら 生きていけないわ","failure_count":3}
 {"sentence":"もう なんにも知らないのにパソコン買うなんてだって 簡単だっていうじゃない","failure_count":3}
 {"sentence":"もう 分ったって・・・","failure_count":3}
@@ -1311,6 +1477,7 @@
 {"sentence":"もっとも、港務長の食卓に着くとき以外は、ほとんど着なかった。","failure_count":3}
 {"sentence":"もっと勉強しなさい。","failure_count":1}
 {"sentence":"もっと教育を受けていたら、彼はさらによい仕事を見つけていただろう。","failure_count":3}
+{"sentence":"もっと近代的な家が欲しいな","failure_count":2}
 {"sentence":"もっと運動したの方がいいね。","failure_count":3}
 {"sentence":"もど もど もど もど もど…。","failure_count":3}
 {"sentence":"もりしまほだか （森嶋帆高の声） これは僕と彼女だけが知っている――ああ・・・","failure_count":1}
@@ -1320,6 +1487,7 @@
 {"sentence":"やってみたまえ、サーヴィック","failure_count":3}
 {"sentence":"やっぱり落合恵理さんってすごいねカメラ回ると全然別人になっちゃうんだもんな","failure_count":3}
 {"sentence":"やつら 何もかも 持ってっちまうつもりですぜ","failure_count":3}
+{"sentence":"やつら 何もかも持ってっちまうつもりですぜ","failure_count":2}
 {"sentence":"やつら 何もかも持ってっちゃうつもりですぜ","failure_count":3}
 {"sentence":"やらないんだったな","failure_count":3}
 {"sentence":"やらなければならないことがあるお前が シャイアの民の勇気を示すときだ","failure_count":3}
@@ -1331,6 +1499,7 @@
 {"sentence":"や・・・「やーしょー」?","failure_count":3}
 {"sentence":"ゆうベね 中川で宴会があったんだがどうも今時の芸者には ド胆を抜かれるね","failure_count":3}
 {"sentence":"ゆっくりとお話願います。","failure_count":1}
+{"sentence":"よいが","failure_count":2}
 {"sentence":"よいが うろたえずに はっきり申せ","failure_count":3}
 {"sentence":"よいが 先回りして馬のそばで待つ","failure_count":3}
 {"sentence":"よいコーヒーと悪いのとの区別がつくように舌を訓練しなければいけません。","failure_count":3}
@@ -1344,6 +1513,7 @@
 {"sentence":"よりによって 角砂糖をおくなんて！","failure_count":3}
 {"sentence":"よりによってこんなところで君に会うなんて。","failure_count":3}
 {"sentence":"よろしく二人だけで話をでは私はここにいつ撮影開始？","failure_count":3}
+{"sentence":"れ・・・","failure_count":2}
 {"sentence":"ろくな人間がいない","failure_count":3}
 {"sentence":"わかったから 落ち着つけ","failure_count":3}
 {"sentence":"わざわざ家に来なくてもいいですよ。","failure_count":3}
@@ -1358,17 +1528,33 @@
 {"sentence":"わたちは わたちが きらいでつ","failure_count":3}
 {"sentence":"われわれの脱出は奇跡というほかなかった。","failure_count":3}
 {"sentence":"われわれは彼を支持したい気がする。","failure_count":1}
+{"sentence":"わわ・・・","failure_count":2}
 {"sentence":"わッ！","failure_count":3}
+{"sentence":"ん…?","failure_count":2}
+{"sentence":"んぐ・・・ ぐぐ・・・ ぐ！","failure_count":2}
+{"sentence":"んっ・・・！","failure_count":2}
 {"sentence":"んもったいない…?","failure_count":3}
+{"sentence":"んん・・・→ああ もう 知らんッ→","failure_count":2}
 {"sentence":"んッ！","failure_count":3}
 {"sentence":"ん・・・","failure_count":3}
+{"sentence":"ん・・・ ここって","failure_count":2}
+{"sentence":"ん・・・ んん・・・ んっ","failure_count":2}
+{"sentence":"ん・・・→","failure_count":2}
+{"sentence":"ん・・・おばあさんに教わったおまじないであんなことがおこるなんて","failure_count":2}
+{"sentence":"ん・・・九州全域は…いただきまーす","failure_count":2}
+{"sentence":"ん・・・何でもないよ→","failure_count":2}
 {"sentence":"゛ナイフと銃 死ぬなら どっち″ごっこかな？","failure_count":3}
 {"sentence":"アァ・・・","failure_count":3}
+{"sentence":"アア・・・","failure_count":2}
 {"sentence":"アイツラは無視しろ","failure_count":3}
 {"sentence":"アイトルを夕食に呼ぼう聞いてみる","failure_count":3}
 {"sentence":"アキラんとこへ行った？","failure_count":3}
 {"sentence":"アサニシマサローマから お電話が何度か・・・奥様だと・・・","failure_count":3}
 {"sentence":"アッハハハハハ…！ アハハハハ…。","failure_count":1}
+{"sentence":"アドルムならその 持ち合わせがすまんですね","failure_count":2}
+{"sentence":"アハハハハハハ","failure_count":2}
+{"sentence":"アハハハハハハ フッハハハハハハハハ","failure_count":2}
+{"sentence":"アハハハハハハハハ","failure_count":2}
 {"sentence":"アハハハハ・・・","failure_count":3}
 {"sentence":"アパート代が高くついたのも 事実だが・・・彼はパンナムで ハリウッドへ戻った","failure_count":3}
 {"sentence":"アホんだらノーダウンやちゅうのに 何をさらすねん","failure_count":3}
@@ -1377,6 +1563,7 @@
 {"sentence":"アメリカに行った方が 楽なくらいだよ、お父さん","failure_count":3}
 {"sentence":"アメリカに行った方が楽なくらいだよ、お父さん","failure_count":3}
 {"sentence":"アメリカの多くの州で死刑は廃止されてきた。","failure_count":1}
+{"sentence":"アメリカ軍がもうすぐ来るちゅうのに恥やで","failure_count":2}
 {"sentence":"アラスカでは、自然現象の「オーロラ」が見られるんですよね。","failure_count":3}
 {"sentence":"アラスカに住んでいます。","failure_count":1}
 {"sentence":"アルジェは何もかもが変わっちまった。","failure_count":3}
@@ -1386,6 +1573,7 @@
 {"sentence":"アレキサンドリア港","failure_count":3}
 {"sentence":"アンは彼らの指導者であると言われている。","failure_count":3}
 {"sentence":"アンドレアンドレ·マチアス","failure_count":3}
+{"sentence":"ア・・・","failure_count":2}
 {"sentence":"ア・・・トトトトト・・・","failure_count":3}
 {"sentence":"ア・・・！","failure_count":3}
 {"sentence":"イギリスでは「ｓｕｂｗａｙ」を「ｕｎｄｅｒｇｒｏｕｎｄ」という。","failure_count":3}
@@ -1398,9 +1586,12 @@
 {"sentence":"ウソだろ!?","failure_count":3}
 {"sentence":"ウディ·カッツが チャック役だ","failure_count":3}
 {"sentence":"ウンともスンともいわねぇです","failure_count":3}
+{"sentence":"ウンともスンとも言わねえです","failure_count":2}
 {"sentence":"ウンともスンとも言わねえです。","failure_count":1}
 {"sentence":"ウ・・・","failure_count":3}
 {"sentence":"ウ・・・ン","failure_count":3}
+{"sentence":"ウーン・・・","failure_count":2}
+{"sentence":"エイーツ","failure_count":2}
 {"sentence":"エスペラント語は発音しやすいよ。","failure_count":1}
 {"sentence":"エボシさまは!?","failure_count":3}
 {"sentence":"エルフ語の何かだ","failure_count":3}
@@ -1409,6 +1600,7 @@
 {"sentence":"エンジンがどうしてもかからなかった。","failure_count":3}
 {"sentence":"オウムは人の声を真似ることができる。","failure_count":3}
 {"sentence":"オリジナル曲も良かったしさ～","failure_count":3}
+{"sentence":"オレたち カマされたのでは？","failure_count":2}
 {"sentence":"オレに不安を抱えたままで 生きてろっていうのか？","failure_count":1}
 {"sentence":"オレやここでやってる事を少しでも誰かに言ったら","failure_count":3}
 {"sentence":"オロクのパーツが足りねぇから出張ってきたんだ","failure_count":3}
@@ -1423,6 +1615,7 @@
 {"sentence":"ガル…お前がいないと なんにも わかんないだろ","failure_count":3}
 {"sentence":"キミ ジジっていうんだろう？","failure_count":3}
 {"sentence":"キミに心から 思って欲しいのかわいいってねえねえ","failure_count":3}
+{"sentence":"キャハハハハハハハ","failure_count":2}
 {"sentence":"キャ～ キャハハハ！","failure_count":1}
 {"sentence":"ギリシャ人たちは幾何学の理論的原形を作った。","failure_count":1}
 {"sentence":"クスコは世界でもっとも興味深い場所のひとつである。","failure_count":3}
@@ -1434,8 +1627,10 @@
 {"sentence":"クレージーだよ","failure_count":3}
 {"sentence":"クーだけでも 連れてって！","failure_count":3}
 {"sentence":"クーデター計画はぎりぎりのところで阻止されました。","failure_count":1}
+{"sentence":"グッハハハハハハハ","failure_count":2}
 {"sentence":"グルジア人のスターリンに感謝…じゃまだ！","failure_count":3}
 {"sentence":"グレグレグレグレ… え～い！","failure_count":3}
+{"sentence":"グレグレグレグレ… エエイ！","failure_count":2}
 {"sentence":"グレグレグレグレ・・・ エエイ！","failure_count":3}
 {"sentence":"ケイトにこの花を持っていってもらえますか。","failure_count":3}
 {"sentence":"ケイトはお父さんからお金をいくらかもらった。","failure_count":3}
@@ -1504,6 +1699,7 @@
 {"sentence":"ソ・・・?","failure_count":3}
 {"sentence":"ソ連は最後の手段としてしかその国を空爆しないだろう。","failure_count":3}
 {"sentence":"タタラ場が燃えちまったら何もかもおしめぇだ","failure_count":3}
+{"sentence":"タタラ場が燃えちまったら何もかもおしめえだ","failure_count":2}
 {"sentence":"タバコでも吸っていないと手持ちぶさただ。","failure_count":3}
 {"sentence":"タバコには重い税金がかかっている。","failure_count":3}
 {"sentence":"ターミナルに到着いたしますまで、お座席をお立ちになりませんようお願いいたします。","failure_count":3}
@@ -1525,7 +1721,9 @@
 {"sentence":"ティーカップの入っている小包には取り扱い注意とかくべきです。","failure_count":3}
 {"sentence":"テオフラストスの求めに応じて、十人の市民役員が集まった。","failure_count":3}
 {"sentence":"テストは全てパスした。","failure_count":1}
+{"sentence":"テト 早くだめじゃ","failure_count":2}
 {"sentence":"テト・・・","failure_count":3}
+{"sentence":"テト・・・よかった","failure_count":2}
 {"sentence":"テニスの練習で手にマメができたんだ。","failure_count":1}
 {"sentence":"テレビを持ち上げて––窓から投げたら自転車に乗った不法移民に当たった","failure_count":3}
 {"sentence":"テレビ修理屋の仕事も無く暇と男性的魅力を持て余していた","failure_count":3}
@@ -1606,10 +1804,17 @@
 {"sentence":"ネックレスは全部、無くなったり壊れちゃったりしたの。","failure_count":3}
 {"sentence":"ノートパソコンの上にそんな重いもの載せちゃだめだよ。","failure_count":3}
 {"sentence":"ノーラン校長と話したがお前は課外活動が多すぎる学校年鑑の編集から手を引け","failure_count":3}
+{"sentence":"ハァ ハァ ハァ ハァ・・・","failure_count":2}
+{"sentence":"ハァ ハァ ハァ・・・","failure_count":2}
 {"sentence":"ハァ ハァ・・・→","failure_count":3}
 {"sentence":"ハァッ・・・","failure_count":3}
+{"sentence":"ハァ・・・","failure_count":2}
+{"sentence":"ハァ・・・→","failure_count":2}
+{"sentence":"ハァ・・・何なのよ この無意識領域は","failure_count":2}
+{"sentence":"ハァ・・・！","failure_count":2}
 {"sentence":"ハア・・・！","failure_count":3}
 {"sentence":"ハイ 調子はどう？","failure_count":1}
+{"sentence":"ハイスクールのあ・・・","failure_count":2}
 {"sentence":"ハウスの屋根は糸杉材で、永遠に持つし雨漏りもしないが、吊り樋は掃除が必要だった。","failure_count":3}
 {"sentence":"ハウル 町に来てるのかしら","failure_count":3}
 {"sentence":"ハウルは来ません 魔王にもなりません。","failure_count":1}
@@ -1617,10 +1822,13 @@
 {"sentence":"ハッ・・・→","failure_count":3}
 {"sentence":"ハッ・・・！","failure_count":3}
 {"sentence":"ハツ!?ْ","failure_count":1}
+{"sentence":"ハツ・・・➡西宮…！","failure_count":2}
 {"sentence":"ハハハハハハ・・・","failure_count":3}
 {"sentence":"ハハハハ・・・何すかそれ 警察がそんなことを","failure_count":3}
+{"sentence":"ハハハ・・・楽しそうだ 君たち いくつなの？","failure_count":2}
 {"sentence":"ハヤシライス食べてるの見ると、自分も食べたくなる。","failure_count":3}
 {"sentence":"ハンガリーの国旗は、赤・白・緑です。","failure_count":3}
+{"sentence":"ハ・・・ あッ→","failure_count":2}
 {"sentence":"ハ・・・でもさ死ぬために稼いだお金なんて使いたくないよ","failure_count":3}
 {"sentence":"バ、ト、ー、…","failure_count":3}
 {"sentence":"バカにしてどうしても 彼女と別れないのね","failure_count":3}
@@ -1645,9 +1853,12 @@
 {"sentence":"パパ…?","failure_count":3}
 {"sentence":"パンを注文するのを聞いただろ？","failure_count":3}
 {"sentence":"パーティーにはどんなプレゼントを持っていきましょうか。","failure_count":3}
+{"sentence":"ヒッ・・・!","failure_count":2}
 {"sentence":"ヒッ・・・！","failure_count":3}
 {"sentence":"ヒン ヒン ヒン…。","failure_count":1}
+{"sentence":"ヒ・・・","failure_count":2}
 {"sentence":"ヒ卜ラ一だ","failure_count":3}
+{"sentence":"ビクともしてねえな","failure_count":2}
 {"sentence":"ビビッてない","failure_count":3}
 {"sentence":"ビルは本当に飲んべえだ。","failure_count":3}
 {"sentence":"ビルは私の肩をぽんとたたいた。","failure_count":3}
@@ -1656,13 +1867,17 @@
 {"sentence":"ピッツバーグの奴と組む来月には何もかも うまくいく","failure_count":3}
 {"sentence":"フィンガーになれるかどうか お確かめに？","failure_count":3}
 {"sentence":"フェイシエが私と戦っている時彼女は動揺し混乱していた簡単に彼女を倒した","failure_count":3}
+{"sentence":"フッハハハハハ 君 婚約したのか！","failure_count":2}
+{"sentence":"フッハハハハハハ","failure_count":2}
 {"sentence":"フラガ防弾ベストを必要ない着てくれ彼らの信用を失うチェ·ゲバラが行ったぞ","failure_count":3}
 {"sentence":"フランクに 何もかも 分かってると伝えて何で皆フランクの話を しに来るんです？","failure_count":3}
 {"sentence":"フランス的なものが大好きです。","failure_count":1}
 {"sentence":"フランス語でお願いします。","failure_count":1}
 {"sentence":"フランス語の宿題手伝ってくれない？","failure_count":1}
 {"sentence":"フランス語を少しかじりました。","failure_count":3}
+{"sentence":"フリッあ・・・","failure_count":2}
 {"sentence":"フロントガラスがカチカチだった。","failure_count":1}
+{"sentence":"フワ・・・","failure_count":2}
 {"sentence":"フ・・・","failure_count":3}
 {"sentence":"フ・・・→","failure_count":3}
 {"sentence":"ブリュンヒルデ","failure_count":3}
@@ -1688,6 +1903,8 @@
 {"sentence":"ポッピはディーラーの知人と 付き合えない","failure_count":3}
 {"sentence":"ポニョ…?","failure_count":3}
 {"sentence":"ポニーテールの男まともな奴じゃない","failure_count":3}
+{"sentence":"ポンポさんジーンくんは!?","failure_count":2}
+{"sentence":"ポンポンさん オーストラリアなんですか?","failure_count":2}
 {"sentence":"ポーツマス通りには、静かな食堂が六軒ほどあった。","failure_count":3}
 {"sentence":"マイクはいつでも冷静だ。","failure_count":3}
 {"sentence":"マネージャーの中には彼が社長になったことについてぶつぶついうのがいた。","failure_count":3}
@@ -1708,7 +1925,9 @@
 {"sentence":"マーニーがあたしたちを 会わせてくれたのね","failure_count":3}
 {"sentence":"マーリーちゃんはティムくんの救世主です。","failure_count":3}
 {"sentence":"ムシロかぶせて ほったろか思てもなゆし","failure_count":1}
+{"sentence":"ムシロかぶせて ほったろか思てもな油脂こぼれるやろ","failure_count":2}
 {"sentence":"ムニの家を見つけた！ - なにしてるんだ？","failure_count":3}
+{"sentence":"ムリムリムリムリ","failure_count":2}
 {"sentence":"ムンっ！","failure_count":1}
 {"sentence":"メアリーが無事だとわかってトムはホッとした。","failure_count":3}
 {"sentence":"メアリーの髪の毛、くるんってしてる。","failure_count":3}
@@ -1720,7 +1939,9 @@
 {"sentence":"モスリムの連中がルチアニと 話したがるってのは ほんとか？","failure_count":3}
 {"sentence":"モノを買う時は、よく吟味してから買いなさい。","failure_count":1}
 {"sentence":"モーリスのように、二十年間学校に通う人たちには、別の教育制度があった。","failure_count":3}
+{"sentence":"ヤックル…目がさめてたらヤックルに礼を言いなずっとお前を守っていたんだ","failure_count":2}
 {"sentence":"ヤニーはスクーラーの彼氏が好きじゃなった。","failure_count":3}
+{"sentence":"ヤバイときたか","failure_count":2}
 {"sentence":"ヤーマスへ連れてってくれるか？","failure_count":1}
 {"sentence":"ユン運転手でなく 私だよ 頼むから","failure_count":3}
 {"sentence":"ライトも 何もかもダメだ","failure_count":3}
@@ -1753,6 +1974,7 @@
 {"sentence":"レディ あなたは セン·シャンシを夫と?","failure_count":1}
 {"sentence":"レトロでホラー映画の｢サイコ｣の バンガローみたいな？","failure_count":3}
 {"sentence":"レベッカ·デル·リオ","failure_count":3}
+{"sentence":"ロケットへンシツルなんだ","failure_count":2}
 {"sentence":"ロサンゼルス警察マルホランド·ドライブで 交通事故は?","failure_count":3}
 {"sentence":"ロッシ あんたのだろ","failure_count":3}
 {"sentence":"ロバーツさんお約束がおはよう","failure_count":3}
@@ -1765,22 +1987,28 @@
 {"sentence":"ローマにいるときは、ローマ人と同じように行動せよ。","failure_count":3}
 {"sentence":"ローマ法王が亡くなった日、最後に公式の","failure_count":3}
 {"sentence":"ローマ法王に電話して 文句を言うこともできる！","failure_count":3}
+{"sentence":"ワァーッ","failure_count":2}
 {"sentence":"ワァーッ!","failure_count":3}
 {"sentence":"ワインのせいともそれでも働きたかった？","failure_count":3}
+{"sentence":"ワッハハハハハハハ","failure_count":2}
 {"sentence":"ワディを抜ければ――カイロに入れる僕は可能だと思う","failure_count":3}
 {"sentence":"ワン電話がかかってきた時に出なかったら・・・ツー スリー ワタルを殺せ","failure_count":3}
 {"sentence":"ワ・タ・シ・ハ・ロ・ボ・ツ・ト・デ・ス。","failure_count":3}
 {"sentence":"ワープロがあれば、こんな煩わしさはなくなるだろう。","failure_count":3}
+{"sentence":"ン・・・","failure_count":2}
+{"sentence":"ン・・・くれるの？","failure_count":2}
 {"sentence":"ヴァーニャ 話しよう","failure_count":3}
 {"sentence":"ヴィンセントは、連中の頭目たちを確実に捕らえた。","failure_count":3}
 {"sentence":"・・・・連れて行け","failure_count":3}
 {"sentence":"ー このあと 取材アポがあんだけど ちょっと試しに話聞いてきてよ","failure_count":3}
+{"sentence":"一つ 怪物は 言葉を喋ってはいけない","failure_count":2}
 {"sentence":"一つ言いたい君は本当に今までで最高の女性だ","failure_count":3}
 {"sentence":"一とうしょうは 白金メタル","failure_count":3}
 {"sentence":"一に 集団罰をやめてほしい二に 犯人を私に任せてほしい","failure_count":3}
 {"sentence":"一ヶ月という時間はあまりにも短い。","failure_count":3}
 {"sentence":"一人にしてほしいの？","failure_count":1}
 {"sentence":"一人死んだけど","failure_count":3}
+{"sentence":"一体・・・？","failure_count":2}
 {"sentence":"一体誰なんだ？","failure_count":1}
 {"sentence":"一年 一月 一日 一秒 離れていたくない","failure_count":3}
 {"sentence":"一度習慣が身につけば、それはわれわれに対してほとんど強制的な力を持つ。","failure_count":3}
@@ -1836,6 +2064,7 @@
 {"sentence":"二月には少なくとも三日に一度は雪が降ります。","failure_count":3}
 {"sentence":"互いに汗を流し合うような 色魔どものためにか？","failure_count":3}
 {"sentence":"五体満足のまま死にたいしさあ殴れ でなきゃキレるぞ","failure_count":3}
+{"sentence":"五十聞くれなきゃ言えねえ","failure_count":2}
 {"sentence":"交通事故のせいで彼はここへ時間どおりに来れてないんだよ。","failure_count":3}
 {"sentence":"京子がどこに住んでいるのか正確にはしりませんが、三ノ宮の方です。","failure_count":3}
 {"sentence":"人々は城の外へと走り出た。","failure_count":3}
@@ -1871,6 +2100,7 @@
 {"sentence":"今、注文を受けている二檣船二隻を造り終え次第、三檣船に取りかかるとのことだった。","failure_count":3}
 {"sentence":"今ここで何もかもきめてしまいましょう。","failure_count":3}
 {"sentence":"今じゃ何もかも奪われて","failure_count":3}
+{"sentence":"今たしか待と言ったがその侍というのは誰だ","failure_count":2}
 {"sentence":"今ちょっとモメてての…","failure_count":3}
 {"sentence":"今でも君の下着がある初●め●て●だったくせに","failure_count":3}
 {"sentence":"今なんて?","failure_count":1}
@@ -1881,6 +2111,7 @@
 {"sentence":"今のところこれで間に合う。","failure_count":3}
 {"sentence":"今のところそれで間に合うでしょう。","failure_count":3}
 {"sentence":"今の三人は 大目付の配下の者ですしご推察の通りです","failure_count":3}
+{"sentence":"今の学校のえいいね","failure_count":2}
 {"sentence":"今の電話を聞いただろ","failure_count":3}
 {"sentence":"今はここに必要な人材だしお前も必要としているでも長くは続かない","failure_count":3}
 {"sentence":"今はそうじゃなくても将来はいい夫になるよ。","failure_count":3}
@@ -1929,6 +2160,7 @@
 {"sentence":"他の連中はチャンスさえあったら 自分がカウボーイだと思い込みたがる","failure_count":3}
 {"sentence":"付き合う前は何でもはっきり言って付き合ってからは曖昧あいまいにいくのが基本だろ","failure_count":3}
 {"sentence":"代りを持ってくるわ","failure_count":3}
+{"sentence":"代わり…?","failure_count":2}
 {"sentence":"以前この辺りに小さなお宮があった。","failure_count":3}
 {"sentence":"以前は肥沃な平野であったのに今では荒れ地にすぎなくなっている。","failure_count":3}
 {"sentence":"仮に太陽が西から昇ることがあっても、私は決心を変えません。","failure_count":3}
@@ -1939,6 +2171,7 @@
 {"sentence":"伝言を聞いといて","failure_count":3}
 {"sentence":"伯父が変な事を言うの貴方が祖父のセンゲルと 戦に行ったなんて何かの間違いよね","failure_count":3}
 {"sentence":"伯父さんは平の医者子は親を追い越すものでなきゃ親子とも落第","failure_count":3}
+{"sentence":"伯父は・・・","failure_count":2}
 {"sentence":"伸び続けてる。","failure_count":3}
 {"sentence":"体から発見できない毒は いくらでもあるのです","failure_count":3}
 {"sentence":"体当たりなど、『十万冊の書』には載っていない。","failure_count":3}
@@ -1969,10 +2202,12 @@
 {"sentence":"何だか・・・ 息苦しくて","failure_count":3}
 {"sentence":"何てのどかな昼下がりなんだろう。","failure_count":3}
 {"sentence":"何でもあるの","failure_count":3}
+{"sentence":"何でもできるわけではないが昨日の自分より 確実に強い自分になれる","failure_count":2}
 {"sentence":"何でもや・・・「やーしょー」?","failure_count":3}
 {"sentence":"何ということだ！","failure_count":3}
 {"sentence":"何といって良いか分からず、彼女はただ微笑むだけだった。","failure_count":3}
 {"sentence":"何とかならんのかのお…","failure_count":3}
+{"sentence":"何とかなんないのかしら","failure_count":2}
 {"sentence":"何としてもダメ！","failure_count":3}
 {"sentence":"何としても勝たなければ。","failure_count":3}
 {"sentence":"何としても生きのびなきゃ いけないってお父さんも言ってた","failure_count":3}
@@ -2031,11 +2266,14 @@
 {"sentence":"修業は これからだ","failure_count":3}
 {"sentence":"修業？","failure_count":1}
 {"sentence":"修理代だけでも残って","failure_count":3}
+{"sentence":"修理代だけでも残ってバカヤロ","failure_count":2}
 {"sentence":"修理代だけでも残って（マンマユート･ボス）バカヤロ","failure_count":3}
+{"sentence":"俺 相手が ゴルフ嫌いなの知らなくてもういいよ","failure_count":2}
 {"sentence":"俺…ほかに教えられることが 何にもないんです","failure_count":3}
 {"sentence":"俺が… 全部 悪いから自分勝手に 何でもかんでも決めつけんなよ","failure_count":1}
 {"sentence":"俺があげた指輪とかさー婚約指輪？ ーそう、それだ","failure_count":3}
 {"sentence":"俺たちのこと知ってんのかな","failure_count":3}
+{"sentence":"俺とお前の俺と君が何の話をする？","failure_count":2}
 {"sentence":"俺には ろくなキャリアがない","failure_count":3}
 {"sentence":"俺のこと よく知りもしないくせに 味方とか言ってんじゃねえ","failure_count":3}
 {"sentence":"俺の兄弟を生き返らせる 魔法でもあるのか？","failure_count":3}
@@ -2044,6 +2282,7 @@
 {"sentence":"俺の身に何かあったら・・・何でもありゃしない","failure_count":3}
 {"sentence":"俺は お前の味方だから俺のこと よく知りもしないくせに 味方とか言ってんじゃねえ","failure_count":3}
 {"sentence":"俺は恐れてる自分自身に対し人に対して亡霊に対して聞こえるんだよ","failure_count":3}
+{"sentence":"俺は恥ずかしい・・・","failure_count":2}
 {"sentence":"俺は有名になり写真は雑誌の表紙を飾るもうリトル·ゼを 恐れずに済む","failure_count":3}
 {"sentence":"俺は用件を聞いただけだ","failure_count":3}
 {"sentence":"俺は親爺を知らないが 短い間とはいえ幸せな男だったろう","failure_count":3}
@@ -2052,6 +2291,7 @@
 {"sentence":"俺ばリトル·ゼと 名前を変えたリトル·ゼだ","failure_count":3}
 {"sentence":"俺も ずっと 西宮と同じこと考えてたけど→","failure_count":3}
 {"sentence":"俺も確実に危なかった","failure_count":3}
+{"sentence":"俺自身のことでもあるんだ","failure_count":2}
 {"sentence":"個人の権利が自由社会でもっとも大切な権利です。","failure_count":3}
 {"sentence":"倒れていた老人は、実は仏様だったのです。","failure_count":3}
 {"sentence":"倒置法は言葉の前後を入れ替えることにより文章を強調する効果があります。","failure_count":3}
@@ -2144,6 +2384,7 @@
 {"sentence":"判事の見解は貴方が 暴力的だということですどんな風に？","failure_count":3}
 {"sentence":"別々の学校に今まで何校通ってきたのですか？","failure_count":3}
 {"sentence":"別に そんな・・・","failure_count":3}
+{"sentence":"別に何もか","failure_count":2}
 {"sentence":"別の場所 別の時代から 来たものだだが 同じように使える","failure_count":3}
 {"sentence":"別当がむちをひゅうぱちっとならしましたのでどんぐりどもは、やっとしずまりました。","failure_count":3}
 {"sentence":"制作国：日本 ドイツ","failure_count":3}
@@ -2182,6 +2423,7 @@
 {"sentence":"友人を訪問しにミラノまで列車で行く際、彼は私についてきてもらいたがっている。","failure_count":3}
 {"sentence":"友人を選ぶときはどんなに注意してもしすぎることはない。","failure_count":3}
 {"sentence":"友達が遊びに来る。","failure_count":1}
+{"sentence":"双方 動くな動けば王蟲の皮より削り出したこの剣が セラミック装甲をも貫くぞ","failure_count":2}
 {"sentence":"叔母は非常なお金持ちだからといって、それだけ幸せというわけではない。","failure_count":3}
 {"sentence":"叔父の米国土産があるの","failure_count":3}
 {"sentence":"叔父は一年前になくなった。","failure_count":3}
@@ -2217,6 +2459,7 @@
 {"sentence":"君にここで会おうとは夢にも思わなかった。","failure_count":3}
 {"sentence":"君にと思って持ってきたものがあるんだ。","failure_count":3}
 {"sentence":"君に話した “正常\"な人聞に一やっとなれた気がする","failure_count":3}
+{"sentence":"君のゼロ日は美しいないい仕事だ","failure_count":2}
 {"sentence":"君のレポートにはつづりの誤りがいくつかある。","failure_count":3}
 {"sentence":"君のレポートは、優秀とは言えないまでもかなりよい。","failure_count":3}
 {"sentence":"君の一族と私の一族はもともと一つの王家だったのだ地上に降りた時 二つに別れたがね","failure_count":3}
@@ -2226,18 +2469,21 @@
 {"sentence":"君の彼に対する評価は、ひかえ目に言っても、少し高いよ。","failure_count":3}
 {"sentence":"君の父 アブ･タレクと 一緒にではない","failure_count":3}
 {"sentence":"君は――ベルの地図は信用できないと 言ってただろ？","failure_count":3}
+{"sentence":"君は――死ぬのが怖くないのか!?","failure_count":2}
 {"sentence":"君はもう大人なのだから、子供のようにふるまってはいけない。","failure_count":3}
 {"sentence":"君はクラスのみんなに追いつくために、一生懸命勉強しなくてはならない。","failure_count":3}
 {"sentence":"君は一魅惑的だと・・・考えを変えたわパりに残るわ","failure_count":3}
 {"sentence":"君は両親に対してもっと思いやりの心を持つべきです。","failure_count":1}
 {"sentence":"君は確実に精神異常だ","failure_count":3}
 {"sentence":"君みたいに いいパンなんだだから…","failure_count":3}
+{"sentence":"君みたいに いいパンなんだだから…何だ そりゃ→","failure_count":2}
 {"sentence":"君も一緒にだ","failure_count":3}
 {"sentence":"君も俺も含めてな","failure_count":3}
 {"sentence":"君も成年に達したからには、自活の道を求めねばならぬ。","failure_count":3}
 {"sentence":"吸血鬼っていると思う？","failure_count":3}
 {"sentence":"呆けてたとはいえ この男にハッキングできる奴なんざそうざらにやいねぇ","failure_count":1}
 {"sentence":"味とか匂いは まだ全然ムリみたいよ","failure_count":3}
+{"sentence":"味の基本線は 綺麗に澄んだ醤油味のスープでコッテリした 迫力のあるコクを狙う","failure_count":2}
 {"sentence":"和平交渉がすでに秘密裡に開始されたそうです。","failure_count":3}
 {"sentence":"和平交渉がすでに秘密裡に開始されたとのことです。","failure_count":3}
 {"sentence":"和平交渉はまた失敗しました。","failure_count":3}
@@ -2251,6 +2497,7 @@
 {"sentence":"唇に聴いてみる。","failure_count":3}
 {"sentence":"問題がありまして・・・俺たちが命令したら 黙って言う事を聞くんだ","failure_count":3}
 {"sentence":"問題があろうと 何とかできる","failure_count":3}
+{"sentence":"問題のこの役 どうすんの!?","failure_count":2}
 {"sentence":"問題は、トムが来るかどうかです。","failure_count":3}
 {"sentence":"問題は、トムにそれができるかどうかだよ。","failure_count":3}
 {"sentence":"問題はどこに駐車すればいいかということです。","failure_count":3}
@@ -2299,9 +2546,12 @@
 {"sentence":"夜空を見上げても 星は見えない","failure_count":3}
 {"sentence":"夜遅くに出す品についてもメモした。","failure_count":3}
 {"sentence":"夢ではなく現実だ","failure_count":3}
+{"sentence":"夢・・・ 力","failure_count":2}
 {"sentence":"大きゅうなったな","failure_count":3}
 {"sentence":"大佐は下部の黒い半球体の中です 兵が目撃しました。","failure_count":1}
 {"sentence":"大体は→あ・・・→そんな顔しないでよ 西宮 →","failure_count":3}
+{"sentence":"大体は➡あ・・・→そんな顔しないでよ 西宮 →","failure_count":2}
+{"sentence":"大地の毒を体に取り込んできれいな結晶にしてから死んで砂になっていくんだわ","failure_count":2}
 {"sentence":"大地震が起これば警報器がなるでしょう。","failure_count":3}
 {"sentence":"大型船すら あいつの重さに耐え切れずついらく 墜落してしまった","failure_count":1}
 {"sentence":"大家族を養うには、彼の収入はあまりにも少なすぎる。","failure_count":3}
@@ -2322,6 +2572,7 @@
 {"sentence":"契約はかなりいいかげんなものだった。","failure_count":3}
 {"sentence":"奨学金のおかげで彼女は留学した。","failure_count":1}
 {"sentence":"奪った金で リトル·ゼと戦う準備を整えた","failure_count":3}
+{"sentence":"女たちが上の曲輪に立てこもって頑張っている今ならまだ間に合う","failure_count":2}
 {"sentence":"女とは他愛のない話しかできません","failure_count":3}
 {"sentence":"女に声をかける兵隊も･･･ナンパ兵のジープが パンクしまして―兵舎まで駆けました","failure_count":3}
 {"sentence":"女の子がかわいくてよぉ・・・ おめえ 何回イッた？","failure_count":3}
@@ -2331,7 +2582,9 @@
 {"sentence":"女友達を失いたくなんだよ。","failure_count":3}
 {"sentence":"女性の立場は多年にわたって確実に好転している。","failure_count":3}
 {"sentence":"奴でなく俺を追う俺が捕まってる間-リトル·ゼは 自由に殺しまくってる","failure_count":3}
+{"sentence":"奴らは そうなる前に 何とかする気だろうがその暇を与えねえで 慌てさせるんだ","failure_count":2}
 {"sentence":"奴らは俺達を たった十人とは思ってねえ","failure_count":3}
+{"sentence":"奴ら三人が隣に集まってるとすると伯父も隣にいるはずだぞ","failure_count":2}
 {"sentence":"奴隷のように圧制者の 足元に倒れねばなならない","failure_count":3}
 {"sentence":"好きじゃなかったんじゃないか？","failure_count":1}
 {"sentence":"好きなことをしなさい。","failure_count":1}
@@ -2351,6 +2604,7 @@
 {"sentence":"子供たちから 目を離さないようしなければ私たちは・・・","failure_count":3}
 {"sentence":"子供でも世の中の事を理解する必要がある。","failure_count":3}
 {"sentence":"子供の頃、親父と冬になると―凍った湖に釣りに行った","failure_count":3}
+{"sentence":"子供は寝かしておけ","failure_count":2}
 {"sentence":"子供達はスケート靴を持って、凍った池に向った。","failure_count":1}
 {"sentence":"季節が変われば、ひどく腹を空かせることになるかもしれないしな","failure_count":3}
 {"sentence":"学ぶのに年は関係ない。","failure_count":3}
@@ -2368,6 +2622,7 @@
 {"sentence":"実際に、この薬で痛みは和らぐのだろうか？","failure_count":1}
 {"sentence":"実際に、すでにその影響を見ることのできるいくつかの地域が世界にはあるのです。","failure_count":3}
 {"sentence":"客が理解しなくてもいいと？","failure_count":3}
+{"sentence":"客車が密閉されていたとはいえ 信じられない","failure_count":2}
 {"sentence":"害者の身辺を洗うしかないか","failure_count":1}
 {"sentence":"家に入る時は、靴を脱ぐよ。","failure_count":3}
 {"sentence":"家の前に車を止める者も いなくなった","failure_count":3}
@@ -2381,9 +2636,11 @@
 {"sentence":"寺院に入る時は、帽子をとりなさい。","failure_count":3}
 {"sentence":"対するは ペンシルベニア州 出身グリーンのトランクスカッターノの前は？","failure_count":3}
 {"sentence":"専制政治による支配の下で、罪のない人々が市民権を剥奪された。","failure_count":3}
+{"sentence":"将也ああ・・・↓あいや・・・えっと君の名前…ガ〜ン！","failure_count":2}
 {"sentence":"小さいけど・・・","failure_count":3}
 {"sentence":"小さくてどこにでもあるようなパン屋さんだった。","failure_count":3}
 {"sentence":"小なりとはいえ―その国に対する これが トルメキアの礼儀か！","failure_count":3}
+{"sentence":"小なりとはいえその国に対する これがトルメキアの礼儀か！","failure_count":2}
 {"sentence":"小便がまっすぐに飛ばない","failure_count":3}
 {"sentence":"小便する時はバケツの側面にかけるのだ真ん中に当てずにな分かりました","failure_count":3}
 {"sentence":"小児科をはやく！","failure_count":1}
@@ -2408,6 +2665,7 @@
 {"sentence":"川は・・・","failure_count":3}
 {"sentence":"差し当たっては不足を心配する必要はありません。","failure_count":3}
 {"sentence":"市場に出回るものといたしまして、こちらのカバンは極上品でございます。","failure_count":3}
+{"sentence":"帆高のヤツ 俺とお前のことをさ愛人!?","failure_count":2}
 {"sentence":"帆高のヤツ俺とお前のことをさ（夏美）愛人!?","failure_count":3}
 {"sentence":"帰ったらね今夜は迎えに来なくても いいから","failure_count":3}
 {"sentence":"常に論理的であると時には人に嫌われるかもしれない。","failure_count":3}
@@ -2415,6 +2673,7 @@
 {"sentence":"平均的な人間の子供とほとんど同じ知能を持っているいる。","failure_count":3}
 {"sentence":"平行四辺形の対辺は平行している。","failure_count":3}
 {"sentence":"幸い 正直な刑事は他にもいる","failure_count":3}
+{"sentence":"幸せな夢を見るためにはい","failure_count":2}
 {"sentence":"幸福とは、どれだけのものを所有しているのかにあるのではありません。","failure_count":3}
 {"sentence":"幸福は満足にありということは誰でも知っている。","failure_count":3}
 {"sentence":"幼い少女は彼に向かって舌をつき出した。","failure_count":3}
@@ -2423,11 +2682,14 @@
 {"sentence":"座って夫が保険会社で働いている頃誰もが秘書と浮気してるって よく言ってたわ","failure_count":3}
 {"sentence":"座るなって・・・","failure_count":3}
 {"sentence":"庶民はまるで羊のように独裁者の後ろにしたがった。","failure_count":3}
+{"sentence":"建物の中のはずなのに・・・","failure_count":2}
 {"sentence":"建物は地震により全壊しました。","failure_count":3}
 {"sentence":"弊社 最近ヒマだし勝手に猫なんか拾ってくるしさ圭ちゃんと一緒じゃん","failure_count":3}
+{"sentence":"弐が男でも女でも 好きだって言うの!?","failure_count":2}
 {"sentence":"引きずり 回さらないでよ","failure_count":3}
 {"sentence":"引き分けなんかに しねえからな","failure_count":3}
 {"sentence":"引出しがどうしても開かないんだよ。","failure_count":3}
+{"sentence":"強い風のせいで 匂いが流れてわかりづらかった","failure_count":2}
 {"sentence":"当のその少年は今日学校に来なかった。","failure_count":3}
 {"sentence":"当地の気候はイングランドよりも暖かい。","failure_count":1}
 {"sentence":"当時は、トムはボストンにいました。","failure_count":1}
@@ -2758,6 +3020,7 @@
 {"sentence":"彼女を一人占めしようとするな。","failure_count":3}
 {"sentence":"彼自信が主張してないのよ！","failure_count":3}
 {"sentence":"往きと返りと変るせいか、景色の違うのも不安だった。","failure_count":3}
+{"sentence":"待だってんだよ","failure_count":2}
 {"sentence":"待ちなさい→","failure_count":3}
 {"sentence":"後でこれ頼もっと。","failure_count":3}
 {"sentence":"後でなら何とでも 言えるさ","failure_count":3}
@@ -2789,6 +3052,7 @@
 {"sentence":"恩返しなんかしなくていいからあんたも魔法の何かだろう","failure_count":3}
 {"sentence":"恭一の前に来ると、わざと肩をそびやかしたり、横めでわらったりして過ぎるのでした。","failure_count":3}
 {"sentence":"息はできるだろ!?","failure_count":3}
+{"sentence":"息子さんの奥さんのでしょう","failure_count":2}
 {"sentence":"息子さんは 葉が落ちる前に立てるわ","failure_count":3}
 {"sentence":"息子を忘れてるそれもこれも読めば分かる","failure_count":3}
 {"sentence":"患者は数日しかもたないと医者は強調した。","failure_count":3}
@@ -2864,6 +3128,7 @@
 {"sentence":"文法なんかくそくらえだ。","failure_count":3}
 {"sentence":"文盲かな","failure_count":3}
 {"sentence":"文章は素晴らしいただ 欧米の人たちに 理解してもらいたいだけだ","failure_count":3}
+{"sentence":"断っとくが 何の合図もなきゃ俺に何か起こったと思って","failure_count":2}
 {"sentence":"新しい先生はどう？","failure_count":1}
 {"sentence":"新しい土地に慣れるには、時間がかかるものですよね。","failure_count":3}
 {"sentence":"新しい学校は単純で近代的な様式で建てられている。","failure_count":3}
@@ -2885,6 +3150,7 @@
 {"sentence":"早く来すぎることもない","failure_count":3}
 {"sentence":"早く覚めたい","failure_count":3}
 {"sentence":"早く言ってくれれば・・・","failure_count":3}
+{"sentence":"早よようなってまた一緒に海行こ","failure_count":2}
 {"sentence":"早起きの習慣が大切だということはいくら言っても言い足りない。","failure_count":3}
 {"sentence":"明日、時間があるかなって思ってたんだけど・・・。","failure_count":3}
 {"sentence":"明日の午後ならいつでもおいでください。","failure_count":3}
@@ -2974,6 +3240,8 @@
 {"sentence":"検便をする必要があります。","failure_count":1}
 {"sentence":"検索エンジン「ヤンデクス」はタタール語をもサポートし始めた。","failure_count":3}
 {"sentence":"横におかねばなりません","failure_count":3}
+{"sentence":"橙子さんにも十代の頃が…ん!?","failure_count":2}
+{"sentence":"次って… 他に どこへ行こうっていうんだおまえの本当の住みかだよ","failure_count":2}
 {"sentence":"次に来そうなものを誰も知らなければ、誰も失望しない。","failure_count":3}
 {"sentence":"次の日曜、どこ行きたい？","failure_count":3}
 {"sentence":"次の日曜にあなたに会いに行きます。","failure_count":3}
@@ -2990,6 +3258,7 @@
 {"sentence":"死になさい","failure_count":3}
 {"sentence":"死ぬ前に故郷の人間に 会いたい","failure_count":3}
 {"sentence":"死んだシカにハエの群角だけが木の枝のように 流れていった","failure_count":3}
+{"sentence":"死んで・・・行こう","failure_count":2}
 {"sentence":"死体も含めて、まったくありがたいことに。","failure_count":3}
 {"sentence":"殊に母は何とか云いながら、良平の体を抱えるようにした。","failure_count":3}
 {"sentence":"残ったものはなにひとつありませんでした。","failure_count":3}
@@ -3001,6 +3270,7 @@
 {"sentence":"殺すんだ！","failure_count":1}
 {"sentence":"殺そうとしなくても誰か死ぬ","failure_count":3}
 {"sentence":"殺られたいのか？ 金は？","failure_count":1}
+{"sentence":"殺・・・ せ・・・","failure_count":2}
 {"sentence":"母は両手を腰に当てひじを張ってたっていた。","failure_count":3}
 {"sentence":"母は私の望むものは何でも言わなくてもかなえてくれる。","failure_count":3}
 {"sentence":"母は私をスイスに留学させたがっている。","failure_count":3}
@@ -3010,15 +3280,18 @@
 {"sentence":"毎年の服代っていくら？","failure_count":3}
 {"sentence":"毎日 あの調子ここに来れて スゴく嬉しい","failure_count":3}
 {"sentence":"毎日 あの調子ここに来れて スゴく嬉しいそれで..","failure_count":3}
+{"sentence":"毎日 判で押したみたい新しい出来事なんか 何にも起こらない","failure_count":2}
 {"sentence":"毎日 判で押したみたい新しい出来事なんか 何にも起こんない","failure_count":3}
 {"sentence":"毎日 薬をもらってあのガキどもみてえに 干からびてけってのかよ！","failure_count":3}
 {"sentence":"毎日洗濯してますよ。","failure_count":1}
 {"sentence":"毎日練習している。","failure_count":1}
 {"sentence":"毎晩あたしと遊んでばかりいてそのとにかくもうこんなこと","failure_count":3}
+{"sentence":"毎月これをやってくれねぇかなぁ・・・","failure_count":2}
 {"sentence":"毎週月曜日はここに来てるんだ。","failure_count":3}
 {"sentence":"毎週火曜日の朝、ラーク先生と呼ばれている老婦人ご学校にやって来ました。","failure_count":3}
 {"sentence":"気ぃつけて","failure_count":3}
 {"sentence":"気ぃ利くがなあ","failure_count":3}
+{"sentence":"気づかれないようにしないと夢の端まで早く・・・","failure_count":2}
 {"sentence":"気味が悪い","failure_count":3}
 {"sentence":"気味が悪い 上司の車で！","failure_count":3}
 {"sentence":"気味が悪いね","failure_count":3}
@@ -3092,6 +3365,7 @@
 {"sentence":"犬死にですよね","failure_count":3}
 {"sentence":"犯行現場に人だかりができていた。","failure_count":3}
 {"sentence":"独りで暮すのは寂しいわ","failure_count":3}
+{"sentence":"狭えな もう","failure_count":2}
 {"sentence":"狼が“なぜ私を憎むのか”と 羊に尋ねますか？","failure_count":1}
 {"sentence":"狼どもも、まっすぐに首をのばして、しきりにそっちを望みました。","failure_count":3}
 {"sentence":"猫はテーブルの上で寝ています。","failure_count":1}
@@ -3125,6 +3399,7 @@
 {"sentence":"町で起こっていたら、その事故は惨事を引き起こしていただろう。","failure_count":3}
 {"sentence":"画かきはあっはは、あっははとびっこのような笑いかたをしました。","failure_count":3}
 {"sentence":"留守中 ジュノから電話があの子 嫌いよ","failure_count":3}
+{"sentence":"疎開いっとるタッちゃんやケン坊もこんなもんばっかり食うとるんやろか","failure_count":2}
 {"sentence":"疫病にかかって死ななんだら、今でも売りに往んでいた事であろ。","failure_count":3}
 {"sentence":"疲れているいないにかかわらず、彼は作業を続けた。","failure_count":3}
 {"sentence":"病気だったとはいえ―幼い自分を遠くにやったことに対して 母を恨んでいた","failure_count":1}
@@ -3177,6 +3452,7 @@
 {"sentence":"禁煙したほうがいいと思います。","failure_count":1}
 {"sentence":"禎子はもっと言いたかったが、口と舌がどうしても動かなかった。","failure_count":3}
 {"sentence":"私 今 ハウルの子供時代に いるんだ。","failure_count":1}
+{"sentence":"私 本当にやるの!?","failure_count":2}
 {"sentence":"私 本当にやるの！？","failure_count":3}
 {"sentence":"私 本当はもうわかってたんだなんで!?","failure_count":3}
 {"sentence":"私からも彼にお願いしていたけど、君からもお願い。","failure_count":3}
@@ -3237,6 +3513,7 @@
 {"sentence":"私には私なりの懸念があった。","failure_count":3}
 {"sentence":"私に恨みでもあるの？","failure_count":3}
 {"sentence":"私に手紙を投函させ、そのうえ私たちがこの海峡を通るよう確実に仕向けたのだ。","failure_count":3}
+{"sentence":"私に音楽を辞めろと!?","failure_count":2}
 {"sentence":"私のこと考えてくれてる？","failure_count":1}
 {"sentence":"私のごう慢さから…それを武器として 使おうとしたんだ。","failure_count":3}
 {"sentence":"私のノートに何か書いた？","failure_count":1}
@@ -3355,6 +3632,7 @@
 {"sentence":"私を待たずに先に食べに行ってくれ","failure_count":3}
 {"sentence":"私を蹴飛ばすしかし あなたは何を知っていますか？","failure_count":3}
 {"sentence":"私んちで、一緒に研究課題するのはどう？","failure_count":3}
+{"sentence":"私んでもってほしい え？","failure_count":2}
 {"sentence":"私一人でこれをやってみたいのですが。","failure_count":3}
 {"sentence":"私宛に何か伝言がとどいていませんか。","failure_count":3}
 {"sentence":"私宛に手紙が来ていますか。","failure_count":1}
@@ -3387,6 +3665,7 @@
 {"sentence":"筋書きは変らない","failure_count":3}
 {"sentence":"答えを見つけるべき疑問はいつだっていくらでもある。","failure_count":3}
 {"sentence":"箱の中にリンゴがいくらかありますか。","failure_count":3}
+{"sentence":"米 盗まれたこ・・・このあは！","failure_count":2}
 {"sentence":"精巧だが 痕跡はある狭い 足幅薄い 甘皮わずかに 受け口","failure_count":3}
 {"sentence":"紙か何かある？","failure_count":3}
 {"sentence":"終演は何時ですか。","failure_count":1}
@@ -3401,6 +3680,7 @@
 {"sentence":"罠だとは思わなかった？","failure_count":3}
 {"sentence":"置いとけ","failure_count":3}
 {"sentence":"署名を外見よりはまともだ","failure_count":3}
+{"sentence":"美しい…まさに秘密の花園に咲く一輪のバラ","failure_count":2}
 {"sentence":"美人でもある。","failure_count":3}
 {"sentence":"美味しそうな石灰石！","failure_count":3}
 {"sentence":"美男美女が多いの","failure_count":3}
@@ -3422,7 +3702,11 @@
 {"sentence":"肉体は死すべきものである。","failure_count":1}
 {"sentence":"育ちのせいだと思います？","failure_count":1}
 {"sentence":"脇見を問題じゃない","failure_count":3}
+{"sentence":"腑条 おまえ女っていないの？","failure_count":2}
 {"sentence":"腫れるかもしれませんが気にしないでください。","failure_count":3}
+{"sentence":"腸の中には 山羊がぎっしり詰まってる山芋の腸詰めだよ・・・","failure_count":2}
+{"sentence":"腹の中でも こんころり","failure_count":2}
+{"sentence":"腹を減らしてる子供ならこの横町だけでも何十人もいる","failure_count":2}
 {"sentence":"膝をついて 手を前に！","failure_count":1}
 {"sentence":"自分ではひとかどの人間だとうぬぼれている。","failure_count":3}
 {"sentence":"自分で作ったのではないのですよ。","failure_count":3}
@@ -3485,10 +3769,13 @@
 {"sentence":"褒めると彼女はうぬぼれるよ。","failure_count":3}
 {"sentence":"西み・・・→","failure_count":1}
 {"sentence":"西み・・・→ポニーテール","failure_count":3}
+{"sentence":"西み・・・→ポニーテールいしだくん どこいくー","failure_count":2}
 {"sentence":"西宮…→ハァ ハァ・・・→","failure_count":3}
 {"sentence":"西宮・・・→西宮…","failure_count":3}
 {"sentence":"覇王もひざまずいて命乞いここまで汚けがされた京劇は 滅びるほかない","failure_count":3}
+{"sentence":"見えた…つ煉・・・","failure_count":2}
 {"sentence":"見かけほど忠実では ないかもしれません","failure_count":3}
+{"sentence":"見つめているまさにその瞬間女性ポン！","failure_count":2}
 {"sentence":"規則は少なく、さらに重要なことには、簡単でなければならない。","failure_count":3}
 {"sentence":"規則を破ればだれでもすぐに出て行ってもらいます。","failure_count":3}
 {"sentence":"親は子供が悪さをするのをしかる。","failure_count":3}
@@ -3547,13 +3834,16 @@
 {"sentence":"誰も知らないよ。","failure_count":1}
 {"sentence":"誰をも愛さない人なんて悪いのは彼よ 他人に求める資格がある？","failure_count":3}
 {"sentence":"課長 自主的研究会だそうです","failure_count":3}
+{"sentence":"課長がもし… てなことになると 後釜は？","failure_count":2}
 {"sentence":"調査官は月曜の午前の遅い時間にその学校に到着した。","failure_count":3}
 {"sentence":"論じるまでもなく基本的人権は尊重されなければならない。","failure_count":3}
 {"sentence":"諦めちゃダメ！","failure_count":1}
 {"sentence":"謎の男とは 死の恐怖症男ではなくただの修理屋で 故障を直していただけだった","failure_count":3}
 {"sentence":"講演者の議論はまとはずれであった。","failure_count":3}
 {"sentence":"講義を聞いている時は、静かにしていなければならない。","failure_count":3}
+{"sentence":"警備は何してる!?","failure_count":2}
 {"sentence":"警備員と仲良くなったりねになった?","failure_count":3}
+{"sentence":"豚さーん カワイイー","failure_count":2}
 {"sentence":"負けた・・・。","failure_count":3}
 {"sentence":"負けちゃいないですよね でも ゆうべ話しましたよね？","failure_count":3}
 {"sentence":"財布、返しなさいよ。","failure_count":1}
@@ -3640,6 +3930,7 @@
 {"sentence":"陳開いっとるタッチゃんやケン坊もこんなもんばっかり食うとるんやろか","failure_count":1}
 {"sentence":"陽気が暖かでやがて果樹の花が咲くだろう。","failure_count":3}
 {"sentence":"陽菜さんが人柱に…（帆高）陽菜さん ウソだろ!?（警察官Ｅ）おい ちょっと","failure_count":3}
+{"sentence":"陽菜ちゃんだっけ？","failure_count":2}
 {"sentence":"隠しマイクが ないかとカメラとか作り話だ","failure_count":3}
 {"sentence":"雑炊 我慢して食べええかげんにしとき","failure_count":3}
 {"sentence":"雑音のせいで仕事に集中できません。","failure_count":3}
@@ -3657,6 +3948,8 @@
 {"sentence":"電話を引くのっていくらすると思う？","failure_count":3}
 {"sentence":"電車に傘を忘れたのはうっかりだったね。","failure_count":1}
 {"sentence":"電車は遅れたけど、それでも出勤時間には間に合ったんだよ。","failure_count":3}
+{"sentence":"霧・・・","failure_count":2}
+{"sentence":"青木は・・・","failure_count":2}
 {"sentence":"静かにしていさえすれば、ここに居たければ居てもよい。","failure_count":3}
 {"sentence":"静かにしていさえすれば、ここに居てもよい。","failure_count":3}
 {"sentence":"静かにしていさえすれば、この部屋にいてもよろしい。","failure_count":3}
@@ -3695,6 +3988,7 @@
 {"sentence":"騒音のせいで私は眠ることができなかった。","failure_count":3}
 {"sentence":"髄膜炎とは違うんですよね？","failure_count":3}
 {"sentence":"高貴の姫君は汗をかくような はしたないまねはなさらぬもの","failure_count":3}
+{"sentence":"鬼の所に移動してるんじゃなく ここに出るの!?","failure_count":2}
 {"sentence":"鬼神のごときとは正にあれだな.","failure_count":3}
 {"sentence":"魔女を私の仕事は 秘密を探ることではない同僚の過去のことだ。","failure_count":3}
 {"sentence":"魔術も 違う世紀では 科学になる","failure_count":3}
@@ -3704,6 +3998,7 @@
 {"sentence":"鳥は四方八方に飛び立った。","failure_count":3}
 {"sentence":"鷲ケ峯のふもとというと ここからどのぐらいかな","failure_count":3}
 {"sentence":"鷲ヶ峯のふもとというと","failure_count":3}
+{"sentence":"鷲ヶ峯のふもとというと ここからどのぐらいかな","failure_count":2}
 {"sentence":"麦氏は髭が要るかな？","failure_count":3}
 {"sentence":"黄（ファン） 車の運転は止めて 引越し業者になったのか？","failure_count":1}
 {"sentence":"黒人とはいえ立派な アメリカ人紳士のルイス褐色の爆弾 ジョー・ルイス！","failure_count":3}

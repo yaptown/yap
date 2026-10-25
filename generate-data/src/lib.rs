@@ -210,6 +210,7 @@ pub mod tatoeba;
 pub mod token_embeddings;
 pub mod tokenize;
 pub mod translate;
+pub mod translation_review;
 pub mod usage_discovery;
 pub mod wiktionary_conjugations;
 pub mod wiktionary_terms;

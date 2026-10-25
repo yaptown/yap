@@ -18,6 +18,7 @@ use crate::usage_discovery::{UsageAnchor, UsageEntry, UsageInventory, UsageKind}
 mod canonical;
 mod corrections;
 mod coverings;
+pub mod furigana;
 mod hierarchy;
 mod inflections;
 mod inventory;

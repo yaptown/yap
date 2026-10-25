@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 3604187
-Total errors: 6387
+Total predictions: 3604195
+Total errors: 6389
 Accuracy: 99.82%
 
 ## Error Patterns (sorted by frequency)
@@ -62,6 +62,14 @@ Accuracy: 99.82%
   - Anche giacca e cravatta è un "dresscode".
   - Beh, è un soldato modello, ma non è un "purosangue".
 
+### "la" + """ (55 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Alighieri" si scrive con la "H"?
+  - Al diavolo la "Posta del cuore"?
+  - Altre volte, la "madre" prendeva il sopravvento completamente.
+
 ### "è" + """ (55 occurrences)
 - Predicted: None
 - Actual: Space
@@ -70,15 +78,7 @@ Accuracy: 99.82%
   - C'è "microfono" scritto sopra.
   - Che colore è "Blu Man City"?
 
-### "la" + """ (54 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Alighieri" si scrive con la "H"?
-  - Al diavolo la "Posta del cuore"?
-  - Altre volte, la "madre" prendeva il sopravvento completamente.
-
-### """ + "è" (52 occurrences)
+### """ + "è" (53 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:

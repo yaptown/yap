@@ -47,7 +47,7 @@
 {"sentence":"Alle Männer sind Schweine (Anwesende ausgenommen).","failure_count":1}
 {"sentence":"Alle halten Tom für einen umsichtigen und vernüntigen Menschen.","failure_count":1}
 {"sentence":"Alleine bin ich besser dran.","failure_count":3}
-{"sentence":"Alleine hab ich Angst.","failure_count":2}
+{"sentence":"Alleine hab ich Angst.","failure_count":3}
 {"sentence":"Alleine hätte es mich erwischt.","failure_count":3}
 {"sentence":"Alleine hätte ich das nicht gekonnt.","failure_count":3}
 {"sentence":"Alleine kommt man nicht durchs Leben.","failure_count":3}
@@ -85,7 +85,7 @@
 {"sentence":"Aus der Ferne sieht der große Felsen aus wie ein altes Schloss.","failure_count":1}
 {"sentence":"Aus einer anderen Zeit.","failure_count":3}
 {"sentence":"Aus'm Blickfeld, du Flöte!","failure_count":3}
-{"sentence":"Aus'm Handschuhfach.","failure_count":2}
+{"sentence":"Aus'm Handschuhfach.","failure_count":3}
 {"sentence":"Aus'm Palast?","failure_count":3}
 {"sentence":"Aus'm Westen?","failure_count":3}
 {"sentence":"Ausserdem habe ich ihn lebendig gesehen.","failure_count":1}
@@ -191,8 +191,8 @@
 {"sentence":"Der Leichnam der Kaiserinwitwe wurde in Stücke gehauen.","failure_count":1}
 {"sentence":"Der Mann vertraut nicht mal seinen eigenen Hosen.","failure_count":1}
 {"sentence":"Der Mann, der Sie liebt, wird auch in der Lage sein, Sie zu beschützen, Herrin.","failure_count":1}
-{"sentence":"Der Ort wird zusammengehauen.","failure_count":2}
-{"sentence":"Der Professor hat mich heute einen \"Künstler Typ Willi Sitte\" genannt.","failure_count":2}
+{"sentence":"Der Ort wird zusammengehauen.","failure_count":3}
+{"sentence":"Der Professor hat mich heute einen \"Künstler Typ Willi Sitte\" genannt.","failure_count":3}
 {"sentence":"Der Satz mit der nächstniedrigeren Nummer ist falsch.","failure_count":1}
 {"sentence":"Der Sinn dieses Ortes könnte das Gegenteil dessen sein, was Sie denken.","failure_count":1}
 {"sentence":"Der Tod wird die ereilen, die den Schlaf der Pharaonen stören.","failure_count":1}
@@ -334,7 +334,7 @@
 {"sentence":"Eine feine Prinzessin kennt Anstößiges wie Schwitzen nicht.","failure_count":3}
 {"sentence":"Einen Freund auch nicht, falls du es nicht weißt.","failure_count":3}
 {"sentence":"Einen erstklassiger Kämpfer.","failure_count":1}
-{"sentence":"Einmal \"Peach Fizz\" feuerwasserfrei.","failure_count":2}
+{"sentence":"Einmal \"Peach Fizz\" feuerwasserfrei.","failure_count":3}
 {"sentence":"Einundachtzig,.","failure_count":1}
 {"sentence":"Elektrizität, fortschrittliche Medizin, man konnte sogar fliegen.","failure_count":1}
 {"sentence":"Er erschlägt den Drachen, weil er ihn nicht fürchtet.","failure_count":1}
@@ -428,7 +428,7 @@
 {"sentence":"Gib mir was zu trinken, Rico.","failure_count":1}
 {"sentence":"Ginny, sieh mal!","failure_count":3}
 {"sentence":"Gleich wird es spannend!","failure_count":1}
-{"sentence":"Gnädige Frau, Sie sind leicht wie eine Feder.","failure_count":2}
+{"sentence":"Gnädige Frau, Sie sind leicht wie eine Feder.","failure_count":3}
 {"sentence":"Gnädige Frau, mein Herr!","failure_count":3}
 {"sentence":"Gott hielt sich an Kantabens Gebete.","failure_count":3}
 {"sentence":"Grauer Van, nach Norden, rauf zur Craw Creek Road.","failure_count":1}
@@ -574,7 +574,7 @@
 {"sentence":"Ich kann mir nicht vorstellen, dass Mama das tat.","failure_count":1}
 {"sentence":"Ich kann nicht neben den Niagarafällen schlafen.","failure_count":1}
 {"sentence":"Ich kann wegen dem Hüpfer meine Mama nicht alleine zurücklassen.","failure_count":1}
-{"sentence":"Ich kapierte schnell, was es heißt, ein Außenseiter zu sein.","failure_count":2}
+{"sentence":"Ich kapierte schnell, was es heißt, ein Außenseiter zu sein.","failure_count":3}
 {"sentence":"Ich kenne Gusteau's Kochstil.","failure_count":3}
 {"sentence":"Ich konnte etwas Probe fahren und gewöhnte mich zum Glück an die Strecke.","failure_count":1}
 {"sentence":"Ich las vor kurzem einen Artikel von dir, er war ausgezeichnet.","failure_count":3}
@@ -625,7 +625,7 @@
 {"sentence":"Ich sollte nicht hier sein.","failure_count":1}
 {"sentence":"Ich traf sie in einem Café in der Nähe des Bahnhofes.","failure_count":1}
 {"sentence":"Ich trinke nie wieder, nie nie wieder!","failure_count":1}
-{"sentence":"Ich verstehe, dass wir verdächtig sind,- wenn die Täter nicht gefunden werden.","failure_count":2}
+{"sentence":"Ich verstehe, dass wir verdächtig sind,- wenn die Täter nicht gefunden werden.","failure_count":3}
 {"sentence":"Ich versuch's nachher noch mal, ja?","failure_count":3}
 {"sentence":"Ich war die Geliebte von Jean Saporta.","failure_count":1}
 {"sentence":"Ich war in Saudi, wissen Sie?","failure_count":1}
@@ -641,7 +641,7 @@
 {"sentence":"Ich will sie erst kennen lernen.","failure_count":1}
 {"sentence":"Ich will zu meiner Mutter!..","failure_count":3}
 {"sentence":"Ich will, dass du meine Tränen trocknest.","failure_count":1}
-{"sentence":"Ich will, dass wir jetzt alle so laut schreien, wie wir nur können.","failure_count":2}
+{"sentence":"Ich will, dass wir jetzt alle so laut schreien, wie wir nur können.","failure_count":3}
 {"sentence":"Ich wollte Fangen mit den anderen Kindern spielen; die ließen mich aber nicht.","failure_count":3}
 {"sentence":"Ich wollte eigentlich, dass du nicht nass wirst, weißt du?","failure_count":1}
 {"sentence":"Ich wollte mal gucken, wie es so läuft.","failure_count":1}
@@ -723,7 +723,7 @@
 {"sentence":"Komma, die Einheimischen.","failure_count":3}
 {"sentence":"Komme Sie, sagen Sie mir, welche Frau sie abweisen würde.","failure_count":1}
 {"sentence":"Kompanie wurden Läuse gefunden, die Wäsche wurde nicht richtig desinfiziert.","failure_count":3}
-{"sentence":"Kompanie, wegtreten lassen!","failure_count":2}
+{"sentence":"Kompanie, wegtreten lassen!","failure_count":3}
 {"sentence":"Kompanie.","failure_count":3}
 {"sentence":"Konzentrieren Sie sich auf Ihre Musik, Sie sind immerhin Künstler.","failure_count":1}
 {"sentence":"Korrekt eingenommen, wird Ihnen dieses Medikament richtig guttun.","failure_count":1}
@@ -769,12 +769,12 @@
 {"sentence":"Los gehts!","failure_count":1}
 {"sentence":"Los, sag's ihnen einfach.","failure_count":3}
 {"sentence":"Lucia weinte noch, aber ihre Tränen waren nicht mehr so bitter.","failure_count":1}
-{"sentence":"Lässt ihn doch reinstecken, wo er reingeht.","failure_count":2}
+{"sentence":"Lässt ihn doch reinstecken, wo er reingeht.","failure_count":3}
 {"sentence":"Ma-ma-ma-ma-ma-ma.","failure_count":1}
 {"sentence":"Mach auf, schnell.","failure_count":1}
 {"sentence":"Mach mal halblang, das war doch gar nichts.","failure_count":1}
 {"sentence":"Machen Sie die Augen weit auf.","failure_count":1}
-{"sentence":"Manchemal Couscous gut.","failure_count":2}
+{"sentence":"Manchemal Couscous gut.","failure_count":3}
 {"sentence":"Mann, ich sag's euch.","failure_count":3}
 {"sentence":"Mann, nicht so laut!","failure_count":1}
 {"sentence":"Maria gab ihrem Pferd ein Stück Würfelzucker.","failure_count":1}
@@ -799,7 +799,7 @@
 {"sentence":"Meine Wohnung ist sauber, ich sag's euch.","failure_count":3}
 {"sentence":"Meister Liu.","failure_count":1}
 {"sentence":"Mich interessieren Probleme, die Toys\"R\"Us angehen.","failure_count":3}
-{"sentence":"Michael's Choir.","failure_count":2}
+{"sentence":"Michael's Choir.","failure_count":3}
 {"sentence":"Misch du dich da nicht ein.","failure_count":1}
 {"sentence":"Mit Ruby Rhod, Korben Dallas und dem Hotel-Direktor.","failure_count":1}
 {"sentence":"Mit deiner Erfahrung würde dich jede Firma auf der Stelle einstellen.","failure_count":1}
@@ -967,7 +967,7 @@
 {"sentence":"Sie wohnt jetzt wieder hier.","failure_count":1}
 {"sentence":"Sieh dir Jin-Rong's Mann an, so ein Taugenichts.","failure_count":3}
 {"sentence":"Sieh sich das einer mal an.","failure_count":3}
-{"sentence":"Sieh zu, damit du lernst, wie man es macht.","failure_count":2}
+{"sentence":"Sieh zu, damit du lernst, wie man es macht.","failure_count":3}
 {"sentence":"Sieh zu, dass du pünktlich hier bist!","failure_count":3}
 {"sentence":"Siehst du, wie die Kindheitsliebe zu einer Romanze heranwächst?","failure_count":1}
 {"sentence":"Silhouette und Stofflichkeit, das geht.","failure_count":1}
@@ -1120,7 +1120,7 @@
 {"sentence":"Viele Dinge haben sich geändert, wissen Sie.","failure_count":1}
 {"sentence":"Viele können die Tränen kaum unterdrücken.","failure_count":1}
 {"sentence":"Vieles lässt sich ändern.","failure_count":1}
-{"sentence":"Vielleicht Deutsche denken Wahrheit.","failure_count":2}
+{"sentence":"Vielleicht Deutsche denken Wahrheit.","failure_count":3}
 {"sentence":"Vielleicht habe ich’s auf dem Tisch gelassen.","failure_count":1}
 {"sentence":"Vielleicht hat es was zu bedeuten.","failure_count":1}
 {"sentence":"Vielleicht könntest du das eine oder andere von ihm lernen.","failure_count":3}
@@ -1170,7 +1170,7 @@
 {"sentence":"Weiáte bescheid.","failure_count":1}
 {"sentence":"Welche Uhr komm?","failure_count":1}
 {"sentence":"Wen hast du angerufen?","failure_count":1}
-{"sentence":"Weniger Hübschen verspricht er, ihnen einen seiner Adjutanten zuzuweisen.","failure_count":2}
+{"sentence":"Weniger Hübschen verspricht er, ihnen einen seiner Adjutanten zuzuweisen.","failure_count":3}
 {"sentence":"Wenn Ihr von Zagreb aus nach Norden reist, erreicht ihr Slowenien.","failure_count":3}
 {"sentence":"Wenn Sie Zweifel haben, zerstreuen sie diese, indem sie wählen.","failure_count":3}
 {"sentence":"Wenn da abgesperrt ist, hat das sicher einen Grund.","failure_count":1}

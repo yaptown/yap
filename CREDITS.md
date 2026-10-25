@@ -24,6 +24,25 @@ licence, not Yap.Town's.
   and filter this data for each course; the converted data remains
   CC BY-SA 4.0.
 
+## Japanese readings and furigana
+
+- **[JMdict](https://www.edrdg.org/wiki/index.php/JMdict-EDICT_Dictionary_Project)**
+  and **[KANJIDIC2](https://www.edrdg.org/wiki/index.php/KANJIDIC_Project)**,
+  by the Electronic Dictionary Research and Development Group (EDRDG) and
+  their contributors, supply Japanese readings and dictionary information.
+- **[JmdictFurigana](https://github.com/Doublevil/JmdictFurigana)**, by
+  Doublevil and contributors, supplies word-level furigana alignments. Yap uses
+  release [2.3.1+2026-10-25](https://github.com/Doublevil/JmdictFurigana/releases/tag/2.3.1%2B2026-10-25).
+
+These data are used under **[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)**;
+see the [EDRDG licence and attribution conditions](https://www.edrdg.org/edrdg/licence.html)
+and [full licence text](https://creativecommons.org/licenses/by-sa/4.0/legalcode).
+Yap filters and converts the dictionary data, normalizes kana, and combines
+furigana alignments with character readings to segment words and sentence
+occurrences. These adapted data remain CC BY-SA 4.0. The source projects do
+not endorse Yap. JmdictFurigana's MIT code licence is separate from its data
+licence.
+
 ## Films
 
 - **[TMDB](https://www.themoviedb.org)**: film posters and metadata.

@@ -91,6 +91,8 @@ pub struct FrequencyList {
 pub struct LanguagePack {
     /// Observed readings ordered by build-time frequency; stored in the sentence half.
     pub gram_readings: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>>,
+    /// Exact displayed text + reading; only segmentations differing from the fallback.
+    pub ruby_segmentations: BTreeMap<(String, String), Vec<crate::readings::RubySegment>>,
     pub redundant_senses: FxHashMap<Spur, Vec<Vec<TaggedGram<SpurGram>>>>,
     pub prefixed_text: FxHashMap<SpurGram, Spur>,
     pub grams_with_prefixed_text: FxHashMap<Spur, Vec<TaggedGram<SpurGram>>>,
@@ -1162,6 +1164,7 @@ impl LanguagePack {
 
         let gram_readings = derive_readings(&encoded_sentences, &rodeo, &gram_rodeo);
         Self {
+            ruby_segmentations: BTreeMap::new(),
             gram_readings,
             prefixed_text,
             grams_with_prefixed_text,
@@ -1294,6 +1297,8 @@ pub struct LanguagePackCore {
 pub struct LanguagePackSentences {
     /// Observed readings, frequency-first with lexical ties; computed at build time.
     pub gram_readings: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>>,
+    /// Exact displayed text + reading; only segmentations differing from the fallback.
+    pub ruby_segmentations: BTreeMap<(String, String), Vec<crate::readings::RubySegment>>,
     /// Cross-gram redundancy sets keyed by exact prefixed text, judged per course.
     pub redundant_senses: FxHashMap<Spur, Vec<Vec<TaggedGram<SpurGram>>>>,
     pub prefixed_text: FxHashMap<SpurGram, Spur>,
@@ -1502,6 +1507,7 @@ impl LanguagePack {
     /// the exhaustive destructure below makes forgetting one a compile error.
     pub fn split(self) -> (LanguagePackCore, LanguagePackSentences) {
         let LanguagePack {
+            ruby_segmentations,
             gram_readings,
             prefixed_text,
             grams_with_prefixed_text,
@@ -1832,6 +1838,7 @@ impl LanguagePack {
                 morphemes,
             },
             LanguagePackSentences {
+                ruby_segmentations,
                 gram_readings,
                 prefixed_text,
                 grams_with_prefixed_text,
@@ -1880,6 +1887,7 @@ impl LanguagePack {
         let (written_ease_order, listening_ease_order) = ease_orders(&gram_frequencies);
 
         let pack = LanguagePack {
+            ruby_segmentations: BTreeMap::new(),
             gram_readings: FxHashMap::default(),
             prefixed_text: FxHashMap::default(),
             grams_with_prefixed_text: FxHashMap::default(),
@@ -1977,6 +1985,7 @@ impl LanguagePack {
         };
 
         LanguagePack {
+            ruby_segmentations: sentences.ruby_segmentations,
             gram_readings: sentences.gram_readings,
             prefixed_text: sentences.prefixed_text,
             grams_with_prefixed_text: sentences.grams_with_prefixed_text,
@@ -2424,6 +2433,29 @@ mod sense_tests {
         let (core, mut sentences) = pack().split();
         sentences.spur_space_fingerprint ^= 1;
         LanguagePack::from_parts(core, None).with_sentences(sentences);
+    }
+
+    #[test]
+    fn ruby_segmentations_live_only_in_the_sentence_half() {
+        let mut pack = pack();
+        let expected = BTreeMap::from([(
+            ("東 京".into(), "とうきょう".into()),
+            vec![crate::readings::RubySegment {
+                base: "東".into(),
+                ruby: Some("とう".into()),
+            }],
+        )]);
+        pack.ruby_segmentations = expected.clone();
+        let (core, sentences) = pack.split();
+        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&sentences).unwrap();
+        let sentences =
+            rkyv::from_bytes::<LanguagePackSentences, rkyv::rancor::Error>(&bytes).unwrap();
+        let core_only = LanguagePack::from_parts(core, None);
+        assert!(core_only.ruby_segmentations.is_empty());
+        assert_eq!(
+            core_only.with_sentences(sentences).ruby_segmentations,
+            expected
+        );
     }
 
     fn pack() -> LanguagePack {

@@ -14,6 +14,8 @@ type Lexicon = BTreeMap<String, Vec<String>>;
 pub(super) struct Verifier {
     characters: BTreeMap<char, BTreeSet<String>>,
     segments: BTreeMap<String, BTreeSet<String>>,
+    furigana:
+        BTreeMap<String, BTreeMap<String, BTreeSet<Vec<language_utils::readings::RubySegment>>>>,
 }
 impl Verifier {
     pub fn new(characters: Table, words: &super::Dictionary, stems: Lexicon) -> Self {
@@ -41,7 +43,22 @@ impl Verifier {
         Self {
             characters,
             segments,
+            furigana: BTreeMap::new(),
         }
+    }
+
+    pub fn add_furigana(
+        &mut self,
+        text: String,
+        reading: String,
+        segments: Vec<language_utils::readings::RubySegment>,
+    ) {
+        self.furigana
+            .entry(text)
+            .or_default()
+            .entry(reading)
+            .or_default()
+            .insert(segments);
     }
 }
 
@@ -192,6 +209,67 @@ pub(super) fn atom_variants(
 }
 
 pub(super) fn matches(surface: &str, reading: &str, verifier: &Verifier) -> bool {
+    align(surface, reading, verifier, false).is_some()
+}
+
+pub(super) fn ruby(
+    surface: &str,
+    reading: &str,
+    verifier: &Verifier,
+) -> Option<Vec<language_utils::readings::RubySegment>> {
+    // Never change the exact displayed text while normalizing dictionary keys.
+    if surface.nfkc().collect::<String>() != surface {
+        return None;
+    }
+    let paths = align(surface, reading, verifier, true)?.paths;
+    (paths.len() == 1).then(|| paths.into_iter().next().unwrap())
+}
+
+#[derive(Clone, Default)]
+struct Alignment {
+    score: (usize, usize),
+    paths: BTreeSet<Vec<language_utils::readings::RubySegment>>,
+}
+
+fn advance(
+    destination: &mut BTreeMap<usize, Alignment>,
+    end: usize,
+    prefix: &Alignment,
+    segments: &[language_utils::readings::RubySegment],
+    score: (usize, usize),
+) {
+    let score = (prefix.score.0 + score.0, prefix.score.1 + score.1);
+    let current = destination.entry(end).or_default();
+    if !current.paths.is_empty() && score < current.score {
+        return;
+    }
+    if score > current.score {
+        current.paths.clear();
+    }
+    current.score = score;
+    for path in &prefix.paths {
+        let mut path = path.clone();
+        for segment in segments {
+            if segment.ruby.is_none()
+                && let Some(last) = path.last_mut()
+                && last.ruby.is_none()
+            {
+                last.base.push_str(&segment.base);
+            } else {
+                path.push(segment.clone());
+            }
+        }
+        current.paths.insert(path);
+    }
+    // Two distinct best paths suffice to prove ambiguity; never enumerate an
+    // exponential number of segmentations just to reject them all.
+    while current.paths.len() > 2 {
+        current.paths.pop_last();
+    }
+}
+
+fn align(surface: &str, reading: &str, verifier: &Verifier, display: bool) -> Option<Alignment> {
+    use language_utils::readings::{RubySegment, ruby_segments};
     let surface: String = surface.nfkc().collect();
     let chars: Vec<_> = surface.char_indices().collect();
     let boundaries: Vec<_> = chars
@@ -199,8 +277,14 @@ pub(super) fn matches(surface: &str, reading: &str, verifier: &Verifier) -> bool
         .map(|(byte, _)| *byte)
         .chain(std::iter::once(surface.len()))
         .collect();
-    let mut positions = vec![BTreeSet::new(); chars.len() + 1];
-    positions[0].insert(0);
+    let mut positions = vec![BTreeMap::new(); chars.len() + 1];
+    positions[0].insert(
+        0,
+        Alignment {
+            score: (0, 0),
+            paths: BTreeSet::from([vec![]]),
+        },
+    );
     let mut previous = None;
     for (i, &(byte, c)) in chars.iter().enumerate() {
         let options = if is_ruby_base(c, Language::Japanese) {
@@ -235,10 +319,20 @@ pub(super) fn matches(surface: &str, reading: &str, verifier: &Verifier) -> bool
                     .map(|readings| (end, readings))
             })
             .collect();
-        for start in starts {
+        for (start, prefix) in starts {
             for part in &options {
                 if reading[start..].starts_with(part) {
-                    positions[i + 1].insert(start + part.len());
+                    let han = is_ruby_base(c, Language::Japanese);
+                    advance(
+                        &mut positions[i + 1],
+                        start + part.len(),
+                        &prefix,
+                        &[RubySegment {
+                            base: c.to_string(),
+                            ruby: han.then(|| part.clone()),
+                        }],
+                        (0, usize::from(han)),
+                    );
                 }
             }
             // Dictionary spans handle jukujikun inside compounds, while stripped
@@ -246,13 +340,42 @@ pub(super) fn matches(surface: &str, reading: &str, verifier: &Verifier) -> bool
             for (end, readings) in &segments {
                 for part in *readings {
                     if reading[start..].starts_with(part) {
-                        positions[*end].insert(start + part.len());
+                        advance(
+                            &mut positions[*end],
+                            start + part.len(),
+                            &prefix,
+                            &ruby_segments(
+                                &surface[byte..boundaries[*end]],
+                                part,
+                                Language::Japanese,
+                            ),
+                            (0, 0),
+                        );
+                    }
+                }
+            }
+            if display {
+                for end in i + 1..=chars.len() {
+                    if let Some(readings) = verifier.furigana.get(&surface[byte..boundaries[end]]) {
+                        for (part, alternatives) in readings {
+                            if reading[start..].starts_with(part) {
+                                for segments in alternatives {
+                                    advance(
+                                        &mut positions[end],
+                                        start + part.len(),
+                                        &prefix,
+                                        segments,
+                                        (end - i, 0),
+                                    );
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
-    positions[chars.len()].contains(&reading.len())
+    positions[chars.len()].remove(&reading.len())
 }
 
 #[cfg(test)]
@@ -341,6 +464,38 @@ mod tests {
         }
         assert!(!matches("一日", "ひいちにち", &verifier));
     }
+    #[test]
+    fn display_prefers_characters_and_rejects_equal_segmentations() {
+        use language_utils::readings::RubySegment;
+        let mut verifier = table();
+        verifier
+            .segments
+            .insert("学校".into(), BTreeSet::from(["がっこう".into()]));
+        let expected = vec![
+            RubySegment {
+                base: "学".into(),
+                ruby: Some("がっ".into()),
+            },
+            RubySegment {
+                base: "校".into(),
+                ruby: Some("こう".into()),
+            },
+        ];
+        assert_eq!(ruby("学校", "がっこう", &verifier), Some(expected.clone()));
+        verifier.add_furigana("学校".into(), "がっこう".into(), expected);
+        verifier.add_furigana(
+            "学校".into(),
+            "がっこう".into(),
+            vec![RubySegment {
+                base: "学校".into(),
+                ruby: Some("がっこう".into()),
+            }],
+        );
+        assert_eq!(ruby("学校", "がっこう", &verifier), None);
+        assert!(matches("学校", "がっこう", &verifier));
+        assert_eq!(ruby("学校", "ねこ", &verifier), None);
+    }
+
     #[test]
     fn jukujikun_need_the_whole_word_dictionary_exemption() {
         assert!(!matches("今日", "きょう", &table()));

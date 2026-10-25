@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 1867524
-Total errors: 94346
+Total predictions: 1867546
+Total errors: 94348
 Accuracy: 94.95%
 
 ## Error Patterns (sorted by frequency)
@@ -918,6 +918,14 @@ Accuracy: 94.95%
   - 가운데땅에 남으면 돌아오는 건 죽음 뿐이다
   - 감정은 약점일 뿐이다.
 
+### "거" + "라면" (52 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “다시 해 볼 거라면,” 캣이 말했다.
+  - 경찰관에 소방관도 물렸는데 전염되는 거라면 그 할머니처럼 날뛰겠지
+  - 공주, 더 이상 고집 부리지 말고… 만약… 지금 제가 드린 말씀이 황제의 명령을 거역하는 거라면 부디 이 자리에서 저를 죽여주세요
+
 ### "누구" + "든" (52 occurrences)
 - Predicted: Space
 - Actual: None
@@ -925,14 +933,6 @@ Accuracy: 94.95%
   - 거기 들어간 사람이라면 누구든 그 아래에 또 다른 비밀 수납공간이 숨겨져 있다는 사실을 눈치채지 못하고 지나칠 만큼이었다.
   - 곰곰이 따져 보면 돛은 거의 영원히 쓸 수 있으니, 누구든 돛용 아마를 심을 땅은 한정되어 있었다.
   - 그 학생들이 누구든 퇴학을 안 당하려면 지금이 유일한 기회다
-
-### "거" + "라면" (51 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - “다시 해 볼 거라면,” 캣이 말했다.
-  - 경찰관에 소방관도 물렸는데 전염되는 거라면 그 할머니처럼 날뛰겠지
-  - 공주, 더 이상 고집 부리지 말고… 만약… 지금 제가 드린 말씀이 황제의 명령을 거역하는 거라면 부디 이 자리에서 저를 죽여주세요
 
 ### "진짜" + "야" (51 occurrences)
 - Predicted: Space
@@ -1982,6 +1982,14 @@ Accuracy: 94.95%
   - 가지고 노는 건가?
   - 그가 하는 일을 모른다고 말하는 건가?
 
+### "겁" + "니다" (26 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - 그 젖산이 산티아고의 폐출혈을 일으킨 겁니다
+  - 그는 이미 브라질 체육계의 우상이었지만 이제 세계 스포츠계의 위대한 우상이 된 겁니다
+  - 그래서 모나코에서 세나의 천재성이 빛난 겁니다
+
 ### "남자" + "랑" (26 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2045,14 +2053,6 @@ Accuracy: 94.95%
   - "좋은 친구지, 우리 편이야"
   - 같은 편이야
   - 난 네 편이야
-
-### "겁" + "니다" (25 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - 그 젖산이 산티아고의 폐출혈을 일으킨 겁니다
-  - 그는 이미 브라질 체육계의 우상이었지만 이제 세계 스포츠계의 위대한 우상이 된 겁니다
-  - 그래서 모나코에서 세나의 천재성이 빛난 겁니다
 
 ### "것" + "이야" (25 occurrences)
 - Predicted: Space

@@ -1089,6 +1089,7 @@ pub async fn translate_sentences(
     course: &Course,
     sentence_corpus: &TargetSentences,
     translator: Translator,
+    token_counts: &BTreeMap<String, usize>,
 ) -> anyhow::Result<BTreeMap<String, Vec<String>>> {
     let course = *course;
     let CourseDirs {
@@ -1120,28 +1121,12 @@ pub async fn translate_sentences(
                 let target_language_sentence = target_language_sentence.clone();
                 let native_sentence = native_sentence.clone();
                 async move {
-                    let mut translation_set = IndexSet::new();
-                    match translator_ref.translate(&target_language_sentence).await {
-                        Ok(t) => {
-                            if !t.trim().is_empty() {
-                                translation_set.insert(t);
-                            }
-                        }
-                        Err(e) => {
-                            crate::translate::report_translation_failure(
-                                e.context(format!("translate {target_language_sentence:?}")),
-                            )?;
-                        }
-                    };
-                    if let Some(native_sentence) = native_sentence {
-                        translation_set.insert(native_sentence);
-                    }
-                    // Machine translation can reintroduce the XProtect tripwire
-                    // even when the corpus filter dropped the original pair
-                    // (e.g. "Bienvenidos al Paraíso." → "Welcome to Paradise."),
-                    // so filter the translations too.
-                    translation_set
-                        .retain(|t| !crate::target_sentences::contains_xprotect_tripwire(t));
+                    let translation_set = translator_ref
+                        .sentence_translations(
+                            &target_language_sentence,
+                            native_sentence.as_deref(),
+                        )
+                        .await?;
                     pb_ref.inc(1);
                     anyhow::Ok((target_language_sentence, translation_set))
                 }
@@ -1156,13 +1141,26 @@ pub async fn translate_sentences(
         translator.cost_estimate_usd(),
         translator.api_calls()
     ));
-    drop(translator);
+    let review_client = (course.target_language == language_utils::Language::Japanese)
+        .then(|| translator.review_client());
+    let decisions = translator.into_decisions();
 
-    let translations: BTreeMap<String, Vec<String>> = all_translations
+    let mut translations: BTreeMap<String, Vec<String>> = all_translations
         .into_iter()
         .filter(|(_, set)| !set.is_empty())
         .map(|(text, set)| (text, set.into_iter().collect()))
         .collect();
+
+    if let Some(client) = review_client {
+        crate::translation_review::review(
+            course,
+            &decisions,
+            token_counts,
+            &mut translations,
+            &client,
+        )
+        .await?;
+    }
 
     let file =
         File::create(native_specific_dir.join("target_language_to_native_translations.jsonl"))
