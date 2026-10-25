@@ -1,7 +1,7 @@
 import { type CSSProperties, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useTheme } from "@/components/theme-provider";
-import { animatePageTurn, type PageSnapshot } from "./page-turn";
+import { startPageTurn, type PageSnapshot, type PageTurn } from "./page-turn";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowUp, ChevronRight, List, LoaderCircle, X } from "lucide-react";
@@ -189,6 +189,11 @@ function textAt(x: number, y: number): { paragraph: number; offset: number } | u
   }
 }
 
+/** A turn under way: the sheet, if one is drawn, and what finishing it does. */
+type Turning = { sheet?: PageTurn; commit: () => void };
+/** A finger on the page. Velocity is smoothed, in px/ms. */
+type Swipe = { x: number; y: number; direction: 1 | -1; turning?: Turning; lastX: number; lastTime: number; velocity: number };
+
 /**
  * CSS columns paginate the live text; a temporary curved sheet animates each turn.
  * The geometry comes from Rust's `reader_layout`, shared with iOS.
@@ -269,7 +274,9 @@ function ChapterPages({
       if (animateArrival && transition) {
         arrival.current = undefined;
         if (JSON.stringify(transition.layout) === JSON.stringify(layout) && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          cancelTurn.current = animatePageTurn(host.current!, flow.current, layout, transition.before, { flow: flow.current, page: next }, transition.direction, () => { cancelTurn.current = undefined; });
+          const sheet = startPageTurn(host.current!, flow.current, layout, transition.before, { flow: flow.current, page: next }, transition.direction);
+          cancelTurn.current = sheet.cancel;
+          sheet.settle(true, () => { cancelTurn.current = undefined; });
         }
       }
     };
@@ -278,24 +285,36 @@ function ChapterPages({
     return () => { cancelled = true; cancelTurn.current?.(); cancelTurn.current = undefined; };
   }, [layout, view, blocks, pageOf]);
 
-  const turn = (direction: 1 | -1) => {
+  /** Lifts the page toward `direction`, or nothing while another turn is under way.
+   * Past the first or last page there is no sheet, and finishing changes chapter. */
+  const begin = (direction: 1 | -1): Turning | undefined => {
     if (paused || cancelTurn.current) return;
     turned();
     const next = page + direction;
-    if (next < 0 || next >= pages) return turnPast(direction, { flow: flow.current!.cloneNode(true) as HTMLElement, page });
+    if (next < 0 || next >= pages) {
+      const before = { flow: flow.current!.cloneNode(true) as HTMLElement, page };
+      return { commit: () => turnPast(direction, before) };
+    }
     const commit = () => {
       const first = blocks().findIndex((block) => [...block.getClientRects()].some((rect) => pageOf(rect) >= next));
       if (first >= 0) { anchor.current = first; rememberRef.current(first); }
       setPage(next);
     };
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      commit();
-    } else {
-      cancelTurn.current = animatePageTurn(host.current!, flow.current!, layout, { flow: flow.current!, page }, { flow: flow.current!, page: next }, direction, () => {
-        flushSync(commit);
-        cancelTurn.current = undefined;
-      });
-    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return { commit };
+    const sheet = startPageTurn(host.current!, flow.current!, layout, { flow: flow.current!, page }, { flow: flow.current!, page: next }, direction);
+    cancelTurn.current = sheet.cancel;
+    return { sheet, commit };
+  };
+  const settle = ({ sheet, commit }: Turning, complete: boolean) => {
+    if (!sheet) return complete && commit();
+    sheet.settle(complete, () => {
+      cancelTurn.current = undefined;
+      if (complete) flushSync(commit);
+    });
+  };
+  const turn = (direction: 1 | -1) => {
+    const turning = begin(direction);
+    if (turning) settle(turning, true);
   };
   const turnRef = useRef(turn);
   useLayoutEffect(() => { turnRef.current = turn; });
@@ -313,22 +332,55 @@ function ChapterPages({
     return () => window.removeEventListener("keydown", onKey);
   }, [paused]);
 
-  // Tap text for the tutor; elsewhere the outer thirds turn and the middle shows the controls; or swipe.
-  const touch = useRef({ x: 0, y: 0, swiped: false });
+  // Tap text for the tutor; elsewhere the outer thirds turn and the middle shows
+  // the controls. Or drag the page: it follows the finger, and on release the
+  // finger's last motion decides whether it goes over or falls back.
+  const swipe = useRef<Swipe | undefined>(undefined);
+  const swiped = useRef(false);
+  const release = (complete: (swipe: Swipe) => boolean) => {
+    const current = swipe.current;
+    swipe.current = undefined;
+    if (current?.turning) settle(current.turning, complete(current));
+  };
   return (
     <div
       ref={host}
-      className="relative flex-1 select-none overflow-hidden"
-      onTouchStart={(e) => (touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, swiped: false })}
-      onTouchEnd={(e) => {
-        const dx = e.changedTouches[0].clientX - touch.current.x;
-        const dy = e.changedTouches[0].clientY - touch.current.y;
-        if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
-        touch.current.swiped = true;
-        turn(dx < 0 ? 1 : -1);
+      className="relative flex-1 touch-pan-y touch-pinch-zoom select-none overflow-hidden"
+      onTouchStart={(e) => {
+        // A second finger is a pinch, not a turn.
+        if (e.touches.length > 1) return release(() => false);
+        const { clientX: x, clientY: y } = e.touches[0];
+        swiped.current = false;
+        swipe.current = { x, y, direction: 1, lastX: x, lastTime: e.timeStamp, velocity: 0 };
       }}
+      onTouchMove={(e) => {
+        const current = swipe.current;
+        if (!current) return;
+        const { clientX: x, clientY: y } = e.touches[0];
+        const dx = x - current.x;
+        if (!current.turning) {
+          if (Math.max(Math.abs(dx), Math.abs(y - current.y)) < 10) return;
+          current.direction = dx < 0 ? 1 : -1;
+          current.turning = Math.abs(dx) > Math.abs(y - current.y) ? begin(current.direction) : undefined;
+          if (!current.turning) { swipe.current = undefined; return; }
+          swiped.current = true;
+        }
+        current.turning.sheet?.drag(-current.direction * dx / e.currentTarget.clientWidth);
+        const elapsed = e.timeStamp - current.lastTime;
+        if (elapsed > 0) {
+          current.velocity = 0.6 * ((x - current.lastX) / elapsed) + 0.4 * current.velocity;
+          current.lastX = x;
+          current.lastTime = e.timeStamp;
+        }
+      }}
+      onTouchEnd={(e) => release(({ x, direction, lastX, lastTime, velocity }) => {
+        // A finger that came to rest before lifting decides by how far the page went.
+        const toward = e.timeStamp - lastTime < 100 ? -direction * velocity : 0;
+        return Math.abs(toward) > 0.15 ? toward > 0 : -direction * (lastX - x) > e.currentTarget.clientWidth / 2;
+      })}
+      onTouchCancel={() => release(() => false)}
       onClick={(e) => {
-        if (touch.current.swiped) { touch.current.swiped = false; return; }
+        if (swiped.current) { swiped.current = false; return; }
         if (paused) return;
         const hit = textAt(e.clientX, e.clientY);
         if (hit) return tapText(hit.paragraph, hit.offset);
