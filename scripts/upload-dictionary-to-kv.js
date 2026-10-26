@@ -78,8 +78,19 @@ async function check() {
   const changed = remote !== digest;
   console.log(`Local digest ${digest}, KV digest ${remote ?? '(none)'} — ${changed ? 'upload needed' : 'data unchanged, upload can be skipped'}`);
   if (process.env.GITHUB_OUTPUT) {
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\ndigest=${digest}\n`);
   }
+}
+
+// --expect <digest>: fail unless KV still holds this digest. The deploy job
+// runs this when the build skipped the upload, since an overlapping deploy
+// may have replaced the data in between.
+async function expect(digest) {
+  const remote = await fetchRemoteDigest();
+  if (remote !== digest) {
+    throw new Error(`KV digest is ${remote ?? '(none)'}, but this build expected ${digest}; rerun the workflow`);
+  }
+  console.log(`KV still holds dictionary digest ${digest}`);
 }
 
 async function kvBulkPut(pairs, attempt = 1) {
@@ -225,7 +236,10 @@ async function main() {
   console.log(`Done! ${totalUploaded} keys uploaded to KV in ${totalBatches} batches (digest ${digest}).`);
 }
 
-(process.argv.includes('--check') ? check() : main()).catch(err => {
+const expectIndex = process.argv.indexOf('--expect');
+(process.argv.includes('--check') ? check()
+  : expectIndex !== -1 ? expect(process.argv[expectIndex + 1])
+  : main()).catch(err => {
   console.error(err);
   process.exit(1);
 });

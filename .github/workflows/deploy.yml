@@ -5,9 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
-concurrency:
-  group: deploy-production
-  cancel-in-progress: false
+# A newer push cancels an older run's checks and builds (so its deploy is
+# skipped), but a deploy job that has started always finishes. Only one deploy
+# runs at a time, and GitHub keeps only the newest pending one.
 
 env:
   CARGO_TERM_COLOR: always
@@ -20,6 +20,9 @@ env:
 jobs:
   # ===== TEST PHASE =====
   checks:
+    concurrency:
+      group: deploy-production-checks
+      cancel-in-progress: true
     runs-on: big-runner
     steps:
       - name: Checkout
@@ -85,9 +88,13 @@ jobs:
 
   # ===== BUILD PHASE =====
   web-build:
+    concurrency:
+      group: deploy-production-web-build
+      cancel-in-progress: true
     runs-on: big-runner
     outputs:
       dictionary_changed: ${{ steps.dictionary-digest.outputs.changed }}
+      dictionary_digest: ${{ steps.dictionary-digest.outputs.digest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -199,6 +206,9 @@ jobs:
           retention-days: 3
 
   publish-packs:
+    concurrency:
+      group: deploy-production-publish-packs
+      cancel-in-progress: true
     runs-on: big-runner
     steps:
       - uses: actions/checkout@v7
@@ -232,6 +242,9 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
 
   backend-image:
+    concurrency:
+      group: deploy-production-backend-image
+      cancel-in-progress: true
     runs-on: big-runner
     steps:
       - name: Checkout
@@ -261,6 +274,9 @@ jobs:
           cache-to: type=registry,ref=registry.fly.io/yap-ai-backend:cache,mode=max,ignore-error=true
 
   mcp-image:
+    concurrency:
+      group: deploy-production-mcp-image
+      cancel-in-progress: true
     runs-on: big-runner
     steps:
       - name: Checkout
@@ -347,6 +363,9 @@ jobs:
   # Cloudflare Pages, and dictionary KV. Pre-cutover clients follow these mutable
   # pointers, so they must not move until every check/build/publication succeeds.
   deploy:
+    concurrency:
+      group: deploy-production-deploy
+      cancel-in-progress: false
     runs-on: big-runner
     needs: [checks, web-build, backend-image, mcp-image, publish-packs]
     steps:
@@ -354,6 +373,16 @@ jobs:
         uses: actions/checkout@v7
         with:
           lfs: false
+
+      # web-build skipped the dictionary artifact because KV already matched.
+      # An older run's deploy may have changed KV since, so check again before
+      # moving any pointer.
+      - name: Confirm dictionary KV still matches this build
+        if: needs.web-build.outputs.dictionary_changed != 'true'
+        run: node scripts/upload-dictionary-to-kv.js --expect ${{ needs.web-build.outputs.dictionary_digest }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       # Metadata files are ordinary Git files: no archive/LFS download needed.
       - uses: dtolnay/rust-toolchain@master
@@ -442,6 +471,9 @@ jobs:
   #   flyctl apps create yap-mcp
   #   flyctl secrets set --app yap-mcp SUPABASE_JWT_SECRET=...
   deploy-mcp:
+    concurrency:
+      group: deploy-production-deploy-mcp
+      cancel-in-progress: false
     runs-on: big-runner
     needs: [checks, web-build, backend-image, mcp-image, publish-packs]
     steps:
