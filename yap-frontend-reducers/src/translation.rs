@@ -10,7 +10,7 @@ use language_utils::{
     text_cleanup::{find_closest_match, normalize_for_grading},
 };
 use language_utils::{
-    Gram, GramDefinition, Language, Literal,
+    Gram, GramDefinition, Language, Literal, OtherWord, OtherWordType, WordType,
     autograde::{AutoGradeTranslationResponse, Remembered},
 };
 use std::collections::BTreeSet;
@@ -571,10 +571,52 @@ pub struct TranslationStep {
     pub effects: Vec<TranslationEffect>,
 }
 
+/// How a sentence's word stands out when shown to the learner, shared by the
+/// translation challenge and the Anki export.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LiteralEmphasis {
+    Plain,
+    /// A proper noun or other word the learner isn't expected to know.
+    Obvious,
+    /// Part of the sentence's only learnable gram.
+    Sole,
+}
+
+/// The emphasis of each literal; `gram_indices` gives each literal's gram group.
+pub fn literal_emphasis(
+    literals: &[Literal<String>],
+    gram_indices: &[usize],
+) -> Vec<LiteralEmphasis> {
+    let learnable: BTreeSet<usize> = literals
+        .iter()
+        .zip(gram_indices)
+        .filter(|(literal, _)| literal.word.heteronym().is_some())
+        .map(|(_, &g)| g)
+        .collect();
+    literals
+        .iter()
+        .zip(gram_indices)
+        .map(|(literal, g)| match &literal.word.word_type {
+            WordType::Heteronym(_) if learnable.len() == 1 && learnable.contains(g) => {
+                LiteralEmphasis::Sole
+            }
+            WordType::Heteronym(_)
+            | WordType::Other(OtherWord {
+                other_tag: OtherWordType::Punct | OtherWordType::Space,
+            }) => LiteralEmphasis::Plain,
+            WordType::Other(_) => LiteralEmphasis::Obvious,
+        })
+        .collect()
+}
+
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq)]
 pub enum TranslationWordTint {
     Neutral,
+    /// A proper noun or other word the learner isn't expected to know.
+    Obvious,
+    /// The sentence's only learnable word, before grading.
+    Highlighted,
     Perfect,
     Tapped,
     Remembered,
@@ -870,9 +912,9 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
         state.tapped.clone(),
         state.course.target_language,
     );
-    let words = state
-        .sentence
-        .target_language_literals
+    let literals = &state.sentence.target_language_literals;
+    let emphasis = literal_emphasis(literals, &state.sentence.literal_gram_indices);
+    let words = literals
         .iter()
         .enumerate()
         .map(|(i, literal)| {
@@ -894,8 +936,13 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
                 {
                     Some(Remembered::Remembered) => TranslationWordTint::Remembered,
                     Some(Remembered::Forgot) => TranslationWordTint::Forgot,
+                    None if grade.is_none() && emphasis[i] == LiteralEmphasis::Sole => {
+                        TranslationWordTint::Highlighted
+                    }
                     None => TranslationWordTint::Neutral,
                 }
+            } else if emphasis[i] == LiteralEmphasis::Obvious {
+                TranslationWordTint::Obvious
             } else {
                 TranslationWordTint::Neutral
             };
@@ -1066,6 +1113,39 @@ mod reducer_tests {
         assert!(matches!(view.words[1].tint, TranslationWordTint::Tapped));
         assert!(view.words[0].tappable && view.words[1].tappable);
         assert!(!view.words[2].tappable);
+    }
+
+    #[test]
+    fn sole_learnable_word_is_highlighted_and_proper_nouns_are_obvious() {
+        let mut state = start();
+        let view = translation_view(state.clone());
+        assert!(matches!(
+            view.words[0].tint,
+            TranslationWordTint::Highlighted
+        ));
+        assert!(matches!(view.words[1].tint, TranslationWordTint::Neutral));
+
+        let mut name = state.sentence.target_language_literals[0].clone();
+        name.word = serde_json::from_value(
+            json!({"text":"Mei","word_type":{"type":"Other","other_tag":"PROPN"}}),
+        )
+        .unwrap();
+        state.sentence.target_language_literals.insert(0, name);
+        state.sentence.literal_gram_indices = vec![1, 0, 0];
+        let view = translation_view(state.clone());
+        assert!(matches!(view.words[0].tint, TranslationWordTint::Obvious));
+        assert!(matches!(
+            view.words[1].tint,
+            TranslationWordTint::Highlighted
+        ));
+
+        let mut second = state.sentence.target_language_literals[1].clone();
+        second.word.text = "noir".into();
+        state.sentence.target_language_literals.insert(2, second);
+        state.sentence.literal_gram_indices = vec![1, 0, 2, 0];
+        let view = translation_view(state);
+        assert!(matches!(view.words[1].tint, TranslationWordTint::Neutral));
+        assert!(matches!(view.words[2].tint, TranslationWordTint::Neutral));
     }
 
     fn editing() -> TranslationState {
@@ -1364,7 +1444,7 @@ mod reducer_tests {
                 ],
             }]
         );
-        assert_eq!(view.words[0].tint, TranslationWordTint::Neutral);
+        assert_eq!(view.words[0].tint, TranslationWordTint::Highlighted);
         let state = translation_transition(state, TranslationEvent::WordTapped { index: 0 }).state;
         assert_eq!(translation_view(state.clone()).definitions.len(), 1);
         let state =

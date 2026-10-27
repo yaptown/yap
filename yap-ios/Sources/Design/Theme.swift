@@ -20,6 +20,7 @@ extension Color {
     @MainActor static let yapOnAccent = Tokens.palette.primary_foreground.color
     /// Saturated enough to read as "on" for switches, which near-white would not be in dark mode.
     @MainActor static let yapSwitchTint = Tokens.palette.accent_foreground.color
+    @MainActor static let yapHighlight = Tokens.palette.accent_foreground.color
     @MainActor static let yapText = Tokens.palette.foreground.color
     @MainActor static let yapMuted = Tokens.palette.muted_foreground.color
     @MainActor static let yapMutedSurface = Tokens.palette.muted.color

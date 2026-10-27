@@ -113,7 +113,8 @@ export function TranslationCard({ challenge }: { challenge: TranslationChallenge
               whitespace: literal.whitespace,
               tappable: false,
               tint: result?.perfect ? "Perfect" :
-                literal.word.word_type.type !== "Heteronym" ? "Neutral" :
+                literal.word.word_type.type !== "Heteronym" ?
+                  (["PUNCT", "SPACE"].includes(literal.word.word_type.other_tag) ? "Neutral" : "Obvious") :
                 result?.literal_grades[index] === "remembered" ? "Remembered" :
                 result?.literal_grades[index] === "forgot" ? "Forgot" : "Neutral",
             }))}

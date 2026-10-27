@@ -94,6 +94,8 @@ const css = `
 .subs .sentence { color: #ffd166; font-weight: 600; letter-spacing: 0; }
 .subs .gap { display: inline-block; width: 2.2em; height: .9em; border-bottom: 2px dashed currentColor; }
 .prompt .gap { font-style: normal; color: transparent; border-bottom: 2px dashed var(--yap-muted); }
+.sentence .obvious { opacity: .45; }
+.sentence .sole { color: var(--yap-accent); }
 .play {
   position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 50%;
   background: rgba(0,0,0,.5); display: grid; place-items: center; transition: opacity .15s;
@@ -268,7 +270,7 @@ function fieldsFor(
   const properNouns = note.proper_nouns.map(({ spans }) => `<li>${spans.map(({ text, target_language }) =>
     target_language ? `<span class="name" lang="${lang}">${escapeHtml(text)}</span>` : escapeHtml(text)).join("")}</li>`).join("");
   return {
-    Sentence: escapeHtml(note.sentence_furigana), Translation: escapeHtml(note.translation), Glosses: glosses, ProperNouns: properNouns,
+    Sentence: note.sentence_html, Translation: escapeHtml(note.translation), Glosses: glosses, ProperNouns: properNouns,
     Source: sourceFor(note), ClipUrl: escapeHtml(note.clip.mp4), TtsBundled: media,
     IncludeReading: note.include_reading ? "1" : "", IncludeListening: note.include_listening && media ? "1" : "",
     Subtitles: captions(note.subtitles), MaskedSubtitles: captions(note.masked_subtitles ?? undefined),

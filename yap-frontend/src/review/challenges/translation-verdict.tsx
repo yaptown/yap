@@ -41,6 +41,8 @@ interface ChallengeSentenceProps {
 
 const tintClasses = {
   Neutral: "",
+  Obvious: "text-foreground/45",
+  Highlighted: "text-accent-foreground",
   Perfect: "text-positive-foreground",
   Remembered: "text-positive-foreground",
   Tapped: "text-caution-foreground",

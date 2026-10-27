@@ -83,8 +83,9 @@ pub enum AnkiNote {
         note_id: i64,
         card_id: i64,
         sentence: String,
-        /// `sentence` in Anki's furigana markup; see [`furigana`].
-        sentence_furigana: String,
+        /// `sentence` as HTML in Anki's furigana markup (see [`furigana`]),
+        /// with names muted and a lone learnable word highlighted.
+        sentence_html: String,
         translation: String,
         target_word: String,
         glosses: Vec<AnkiGloss>,
@@ -482,27 +483,28 @@ fn definition(def: &GramDefinition) -> String {
         .collect::<Vec<_>>()
         .join("; ")
 }
+fn escape_html(text: &str) -> String {
+    text.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
 /// Each word to transcribe is kept, in invisible ink over a dashed rule, so
 /// the blank is exactly as wide as the word and revealing it shifts nothing.
 fn masked_sentence_html(parts: &[language_utils::transcription_challenge::Part]) -> String {
     use language_utils::transcription_challenge::Part;
-    let escape = |text: &str| {
-        text.replace('&', "&amp;")
-            .replace('<', "&lt;")
-            .replace('>', "&gt;")
-    };
     let mut html = String::new();
     for part in parts {
         match part {
             Part::Provided { part } => {
-                html.push_str(&escape(&part.word.text));
+                html.push_str(&escape_html(&part.word.text));
                 html.push_str(part.whitespace.as_str());
             }
             Part::AskedToTranscribe { parts } => {
                 for part in parts {
                     html.push_str(&format!(
                         r#"<i class="gap">{}</i>"#,
-                        escape(&part.word.text)
+                        escape_html(&part.word.text)
                     ));
                     html.push_str(part.whitespace.as_str());
                 }
@@ -569,19 +571,31 @@ fn ruby_furigana(text: &str, segments: &[language_utils::readings::RubySegment])
 }
 
 /// The sentence as the challenge's literals spell it, each gram annotated with
-/// the reading it has in this sentence.
-fn sentence_furigana(
+/// the reading it has in this sentence and wrapped in its emphasis class.
+fn sentence_html(
     pack: &LanguagePack,
     language: Language,
     sentence: Spur,
     literals: &[Literal<String>],
     indices: &[usize],
 ) -> String {
+    let emphasis = yap_frontend_reducers::literal_emphasis(literals, indices);
+    let mut start = 0;
     crate::ruby::sentence_ruby_groups(pack, language, sentence, literals, indices)
         .into_iter()
         .map(|group| {
-            ruby_furigana(&group.text, &group.ruby)
-                + group.literals.last().unwrap().whitespace.as_str()
+            let text = escape_html(&ruby_furigana(&group.text, &group.ruby));
+            let class = match emphasis[start] {
+                yap_frontend_reducers::LiteralEmphasis::Plain => None,
+                yap_frontend_reducers::LiteralEmphasis::Obvious => Some("obvious"),
+                yap_frontend_reducers::LiteralEmphasis::Sole => Some("sole"),
+            };
+            start += group.literals.len();
+            let text = match class {
+                Some(class) => format!(r#"<span class="{class}">{text}</span>"#),
+                None => text,
+            };
+            text + group.literals.last().unwrap().whitespace.as_str()
         })
         .collect()
 }
@@ -1336,7 +1350,7 @@ impl PlannerState {
             guid: guid(course, "sentence", &text),
             note_id: id(course, "sentence-note", &text),
             card_id: id(course, "sentence-card", &text),
-            sentence_furigana: sentence_furigana(
+            sentence_html: sentence_html(
                 pack,
                 language,
                 sentence,

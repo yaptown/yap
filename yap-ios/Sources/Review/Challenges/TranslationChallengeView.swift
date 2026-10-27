@@ -128,6 +128,8 @@ struct TranslationChallengeView: View {
     private func tint(_ tint: TranslationWordTint) -> Color {
         switch tint {
         case .Neutral: .yapText
+        case .Obvious: .yapText.opacity(0.45)
+        case .Highlighted: .yapHighlight
         case .Perfect, .Remembered: .yapPositiveForeground
         case .Tapped: .yapCautionForeground
         case .Forgot: .yapNegativeForeground
