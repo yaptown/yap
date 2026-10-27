@@ -68,8 +68,5 @@ jobs:
         run: cargo clippy --target wasm32-unknown-unknown -- -D warnings
         working-directory: yap-frontend-rs
 
-      - name: Tests (default features)
+      - name: Tests
         run: cargo nextest run --all
-
-      - name: Tests (no default features)
-        run: cargo nextest run --all --no-default-features

@@ -123,6 +123,11 @@ opt-level = 3
 [profile.release.package.hdbscan]
 opt-level = 3
 
+# yap-frontend-rs's simulation tests replay a year of study for every course
+# and dominate CI time in an unoptimized build.
+[profile.test.package.yap-frontend-rs]
+opt-level = 1
+
 [profile.profiling]
 inherits = "release"
 debug = true
