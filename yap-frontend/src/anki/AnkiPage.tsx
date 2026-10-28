@@ -10,6 +10,7 @@ import {
   type AnkiCardTypes,
   type AnkiDeckPlan,
   type AnkiNote,
+  type Course,
   type Deck,
   type Language,
   type MintedAnkiDeck,
@@ -187,10 +188,15 @@ function CardTypeOption({
 
 function AnkiScreen({
   deck,
+  course,
   targetLanguage,
   userInfo,
   accessToken,
-}: AppContextType & { deck: Deck; targetLanguage: Language }) {
+}: AppContextType & {
+  deck: Deck;
+  course: Course;
+  targetLanguage: Language;
+}) {
   const weapon = useWeapon();
   const navigate = useNavigate();
   const { openSignUp } = useAuthDialog();
@@ -304,7 +310,7 @@ function AnkiScreen({
         word_cards: wordCards,
         explicit_clips: explicitClips,
       };
-      const minted = await mint_anki_deck(options, accessToken);
+      const minted = await mint_anki_deck(course, options, accessToken);
       update((current) => ({
         ...current,
         phase: t("anki-page-choosing-sentences"),

@@ -9,6 +9,7 @@ import {
 import type { AppContextType } from "@/app/context";
 import { CourseAudioPrefetch, useCourseDeck } from "@/review/course-study";
 import type {
+  Course,
   Deck,
   Language,
   DeckLoadPhase,
@@ -28,7 +29,11 @@ export function DeckPage({
   /** Shown instead of sending a visitor with no course to the picker. */
   noLanguage?: ReactNode;
   children: (
-    props: AppContextType & { deck: Deck; targetLanguage: Language },
+    props: AppContextType & {
+      deck: Deck;
+      course: Course;
+      targetLanguage: Language;
+    },
   ) => ReactNode;
 }) {
   const context = useOutletContext<AppContextType>();
@@ -51,6 +56,7 @@ export function DeckPage({
         {children({
           ...context,
           deck: state.deck,
+          course: state.course,
           targetLanguage: state.course.targetLanguage,
         })}
       </>

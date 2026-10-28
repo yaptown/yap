@@ -282,13 +282,14 @@ pub fn anki_options_copy(reading: bool, listening: bool, word_cards: bool) -> An
 
 #[bridgerton::bridge]
 pub async fn mint_anki_deck(
+    course: Course,
     options: AnkiDeckOptions,
     access_token: Option<String>,
 ) -> Result<MintedAnkiDeck, Error> {
     let response = utils::hit_ai_server(
         fetch_happen::Method::POST,
         "/anki/deck",
-        Some(serde_json::json!({"options": options})),
+        Some(serde_json::json!({"course": course, "options": options})),
         access_token.as_ref(),
     )
     .await
@@ -302,21 +303,14 @@ pub async fn mint_anki_deck(
 // two native languages must not share deck, model, or note identities, or
 // Anki would merge the decks and overwrite one language's translations with
 // the other's.
-fn course_code(course: Course) -> String {
-    format!(
-        "{}-{}",
-        course.target_language.code(),
-        course.native_language.code()
-    )
-}
 // Reserve the low two bits for template ordinals, staying strictly inside JS's exact range.
 fn id(course: Course, kind: &str, text: &str) -> i64 {
-    let hash = xxh3_64(format!("yap.anki.v1|{}|{kind}|{text}", course_code(course)).as_bytes());
+    let hash = xxh3_64(format!("yap.anki.v1|{}|{kind}|{text}", course.code()).as_bytes());
     (((hash % ((1_u64 << 51) - 1)) + 1) * 4) as i64
 }
 fn guid(course: Course, kind: &str, text: &str) -> String {
     URL_SAFE_NO_PAD
-        .encode(xxh3_64(format!("{}|{kind}|{text}", course_code(course)).as_bytes()).to_be_bytes())
+        .encode(xxh3_64(format!("{}|{kind}|{text}", course.code()).as_bytes()).to_be_bytes())
 }
 
 /// Word notes have spelling identities, so their frequency combines all meanings
@@ -431,7 +425,7 @@ fn word_note(
 fn note_tags(course: Course, kind: &str) -> Vec<String> {
     vec![
         "yap".into(),
-        format!("yap::{}", course_code(course)),
+        format!("yap::{}", course.code()),
         format!("yap::{kind}"),
     ]
 }
@@ -1429,7 +1423,7 @@ impl PlannerState {
                 .union(&self.word_clip_sentences)
                 .map(|s| pack.string_rodeo.resolve(s).to_owned())
                 .collect(),
-            course_code: course_code(course),
+            course_code: course.code(),
             deck_name: if course.native_language == Language::English {
                 format!("Yap • {language}")
             } else {

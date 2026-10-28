@@ -4849,6 +4849,15 @@ pub struct Course {
 }
 
 impl Course {
+    /// Stable identifier of the course, e.g. "fra-eng" (target first).
+    pub fn code(&self) -> String {
+        format!(
+            "{}-{}",
+            self.target_language.code(),
+            self.native_language.code()
+        )
+    }
+
     pub fn teaches_new_writing_system(&self) -> bool {
         self.native_language.writing_system() != self.target_language.writing_system()
     }
