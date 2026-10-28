@@ -91,6 +91,7 @@ private struct BookCard: View {
 private enum Opening: Equatable { case paragraph(Int), end }
 
 struct BookReaderScreen: View {
+    @Environment(YapSession.self) private var session
     let language: Language
     let nativeLanguage: Language
     let slug: String
@@ -113,7 +114,6 @@ struct BookReaderScreen: View {
     private var themes: [ReaderTheme] { reader_themes(dark: colorScheme == .dark) }
     private var paper: Paper { Paper(theme: themes.first { $0.id == themeID } ?? themes[0]) }
     @AppStorage("yap-reader-text-size") private var textSize: Int?
-    @State private var saveTask: Task<Void, Never>?
     private let copy = books_copy()
     var body: some View {
         GeometryReader { geometry in
@@ -222,9 +222,8 @@ struct BookReaderScreen: View {
         requestID += 1
         let request = requestID
         do {
-            await saveTask?.value
-            guard request == requestID, !Task.isCancelled else { return }
-            let result = try await load_book(language: language, slug: slug, position: chapter.map { BookPosition(chapter: $0, paragraph: 0) })
+            guard let weapon = session.weapon else { return }
+            let result = try await weapon.load_book(language: language, slug: slug, position: chapter.map { BookPosition(chapter: $0, paragraph: 0) })
             guard request == requestID, !Task.isCancelled else { return }
             closeTutor()
             view = result
@@ -266,11 +265,7 @@ struct BookReaderScreen: View {
     }
     private func remember(_ paragraph: Int) {
         guard let view else { return }
-        let previous = saveTask
-        saveTask = Task {
-            await previous?.value
-            try? await save_book_position(language: language, slug: slug, position: BookPosition(chapter: view.position.chapter, paragraph: UInt64(paragraph)))
-        }
+        session.weapon?.save_book_position(language: language, slug: slug, position: BookPosition(chapter: view.position.chapter, paragraph: UInt64(paragraph)))
     }
 }
 

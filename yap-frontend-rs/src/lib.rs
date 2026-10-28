@@ -9,6 +9,7 @@ pub use challenge_views::*;
 pub mod books;
 mod cards;
 mod clips;
+pub mod reading;
 pub use books::*;
 use cards::Cards;
 mod comprehensible;
@@ -87,6 +88,8 @@ pub use simulation::{DailySimulationIterator, DayChallengeIterator};
 
 use bridgerton::{AbortSignal, Callback, bridge};
 use chrono::{DateTime, Datelike, Utc};
+use reading::{ReadingEvent, ReadingPositions};
+
 use deck_selection::DailyReviewTarget;
 use deck_selection::DeckSelectionEvent;
 use isotonic::{Direction, Point, SmoothRegression};
@@ -122,6 +125,17 @@ use crate::directories::Directories;
 use crate::next_cards::AllowedCards;
 use crate::utils::hit_ai_server;
 use next_cards::NextCardsIterator;
+
+const REVIEWS_STREAM: &str = "reviews";
+const DECK_SELECTION_STREAM: &str = "deck_selection";
+const READING_STREAM: &str = "reading";
+
+#[bridgerton::bridge]
+pub fn event_streams() -> Vec<String> {
+    [REVIEWS_STREAM, DECK_SELECTION_STREAM, READING_STREAM]
+        .map(str::to_owned)
+        .to_vec()
+}
 
 fn language_pack_lock_name(course: Course) -> String {
     format!(
@@ -289,21 +303,54 @@ impl Weapon {
         self.store.borrow_mut().unregister_listener(key)
     }
 
-    pub fn request_reviews(&self) {
-        let _flusher = FlushLater::new(self); // The addition of a new stream can trigger listeners, so we want to make sure to flush them after.
-        self.store
-            .borrow_mut()
-            .get_or_insert_default::<EventType<DeckEvent>>("reviews".to_string(), None);
+    pub fn request_streams(&self) {
+        let _flusher = FlushLater::new(self);
+        let mut store = self.store.borrow_mut();
+        store.get_or_insert_default::<EventType<DeckEvent>>(REVIEWS_STREAM.into(), None);
+        store.get_or_insert_default::<EventType<DeckSelectionEvent>>(
+            DECK_SELECTION_STREAM.into(),
+            None,
+        );
+        store.get_or_insert_default::<EventType<ReadingEvent>>(READING_STREAM.into(), None);
     }
 
-    pub fn request_deck_selection(&self) {
-        let _flusher = FlushLater::new(self); // The addition of a new stream can trigger listeners, so we want to make sure to flush them after.
-        self.store
-            .borrow_mut()
-            .get_or_insert_default::<EventType<DeckSelectionEvent>>(
-                "deck_selection".to_string(),
-                None,
-            );
+    pub async fn load_book(
+        &self,
+        language: Language,
+        slug: String,
+        position: Option<BookPosition>,
+    ) -> Result<BookReaderView, bridgerton::Error> {
+        if !self
+            .store
+            .borrow()
+            .loaded_at_least_once(&READING_STREAM.to_owned())
+        {
+            self.load_from_local_storage(READING_STREAM.into()).await?;
+        }
+        let prefer_cache = position.is_some();
+        let position = match position.or_else(|| self.book_position(language, &slug)) {
+            Some(position) => position,
+            None => books::legacy_position(language, &slug).await,
+        };
+        books::load_book(language, slug, position, prefer_cache).await
+    }
+
+    pub fn save_book_position(&self, language: Language, slug: String, position: BookPosition) {
+        if self.book_position(language, &slug).as_ref() == Some(&position) {
+            return;
+        }
+        self.store.borrow_mut().add_raw_event(
+            READING_STREAM.into(),
+            self.device_id.clone(),
+            ReadingEvent::SetBookPosition {
+                language,
+                slug,
+                position,
+            },
+            None,
+            bridgerton::platform::current_local_offset(),
+        );
+        self.flush_notifications();
     }
 
     /// Whether the user's review history can be treated as complete: either
@@ -317,7 +364,7 @@ impl Weapon {
             || self
                 .store
                 .borrow()
-                .synced_at_least_once(&"reviews".to_string())
+                .synced_at_least_once(&REVIEWS_STREAM.to_string())
     }
 
     pub fn get_stream_num_events(&self, stream_id: String) -> Option<usize> {
@@ -332,7 +379,7 @@ impl Weapon {
     pub fn get_deck_selection_state(&self) -> Option<DeckSelection> {
         let store = self.store.borrow();
         store
-            .get::<EventType<DeckSelectionEvent>>("deck_selection".to_string())
+            .get::<EventType<DeckSelectionEvent>>(DECK_SELECTION_STREAM.to_string())
             .map(|s| {
                 s.state(
                     DeckSelectionPartial {
@@ -368,8 +415,8 @@ impl Weapon {
         };
         format!(
             "reviews={} selections={} pack={pack} history={}",
-            count("reviews"),
-            count("deck_selection"),
+            count(REVIEWS_STREAM),
+            count(DECK_SELECTION_STREAM),
             self.reviews_history_known(),
         )
     }
@@ -423,7 +470,7 @@ impl Weapon {
             *cached = Some((context.clone(), full, Default::default()));
         }
         let store = self.store.borrow();
-        let deck = match store.get::<EventType<DeckEvent>>("reviews".to_string()) {
+        let deck = match store.get::<EventType<DeckEvent>>(REVIEWS_STREAM.to_string()) {
             Some(stream) => {
                 stream.state_cached(&mut cached.as_mut().unwrap().2, DeckState::new, &context)
             }
@@ -764,7 +811,7 @@ impl Weapon {
 
     pub fn add_deck_event(&self, event: DeckEvent) {
         self.store.borrow_mut().add_raw_event(
-            "reviews".to_string(),
+            REVIEWS_STREAM.to_string(),
             self.device_id.clone(),
             event,
             None,
@@ -779,7 +826,7 @@ impl Weapon {
         let timestamp = chrono::DateTime::from_timestamp_millis(timestamp_ms as i64)
             .unwrap_or_else(chrono::Utc::now);
         self.store.borrow_mut().add_raw_event_at(
-            "reviews".to_string(),
+            REVIEWS_STREAM.to_string(),
             self.device_id.clone(),
             event,
             None,
@@ -791,7 +838,7 @@ impl Weapon {
 
     pub fn add_deck_selection_event(&self, event: DeckSelectionEvent) {
         self.store.borrow_mut().add_raw_event(
-            "deck_selection".to_string(),
+            DECK_SELECTION_STREAM.to_string(),
             self.device_id.clone(),
             event,
             None,
@@ -806,6 +853,20 @@ impl Weapon {
     ) -> Result<(), language_pack::LanguageDataError> {
         let _guard = language_pack::acquire_cache_lock(course).await?;
         language_pack::cache_language_pack(&self.directories.data_directory_handle, course).await
+    }
+}
+
+impl Weapon {
+    fn book_position(&self, language: Language, slug: &str) -> Option<BookPosition> {
+        self.store
+            .borrow()
+            .get::<EventType<ReadingEvent>>(READING_STREAM.into())
+            .and_then(|stream| {
+                stream
+                    .state::<ReadingEvent, ReadingPositions>(ReadingPositions::default(), &())
+                    .0
+                    .remove(&(language, slug.to_owned()))
+            })
     }
 }
 
@@ -5407,6 +5468,94 @@ mod tests {
     use super::*;
 
     use language_utils::SentenceGram;
+    #[cfg(not(target_arch = "wasm32"))]
+    #[tokio::test]
+    async fn reading_positions_merge_by_timestamp_and_book() {
+        let (weapon, path) = test_weapon().await;
+        weapon.request_streams();
+        let before = weapon.deck_inputs_key(Course {
+            native_language: Language::English,
+            target_language: Language::French,
+        });
+        let late = Utc::now();
+        let early = late - chrono::Duration::seconds(10);
+        for (device, timestamp, language, slug, chapter) in [
+            ("phone", late, Language::French, "book", 3),
+            ("web", early, Language::French, "book", 1),
+            ("web", late, Language::French, "other", 2),
+            ("web", late, Language::English, "book", 4),
+        ] {
+            weapon.store.borrow_mut().add_raw_event_at(
+                READING_STREAM.into(),
+                device.into(),
+                ReadingEvent::SetBookPosition {
+                    language,
+                    slug: slug.into(),
+                    position: BookPosition {
+                        chapter,
+                        paragraph: 5,
+                    },
+                },
+                None,
+                timestamp,
+                chrono::FixedOffset::east_opt(0).unwrap(),
+            );
+        }
+        for (language, slug, chapter) in [
+            (Language::French, "book", 3),
+            (Language::French, "other", 2),
+            (Language::English, "book", 4),
+        ] {
+            assert_eq!(
+                weapon.book_position(language, slug),
+                Some(BookPosition {
+                    chapter,
+                    paragraph: 5
+                })
+            );
+        }
+        assert_eq!(
+            before,
+            weapon.deck_inputs_key(Course {
+                native_language: Language::English,
+                target_language: Language::French
+            })
+        );
+        std::fs::remove_dir_all(path).unwrap();
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[tokio::test]
+    async fn reading_unchanged_position_appends_nothing() {
+        let (weapon, path) = test_weapon().await;
+        weapon.request_streams();
+        let position = BookPosition {
+            chapter: 2,
+            paragraph: 10,
+        };
+        weapon.save_book_position(Language::French, "book".into(), position.clone());
+        weapon.save_book_position(Language::French, "book".into(), position);
+        assert_eq!(
+            weapon
+                .store
+                .borrow()
+                .get_raw(READING_STREAM.into())
+                .unwrap()
+                .num_events(),
+            1
+        );
+        weapon.save_book_position(Language::French, "book".into(), BookPosition::default());
+        assert_eq!(
+            weapon
+                .store
+                .borrow()
+                .get_raw(READING_STREAM.into())
+                .unwrap()
+                .num_events(),
+            2
+        );
+        std::fs::remove_dir_all(path).unwrap();
+    }
 
     #[cfg(not(target_arch = "wasm32"))]
     async fn test_weapon() -> (Weapon, std::path::PathBuf) {
@@ -6828,13 +6977,13 @@ mod tests {
 
         let mut store: EventStore<String, String> = EventStore::default();
         store.get_or_insert_default::<EventType<DeckSelectionEvent>>(
-            "deck_selection".to_string(),
+            DECK_SELECTION_STREAM.to_string(),
             None,
         );
         let event: Timestamped<weapon::data_model::RawJson> =
             serde_json::from_str(payload).unwrap();
         let added = store.add_device_events_jsons(
-            "deck_selection".to_string(),
+            DECK_SELECTION_STREAM.to_string(),
             "other-device".to_string(),
             vec![event],
             None,
@@ -6859,9 +7008,9 @@ mod tests {
 
         let mut store: EventStore<String, String> = EventStore::default();
 
-        store.get_or_insert_default::<EventType<DeckEvent>>("reviews".to_string(), None);
+        store.get_or_insert_default::<EventType<DeckEvent>>(REVIEWS_STREAM.to_string(), None);
         store.get_or_insert_default::<EventType<DeckSelectionEvent>>(
-            "deck_selection".to_string(),
+            DECK_SELECTION_STREAM.to_string(),
             None,
         );
 
@@ -6885,7 +7034,7 @@ mod tests {
         }
         for (device_id, events) in reviews_by_device {
             let added = store.add_device_events_jsons(
-                "reviews".to_string(),
+                REVIEWS_STREAM.to_string(),
                 device_id.clone(),
                 events.clone(),
                 None,
@@ -6910,7 +7059,12 @@ mod tests {
                 .push(record.event.clone());
         }
         for (device_id, events) in selections_by_device {
-            store.add_device_events_jsons("deck_selection".to_string(), device_id, events, None);
+            store.add_device_events_jsons(
+                DECK_SELECTION_STREAM.to_string(),
+                device_id,
+                events,
+                None,
+            );
         }
 
         let context = Context {
@@ -6924,7 +7078,7 @@ mod tests {
         };
         let initial_state = DeckState::new();
         let stream = store
-            .get::<EventType<DeckEvent>>("reviews".to_string())
+            .get::<EventType<DeckEvent>>(REVIEWS_STREAM.to_string())
             .expect("reviews stream should exist");
         let deck: Deck = stream.state(initial_state, &context);
 
@@ -7041,7 +7195,7 @@ mod tests {
         let language_pack = Arc::new(language_pack);
 
         let mut store: EventStore<String, String> = EventStore::default();
-        store.get_or_insert_default::<EventType<DeckEvent>>("reviews".to_string(), None);
+        store.get_or_insert_default::<EventType<DeckEvent>>(REVIEWS_STREAM.to_string(), None);
 
         let reviews_blob = std::fs::read(
             "test-data/.weapon/user-events/user__aa6b6044-10d0-444b-8518-3696a15d2392/stream__reviews/events.blob",
@@ -7056,7 +7210,7 @@ mod tests {
                 .push(record.event.clone());
         }
         for (device_id, events) in reviews_by_device {
-            store.add_device_events_jsons("reviews".to_string(), device_id, events, None);
+            store.add_device_events_jsons(REVIEWS_STREAM.to_string(), device_id, events, None);
         }
 
         let context = Context {
@@ -7070,7 +7224,7 @@ mod tests {
         };
         let initial_state = DeckState::new();
         let stream = store
-            .get::<EventType<DeckEvent>>("reviews".to_string())
+            .get::<EventType<DeckEvent>>(REVIEWS_STREAM.to_string())
             .expect("reviews stream should exist");
         let deck: Deck = stream.state(initial_state, &context);
 
@@ -7213,9 +7367,9 @@ mod tests {
         }
 
         let mut store: EventStore<String, String> = EventStore::default();
-        store.get_or_insert_default::<EventType<DeckEvent>>("reviews".to_string(), None);
+        store.get_or_insert_default::<EventType<DeckEvent>>(REVIEWS_STREAM.to_string(), None);
         store.get_or_insert_default::<EventType<DeckSelectionEvent>>(
-            "deck_selection".to_string(),
+            DECK_SELECTION_STREAM.to_string(),
             None,
         );
 
@@ -7232,7 +7386,7 @@ mod tests {
 
         // 4. Replay deck_selection to auto-detect language pair
         let deck_selection = store
-            .get::<EventType<DeckSelectionEvent>>("deck_selection".to_string())
+            .get::<EventType<DeckSelectionEvent>>(DECK_SELECTION_STREAM.to_string())
             .map(|s| {
                 s.state(
                     deck_selection::DeckSelectionPartial {
@@ -7285,7 +7439,7 @@ mod tests {
         };
         let initial_state = DeckState::new();
         let stream = store
-            .get::<EventType<DeckEvent>>("reviews".to_string())
+            .get::<EventType<DeckEvent>>(REVIEWS_STREAM.to_string())
             .expect("reviews stream should exist");
 
         stream.state(initial_state, &context)
@@ -7743,9 +7897,9 @@ mod tests {
         }
 
         let mut store: EventStore<String, String> = EventStore::default();
-        store.get_or_insert_default::<EventType<DeckEvent>>("reviews".to_string(), None);
+        store.get_or_insert_default::<EventType<DeckEvent>>(REVIEWS_STREAM.to_string(), None);
         store.get_or_insert_default::<EventType<DeckSelectionEvent>>(
-            "deck_selection".to_string(),
+            DECK_SELECTION_STREAM.to_string(),
             None,
         );
         for (stream_id, devices) in grouped {
@@ -7756,7 +7910,7 @@ mod tests {
 
         // Detect the language pair from deck_selection.
         let deck_selection = store
-            .get::<EventType<DeckSelectionEvent>>("deck_selection".to_string())
+            .get::<EventType<DeckSelectionEvent>>(DECK_SELECTION_STREAM.to_string())
             .map(|s| {
                 s.state(
                     deck_selection::DeckSelectionPartial {
@@ -7797,7 +7951,7 @@ mod tests {
             timezone: chrono::FixedOffset::east_opt(0).unwrap(),
         };
 
-        let Some(stream) = store.get::<EventType<DeckEvent>>("reviews".to_string()) else {
+        let Some(stream) = store.get::<EventType<DeckEvent>>(REVIEWS_STREAM.to_string()) else {
             return vec![];
         };
 

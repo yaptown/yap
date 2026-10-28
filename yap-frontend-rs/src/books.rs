@@ -80,8 +80,9 @@ pub struct BooksScreenView {
     pub copy: BooksCopy,
     pub books: Vec<BookCardView>,
 }
+/// Serialized in reading events (`crate::reading`), so its shape must stay readable.
 #[bridgerton::bridge(transparent)]
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct BookPosition {
     pub chapter: usize,
     pub paragraph: usize,
@@ -434,34 +435,27 @@ pub async fn load_books(
             .collect(),
     })
 }
-#[bridgerton::bridge]
-pub async fn load_book(
+pub(crate) async fn load_book(
     language: Language,
     slug: String,
-    position: Option<BookPosition>,
+    position: BookPosition,
+    prefer_cache: bool,
 ) -> Result<BookReaderView, Error> {
     let edition = cached(
         &key(language, &slug, "edition"),
-        position.is_some(),
+        prefer_cache,
         "book_edition",
         serde_json::json!({"requested_language": language.code(), "requested_slug": slug}),
     )
     .await?;
-    let position = match position {
-        Some(p) => p,
-        None => read(&key(language, &slug, "position"))
-            .await
-            .unwrap_or_default(),
-    };
     Ok(reader(edition, language, position))
 }
-#[bridgerton::bridge]
-pub async fn save_book_position(
-    language: Language,
-    slug: String,
-    position: BookPosition,
-) -> Result<(), Error> {
-    write(&key(language, &slug, "position"), &position).await
+
+pub(crate) async fn legacy_position(language: Language, slug: &str) -> BookPosition {
+    // Delete this fallback once existing readers have reopened their books.
+    read(&key(language, slug, "position"))
+        .await
+        .unwrap_or_default()
 }
 
 /// Starts the sentence tutor on a tap at a UTF-16 offset into one of the reader's paragraphs.

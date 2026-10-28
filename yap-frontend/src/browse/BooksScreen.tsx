@@ -13,8 +13,6 @@ import {
   chat_book_sentence,
   explain_book_sentence,
   load_books,
-  load_book,
-  save_book_position,
   type BookCardView,
   type BookSentenceEvent,
   type BookSentenceHighlight,
@@ -30,6 +28,7 @@ import {
   type ReaderTheme,
 } from "../../../yap-frontend-rs/pkg";
 import { useCourseDeck } from "@/review/course-study";
+import { useWeapon } from "@/core/weapon";
 import type { AppContextType } from "@/app/context";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import { TargetLanguageText } from "@/components/TargetLanguageText";
@@ -598,6 +597,7 @@ function ReaderBar({
 }
 
 export function BookReader({ language, nativeLanguage, slug }: { language: Language; nativeLanguage: Language; slug: string }) {
+  const weapon = useWeapon();
   const copy = books_copy();
   const { accessToken } = useOutletContext<AppContextType>();
   // The tapped sentence's tutor, shared with iOS through Rust's `book_sentence` reducer.
@@ -672,7 +672,7 @@ export function BookReader({ language, nativeLanguage, slug }: { language: Langu
   const [opened, setOpened] = useState<{ opening: Opening; revision: number; turn?: OpeningTurn }>();
   useEffect(() => {
     let cancelled = false;
-    load_book(language, slug, request === undefined ? undefined : { chapter: request.chapter, paragraph: 0 })
+    weapon.load_book(language, slug, request === undefined ? undefined : { chapter: request.chapter, paragraph: 0 })
       .then((v) => {
         if (cancelled) return;
         setView(v);
@@ -682,14 +682,9 @@ export function BookReader({ language, nativeLanguage, slug }: { language: Langu
     return () => {
       cancelled = true;
     };
-  }, [language, slug, request]);
-  // Serialize writes so an older anchor cannot overwrite a newer one; a failed write
-  // mustn't stop later ones.
-  const saves = useRef(Promise.resolve());
+  }, [weapon, language, slug, request]);
   const remember = (chapter: number) => (paragraph: number) => {
-    saves.current = saves.current
-      .then(() => save_book_position(language, slug, { chapter, paragraph }))
-      .catch(() => {});
+    weapon.save_book_position(language, slug, { chapter, paragraph });
   };
   const open = (chapter: number, opening: Opening, turn?: OpeningTurn) => {
     closeTutor();

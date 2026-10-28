@@ -23,7 +23,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective October 20, 2026.</p>
+            <p className="text-sm">Effective October 27, 2026.</p>
           </div>
         </Card>
 
@@ -42,9 +42,9 @@ export function PrivacyPage() {
             </p>
             <p>
               <span className="text-foreground">Learning activity.</span> The
-              words you add, your reviews and ratings, streaks, XP, and course
-              selection. This is the heart of the app: it's stored on our
-              servers so your progress syncs between devices, and a copy lives
+              words you add, your reviews and ratings, streaks, XP, where you
+              are in each book, and course selection. This is the heart of the
+              app: it's stored on our servers so your progress syncs between devices, and a copy lives
               on your device so yap works offline. Each device gets a random
               identifier, created by yap and synced with your activity, so
               your devices' histories can be merged; it isn't your phone's

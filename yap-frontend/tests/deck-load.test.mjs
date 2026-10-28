@@ -97,8 +97,7 @@ function harness({ ready = true, cached = false } = {}) {
     return task.promise;
   };
   const weapon = {
-    request_deck_selection() {},
-    request_reviews() {},
+    request_streams() {},
     get_stream_num_events: () => (ready ? 0 : undefined),
     reviews_history_known: () => ready,
     get_deck_selection_state: () => selection,

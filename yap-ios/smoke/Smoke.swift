@@ -44,7 +44,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
             check(weapon!.device_id == device) // reenter the real Weapon
             notifications += 1
         }
-        weapon.request_reviews()
+        weapon.request_streams()
         check(notifications > 0 && syncStreams.contains("reviews") && !syncKeys.isEmpty)
         let modifier = syncKeys.removeFirst()
         try await weapon.sync(stream_id: "reviews", access_token: nil, attempt_supabase: false, modifier: modifier, upload: false)
@@ -80,7 +80,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         check(weapon.deck_inputs_key(course: course) != noPackInputs)
         // A core-only deck is withheld unless the learner would see the placement test.
         check(try await weapon.get_deck_state(course: course, utc_offset_seconds: 0) == nil)
-        weapon.request_deck_selection()
+        weapon.request_streams()
         try weapon.add_deck_selection_event(event: .SelectBothLanguages(native: course.native_language, target: course.target_language))
         try weapon.add_deck_selection_event(event: .SetOnboardingSelections(
             selections: OnboardingSelections(starting_fresh: false, motivation: nil, experience_level: nil, study_goal: nil),
@@ -155,7 +155,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         let future = Date().timeIntervalSince1970 * 1000 + 10_000
         weapon.add_deck_event_at(event: goal, timestamp_ms: future)
         check(weapon.get_stream_num_events(stream_id: "reviews")! == reviewCount + 2)
-        weapon.request_deck_selection()
+        weapon.request_streams()
         try await weapon.load_from_local_storage(stream_id: "deck_selection")
         try weapon.add_deck_selection_event(event: .SelectBothLanguages(native: .English, target: .French))
         let selection = weapon.get_deck_selection_state()!
@@ -176,8 +176,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         check(weapon.deck_inputs_key(course: course) == beforeSyncInputs)
         let reopened = try await Weapon.create(user_id: nil) { _, _ in }
         check(reopened.device_id == device)
-        reopened.request_reviews()
-        reopened.request_deck_selection()
+        reopened.request_streams()
         try await reopened.load_from_local_storage(stream_id: "reviews")
         try await reopened.load_from_local_storage(stream_id: "deck_selection")
         check(reopened.get_stream_num_events(stream_id: "reviews") == reviewCount + 2)

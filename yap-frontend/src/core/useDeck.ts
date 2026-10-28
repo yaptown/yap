@@ -50,7 +50,7 @@ function useCurrentDeckSelection():
   const weapon = useWeapon();
 
   useEffect(() => {
-    weapon.request_deck_selection();
+    weapon.request_streams();
   }, [weapon]);
 
   const getSnapshot = useCallback(() => {
@@ -140,8 +140,7 @@ export function useDeck(): {
   const selectedCourse = useRef<Course | null>(null);
 
   useEffect(() => {
-    weapon.request_deck_selection();
-    weapon.request_reviews();
+    weapon.request_streams();
   }, [weapon]);
 
   const getSnapshot = useCallback(() => {

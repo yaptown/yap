@@ -101,8 +101,8 @@ struct CurriculumDraft: Equatable { let selection: SentenceListSelection? }
             for stream in ["reviews", "deck_selection"] {
                 listeners.append(weapon.subscribe_to_stream(stream_id: stream) { [weak self] in self?.recompute() })
             }
-            weapon.request_reviews(); weapon.request_deck_selection()
-            for stream in ["reviews", "deck_selection"] { try await weapon.load_from_local_storage(stream_id: stream) }
+            weapon.request_streams()
+            for stream in event_streams() { try await weapon.load_from_local_storage(stream_id: stream) }
             guard active else { return }
             recompute()
             syncSoon()
@@ -297,7 +297,7 @@ struct CurriculumDraft: Equatable { let selection: SentenceListSelection? }
             await starting?.value
             if let weapon {
                 do {
-                    for stream in ["reviews", "deck_selection"] {
+                    for stream in event_streams() {
                         try await weapon.sync(stream_id: stream, access_token: nil,
                             attempt_supabase: false, modifier: nil, upload: false)
                     }
