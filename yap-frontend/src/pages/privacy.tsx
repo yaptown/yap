@@ -87,8 +87,8 @@ export function PrivacyPage() {
             </p>
             <p>
               <span className="text-foreground">Exported Anki decks.</span>{" "}
-              When you download an Anki deck, we record that the deck was made,
-              the options you chose, and your account if you were signed in.
+              When you make an Anki deck, we record the course, the options you chose,
+              and your account if you were signed in.
               Your local learning history also records the exported deck's identifier,
               options, words, and sentences, including when signed out. This history
               syncs to your account when signed in.
@@ -97,11 +97,7 @@ export function PrivacyPage() {
               it with a download link, then delete it. Anyone with the link can
               download the package during that time.
               Audio is generated and bundled when the deck is built; movie clips
-              stream from clips.yap.town with a per-deck token. Each time building
-              a deck generates audio that was not already cached, we log which text
-              it was and when, tied to that deck. We use this to keep the cost
-              of generating audio in check and to switch off a deck that is
-              being shared in ways it shouldn't be.
+              stream from clips.yap.town.
             </p>
             <p>
               <span className="text-foreground">Technical.</span> We use Sentry

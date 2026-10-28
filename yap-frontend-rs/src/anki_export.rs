@@ -29,13 +29,6 @@ pub use crate::deck_event::{AnkiCardTypes, AnkiDeckOptions};
 
 #[bridgerton::bridge(transparent)]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct MintedAnkiDeck {
-    pub deck_id: String,
-    pub token: String,
-}
-
-#[bridgerton::bridge(transparent)]
-#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AnkiDeckPlan {
     pub language: Language,
     pub native_language: Language,
@@ -280,25 +273,6 @@ pub fn anki_options_copy(reading: bool, listening: bool, word_cards: bool) -> An
     }
 }
 
-#[bridgerton::bridge]
-pub async fn mint_anki_deck(
-    course: Course,
-    options: AnkiDeckOptions,
-    access_token: Option<String>,
-) -> Result<MintedAnkiDeck, Error> {
-    let response = utils::hit_ai_server(
-        fetch_happen::Method::POST,
-        "/anki/deck",
-        Some(serde_json::json!({"course": course, "options": options})),
-        access_token.as_ref(),
-    )
-    .await
-    .map_err(|e| Error::new(e.to_string()))?
-    .error_for_status()
-    .map_err(|e| Error::new(e.to_string()))?;
-    response.json().await.map_err(|e| Error::new(e.to_string()))
-}
-
 // Identities are scoped to the whole course: the same target language for
 // two native languages must not share deck, model, or note identities, or
 // Anki would merge the decks and overwrite one language's translations with
@@ -351,7 +325,6 @@ fn word_note(
     gram: TaggedGram<SpurGram>,
     word: &str,
     frequency_rank: Option<usize>,
-    token: &str,
     bundled: &mut Vec<AnkiBundledMedia>,
 ) -> AnkiNote {
     let senses = pack
@@ -376,7 +349,7 @@ fn word_note(
         let filename = format!("yap-word-{}.mp3", guid(course, "word", word));
         bundled.push(AnkiBundledMedia {
             filename: filename.clone(),
-            source: tts_source(course.target_language, word, &[], token),
+            source: tts_source(course.target_language, word, &[]),
         });
         filename
     };
@@ -448,7 +421,7 @@ const COMPONENT: &AsciiSet = &NON_ALPHANUMERIC
 fn component(value: &str) -> String {
     utf8_percent_encode(value, COMPONENT).to_string()
 }
-fn tts_source(language: Language, text: &str, hints: &[String], token: &str) -> AnkiMediaSource {
+fn tts_source(language: Language, text: &str, hints: &[String]) -> AnkiMediaSource {
     let request = TtsRequest::plain(language, text, hints.to_vec());
     // A clip the app already verified is free in either voice; Gemini, the
     // deck voice, is what the backend would make on a miss.
@@ -458,11 +431,10 @@ fn tts_source(language: Language, text: &str, hints: &[String], token: &str) -> 
         .collect();
     let name = serde_json::to_value(language).unwrap();
     let mut url = format!(
-        "{}/anki/tts?language={}&text={}&d={}",
+        "{}/anki/tts?language={}&text={}",
         utils::ai_server_url(),
         component(name.as_str().unwrap()),
-        component(&request.text),
-        component(token)
+        component(&request.text)
     );
     for hint in hints {
         url.push_str(&format!("&hint={}", component(hint)));
@@ -615,7 +587,6 @@ fn clip_presentation(
     pack: &LanguagePack,
     language: Language,
     clip: &clips::ClipRow,
-    token: &str,
     posters: &mut BTreeSet<String>,
     bundled: &mut Vec<AnkiBundledMedia>,
     tags: &mut Vec<String>,
@@ -659,23 +630,11 @@ fn clip_presentation(
             poster_filename: poster,
         }),
         AnkiClip {
-            mp4: format!(
-                "{}?d={}",
-                clip_url(language, &format!("{}/lo.mp4", component(&clip.clip_id))),
-                component(token)
-            ),
-            webm: format!(
-                "{}?d={}",
-                clip_url(language, &format!("{}/lo.webm", component(&clip.clip_id))),
-                component(token)
-            ),
-            poster: format!(
-                "{}?d={}",
-                clip_url(
-                    language,
-                    &format!("{}/poster.jpg", component(&clip.clip_id))
-                ),
-                component(token)
+            mp4: clip_url(language, &format!("{}/lo.mp4", component(&clip.clip_id))),
+            webm: clip_url(language, &format!("{}/lo.webm", component(&clip.clip_id))),
+            poster: clip_url(
+                language,
+                &format!("{}/poster.jpg", component(&clip.clip_id)),
             ),
             aspect_ratio: clip.aspect_ratio,
         },
@@ -814,10 +773,9 @@ impl Deck {
     pub fn start_anki_deck_plan(
         &self,
         options: AnkiDeckOptions,
-        token: String,
         timestamp_ms: f64,
     ) -> Result<AnkiDeckPlanner, Error> {
-        AnkiDeckPlanner::new(self, options, DECK_SIZE, token, timestamp_ms)
+        AnkiDeckPlanner::new(self, options, DECK_SIZE, timestamp_ms)
     }
 
     /// Call only after the host has delivered the finished package.
@@ -846,10 +804,9 @@ impl Deck {
         &self,
         options: AnkiDeckOptions,
         size: usize,
-        token: String,
         timestamp_ms: f64,
     ) -> Result<AnkiDeckPlan, Error> {
-        let planner = AnkiDeckPlanner::new(self, options, size, token, timestamp_ms)?;
+        let planner = AnkiDeckPlanner::new(self, options, size, timestamp_ms)?;
         while !planner.step().done {}
         planner.finish()
     }
@@ -874,7 +831,6 @@ pub struct AnkiDeckPlanner {
 struct PlannerState {
     seed: Deck,
     options: AnkiDeckOptions,
-    token: String,
     size: usize,
     unindexed: Vec<Spur>,
     clip_sentence_ranks: FxHashMap<Spur, Vec<u32>>,
@@ -906,7 +862,6 @@ impl AnkiDeckPlanner {
         deck: &Deck,
         options: AnkiDeckOptions,
         size: usize,
-        token: String,
         timestamp_ms: f64,
     ) -> Result<Self, Error> {
         let language = deck.context.course.target_language;
@@ -928,7 +883,6 @@ impl AnkiDeckPlanner {
             state: RefCell::new(PlannerState {
                 seed: deck.clone(),
                 options,
-                token,
                 size,
                 unindexed,
                 clip_sentence_ranks: FxHashMap::default(),
@@ -1154,7 +1108,6 @@ impl PlannerState {
             bundled,
             posters,
             options,
-            token,
             still_pending,
             ..
         } = self;
@@ -1224,7 +1177,6 @@ impl PlannerState {
                     prerequisite,
                     &word,
                     spelling_ranks.get(&word).copied(),
-                    token,
                     bundled,
                 );
                 // Match stream gram IDs (including sense), not display text or
@@ -1277,7 +1229,7 @@ impl PlannerState {
                     )
                     .unwrap();
                     let (credit, url, captions) =
-                        clip_presentation(pack, language, &row, token, posters, bundled, tags);
+                        clip_presentation(pack, language, &row, posters, bundled, tags);
                     *source = credit;
                     *clip = Some(url);
                     *subtitles = Some(captions);
@@ -1297,19 +1249,14 @@ impl PlannerState {
         let row = clips::clip_for_sentence_where(language, &text, |row| options.allows_clip(row))
             .unwrap();
         let (source, clip, subtitles) =
-            clip_presentation(pack, language, &row, token, posters, bundled, &mut tags);
+            clip_presentation(pack, language, &row, posters, bundled, &mut tags);
         // Every sentence ships its recording: a Listening card cannot
         // be answered without it, and the Translate card shares the
         // same file, so there is nothing to save by streaming.
         let filename = format!("yap-sentence-{}.mp3", guid(course, "sentence", &text));
         bundled.push(AnkiBundledMedia {
             filename: filename.clone(),
-            source: tts_source(
-                language,
-                &text,
-                &challenge.audio.request.verification_hints,
-                token,
-            ),
+            source: tts_source(language, &text, &challenge.audio.request.verification_hints),
         });
         let tts = filename;
         let include_listening = !matches!(options.card_types, AnkiCardTypes::Reading);
@@ -1531,17 +1478,10 @@ mod tests {
             explicit_clips: false,
             ..options()
         };
-        let planner = AnkiDeckPlanner::new(
-            &deck,
-            restricted.clone(),
-            3,
-            "token".into(),
-            1_700_000_000_000.0,
-        )
-        .unwrap();
-        assert!(planner.state.borrow().unindexed.is_empty());
         let planner =
-            AnkiDeckPlanner::new(&deck, options(), 3, "token".into(), 1_700_000_000_000.0).unwrap();
+            AnkiDeckPlanner::new(&deck, restricted.clone(), 3, 1_700_000_000_000.0).unwrap();
+        assert!(planner.state.borrow().unindexed.is_empty());
+        let planner = AnkiDeckPlanner::new(&deck, options(), 3, 1_700_000_000_000.0).unwrap();
         assert_eq!(
             planner.state.borrow().unindexed.len(),
             pack.encoded_sentences.len()
@@ -1561,7 +1501,6 @@ mod tests {
                         ..options()
                     },
                     3,
-                    "token".into(),
                     1_700_000_000_000.0,
                 )
                 .unwrap();
@@ -1838,7 +1777,6 @@ mod tests {
                         explicit_clips: true,
                     },
                     3,
-                    "token".into(),
                     1_700_000_000_000.0,
                 )
                 .unwrap();
@@ -1901,10 +1839,10 @@ mod tests {
         let deck = fixture();
         publish(&deck.context.language_pack, deck.context.course);
         let a = deck
-            .plan_anki_deck(options(), 55, "a+b&雪".into(), 1_700_000_000_000.0)
+            .plan_anki_deck(options(), 55, 1_700_000_000_000.0)
             .unwrap();
         let b = deck
-            .plan_anki_deck(options(), 55, "a+b&雪".into(), 1_700_000_000_000.0)
+            .plan_anki_deck(options(), 55, 1_700_000_000_000.0)
             .unwrap();
         assert_eq!(
             serde_json::to_value(&a).unwrap(),
@@ -1947,9 +1885,9 @@ mod tests {
                     assert!(words.insert(word.clone()));
                     assert!(clips.insert(clip.as_ref().unwrap().mp4.clone()));
                     let clip = clip.as_ref().unwrap();
-                    assert!(clip.mp4.ends_with("/lo.mp4?d=a%2Bb%26%E9%9B%AA"));
-                    assert_eq!(clip.webm, clip.mp4.replace("/lo.mp4?", "/lo.webm?"));
-                    assert_eq!(clip.poster, clip.mp4.replace("/lo.mp4?", "/poster.jpg?"));
+                    assert!(clip.mp4.ends_with("/lo.mp4"));
+                    assert_eq!(clip.webm, clip.mp4.replace("/lo.mp4", "/lo.webm"));
+                    assert_eq!(clip.poster, clip.mp4.replace("/lo.mp4", "/poster.jpg"));
                     let entry = a.bundled.iter().find(|m| &m.filename == audio).unwrap();
                     assert_eq!(
                         audio,
@@ -1959,7 +1897,7 @@ mod tests {
                         )
                     );
                     assert!(
-                        matches!((&entry.source, tts_source(Language::English, word, &[], "a+b&雪")), (AnkiMediaSource::Tts { url, .. }, AnkiMediaSource::Tts { url: expected, .. }) if url == &expected)
+                        matches!((&entry.source, tts_source(Language::English, word, &[])), (AnkiMediaSource::Tts { url, .. }, AnkiMediaSource::Tts { url: expected, .. }) if url == &expected)
                     );
                     (*note_id, *card_id, guid)
                 }
@@ -1984,9 +1922,9 @@ mod tests {
                     );
                     assert!(clips.insert(clip.mp4.clone()));
                     assert!(clip.mp4.starts_with("https://clips.yap.town/eng/"));
-                    assert!(clip.mp4.ends_with("/lo.mp4?d=a%2Bb%26%E9%9B%AA"));
-                    assert_eq!(clip.webm, clip.mp4.replace("/lo.mp4?", "/lo.webm?"));
-                    assert_eq!(clip.poster, clip.mp4.replace("/lo.mp4?", "/poster.jpg?"));
+                    assert!(clip.mp4.ends_with("/lo.mp4"));
+                    assert_eq!(clip.webm, clip.mp4.replace("/lo.mp4", "/lo.webm"));
+                    assert_eq!(clip.poster, clip.mp4.replace("/lo.mp4", "/poster.jpg"));
                     assert_eq!(glosses[0].gloss.as_deref(), Some("meaning"));
                     assert!(
                         glosses[0]
@@ -2017,7 +1955,6 @@ mod tests {
                     explicit_clips: true,
                 },
                 55,
-                "new token".into(),
                 1_700_000_000_000.0,
             )
             .unwrap();
@@ -2072,7 +2009,6 @@ mod tests {
             sense,
             "word63",
             ranks.get("word63").copied(),
-            "token",
             &mut vec![],
         );
         assert!(
@@ -2145,8 +2081,7 @@ mod tests {
             data.translations.push((text.into(), vec!["a word".into()]));
         });
         publish(&deck.context.language_pack, deck.context.course);
-        let planner =
-            AnkiDeckPlanner::new(&deck, options(), 1, "token".into(), 1_700_000_000_000.0).unwrap();
+        let planner = AnkiDeckPlanner::new(&deck, options(), 1, 1_700_000_000_000.0).unwrap();
         {
             let mut state = planner.state.borrow_mut();
             while !state.unindexed.is_empty() || state.simulation.is_none() {
@@ -2182,8 +2117,7 @@ mod tests {
             .resolve_gram(&prerequisite.gram)
             .to_display_string(Language::English);
         publish(pack, deck.context.course);
-        let planner =
-            AnkiDeckPlanner::new(&deck, options(), 1, "token".into(), 1_700_000_000_000.0).unwrap();
+        let planner = AnkiDeckPlanner::new(&deck, options(), 1, 1_700_000_000_000.0).unwrap();
         {
             let mut state = planner.state.borrow_mut();
             while !state.unindexed.is_empty() || state.simulation.is_none() {
@@ -2257,7 +2191,7 @@ mod tests {
         let deck = fixture();
         publish(&deck.context.language_pack, deck.context.course);
         let plan = deck
-            .plan_anki_deck(options(), 55, "token".into(), 1_700_000_000_000.0)
+            .plan_anki_deck(options(), 55, 1_700_000_000_000.0)
             .unwrap();
         for note in &plan.notes {
             let (tags, kind) = match note {
@@ -2297,7 +2231,6 @@ mod tests {
                     ..options()
                 },
                 55,
-                "token".into(),
                 1_700_000_000_000.0,
             )
             .unwrap();
@@ -2348,9 +2281,7 @@ mod tests {
     fn anki_steps_preserve_note_order_and_plan() {
         let deck = fixture();
         publish(&deck.context.language_pack, deck.context.course);
-        let planner =
-            AnkiDeckPlanner::new(&deck, options(), 55, "token".into(), 1_700_000_000_000.0)
-                .unwrap();
+        let planner = AnkiDeckPlanner::new(&deck, options(), 55, 1_700_000_000_000.0).unwrap();
         assert!(planner.finish().is_err());
         let mut notes = Vec::new();
         let mut chosen = 0;
@@ -2393,7 +2324,7 @@ mod tests {
                 .collect(),
         );
         let error = deck
-            .plan_anki_deck(options(), 55, "token".into(), 1_700_000_000_000.0)
+            .plan_anki_deck(options(), 55, 1_700_000_000_000.0)
             .unwrap_err();
         assert_eq!(
             error.to_string(),
@@ -2407,7 +2338,7 @@ mod tests {
         // A different language has no manifest in this test's thread-local mirror.
         assert!(!deck.anki_export_view(None).clips_loaded);
         assert!(
-            deck.plan_anki_deck(options(), 1, "token".into(), 1_700_000_000_000.0)
+            deck.plan_anki_deck(options(), 1, 1_700_000_000_000.0)
                 .is_err()
         );
         clips::publish_manifest(Language::English, vec![]);
@@ -2417,7 +2348,7 @@ mod tests {
         assert!(deck.anki_export_view(Some(false)).needs_placement);
         assert!(!deck.anki_export_view(Some(true)).needs_placement);
         assert!(
-            deck.plan_anki_deck(options(), 1, "token".into(), 1_700_000_000_000.0)
+            deck.plan_anki_deck(options(), 1, 1_700_000_000_000.0)
                 .is_err()
         );
         assert!(
@@ -2432,7 +2363,7 @@ mod tests {
     fn anki_tts_normalizes_and_preserves_hint_order() {
         let hints = ["Élodie".into(), "Paris".into(), "Élodie".into()];
         let AnkiMediaSource::Tts { cached, url } =
-            tts_source(Language::French, "E\u{301}lodie & Paris?", &hints, "a+b")
+            tts_source(Language::French, "E\u{301}lodie & Paris?", &hints)
         else {
             unreachable!()
         };
@@ -2442,7 +2373,7 @@ mod tests {
             cached[0],
             tts_cache_url(&tts_cache_filename(&app, &TtsProvider::Gemini))
         );
-        assert!(url.ends_with("language=French&text=%C3%89lodie%20%26%20Paris%3F&d=a%2Bb&hint=%C3%89lodie&hint=Paris&hint=%C3%89lodie"));
+        assert!(url.ends_with("language=French&text=%C3%89lodie%20%26%20Paris%3F&hint=%C3%89lodie&hint=Paris&hint=%C3%89lodie"));
     }
     #[test]
     fn anki_missing_movie_keeps_sentence_without_credit_or_film_tag() {
@@ -2450,7 +2381,7 @@ mod tests {
         assert!(deck.context.language_pack.movies.is_empty());
         publish(&deck.context.language_pack, deck.context.course);
         let plan = deck
-            .plan_anki_deck(options(), 3, "token".into(), 1_700_000_000_000.0)
+            .plan_anki_deck(options(), 3, 1_700_000_000_000.0)
             .unwrap();
         let mut count = 0;
         for note in &plan.notes {
@@ -2506,7 +2437,7 @@ mod tests {
         human_audio::register(Language::English, &deck.context.language_pack);
         publish(&deck.context.language_pack, deck.context.course);
         let plan = deck
-            .plan_anki_deck(options(), 3, "token".into(), 1_700_000_000_000.0)
+            .plan_anki_deck(options(), 3, 1_700_000_000_000.0)
             .unwrap();
         assert_eq!(
             plan.bundled
@@ -2868,7 +2799,7 @@ mod tests {
         let deck = Deck::default();
         publish(&deck.context.language_pack, deck.context.course);
         let plan = deck
-            .plan_anki_deck(options(), 10, "offline-test".into(), 1_700_000_000_000.0)
+            .plan_anki_deck(options(), 10, 1_700_000_000_000.0)
             .unwrap();
         assert_eq!(plan.stats.sentence_count, 10);
         println!("FIRST TEN ANKI NOTES (real French pack, offline manifest fixture):");

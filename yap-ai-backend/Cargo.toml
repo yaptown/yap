@@ -45,8 +45,6 @@ google-speech = { path = "../libraries/google-speech" }
 phoneme-verify = { path = "../libraries/phoneme-verify" }
 unicode-normalization.workspace = true
 rusty-s3 = "0.10"
-hmac = "0.13"
-sha2 = "0.11"
 unicode-segmentation = "1.13.3"
 
 [dev-dependencies]

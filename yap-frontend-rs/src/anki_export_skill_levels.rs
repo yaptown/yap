@@ -132,7 +132,6 @@ fn check_skill_levels_at(language: Language, levels: &[usize]) {
                 explicit_clips: true,
             },
             DECK_SIZE,
-            "skill-level-test".into(),
             1_700_000_000_000.0,
         )
         .unwrap();

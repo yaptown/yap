@@ -9,7 +9,6 @@ import {
 import type { AppContextType } from "@/app/context";
 import { CourseAudioPrefetch, useCourseDeck } from "@/review/course-study";
 import type {
-  Course,
   Deck,
   Language,
   DeckLoadPhase,
@@ -31,7 +30,6 @@ export function DeckPage({
   children: (
     props: AppContextType & {
       deck: Deck;
-      course: Course;
       targetLanguage: Language;
     },
   ) => ReactNode;
@@ -56,7 +54,6 @@ export function DeckPage({
         {children({
           ...context,
           deck: state.deck,
-          course: state.course,
           targetLanguage: state.course.targetLanguage,
         })}
       </>

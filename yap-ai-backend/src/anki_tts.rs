@@ -1,18 +1,16 @@
-//! Anki's audio tags cannot send a JWT. A deck token instead guards new
-//! synthesis spend; playback from the public cache needs no permission.
+//! Synthesis for a deck being built, unauthenticated like the other /tts routes.
+//! Unlike them it is a GET returning the audio bytes, and it checks clips with
+//! the burst-friendly Cloudflare-only transcriber.
 
 use axum::{
     http::{StatusCode, header},
     response::{IntoResponse, Response},
 };
 use axum_extra::extract::Query;
-use language_utils::{Language, TtsProvider, TtsRequest, audio_mime_type, tts_cache_filename};
-use postgrest::Postgrest;
+use language_utils::{Language, TtsProvider, TtsRequest, audio_mime_type};
 use serde::Deserialize;
 
-use crate::{
-    HTTP, deck_token, service_role_client, synthesize_checked_bytes, tts_verify::Transcribers,
-};
+use crate::{HTTP, synthesize_checked_bytes, tts_verify::Transcribers};
 
 #[derive(Debug, Deserialize)]
 pub struct Params {
@@ -20,7 +18,6 @@ pub struct Params {
     text: String,
     #[serde(default)]
     hint: Vec<String>,
-    d: String,
 }
 
 impl Params {
@@ -38,49 +35,8 @@ fn cache_control(verified: bool) -> &'static str {
 }
 
 pub async fn tts(Query(params): Query<Params>) -> Result<Response, StatusCode> {
-    let token = params.d.clone();
     let request = params.request();
     let http = &*HTTP;
-    // The export has already looked in the shared cache for this clip in
-    // either voice (see `AnkiMediaSource::Tts`), so a request here is a miss.
-    // Gemini is the deck voice: about an eighth of ElevenLabs' price.
-    let cache_filename = tts_cache_filename(&request, &TtsProvider::Gemini);
-
-    if !deck_token::configured() {
-        eprintln!("anki TTS: DECK_TOKEN_SECRET is not set, refusing to synthesize");
-        return Err(StatusCode::NOT_IMPLEMENTED);
-    }
-    let deck_id = deck_token::verify(&token).ok_or(StatusCode::FORBIDDEN)?;
-    let client = service_role_client()?;
-    let response = client
-        .from("anki_decks")
-        .select("revoked_at")
-        .eq("id", deck_id.to_string())
-        .execute()
-        .await
-        .map_err(|e| {
-            eprintln!("anki TTS: failed to look up deck: {e:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
-    if !response.status().is_success() {
-        eprintln!(
-            "anki TTS: failed to look up deck: {:?}",
-            response.text().await
-        );
-        return Err(StatusCode::INTERNAL_SERVER_ERROR);
-    }
-    #[derive(Deserialize)]
-    struct Deck {
-        revoked_at: Option<String>,
-    }
-    let decks: Vec<Deck> = response.json().await.map_err(|e| {
-        eprintln!("anki TTS: failed to decode deck: {e:?}");
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
-    if decks.first().is_none_or(|deck| deck.revoked_at.is_some()) {
-        return Err(StatusCode::FORBIDDEN);
-    }
-
     // A deck export fires hundreds of these in minutes; see `Transcribers`.
     // ElevenLabs is the only fallback: Google's voice would be a step down
     // for a card the learner keeps.
@@ -92,11 +48,6 @@ pub async fn tts(Query(params): Query<Params>) -> Result<Response, StatusCode> {
         Transcribers::CloudflareOnly,
     )
     .await?;
-    // Another request may have populated the bucket between our HEAD and the
-    // pipeline's lookup. That playback did not spend anything for this deck.
-    if synthesized.synthesized {
-        record_in_background(client, deck_id, cache_filename, synthesized.verified);
-    }
     Ok((
         [
             (header::CONTENT_TYPE, audio_mime_type(&synthesized.audio)),
@@ -105,39 +56,6 @@ pub async fn tts(Query(params): Query<Params>) -> Result<Response, StatusCode> {
         synthesized.audio,
     )
         .into_response())
-}
-
-/// Accounting must not delay a learner's audio. Like the shared-cache upload,
-/// an unavailable database is logged rather than turning a good clip into an
-/// error; both verified and salvage clips have already incurred spend.
-fn record_in_background(
-    client: Postgrest,
-    deck_id: uuid::Uuid,
-    cache_filename: String,
-    verified: bool,
-) {
-    tokio::spawn(async move {
-        let row = serde_json::json!({
-            "deck_id": deck_id,
-            "cache_filename": cache_filename,
-            "verified": verified,
-        });
-        match client
-            .from("anki_deck_tts_synths")
-            .insert(row.to_string())
-            .execute()
-            .await
-        {
-            Ok(response) if response.status().is_success() => {}
-            Ok(response) => eprintln!(
-                "anki TTS: failed to record synthesis for {deck_id}/{cache_filename}: {:?}",
-                response.text().await
-            ),
-            Err(e) => eprintln!(
-                "anki TTS: failed to record synthesis for {deck_id}/{cache_filename}: {e:?}"
-            ),
-        }
-    });
 }
 
 #[cfg(test)]
@@ -153,14 +71,12 @@ mod tests {
                 let language = serde_json::to_value(Language::French).unwrap();
                 query.append_pair("language", language.as_str().unwrap());
                 query.append_pair("text", "Élodie voit Paris.");
-                query.append_pair("d", "token");
                 for hint in &hints {
                     query.append_pair("hint", hint);
                 }
             }
             let uri = url.as_str().parse().unwrap();
             let Query(params) = Query::<Params>::try_from_uri(&uri).unwrap();
-            assert_eq!(params.d, "token");
             let request = params.request();
             assert_eq!(request.text, "Élodie voit Paris.");
             assert_eq!(request.language, Language::French);

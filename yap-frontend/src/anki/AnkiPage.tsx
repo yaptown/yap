@@ -5,15 +5,12 @@ import { toast } from "sonner";
 import {
   get_ai_server_url,
   anki_options_copy,
-  mint_anki_deck,
   refresh_clip_manifest,
   type AnkiCardTypes,
   type AnkiDeckPlan,
   type AnkiNote,
-  type Course,
   type Deck,
   type Language,
-  type MintedAnkiDeck,
   type MovieMetadataBasic,
   type PlacementSession,
 } from "../../../yap-frontend-rs/pkg";
@@ -60,14 +57,15 @@ const idleExport: AnkiExport = { choosing: false, build: emptyBuild, run: 0 };
 // Stores the built package so it can be fetched by link (AnkiMobile's
 // "Download link"). The backend keeps it for 8 days.
 async function uploadPackage(
-  minted: MintedAnkiDeck,
-  languageCode: string,
+  deckId: string,
+  course: string,
+  options: AnkiDeckPlan["options"],
   blob: Blob,
   accessToken?: string,
 ): Promise<string> {
-  const query = new URLSearchParams({ d: minted.token, code: languageCode });
+  const query = new URLSearchParams({ course, options: JSON.stringify(options) });
   const response = await fetch(
-    `${get_ai_server_url()}/anki/deck/${encodeURIComponent(minted.deck_id)}/package?${query}`,
+    `${get_ai_server_url()}/anki/deck/${encodeURIComponent(deckId)}/package?${query}`,
     {
       method: "PUT",
       headers: {
@@ -188,13 +186,11 @@ function CardTypeOption({
 
 function AnkiScreen({
   deck,
-  course,
   targetLanguage,
   userInfo,
   accessToken,
 }: AppContextType & {
   deck: Deck;
-  course: Course;
   targetLanguage: Language;
 }) {
   const weapon = useWeapon();
@@ -292,6 +288,7 @@ function AnkiScreen({
   // The async run owns its immutable deck snapshot. Account replacement does
   // not free it; navigation or a newer Generate invalidates this run instead.
   async function download(cardTypes: AnkiCardTypes) {
+    const deckId = crypto.randomUUID();
     const run = ++generation.current;
     const active = () => generation.current === run;
     const update = (change: (current: AnkiExport) => AnkiExport) => {
@@ -310,7 +307,6 @@ function AnkiScreen({
         word_cards: wordCards,
         explicit_clips: explicitClips,
       };
-      const minted = await mint_anki_deck(course, options, accessToken);
       update((current) => ({
         ...current,
         phase: t("anki-page-choosing-sentences"),
@@ -320,7 +316,6 @@ function AnkiScreen({
       if (!active()) return;
       const planner = deck.start_anki_deck_plan(
         options,
-        minted.token,
         Date.now(),
       );
       let plan: AnkiDeckPlan;
@@ -382,8 +377,9 @@ function AnkiScreen({
       let downloadLink: string | undefined;
       try {
         downloadLink = await uploadPackage(
-          minted,
+          deckId,
           plan.course_code,
+          plan.options,
           blob,
           accessToken,
         );
@@ -394,7 +390,7 @@ function AnkiScreen({
       if (!active()) return;
       const file = { blob, name: `yap-${plan.course_code}.apkg` };
       saveFile(file);
-      weapon.add_deck_event(deck.anki_deck_exported(plan, minted.deck_id));
+      weapon.add_deck_event(deck.anki_deck_exported(plan, deckId));
       const notes = plan.stats.word_count
         ? t("anki-note-count-with-words", {
             sentences: plan.stats.sentence_count.toLocaleString(),

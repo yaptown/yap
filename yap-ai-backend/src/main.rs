@@ -34,7 +34,6 @@ use std::sync::LazyLock;
 mod anki_package;
 mod anki_tts;
 mod book_sentence;
-mod deck_token;
 mod packs;
 mod tts_cache;
 mod tts_verify;
@@ -286,9 +285,6 @@ struct Synthesized {
     audio: Vec<u8>,
     /// Passed the checks, or came from the verified-only shared cache.
     verified: bool,
-    /// False for cache hits, including a hit after the GET handler's lookup.
-    /// Only newly synthesized audio counts toward a deck's synthesis counter.
-    synthesized: bool,
 }
 
 async fn synthesize_checked(
@@ -358,7 +354,6 @@ async fn synthesize_checked_bytes(
         return Ok(Synthesized {
             audio,
             verified: true,
-            synthesized: false,
         });
     }
     // A clip that passed every check: hand it back and, off the response
@@ -368,7 +363,6 @@ async fn synthesize_checked_bytes(
         Ok(Synthesized {
             audio,
             verified: true,
-            synthesized: true,
         })
     };
 
@@ -481,7 +475,6 @@ async fn synthesize_checked_bytes(
     Ok(Synthesized {
         audio,
         verified: false,
-        synthesized: true,
     })
 }
 
@@ -2232,69 +2225,6 @@ async fn sentry_tunnel(body: Bytes) -> StatusCode {
     }
 }
 
-/// What the client sends when it starts generating an Anki deck. `options`
-/// is whatever the deck page chose (starting level, size, sources, ...),
-/// recorded verbatim so a minted deck can be understood later; the backend
-/// doesn't interpret it.
-#[derive(Debug, Deserialize)]
-struct MintAnkiDeckRequest {
-    // Optional only so tabs still running the previous frontend can mint.
-    course: Option<language_utils::Course>,
-    #[serde(default)]
-    options: serde_json::Value,
-}
-
-#[derive(Debug, Serialize)]
-struct MintAnkiDeckResponse {
-    deck_id: uuid::Uuid,
-    /// Goes into every media URL of the generated deck as `?d=<token>`.
-    token: String,
-}
-
-/// Mint the signed token a new Anki deck embeds in its media URLs, and
-/// record the mint (see `deck_token`). Signing in is optional — the deck
-/// page is public — but when the caller is signed in the deck is tied to
-/// them. The row is written before the token is handed out: a token nobody
-/// can attribute defeats the purpose of minting server-side.
-async fn mint_anki_deck(
-    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
-    Json(request): Json<MintAnkiDeckRequest>,
-) -> Result<Json<MintAnkiDeckResponse>, StatusCode> {
-    let user_id = verify_jwt(auth.token()).await.ok().map(|claims| claims.sub);
-
-    let (deck_id, token) = deck_token::mint().ok_or_else(|| {
-        eprintln!("anki deck: DECK_TOKEN_SECRET is not set, refusing to mint");
-        StatusCode::NOT_IMPLEMENTED
-    })?;
-
-    let client = service_role_client()?;
-
-    let row = serde_json::json!({
-        "id": deck_id,
-        "user_id": user_id,
-        "course": request.course.map(|course| course.code()),
-        "options": request.options,
-    });
-    let response = client
-        .from("anki_decks")
-        .insert(row.to_string())
-        .execute()
-        .await
-        .map_err(|e| {
-            eprintln!("anki deck: failed to record mint: {e:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
-    if !response.status().is_success() {
-        eprintln!(
-            "anki deck: failed to record mint: {:?}",
-            response.text().await
-        );
-        return Err(StatusCode::INTERNAL_SERVER_ERROR);
-    }
-
-    Ok(Json(MintAnkiDeckResponse { deck_id, token }))
-}
-
 fn app() -> Router {
     let cors = CorsLayer::new()
         .allow_origin(Any)
@@ -2318,7 +2248,6 @@ fn app() -> Router {
             post(generate_pronunciation_feedback),
         )
         .route("/clip/{lang}/sentences", get(serve_clip_sentences))
-        .route("/anki/deck", post(mint_anki_deck))
         .route("/anki/tts", get(anki_tts::tts))
         .route(
             "/anki/deck/{deck_id}/package",
@@ -2361,11 +2290,6 @@ async fn main() {
         );
     } else {
         println!("TTS verification: on ({})", transcribers.join(" + "));
-    }
-    if deck_token::configured() {
-        println!("Anki decks: minting and streamed TTS enabled");
-    } else {
-        eprintln!("Anki decks: OFF — set DECK_TOKEN_SECRET to mint deck tokens and serve deck TTS");
     }
     if tts_cache::write_enabled() {
         println!("TTS cache: storing verified clips in the shared bucket");

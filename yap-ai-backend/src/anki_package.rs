@@ -1,9 +1,14 @@
-//! Temporary, write-once Anki packages. The bucket must expire objects after eight days.
+//! Temporary, write-once Anki packages, recorded for stats on upload.
+//! The bucket must expire objects after eight days.
 use axum::{
     Json,
     body::Bytes,
     extract::{Path, Query},
     http::StatusCode,
+};
+use axum_extra::{
+    TypedHeader,
+    headers::{Authorization, authorization::Bearer},
 };
 use language_utils::ANKI_DECKS_ORIGIN;
 use rusty_s3::{Bucket, Credentials, S3Action, UrlStyle};
@@ -16,8 +21,8 @@ type Failure = (StatusCode, &'static str);
 
 #[derive(Deserialize)]
 pub struct Params {
-    d: String,
-    code: String,
+    course: String,
+    options: String,
 }
 
 fn valid_code(code: &str) -> bool {
@@ -169,84 +174,51 @@ fn internal(error: impl std::fmt::Display) -> Failure {
     )
 }
 
-/// Only a confirmed 404 permits an upload; storage outages must not look like misses.
-fn require_missing_package(
-    status: Result<StatusCode, impl std::fmt::Display>,
-) -> Result<(), Failure> {
-    match status {
-        Ok(StatusCode::NOT_FOUND) => Ok(()),
-        Ok(status) if status.is_success() => {
-            Err((StatusCode::CONFLICT, "Deck package already uploaded"))
-        }
-        other => {
-            match other {
-                Ok(status) => eprintln!("anki package: R2 HEAD returned {status}"),
-                Err(error) => eprintln!("anki package: R2 HEAD failed: {error}"),
-            }
-            Err((StatusCode::BAD_GATEWAY, "Could not check package storage"))
-        }
-    }
-}
-
+/// Record the deck, then store its package. The row reserves the
+/// client-chosen id: a package R2 has already expired must not be
+/// replaced under a link someone may still have, so an id that was ever
+/// recorded never stores again.
 pub async fn upload(
     Path(deck_id): Path<Uuid>,
     Query(params): Query<Params>,
+    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
     bytes: Bytes,
 ) -> Result<Json<serde_json::Value>, Failure> {
-    if crate::deck_token::verify(&params.d) != Some(deck_id) {
-        return Err((StatusCode::FORBIDDEN, "Invalid deck token"));
+    if !valid_code(&params.course) {
+        return Err((StatusCode::UNPROCESSABLE_ENTITY, "Invalid course code"));
     }
-    if !valid_code(&params.code) {
-        return Err((StatusCode::UNPROCESSABLE_ENTITY, "Invalid language code"));
-    }
+    let options: serde_json::Value = serde_json::from_str(&params.options)
+        .map_err(|_| (StatusCode::UNPROCESSABLE_ENTITY, "Invalid options JSON"))?;
     validate_package(&bytes).map_err(|reason| (StatusCode::UNPROCESSABLE_ENTITY, reason))?;
-    let client = crate::service_role_client().map_err(internal)?;
-    let response = client
-        .from("anki_decks")
-        .select("revoked_at,created_at")
-        .eq("id", deck_id.to_string())
-        .execute()
-        .await
-        .map_err(internal)?;
-    if !response.status().is_success() {
-        return Err(internal(response.status()));
-    }
-    #[derive(Deserialize)]
-    struct Deck {
-        revoked_at: Option<String>,
-        created_at: String,
-    }
-    let decks: Vec<Deck> = response.json().await.map_err(internal)?;
-    let deck = decks
-        .first()
-        .ok_or((StatusCode::NOT_FOUND, "Deck not found"))?;
-    if deck.revoked_at.is_some() {
-        return Err((StatusCode::FORBIDDEN, "Deck revoked"));
-    }
-    // The token never expires and ships inside the package, so the upload
-    // window does: the browser uploads seconds after minting, and once the
-    // bucket has expired the object nobody can refill its URL.
-    let minted = chrono::DateTime::parse_from_rfc3339(&deck.created_at).map_err(internal)?;
-    if chrono::Utc::now() - minted.with_timezone(&chrono::Utc) > chrono::Duration::hours(1) {
-        return Err((StatusCode::FORBIDDEN, "Deck upload window closed"));
-    }
     let writer = WRITER.as_ref().ok_or((
         StatusCode::NOT_IMPLEMENTED,
         "Package storage is not configured",
     ))?;
-    let key = format!("{deck_id}.apkg");
-    let http = reqwest::Client::builder()
-        .redirect(reqwest::redirect::Policy::none())
-        .build()
+    let user_id = crate::verify_jwt(auth.token())
+        .await
+        .ok()
+        .map(|claims| claims.sub);
+    let row = serde_json::json!({
+        "id": deck_id,
+        "user_id": user_id,
+        "course": params.course,
+        "options": options,
+    });
+    let response = crate::service_role_client()
+        .map_err(internal)?
+        .from("anki_decks")
+        .insert(row.to_string())
+        .execute()
+        .await
         .map_err(internal)?;
-    let head = writer.bucket.head_object(Some(&writer.credentials), &key);
-    require_missing_package(
-        http.head(head.sign(Duration::from_secs(300)))
-            .send()
-            .await
-            .map(|response| response.status()),
-    )?;
-    let disposition = format!("attachment; filename=\"yap-{}.apkg\"", params.code);
+    if response.status().as_u16() == 409 {
+        return Err((StatusCode::CONFLICT, "Deck package already uploaded"));
+    }
+    if !response.status().is_success() {
+        return Err(internal(response.status()));
+    }
+    let key = format!("{deck_id}.apkg");
+    let disposition = format!("attachment; filename=\"yap-{}.apkg\"", params.course);
     let headers = [
         ("content-type", "application/octet-stream"),
         ("content-disposition", disposition.as_str()),
@@ -258,16 +230,15 @@ pub async fn upload(
     for (name, value) in headers {
         put.headers_mut().insert(name, value);
     }
-    let mut request = http.put(put.sign(Duration::from_secs(300)));
+    let mut request = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .map_err(internal)?
+        .put(put.sign(Duration::from_secs(300)));
     for (name, value) in headers {
         request = request.header(name, value);
     }
     let response = request.body(bytes).send().await.map_err(internal)?;
-    // R2's conditional write is the arbiter even if two requests HEAD the key
-    // before either upload completes. Never overwrite a successfully stored deck.
-    if matches!(response.status().as_u16(), 409 | 412) {
-        return Err((StatusCode::CONFLICT, "Deck package already uploaded"));
-    }
     if !response.status().is_success() {
         return Err(internal(response.status()));
     }
@@ -405,18 +376,26 @@ mod tests {
         assert!(validate_package(&mismatched).is_err());
     }
     #[tokio::test]
-    async fn route_rejects_forged_tokens_and_limits_only_this_body() {
+    async fn route_limits_only_this_body() {
         use axum::{body::Body, http::Request};
         use tower::ServiceExt;
-        let uri = format!("/anki/deck/{}/package?d=forged&code=fra", Uuid::nil());
+        let uri = format!(
+            "/anki/deck/{}/package?course=fra-eng&options=%7B%7D",
+            Uuid::nil()
+        );
         // Above axum's ordinary 2 MiB limit, but under this route's limit:
-        // authentication, not body extraction, rejects the request.
+        // package validation, not body extraction, rejects the request.
         for (size, expected) in [
-            (2 * 1024 * 1024 + 1, StatusCode::FORBIDDEN),
+            (2 * 1024 * 1024 + 1, StatusCode::UNPROCESSABLE_ENTITY),
             (MAX_PACKAGE_BYTES + 1, StatusCode::PAYLOAD_TOO_LARGE),
         ] {
             let response = crate::app()
-                .oneshot(Request::put(&uri).body(Body::from(vec![0; size])).unwrap())
+                .oneshot(
+                    Request::put(&uri)
+                        .header("Authorization", "Bearer anonymous")
+                        .body(Body::from(vec![0; size]))
+                        .unwrap(),
+                )
                 .await
                 .unwrap();
             assert_eq!(response.status(), expected);
@@ -435,40 +414,6 @@ mod tests {
         let mut bad = good;
         bad.push(0);
         assert!(validate_package(&bad).is_err());
-    }
-
-    #[test]
-    fn only_a_confirmed_storage_miss_allows_upload() {
-        assert_eq!(
-            require_missing_package(Ok::<_, &str>(StatusCode::NOT_FOUND)),
-            Ok(())
-        );
-        for status in [StatusCode::OK, StatusCode::NO_CONTENT] {
-            assert_eq!(
-                require_missing_package(Ok::<_, &str>(status))
-                    .unwrap_err()
-                    .0,
-                StatusCode::CONFLICT
-            );
-        }
-        for status in [
-            StatusCode::FORBIDDEN,
-            StatusCode::INTERNAL_SERVER_ERROR,
-            StatusCode::MOVED_PERMANENTLY,
-        ] {
-            assert_eq!(
-                require_missing_package(Ok::<_, &str>(status))
-                    .unwrap_err()
-                    .0,
-                StatusCode::BAD_GATEWAY
-            );
-        }
-        assert_eq!(
-            require_missing_package(Err("connection failed"))
-                .unwrap_err()
-                .0,
-            StatusCode::BAD_GATEWAY
-        );
     }
 
     #[test]
