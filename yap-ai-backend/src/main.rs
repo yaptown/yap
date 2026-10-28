@@ -2238,6 +2238,8 @@ async fn sentry_tunnel(body: Bytes) -> StatusCode {
 /// doesn't interpret it.
 #[derive(Debug, Deserialize)]
 struct MintAnkiDeckRequest {
+    // Optional only so tabs still running the previous frontend can mint.
+    course: Option<language_utils::Course>,
     #[serde(default)]
     options: serde_json::Value,
 }
@@ -2270,6 +2272,7 @@ async fn mint_anki_deck(
     let row = serde_json::json!({
         "id": deck_id,
         "user_id": user_id,
+        "course": request.course.map(|course| course.code()),
         "options": request.options,
     });
     let response = client
