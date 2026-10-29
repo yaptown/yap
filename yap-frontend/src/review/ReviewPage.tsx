@@ -86,6 +86,7 @@ export function ReviewPage() {
   }
   return (
     <TopPageLayout
+      footer={false}
       userInfo={userInfo}
       headerProps={{
         title: t("common-review"),
@@ -138,6 +139,7 @@ function Review({
 
   return (
     <TopPageLayout
+      footer={false}
       userInfo={userInfo}
       headerProps={{
         title: t("common-review"),

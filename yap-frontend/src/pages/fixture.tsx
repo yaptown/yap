@@ -118,6 +118,7 @@ export function FixturePage() {
     // would make every web/iOS pair differ by the chrome alone. The signup nag
     // stays off: it varies with auth state and would make captures unstable.
     <TopPageLayout
+      footer={false}
       userInfo={userInfo}
       headerProps={{
         backButton: { label: "Home", onBack: log },

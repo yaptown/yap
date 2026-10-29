@@ -27,6 +27,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AnimatePresence, motion } from "framer-motion";
 import { Moon, MoreVertical, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SiteFooter } from "@/components/site-footer";
 import { APP_STORE_URL, IS_IOS } from "@/lib/ios-app";
 import { mountGlobe, type Landmark } from "@/lib/landing-globe";
 import type { AppContextType } from "@/app/context";
@@ -99,14 +100,6 @@ function WorldCanvas({
         className,
       )}
     />
-  );
-}
-
-function Wordmark({ className }: { className?: string }) {
-  return (
-    <Link to="/" className={cn("landing-disp leading-none", className)}>
-      Yap<span className="text-(--pink)">.</span>Town
-    </Link>
   );
 }
 
@@ -730,26 +723,7 @@ function Coda() {
             <CallToAction className="shrink-0 self-start sm:self-auto" />
           </div>
         </div>
-        <Footer />
-      </div>
-    </div>
-  );
-}
-
-function Footer() {
-  return (
-    <div className="flex flex-wrap items-baseline justify-between gap-4 border-t border-(--rule) pt-7 pb-9">
-      <Wordmark className="text-[24px]" />
-      <div className="flex flex-wrap gap-x-6 gap-y-2 text-[15px] text-(--fg-dim)">
-        <a href="/d/">{t("common-dictionary")}</a>
-        <Link to="/anki">{t("landing-anki-decks")}</Link>
-        <Link to="/select-language">{t("landing-languages-2")}</Link>
-        <a href="/blog/">{t("landing-blog")}</a>
-        <Link to="/about">{t("common-about")}</Link>
-        <a href="https://github.com/yaptown/yap">GitHub</a>
-        <a href="https://discord.gg/mpgqfsH">Discord</a>
-        <Link to="/privacy">{t("common-privacy")}</Link>
-        <Link to="/terms">{t("common-terms")}</Link>
+        <SiteFooter className="[--border:var(--rule)] [--muted-foreground:var(--fg-dim)]" />
       </div>
     </div>
   );

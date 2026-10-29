@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { InstallPwaButton } from "@/components/InstallPwaButton";
 import { AppStoreButton } from "@/components/AppStoreButton";
+import { SiteFooter } from "@/components/site-footer";
 
 export function AboutPage() {
   return (
@@ -121,6 +122,7 @@ export function AboutPage() {
           </div>
         </Card>
       </div>
+      <SiteFooter className="mx-4 mt-4" />
     </div>
   );
 }

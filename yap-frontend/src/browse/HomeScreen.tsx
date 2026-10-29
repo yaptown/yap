@@ -38,7 +38,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { WeekProgressStrip } from "@/review/WeekProgressStrip";
 import { TargetLanguageText } from "@/components/TargetLanguageText";
-import { About } from "@/components/about";
 import { IdleScreen } from "@/review/IdleScreen";
 import {
   sentenceListToSelection,
@@ -126,161 +125,158 @@ function HomeContent({
   const upNext = view.up_next;
 
   return (
-    <>
-      <TopPageLayout
-        userInfo={userInfo}
-        headerProps={{
-          title: "Yap.Town",
-          showSignupNag: inert ? false : undefined,
-        }}
-      >
-        <main className="flex flex-col gap-4 py-4" aria-label={view.title}>
-          {/* A tagline, not a headline: Up Next's word is the page's one
-              headline. The course inside it is the course switcher. */}
-          <h1 className="pt-4 text-2xl font-medium tracking-tight">
-            {view.greeting_lead}{" "}
-            <button
-              type="button"
-              onClick={() => {
-                if (!inert) navigate("/select-language");
-              }}
-              className="inline-flex items-baseline gap-1.5 rounded-md font-semibold decoration-muted-foreground/50 decoration-2 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <LanguageIcon icon={view.course_icon} variant="bare" className="size-[1.1em] self-center" />
-              {view.course_name}
-              <ChevronDown
-                className="h-4 w-4 self-center text-muted-foreground"
-                aria-hidden
-              />
-            </button>
-            {view.greeting_tail}
-          </h1>
-          {upNext.idle ? (
-            <IdleScreen
-              view={upNext.idle}
-              deck={deck}
-              addEvent={addEvent}
-              undoRestrictions={undoRestrictions}
-              setSentenceList={setSentenceList}
-              commitSentenceList={commitSentenceList}
-              showEngagementPrompts={false}
-              showWeek={false}
-            />
-          ) : (
-            // The whole card starts the review, not just its button.
-            <Link
-              to="/learn"
-              className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Card className="p-6 gap-0 transition-colors group-hover:bg-muted/40">
-                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                  <KindIcon kind={upNext.kind} />
-                  {upNext.eyebrow}
-                </p>
-                <p className="mt-1.5 text-4xl font-bold break-words">
-                  <TargetLanguageText language={view.target_language}>
-                    {upNext.headline}
-                  </TargetLanguageText>
-                </p>
-                <span className="mt-5 flex items-center justify-between gap-2 h-12 px-5 rounded-xl bg-primary text-primary-foreground font-medium shadow-xs transition-all group-hover:bg-primary/90">
-                  {upNext.action_label}
-                  <ArrowRight
-                    className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
-                    aria-hidden
-                  />
-                </span>
-              </Card>
-            </Link>
-          )}
-          {/* Everything below Up Next is one quiet panel of progress, so the
-              next thing to study stays the only card that stands out. */}
-          <Card variant="light" className="p-0 gap-0 divide-y divide-border/60 overflow-hidden">
-            {view.curriculum && (
-              <HomeCurriculum
-                view={view.curriculum}
-                deck={deck}
-                inert={inert}
-                onChoose={commitSentenceList}
-              />
-            )}
-            <section className="flex flex-col gap-4 p-5">
-              <div className="flex items-baseline justify-between gap-4">
-                <h2 className="text-lg font-semibold">{view.week.title}</h2>
-                <span className="text-sm tabular-nums text-muted-foreground">
-                  {view.week.today.before}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="-mx-1 inline-flex items-baseline gap-0.5 rounded-md px-1 font-medium text-foreground hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-muted/60">
-                      {view.week.today.emphasis}
-                      <ChevronDown className="h-3.5 w-3.5 self-center text-muted-foreground" aria-hidden />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="min-w-44"
-                      onCloseAutoFocus={(event) => event.preventDefault()}
-                    >
-                      {view.week.goal_options.map((option) => (
-                        <DropdownMenuItem
-                          key={option.target}
-                          onSelect={() => {
-                            if (!inert && option.target !== view.week.daily_goal)
-                              setGoal(option.event);
-                          }}
-                          className="py-2"
-                        >
-                          <span className="text-base tabular-nums">{option.minutes_label}</span>
-                          <span className="text-muted-foreground">{option.label}</span>
-                          {option.target === view.week.daily_goal && (
-                            <Check className="ml-auto h-4 w-4 text-foreground" />
-                          )}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  {view.week.today.after}
-                </span>
-              </div>
-              <WeekProgressStrip week={view.week.days} />
-            </section>
-            <Link
-              to="/stats"
-              className="grid grid-cols-2 gap-4 p-5 hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:bg-muted/40"
-            >
-              <HomeStat stat={view.xp} icon={Zap} />
-              <HomeStat stat={view.cards} icon={BookOpen} />
-            </Link>
-            <Link
-              to="/books"
-              className="flex items-center gap-3 p-5 hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:bg-muted/40"
-            >
-              <Library className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
-              <div className="flex flex-col min-w-0 flex-1">
-                <p className="text-lg font-semibold">{view.books.title}</p>
-                <p className="text-sm text-muted-foreground">{view.books.caption}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            </Link>
-          </Card>
-          {/* Not a real field: tapping it morphs into the dictionary's search
-              bar (same view-transition-name), where typing gets live results. */}
+    <TopPageLayout
+      userInfo={userInfo}
+      headerProps={{
+        title: "Yap.Town",
+        showSignupNag: inert ? false : undefined,
+      }}
+    >
+      <main className="flex flex-col gap-4 py-4" aria-label={view.title}>
+        {/* A tagline, not a headline: Up Next's word is the page's one
+            headline. The course inside it is the course switcher. */}
+        <h1 className="pt-4 text-2xl font-medium tracking-tight">
+          {view.greeting_lead}{" "}
           <button
             type="button"
-            aria-label={view.dictionary.title}
             onClick={() => {
-              if (!inert)
-                navigate("/dictionary", {
-                  viewTransition: true,
-                  state: { focusSearch: true },
-                });
+              if (!inert) navigate("/select-language");
             }}
-            className="dictionary-search flex h-11 w-full items-center gap-2 rounded-xl border border-border/60 bg-foreground/5 px-4 text-left text-muted-foreground backdrop-blur-sm hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-baseline gap-1.5 rounded-md font-semibold decoration-muted-foreground/50 decoration-2 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Search className="h-4 w-4 shrink-0" aria-hidden />
-            <span className="truncate">{view.dictionary.search_placeholder}</span>
+            <LanguageIcon icon={view.course_icon} variant="bare" className="size-[1.1em] self-center" />
+            {view.course_name}
+            <ChevronDown
+              className="h-4 w-4 self-center text-muted-foreground"
+              aria-hidden
+            />
           </button>
-        </main>
-      </TopPageLayout>
-      <About />
-    </>
+          {view.greeting_tail}
+        </h1>
+        {upNext.idle ? (
+          <IdleScreen
+            view={upNext.idle}
+            deck={deck}
+            addEvent={addEvent}
+            undoRestrictions={undoRestrictions}
+            setSentenceList={setSentenceList}
+            commitSentenceList={commitSentenceList}
+            showEngagementPrompts={false}
+            showWeek={false}
+          />
+        ) : (
+          // The whole card starts the review, not just its button.
+          <Link
+            to="/learn"
+            className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Card className="p-6 gap-0 transition-colors group-hover:bg-muted/40">
+              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                <KindIcon kind={upNext.kind} />
+                {upNext.eyebrow}
+              </p>
+              <p className="mt-1.5 text-4xl font-bold break-words">
+                <TargetLanguageText language={view.target_language}>
+                  {upNext.headline}
+                </TargetLanguageText>
+              </p>
+              <span className="mt-5 flex items-center justify-between gap-2 h-12 px-5 rounded-xl bg-primary text-primary-foreground font-medium shadow-xs transition-all group-hover:bg-primary/90">
+                {upNext.action_label}
+                <ArrowRight
+                  className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                  aria-hidden
+                />
+              </span>
+            </Card>
+          </Link>
+        )}
+        {/* Everything below Up Next is one quiet panel of progress, so the
+            next thing to study stays the only card that stands out. */}
+        <Card variant="light" className="p-0 gap-0 divide-y divide-border/60 overflow-hidden">
+          {view.curriculum && (
+            <HomeCurriculum
+              view={view.curriculum}
+              deck={deck}
+              inert={inert}
+              onChoose={commitSentenceList}
+            />
+          )}
+          <section className="flex flex-col gap-4 p-5">
+            <div className="flex items-baseline justify-between gap-4">
+              <h2 className="text-lg font-semibold">{view.week.title}</h2>
+              <span className="text-sm tabular-nums text-muted-foreground">
+                {view.week.today.before}
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="-mx-1 inline-flex items-baseline gap-0.5 rounded-md px-1 font-medium text-foreground hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-muted/60">
+                    {view.week.today.emphasis}
+                    <ChevronDown className="h-3.5 w-3.5 self-center text-muted-foreground" aria-hidden />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="min-w-44"
+                    onCloseAutoFocus={(event) => event.preventDefault()}
+                  >
+                    {view.week.goal_options.map((option) => (
+                      <DropdownMenuItem
+                        key={option.target}
+                        onSelect={() => {
+                          if (!inert && option.target !== view.week.daily_goal)
+                            setGoal(option.event);
+                        }}
+                        className="py-2"
+                      >
+                        <span className="text-base tabular-nums">{option.minutes_label}</span>
+                        <span className="text-muted-foreground">{option.label}</span>
+                        {option.target === view.week.daily_goal && (
+                          <Check className="ml-auto h-4 w-4 text-foreground" />
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {view.week.today.after}
+              </span>
+            </div>
+            <WeekProgressStrip week={view.week.days} />
+          </section>
+          <Link
+            to="/stats"
+            className="grid grid-cols-2 gap-4 p-5 hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:bg-muted/40"
+          >
+            <HomeStat stat={view.xp} icon={Zap} />
+            <HomeStat stat={view.cards} icon={BookOpen} />
+          </Link>
+          <Link
+            to="/books"
+            className="flex items-center gap-3 p-5 hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:bg-muted/40"
+          >
+            <Library className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+            <div className="flex flex-col min-w-0 flex-1">
+              <p className="text-lg font-semibold">{view.books.title}</p>
+              <p className="text-sm text-muted-foreground">{view.books.caption}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          </Link>
+        </Card>
+        {/* Not a real field: tapping it morphs into the dictionary's search
+            bar (same view-transition-name), where typing gets live results. */}
+        <button
+          type="button"
+          aria-label={view.dictionary.title}
+          onClick={() => {
+            if (!inert)
+              navigate("/dictionary", {
+                viewTransition: true,
+                state: { focusSearch: true },
+              });
+          }}
+          className="dictionary-search flex h-11 w-full items-center gap-2 rounded-xl border border-border/60 bg-foreground/5 px-4 text-left text-muted-foreground backdrop-blur-sm hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Search className="h-4 w-4 shrink-0" aria-hidden />
+          <span className="truncate">{view.dictionary.search_placeholder}</span>
+        </button>
+      </main>
+    </TopPageLayout>
   );
 }
 

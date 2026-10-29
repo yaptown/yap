@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import { SiteFooter } from "@/components/site-footer";
 
 const CONTACT_EMAIL = "support@yap.town";
 
@@ -133,6 +134,7 @@ export function TermsPage() {
           </div>
         </Card>
       </div>
+      <SiteFooter className="mx-4 mt-4" />
     </div>
   );
 }
