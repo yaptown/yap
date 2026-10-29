@@ -81,7 +81,6 @@ anki-cards-blank-out-the-words-you-know-in-the = Cards blank out the words you k
 anki-cards-show-the-subtitle-and-you-try-to-translate = Cards show the subtitle, and you try to translate.
 anki-download-again = Download again
 anki-download-size = { $notes } · { $size } MB
-anki-downloaded = Downloaded { $summary }
 anki-each-card-teaches-a-new-word-with-a-clip = Each card teaches a new word with a clip from one of these films. We'll pick words that are right for your knowledge level:
 anki-essential-course = Essential { $language }
 anki-first-tell-us-which-words-you-know-no-account = First, tell us which words you know. No account needed.
