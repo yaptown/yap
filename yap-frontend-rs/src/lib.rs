@@ -1413,6 +1413,7 @@ pub struct DeckState {
     last_plan_day: Option<chrono::NaiveDate>,
     /// The timestamp of the most recent accepted study plan.
     last_lock_timestamp: Option<DateTime<Utc>>,
+    latest_anki_export: Option<anki_export::AnkiExport>,
 }
 
 #[bridgerton::bridge(opaque)]
@@ -1445,6 +1446,7 @@ pub struct Deck {
     last_plan_day: Option<chrono::NaiveDate>,
     /// The timestamp of the most recent accepted study plan.
     last_lock_timestamp: Option<DateTime<Utc>>,
+    latest_anki_export: Option<anki_export::AnkiExport>,
 }
 
 #[derive(Clone, Debug)]
@@ -1518,6 +1520,7 @@ impl From<Deck> for DeckState {
             last_lock_day: deck.last_lock_day,
             last_plan_day: deck.last_plan_day,
             last_lock_timestamp: deck.last_lock_timestamp,
+            latest_anki_export: deck.latest_anki_export,
         }
     }
 }
@@ -1543,11 +1546,35 @@ impl weapon::AppState for Deck {
 
         let DeckEvent::Language(LanguageEvent {
             target_language: event_language,
-            native_language: _, // TODO: specify native_language
+            native_language: event_native_language,
             content: event,
         }) = event;
 
-        if matches!(event, LanguageEventContent::AnkiDeckExported { .. }) {
+        if let LanguageEventContent::AnkiDeckExported {
+            deck_id,
+            options,
+            taught_words,
+            sentences,
+            word_clip_sentences,
+        } = event
+        {
+            if *event_language == context.course.target_language
+                && *event_native_language == context.course.native_language
+                && deck
+                    .latest_anki_export
+                    .as_ref()
+                    .is_none_or(|previous| *timestamp >= previous.timestamp)
+            {
+                deck.latest_anki_export = Some(anki_export::AnkiExport {
+                    deck_id: deck_id.clone(),
+                    options: options.clone(),
+                    taught_words: taught_words.clone(),
+                    sentences: sentences.clone(),
+                    word_clip_sentences: word_clip_sentences.clone(),
+                    timestamp: *timestamp,
+                });
+            }
+
             return deck;
         }
 
@@ -2324,6 +2351,7 @@ impl weapon::AppState for Deck {
             last_lock_day: state.last_lock_day,
             last_plan_day: state.last_plan_day,
             last_lock_timestamp: state.last_lock_timestamp,
+            latest_anki_export: state.latest_anki_export,
         }
     }
 }
@@ -2381,6 +2409,7 @@ impl DeckState {
             last_lock_day: None,
             last_plan_day: None,
             last_lock_timestamp: None,
+            latest_anki_export: None,
         }
     }
 

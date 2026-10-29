@@ -256,6 +256,9 @@ pub enum LanguageEventContent {
         taught_words: Vec<TaggedGram<Gram<String>>>,
         /// Exact sentence text, as in sentence review events.
         sentences: Vec<String>,
+        /// Subset used only as word-note clips; absent on older exports.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        word_clip_sentences: Option<Vec<String>>,
     },
 
     CompletePlacementTest {

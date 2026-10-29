@@ -11,17 +11,16 @@ import { IS_IOS } from "@/lib/ios-app";
 import { saveFile } from "./save-file";
 
 /**
- * What comes after the deck downloads. Signed-in learners are invited into
- * the app (the App Store one, on iOS); signed-out visitors get one call to
- * action, saving their deck.
- * Either way the deck can be saved again or fetched by link.
+ * What comes after the deck downloads: the deck can be saved again or
+ * fetched by link, and signed-in learners are invited into the app (the App
+ * Store one, on iOS). Signed-out visitors are asked to sign in by the deck
+ * card instead, so there is one call to action, not two.
  */
 export function ExportResult({
   view,
   signedIn,
   file,
   downloadLink,
-  onSignUp,
   onGoToYap,
   Title = "h2",
   Body = "p",
@@ -30,48 +29,53 @@ export function ExportResult({
   signedIn: boolean;
   file?: { blob: Blob; name: string };
   downloadLink?: string;
-  onSignUp: () => void;
   onGoToYap: () => void;
   /** The dialog passes its own title and description for accessibility. */
   Title?: ComponentType<{ className?: string; children: ReactNode }> | "h2";
   Body?: ComponentType<{ className?: string; children: ReactNode }> | "p";
 }) {
-  return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-2 text-left">
-        <Title className="text-xl font-semibold leading-snug">
-          {signedIn ? view.try_yap_heading : view.save_deck_heading}
-        </Title>
-        <Body className="text-muted-foreground">
-          {signedIn ? view.try_yap_body : view.save_deck_body}
-        </Body>
-      </div>
-      {signedIn && IS_IOS ? (
-        <AppStoreButton size="lg" className="h-11 self-start text-base" />
-      ) : (
+  const files = (file || downloadLink) && (
+    <div className="flex flex-col gap-3">
+      {file && (
         <Button
           type="button"
-          size="lg"
-          className="h-11 self-start text-base"
-          onClick={signedIn ? onGoToYap : onSignUp}
+          variant="outline"
+          className="self-start"
+          onClick={() => saveFile(file)}
         >
-          {signedIn ? view.try_yap_label : view.sign_up_label}
+          <Download aria-hidden />
+          {view.download_again_label}
         </Button>
       )}
-      <div className="flex flex-col gap-3 border-t pt-5">
-        {signedIn && <p>{view.enjoy_deck}</p>}
-        {file && (
+      {downloadLink && <DownloadLink link={downloadLink} />}
+    </div>
+  );
+  if (!signedIn) return files;
+  return (
+    <div className="flex flex-col gap-5">
+      {files}
+      <div
+        className={`flex flex-col gap-5 ${files ? "border-t pt-5" : ""}`}
+      >
+        <div className="flex flex-col gap-2 text-left">
+          <Title className="text-xl font-semibold leading-snug">
+            {view.try_yap_heading}
+          </Title>
+          <Body className="text-muted-foreground">{view.try_yap_body}</Body>
+        </div>
+        {IS_IOS ? (
+          <AppStoreButton size="lg" className="h-11 self-start text-base" />
+        ) : (
           <Button
             type="button"
-            variant="outline"
-            className="self-start"
-            onClick={() => saveFile(file)}
+            size="lg"
+            className="h-11 self-start text-base"
+            onClick={onGoToYap}
           >
-            <Download aria-hidden />
-            {view.download_again_label}
+            {view.try_yap_label}
           </Button>
         )}
-        {downloadLink && <DownloadLink link={downloadLink} />}
+        <p>{view.enjoy_deck}</p>
       </div>
     </div>
   );

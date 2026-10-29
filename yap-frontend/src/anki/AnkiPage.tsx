@@ -2,12 +2,16 @@ import { t } from "@/lib/i18n";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { CircleCheck, Download, Plus } from "lucide-react";
 import {
   get_ai_server_url,
+  anki_export_relative_time,
   anki_options_copy,
   refresh_clip_manifest,
   type AnkiCardTypes,
   type AnkiDeckPlan,
+  type AnkiDeckPlanner,
+  type AnkiExistingDeckView,
   type AnkiNote,
   type Deck,
   type Language,
@@ -48,6 +52,8 @@ type AnkiExport = {
   run: number;
   finishMessage?: string;
   summary?: string;
+  /** Only when the deck grew an existing one. */
+  added?: string;
   error?: string;
   downloadLink?: string;
   file?: { blob: Blob; name: string };
@@ -195,7 +201,7 @@ function AnkiScreen({
 }) {
   const weapon = useWeapon();
   const navigate = useNavigate();
-  const { openSignUp } = useAuthDialog();
+  const { openSignIn } = useAuthDialog();
   const [reading, setReading] = useState(true);
   const [listening, setListening] = useState(true);
   const [wordCards, setWordCards] = useState(true);
@@ -234,6 +240,7 @@ function AnkiScreen({
     choosing,
     finishMessage,
     summary,
+    added,
     downloadLink,
     file,
   } = exportState;
@@ -287,7 +294,7 @@ function AnkiScreen({
 
   // The async run owns its immutable deck snapshot. Account replacement does
   // not free it; navigation or a newer Generate invalidates this run instead.
-  async function download(cardTypes: AnkiCardTypes) {
+  async function download(startPlanner: () => AnkiDeckPlanner) {
     const deckId = crypto.randomUUID();
     const run = ++generation.current;
     const active = () => generation.current === run;
@@ -302,11 +309,6 @@ function AnkiScreen({
       status.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
     );
     try {
-      const options = {
-        card_types: cardTypes,
-        word_cards: wordCards,
-        explicit_clips: explicitClips,
-      };
       update((current) => ({
         ...current,
         phase: t("anki-page-choosing-sentences"),
@@ -314,10 +316,7 @@ function AnkiScreen({
       }));
       await new Promise((resolve) => setTimeout(resolve, 0));
       if (!active()) return;
-      const planner = deck.start_anki_deck_plan(
-        options,
-        Date.now(),
-      );
+      const planner = startPlanner();
       let plan: AnkiDeckPlan;
       try {
         let done = false;
@@ -403,7 +402,22 @@ function AnkiScreen({
         notes,
         size: (blob.size / 1024 / 1024).toFixed(1),
       });
-      update((current) => ({ ...current, downloadLink, file, summary }));
+      const { new_sentence_count, new_card_count, sentence_count } =
+        plan.stats;
+      const added =
+        new_sentence_count > 0 && new_sentence_count < sentence_count
+          ? t("anki-added-new-cards", {
+              sentences: new_sentence_count.toLocaleString(),
+              cards: new_card_count.toLocaleString(),
+            })
+          : undefined;
+      update((current) => ({
+        ...current,
+        downloadLink,
+        file,
+        summary,
+        added,
+      }));
     } catch (error) {
       const message =
         error instanceof AudioUnavailableError
@@ -420,6 +434,71 @@ function AnkiScreen({
       }));
     }
   }
+
+  const existing = view.latest_deck;
+  const showDeck = existing !== undefined;
+  const ready = view.manifest === "ready" && view.clip_sentence_count > 0;
+  const building = (busy || summary) && (
+    <div className="flex flex-col gap-4 text-foreground">
+      <DeckBuilding
+        key={run}
+        build={build}
+        deck={deck}
+        language={targetLanguage}
+        choosing={choosing}
+        animate={busy}
+        status={
+          phase &&
+          (!choosing && progress && progress.done < progress.total
+            ? t("anki-progress", {
+                phase,
+                done: progress.done.toLocaleString(),
+                total: progress.total.toLocaleString(),
+              })
+            : phase)
+        }
+        progress={
+          busy && progress
+            ? progress.total
+              ? (100 * progress.done) / progress.total
+              : 100
+            : undefined
+        }
+        target={choosing ? progress?.total : undefined}
+        finishMessage={finishMessage}
+      />
+      {busy && (
+        <Backstory text={view.backstory} signature={view.backstory_signature} />
+      )}
+    </div>
+  );
+  const manifestStatus = (
+    <>
+      {view.manifest === "loading" && (
+        <p>{t("anki-page-loading-movie-clips")}</p>
+      )}
+      {view.manifest === "ready" && view.clip_sentence_count === 0 && (
+        <p>{t("anki-page-no-movie-clips-are-available-for-this-course")}</p>
+      )}
+    </>
+  );
+  const retryManifest = view.manifest === "error" && (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={() => {
+        setManifest("loading");
+        setRetry((value) => value + 1);
+      }}
+    >
+      {t("anki-page-retry-loading-movie-clips")}
+    </Button>
+  );
+  const errorMessage = exportState.error && (
+    <p role="alert" className="text-sm text-destructive">
+      {exportState.error}
+    </p>
+  );
 
   return (
     <TopPageLayout
@@ -438,19 +517,85 @@ function AnkiScreen({
               navigate(`/select-language?next=${encodeURIComponent("/anki")}`)
             }
           />
-          <h1
-            className="text-2xl font-semibold"
-            style={{ textWrap: "balance" }}
-          >
-            {view.title}
-          </h1>
+          {!showDeck && (
+            <h1
+              className="text-2xl font-semibold"
+              style={{ textWrap: "balance" }}
+            >
+              {view.title}
+            </h1>
+          )}
         </div>
         <PosterStrip
           films={view.films}
           deck={deck}
           loading={view.manifest === "loading"}
         />
-        {view.needs_placement ? (
+        {showDeck ? (
+          <>
+            <div
+              ref={status}
+              className="flex scroll-mt-4 flex-col gap-6"
+              role="status"
+              aria-live="polite"
+            >
+              {building}
+              {summary && !busy && (
+                <Card ref={result} className="scroll-mb-4 p-5">
+                  <div className="flex flex-col gap-2">
+                    <h2 className="flex items-center gap-2 text-xl font-semibold">
+                      <CircleCheck aria-hidden className="size-5 text-primary" />
+                      {t("anki-deck-downloaded")}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">{summary}</p>
+                    {added && (
+                      <p className="mt-2">
+                        {added} {t("anki-merge-hint")}
+                      </p>
+                    )}
+                  </div>
+                  <ExportResult
+                    view={view}
+                    signedIn={!!userInfo}
+                    file={file}
+                    downloadLink={downloadLink}
+                    onGoToYap={() => navigate("/learn")}
+                  />
+                </Card>
+              )}
+            </div>
+            <ExistingDeck
+              existing={existing}
+              signedIn={!!userInfo}
+              disabled={busy || !ready}
+              canRebuild={!file}
+              onAdd={(extra) =>
+                void download(() =>
+                  deck.start_anki_deck_extension(
+                    existing.deck_id,
+                    extra,
+                    Date.now(),
+                  ),
+                )
+              }
+              onRebuild={() =>
+                void download(() =>
+                  deck.start_anki_deck_extension(
+                    existing.deck_id,
+                    0,
+                    Date.now(),
+                  ),
+                )
+              }
+              onSignIn={openSignIn}
+            />
+            {retryManifest}
+            {errorMessage}
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              {manifestStatus}
+            </div>
+          </>
+        ) : view.needs_placement ? (
           <div className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">
               {view.placement_intro}
@@ -466,7 +611,17 @@ function AnkiScreen({
             className="flex flex-col gap-6"
             onSubmit={(event) => {
               event.preventDefault();
-              if (cardTypes) void download(cardTypes);
+              if (cardTypes)
+                void download(() =>
+                  deck.start_anki_deck_plan(
+                    {
+                      card_types: cardTypes,
+                      word_cards: wordCards,
+                      explicit_clips: explicitClips,
+                    },
+                    Date.now(),
+                  ),
+                );
             }}
           >
             <p className="text-muted-foreground">{copy.intro}</p>
@@ -529,125 +684,143 @@ function AnkiScreen({
                 "anki-page-re-downloading-updates-matching-notes-if-you-remove-a",
               )}
             </p>
-            {view.manifest === "error" ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setManifest("loading");
-                  setRetry((value) => value + 1);
-                }}
-              >
-                {t("anki-page-retry-loading-movie-clips")}
-              </Button>
-            ) : (
+            {retryManifest || (
               <Button
                 type="submit"
                 size="lg"
                 className="h-12 text-base font-medium"
-                disabled={
-                  busy ||
-                  !cardTypes ||
-                  view.manifest !== "ready" ||
-                  view.clip_sentence_count === 0
-                }
+                disabled={busy || !cardTypes || !ready}
               >
                 {view.download_label}
               </Button>
             )}
-            {exportState.error && (
-              <p role="alert" className="text-sm text-destructive">
-                {exportState.error}
-              </p>
-            )}
+            {errorMessage}
             <div
               ref={status}
               className="flex scroll-mt-4 flex-col gap-2 text-sm text-muted-foreground"
               role="status"
               aria-live="polite"
             >
-              {view.manifest === "loading" && (
-                <p>{t("anki-page-loading-movie-clips")}</p>
-              )}
-              {view.manifest === "ready" && view.clip_sentence_count === 0 && (
-                <p>
-                  {t("anki-page-no-movie-clips-are-available-for-this-course")}
-                </p>
-              )}
-              {(busy || summary) && (
-                <div className="flex flex-col gap-4 pt-2 text-base text-foreground">
-                  <DeckBuilding
-                    key={run}
-                    build={build}
-                    deck={deck}
-                    language={targetLanguage}
-                    choosing={choosing}
-                    animate={busy}
-                    status={
-                      phase &&
-                      (!choosing && progress && progress.done < progress.total
-                        ? t("anki-progress", {
-                            phase,
-                            done: progress.done.toLocaleString(),
-                            total: progress.total.toLocaleString(),
-                          })
-                        : phase)
-                    }
-                    progress={
-                      busy && progress
-                        ? progress.total
-                          ? (100 * progress.done) / progress.total
-                          : 100
-                        : undefined
-                    }
-                    target={choosing ? progress?.total : undefined}
-                    finishMessage={finishMessage}
-                  />
-                  {busy && (
-                    <Backstory
-                      text={view.backstory}
-                      signature={view.backstory_signature}
-                    />
-                  )}
-                </div>
-              )}
-              {summary && (
-                <p>
-                  {t("anki-downloaded", {
-                    summary: String(summary),
-                  })}
-                </p>
-              )}
+              {manifestStatus}
+              {building && <div className="pt-2 text-base">{building}</div>}
             </div>
-            {summary && (
-              <Card ref={result} className="scroll-mb-4 p-5">
-                <ExportResult
-                  view={view}
-                  signedIn={!!userInfo}
-                  file={file}
-                  downloadLink={downloadLink}
-                  onSignUp={openSignUp}
-                  onGoToYap={() => navigate("/learn")}
-                />
-              </Card>
-            )}
-            <Dialog open={welcome} onOpenChange={setWelcome}>
-              <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
-                <ExportResult
-                  view={view}
-                  signedIn
-                  file={file}
-                  downloadLink={downloadLink}
-                  onSignUp={openSignUp}
-                  onGoToYap={() => navigate("/learn")}
-                  Title={DialogTitle}
-                  Body={DialogDescription}
-                />
-              </DialogContent>
-            </Dialog>
           </form>
         )}
+        <Dialog open={welcome} onOpenChange={setWelcome}>
+          <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
+            {/* The page behind still has the file and link. */}
+            <ExportResult
+              view={view}
+              signedIn
+              onGoToYap={() => navigate("/learn")}
+              Title={DialogTitle}
+              Body={DialogDescription}
+            />
+          </DialogContent>
+        </Dialog>
       </main>
     </TopPageLayout>
+  );
+}
+
+/**
+ * The learner's latest deck for this course, and the ways to grow it. A
+ * bigger deck is the old one plus new notes, so importing it over the old
+ * one keeps every review.
+ */
+function ExistingDeck({
+  existing,
+  signedIn,
+  disabled,
+  canRebuild,
+  onAdd,
+  onRebuild,
+  onSignIn,
+}: {
+  existing: AnkiExistingDeckView;
+  signedIn: boolean;
+  disabled: boolean;
+  /** Off while this session's file can simply be saved again. */
+  canRebuild: boolean;
+  onAdd: (extraSentences: number) => void;
+  onRebuild: () => void;
+  onSignIn: () => void;
+}) {
+  const choices = existing.extension_choices;
+  const [extra, setExtra] = useState(choices[0].extra_sentences);
+  // "Made 3 minutes ago" is read once per render; that's fresh enough.
+  // eslint-disable-next-line react-hooks/purity -- the age is meant to be read at render time
+  const ago = anki_export_relative_time(existing.exported_at_ms, Date.now());
+  return (
+    <Card className="flex flex-col gap-5 p-5">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-xl font-semibold">{existing.heading}</h2>
+        <p className="text-sm text-muted-foreground">
+          {existing.detail} · {t("anki-deck-made", { ago })}
+        </p>
+      </div>
+      <div className="flex flex-col gap-2 border-t pt-5">
+        <h3 className="font-semibold">{t("anki-want-more-cards")}</h3>
+        {!signedIn && (
+          <p className="text-muted-foreground">
+            {t("anki-sign-in-to-save-deck")}{" "}
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto p-0 text-base"
+              onClick={onSignIn}
+            >
+              {t("anki-sign-in")}
+            </Button>
+          </p>
+        )}
+        <p className="text-muted-foreground">{t("anki-more-cards-merge")}</p>
+      </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div
+          role="radiogroup"
+          aria-label={t("anki-want-more-cards")}
+          className="grid h-11 grid-cols-3 rounded-lg border p-1 sm:inline-grid"
+        >
+          {choices.map((choice) => (
+            <button
+              key={choice.extra_sentences}
+              type="button"
+              role="radio"
+              aria-checked={extra === choice.extra_sentences}
+              disabled={disabled}
+              onClick={() => setExtra(choice.extra_sentences)}
+              className="rounded-md px-4 text-sm font-medium tabular-nums text-muted-foreground transition-colors hover:text-foreground aria-checked:bg-primary/15 aria-checked:text-foreground disabled:pointer-events-none disabled:opacity-50"
+            >
+              {choice.label}
+            </button>
+          ))}
+        </div>
+        <Button
+          type="button"
+          size="lg"
+          className="h-11 text-base"
+          disabled={disabled}
+          onClick={() => onAdd(extra)}
+        >
+          <Plus aria-hidden />
+          {t("anki-add-sentences", { count: extra })}
+        </Button>
+      </div>
+      {canRebuild && (
+        <div className="border-t pt-4 text-sm">
+          <Button
+            type="button"
+            variant="link"
+            className="h-auto p-0 text-muted-foreground has-[>svg]:px-0"
+            disabled={disabled}
+            onClick={onRebuild}
+          >
+            <Download aria-hidden />
+            {existing.download_again_label}
+          </Button>
+        </div>
+      )}
+    </Card>
   );
 }

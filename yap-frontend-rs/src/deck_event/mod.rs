@@ -66,6 +66,7 @@ mod tests {
             &event,
             VersionedDeckEvent::V4(DeckEvent::Language(LanguageEvent {
                 content: LanguageEventContent::AnkiDeckExported {
+                    word_clip_sentences: None,
                     options: AnkiDeckOptions {
                         explicit_clips: true,
                         ..
@@ -75,6 +76,12 @@ mod tests {
                 ..
             }))
         ));
+        let serialized = serde_json::to_value(&event).unwrap();
+        assert!(serialized["content"].get("word_clip_sentences").is_none());
+        let mut with_clips = serialized;
+        with_clips["content"]["word_clip_sentences"] = serde_json::json!(["Bonjour."]);
+        let event: VersionedDeckEvent = serde_json::from_value(with_clips.clone()).unwrap();
+        assert_eq!(serde_json::to_value(&event).unwrap(), with_clips);
         for future in [
             json.replace("AnkiDeckExported", "FutureLanguageEvent"),
             json.replace("V4", "V5"),

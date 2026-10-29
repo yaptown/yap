@@ -61,6 +61,23 @@ pub fn ui_language() -> UiLanguage {
     UiLanguage::ALL[LANGUAGE.load(Ordering::Relaxed) as usize]
 }
 
+/// Group an integer using the UI locale before passing it to Fluent. The Rust
+/// Fluent number formatter currently prints bare digits, unlike browser Intl.
+pub fn format_count(count: u32) -> String {
+    format_count_in(ui_language(), count)
+}
+
+fn format_count_in(language: UiLanguage, count: u32) -> String {
+    use num_format::{Locale, ToFormattedString};
+    let locale = match language {
+        UiLanguage::English => Locale::en,
+        UiLanguage::French => Locale::fr,
+        UiLanguage::Spanish => Locale::es,
+        UiLanguage::Chinese => Locale::zh,
+    };
+    count.to_formatted_string(&locale)
+}
+
 fn bundle(language: UiLanguage) -> FluentBundle<FluentResource> {
     let mut bundle = FluentBundle::new(vec![language.tag().parse().unwrap()]);
     bundle.set_use_isolating(false);
@@ -125,6 +142,14 @@ macro_rules! tr {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn counts_use_locale_grouping() {
+        assert_eq!(format_count_in(UiLanguage::English, 1000), "1,000");
+        assert_eq!(format_count_in(UiLanguage::French, 1000), "1\u{202f}000");
+        assert_eq!(format_count_in(UiLanguage::Spanish, 1000), "1.000");
+        assert_eq!(format_count_in(UiLanguage::Chinese, 1000), "1,000");
+    }
 
     #[test]
     fn missing_translation_uses_english_for_messages_and_attributes() {

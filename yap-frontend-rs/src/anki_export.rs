@@ -37,6 +37,8 @@ pub struct AnkiDeckPlan {
     pub taught_words: Vec<TaggedGram<language_utils::Gram<String>>>,
     /// Sentence text is the stable sentence identifier used by the learning event log.
     pub sentences: Vec<String>,
+    /// The subset of sentences used as word-note clips rather than sentence notes.
+    pub word_clip_sentences: Vec<String>,
     /// `{target}-{native}` language codes, e.g. `fra-eng`; names the note
     /// types, tags, and the package file.
     pub course_code: String,
@@ -65,6 +67,8 @@ pub struct AnkiDeckStats {
     pub sentence_count: u32,
     pub word_count: u32,
     pub card_count: u32,
+    pub new_sentence_count: u32,
+    pub new_card_count: u32,
 }
 
 #[bridgerton::bridge(transparent)]
@@ -180,6 +184,7 @@ pub enum AnkiMediaSource {
 #[bridgerton::bridge(transparent)]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AnkiExportView {
+    pub latest_deck: Option<AnkiExistingDeckView>,
     pub title: String,
     /// Films the deck's clips come from, most clips first; only films with
     /// a poster, since the page shows them as a strip of posters.
@@ -217,18 +222,12 @@ pub struct AnkiExportView {
     pub try_yap_body: String,
     pub try_yap_label: String,
     pub enjoy_deck: String,
-    /// Signed-out visitors are asked to save their deck instead: one call to
-    /// action, not two.
-    pub save_deck_heading: String,
-    pub save_deck_body: String,
-    pub sign_up_label: String,
     /// The deck downloads by itself once built; this saves it again.
     pub download_again_label: String,
     pub audio_unavailable_message: String,
 }
 
-/// Sentence notes per deck. Not a choice yet: one good default beats a
-/// number nobody knows how to pick.
+/// Sentence notes in a first deck; extensions choose their own size.
 const DECK_SIZE: usize = 200;
 /// Fewer sentences than this and the deck isn't worth downloading. Every
 /// real course fills all 200 at every level (`skill_levels`); only manifests
@@ -642,6 +641,152 @@ fn clip_presentation(
     )
 }
 
+/// Folded export metadata, not a persisted event schema.
+#[derive(Clone, Debug)]
+pub(crate) struct AnkiExport {
+    pub deck_id: String,
+    pub options: AnkiDeckOptions,
+    pub taught_words: Vec<TaggedGram<language_utils::Gram<String>>>,
+    pub sentences: Vec<String>,
+    pub word_clip_sentences: Option<Vec<String>>,
+    pub timestamp: chrono::DateTime<chrono::Utc>,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct AnkiExtensionChoice {
+    pub extra_sentences: u32,
+    pub label: String,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct AnkiExistingDeckView {
+    pub deck_id: String,
+    pub exported_at_ms: f64,
+    pub heading: String,
+    pub detail: String,
+    pub sentence_count: u32,
+    pub word_count: u32,
+    pub card_count: u32,
+    pub extension_choices: Vec<AnkiExtensionChoice>,
+    pub download_again_label: String,
+}
+
+#[bridgerton::bridge]
+pub fn anki_export_relative_time(exported_ms: f64, now_ms: f64) -> String {
+    if (now_ms - exported_ms).abs() < 60_000.0 {
+        yap_i18n::tr!("anki-just-now")
+    } else {
+        crate::screens::relative_time(now_ms, exported_ms).0
+    }
+}
+
+fn card_count(options: &AnkiDeckOptions, sentences: u32, words: u32) -> u32 {
+    words
+        + sentences
+            * if matches!(options.card_types, AnkiCardTypes::Both) {
+                2
+            } else {
+                1
+            }
+}
+
+impl AnkiExport {
+    fn view(&self, deck: &Deck) -> AnkiExistingDeckView {
+        let pack = &deck.context.language_pack;
+        let language = deck.context.course.target_language;
+        let words: BTreeSet<_> = self
+            .taught_words
+            .iter()
+            .map(|g| g.to_display_string(language))
+            .collect();
+        let word_count = if self.options.word_cards {
+            words.len() as u32
+        } else {
+            0
+        };
+        // Older events lack note kinds, so only those need a best-effort guess.
+        // A bare sentence can be a sentence note when its word was already taught.
+        let sentence_count = self
+            .sentences
+            .iter()
+            .filter(|text| {
+                if let Some(word_clips) = &self.word_clip_sentences {
+                    return !word_clips.contains(text);
+                }
+                !self.options.word_cards
+                    || pack
+                        .string_rodeo
+                        .get(text)
+                        .and_then(|s| bare_gram(pack, s))
+                        .is_none_or(|g| {
+                            !self
+                                .taught_words
+                                .contains(&g.resolve(&pack.gram_rodeo).resolve(&pack.string_rodeo))
+                        })
+            })
+            .count() as u32;
+        let cards = card_count(&self.options, sentence_count, word_count);
+        AnkiExistingDeckView {
+            deck_id: self.deck_id.clone(),
+            exported_at_ms: self.timestamp.timestamp_millis() as f64,
+            heading: yap_i18n::tr!(
+                "anki-your-language-deck",
+                language = get_language_metadata(language).english_name
+            ),
+            detail: if self.options.word_cards {
+                yap_i18n::tr!(
+                    "anki-existing-deck-with-words",
+                    cards = yap_i18n::format_count(cards),
+                    sentences = yap_i18n::format_count(sentence_count),
+                    words = yap_i18n::format_count(word_count)
+                )
+            } else {
+                yap_i18n::tr!(
+                    "anki-existing-deck-sentences",
+                    cards = yap_i18n::format_count(cards),
+                    sentences = yap_i18n::format_count(sentence_count)
+                )
+            },
+            sentence_count,
+            word_count,
+            card_count: cards,
+            extension_choices: [200, 500, 1000]
+                .into_iter()
+                .map(|extra_sentences| AnkiExtensionChoice {
+                    extra_sentences,
+                    label: yap_i18n::tr!(
+                        "anki-more-sentences",
+                        count = yap_i18n::format_count(extra_sentences)
+                    ),
+                })
+                .collect(),
+            download_again_label: yap_i18n::tr!("anki-download-again"),
+        }
+    }
+}
+
+fn bare_gram(pack: &LanguagePack, sentence: Spur) -> Option<TaggedGram<SpurGram>> {
+    let mut grams = pack
+        .encoded_sentences
+        .get(&sentence)?
+        .grams
+        .iter()
+        .map(|g| {
+            let (SentenceGram::Learnable(g) | SentenceGram::Obvious(g)) = g;
+            g.sense
+        })
+        .filter(|g| {
+            pack.gram_rodeo.resolve(&g.gram).iter().any(|atom| {
+                matches!(atom, Atom::Tok(Word { word_type, .. }) if !matches!(word_type,
+            WordType::Other(OtherWord { other_tag: OtherWordType::Punct })))
+            })
+        });
+    let gram = grams.next()?;
+    grams.next().is_none().then_some(gram)
+}
+
 // The page never talks about "your level": Yap's level system is due a
 // rethink, so the deck is described by the words it teaches instead.
 /// How many posters the page shows.
@@ -667,9 +812,6 @@ fn backstory() -> String {
 }
 fn try_yap_body() -> String {
     yap_i18n::tr!("anki-my-goal-with-yap-was-to-combine-spaced-repetition")
-}
-fn save_deck_body() -> String {
-    yap_i18n::tr!("anki-if-you-create-an-account-i-ll-save-your")
 }
 const DECK_DESCRIPTION: &str = "Made with Yap (https://yap.town/anki): real movie lines built from words you know, each with its clip and a recording.\n\nWhen these run out, Yap keeps going at https://yap.town.";
 
@@ -698,6 +840,10 @@ impl Deck {
             .take(FILM_COUNT)
             .collect();
         AnkiExportView {
+            latest_deck: self
+                .latest_anki_export
+                .as_ref()
+                .map(|export| export.view(self)),
             title: yap_i18n::tr!(
                 "anki-build-a-custom-anki-deck-that-reinforces-your",
                 language = get_language_metadata(language).english_name
@@ -734,9 +880,6 @@ impl Deck {
             try_yap_body: try_yap_body(),
             try_yap_label: yap_i18n::tr!("anki-go-to-yap"),
             enjoy_deck: yap_i18n::tr!("anki-in-the-meantime-enjoy-your-anki-deck"),
-            save_deck_heading: yap_i18n::tr!("anki-save-your-deck"),
-            save_deck_body: save_deck_body(),
-            sign_up_label: yap_i18n::tr!("anki-create-an-account"),
             download_again_label: yap_i18n::tr!("anki-download-again"),
             audio_unavailable_message: yap_i18n::tr!(
                 "anki-audio-downloads-are-temporarily-unavailable-please-try-again-in"
@@ -778,6 +921,42 @@ impl Deck {
         AnkiDeckPlanner::new(self, options, DECK_SIZE, timestamp_ms)
     }
 
+    /// Zero extra sentences rebuilds the latest deck without running a simulation.
+    pub fn start_anki_deck_extension(
+        &self,
+        base_deck_id: String,
+        extra_sentences: u32,
+        timestamp_ms: f64,
+    ) -> Result<AnkiDeckPlanner, Error> {
+        let base = self
+            .latest_anki_export
+            .as_ref()
+            .filter(|base| base.deck_id == base_deck_id)
+            .ok_or_else(|| Error::new(yap_i18n::tr!("anki-base-deck-unavailable")))?;
+        let planner = AnkiDeckPlanner::new(
+            self,
+            base.options.clone(),
+            extra_sentences as usize,
+            timestamp_ms,
+        )?;
+        {
+            let mut state = planner.state.borrow_mut();
+            state.base = Some(base.clone());
+            state.done = false;
+            state.base_taught = base
+                .taught_words
+                .iter()
+                .filter_map(|g| {
+                    Some(TaggedGram {
+                        gram: self.context.language_pack.intern_gram(&g.gram)?,
+                        sense: g.sense,
+                    })
+                })
+                .collect();
+        }
+        Ok(planner)
+    }
+
     /// Call only after the host has delivered the finished package.
     pub fn anki_deck_exported(
         &self,
@@ -792,6 +971,7 @@ impl Deck {
                 options: plan.options,
                 taught_words: plan.taught_words,
                 sentences: plan.sentences,
+                word_clip_sentences: Some(plan.word_clip_sentences),
             },
         })
     }
@@ -817,6 +997,7 @@ impl Deck {
 pub struct AnkiDeckStep {
     /// Exactly the new notes, including prerequisites, in final deck order.
     pub notes: Vec<AnkiNote>,
+    /// Whole-deck progress: after rebuilding the base, target_size includes it.
     pub sentences_chosen: u32,
     pub target_size: u32,
     pub done: bool,
@@ -830,6 +1011,16 @@ pub struct AnkiDeckPlanner {
 
 struct PlannerState {
     seed: Deck,
+    base: Option<AnkiExport>,
+    base_taught: FxHashSet<TaggedGram<SpurGram>>,
+    base_ranks: FxHashSet<u32>,
+    base_sentences: BTreeSet<Spur>,
+    base_word_clip_sentences: Option<BTreeSet<Spur>>,
+    base_sentence_count: usize,
+    base_card_count: u32,
+    /// The current simulated day introduced a word the base deck already
+    /// teaches. Replaying the base is progress, not an empty day.
+    replayed_base: bool,
     options: AnkiDeckOptions,
     size: usize,
     unindexed: Vec<Spur>,
@@ -882,6 +1073,14 @@ impl AnkiDeckPlanner {
         Ok(Self {
             state: RefCell::new(PlannerState {
                 seed: deck.clone(),
+                base: None,
+                base_taught: FxHashSet::default(),
+                base_ranks: FxHashSet::default(),
+                base_sentences: BTreeSet::new(),
+                base_word_clip_sentences: None,
+                base_sentence_count: 0,
+                base_card_count: 0,
+                replayed_base: false,
                 options,
                 size,
                 unindexed,
@@ -1032,14 +1231,94 @@ impl PlannerState {
                 .count();
             self.clip_sentence_names.insert(sentence, names);
         }
-        if self.unindexed.is_empty() && self.clip_sentence_ranks.is_empty() {
+        if self.unindexed.is_empty() && self.clip_sentence_ranks.is_empty() && self.base.is_none() {
             self.done = true;
         }
+    }
+
+    fn rebuild_base(&mut self, base: AnkiExport) {
+        let pack = &self.seed.context.language_pack;
+        self.base_word_clip_sentences = base.word_clip_sentences.as_ref().map(|sentences| {
+            sentences
+                .iter()
+                .filter_map(|s| pack.string_rodeo.get(s))
+                .collect()
+        });
+        self.base_sentences = base
+            .sentences
+            .iter()
+            .filter_map(|s| pack.string_rodeo.get(s))
+            .collect();
+        let mut sentences: Vec<_> = self
+            .base_sentences
+            .iter()
+            .filter_map(|s| {
+                let ranks = self.clip_sentence_ranks.get(s)?;
+                let gram = self
+                    .base_taught
+                    .iter()
+                    .filter(|g| {
+                        pack.written_ease_order
+                            .rank(g)
+                            .is_some_and(|r| ranks.contains(&r))
+                    })
+                    .max_by_key(|g| pack.written_ease_order.rank(g))?;
+                Some((*s, *gram, ranks.iter().max().copied().unwrap_or(0)))
+            })
+            .collect();
+        // Reconstruct easy-to-hard order; the event deliberately did not retain order.
+        sentences.sort_by_key(|(s, _, rank)| (*rank, pack.string_rodeo.resolve(s).to_owned()));
+        for (sentence, gram, _) in sentences {
+            if !self.word_clip_sentences.contains(&sentence)
+                && let Some(challenge) =
+                    self.seed.translation_challenge_for_sentence(gram, sentence)
+            {
+                self.emit_sentence(gram, sentence, challenge, true);
+            }
+        }
+        let pack = &self.seed.context.language_pack;
+        let mut remaining: Vec<_> = self.base_taught.iter().copied().collect();
+        remaining.sort_by_key(|g| pack.written_ease_order.rank(g));
+        for gram in remaining {
+            let word = gram
+                .resolve(&pack.gram_rodeo)
+                .resolve(&pack.string_rodeo)
+                .to_display_string(self.seed.context.course.target_language);
+            if self.options.word_cards && self.used_words.insert(word.clone()) {
+                self.notes.push(word_note(
+                    pack,
+                    self.seed.context.course,
+                    gram,
+                    &word,
+                    self.spelling_ranks.get(&word).copied(),
+                    &mut self.bundled,
+                ));
+            }
+        }
+        self.base_ranks = self
+            .base_taught
+            .iter()
+            .filter_map(|g| pack.written_ease_order.rank(g))
+            .collect();
+        self.taught.extend(&self.base_taught);
+        self.base_sentence_count = self.used_sentences.len();
+        self.base_card_count = card_count(
+            &self.options,
+            self.base_sentence_count as u32,
+            self.used_words.len() as u32,
+        );
+        self.size += self.base_sentence_count;
+        self.done = self.used_sentences.len() == self.size;
+        self.still_pending.clear();
     }
 
     fn advance(&mut self) {
         if !self.unindexed.is_empty() {
             self.index_sentences();
+            return;
+        }
+        if let Some(base) = self.base.take() {
+            self.rebuild_base(base);
             return;
         }
         if self.clip_sentence_ranks.is_empty() {
@@ -1063,6 +1342,7 @@ impl PlannerState {
                 );
                 self.simulation = Some(simulation);
                 self.before = self.used_sentences.len();
+                self.replayed_base = false;
             }
             return;
         }
@@ -1072,7 +1352,7 @@ impl PlannerState {
             return;
         }
         self.pending = std::mem::take(&mut self.still_pending);
-        self.empty_days = if self.before == self.used_sentences.len() {
+        self.empty_days = if self.before == self.used_sentences.len() && !self.replayed_base {
             self.empty_days + 1
         } else {
             0
@@ -1084,6 +1364,60 @@ impl PlannerState {
     }
 
     fn choose_sentence(&mut self, gram: TaggedGram<SpurGram>) {
+        if self.base_taught.contains(&gram) {
+            self.replayed_base = true;
+            return;
+        }
+        let pack = &self.seed.context.language_pack;
+        let deck = self.simulation.as_ref().unwrap().deck();
+        let known_now = self.known_now.as_ref().unwrap();
+        let Some(gram_rank) = pack.written_ease_order.rank(&gram) else {
+            return;
+        };
+        // A candidate is a clip sentence containing the gram whose
+        // every other gram the learner already knows.
+        let mut candidates: Vec<Spur> = self
+            .clip_sentences_of
+            .get(&gram)
+            .into_iter()
+            .flatten()
+            .copied()
+            .filter(|s| {
+                !self.used_sentences.contains(s)
+                    && !self.word_clip_sentences.contains(s)
+                    && !self.base_sentences.contains(s)
+            })
+            .filter(|s| {
+                self.clip_sentence_ranks[s].iter().all(|&r| {
+                    r == gram_rank || known_now.contains(r) || self.base_ranks.contains(&r)
+                })
+            })
+            .collect();
+        candidates.sort_by_key(|s| {
+            (
+                deck.stats.sentences_reviewed.get(s).copied().unwrap_or(0),
+                self.clip_sentence_names[s],
+                pack.string_rodeo.resolve(s).chars().count(),
+                pack.string_rodeo.resolve(s),
+            )
+        });
+        let Some((sentence, challenge)) = candidates.into_iter().find_map(|s| {
+            deck.translation_challenge_for_sentence(gram, s)
+                .map(|c| (s, c))
+        }) else {
+            self.still_pending.push_back(gram);
+            return;
+        };
+        self.emit_sentence(gram, sentence, challenge, false);
+    }
+
+    fn emit_sentence(
+        &mut self,
+        gram: TaggedGram<SpurGram>,
+        sentence: Spur,
+        challenge: crate::TranslateComprehensibleSentence,
+        rebuilding: bool,
+    ) {
         let course = self.seed.context.course;
         let language = course.target_language;
         let pack = &self.seed.context.language_pack;
@@ -1093,12 +1427,10 @@ impl PlannerState {
                 .to_display_string(language)
         };
         let known = self.seed.get_comprehensible_written_grams(false);
-        let deck = self.simulation.as_ref().unwrap().deck();
-        let known_now = self.known_now.as_ref().unwrap();
+        let deck = self.simulation.as_ref().map_or(&self.seed, |s| s.deck());
+        let word = display(gram);
         let Self {
             clip_sentences_of,
-            clip_sentence_ranks,
-            clip_sentence_names,
             used_sentences,
             word_clip_sentences,
             spelling_ranks,
@@ -1109,41 +1441,11 @@ impl PlannerState {
             posters,
             options,
             still_pending,
+            base_taught,
+            base_sentences,
+            base_word_clip_sentences,
             ..
         } = self;
-        let word = display(gram);
-        let Some(gram_rank) = pack.written_ease_order.rank(&gram) else {
-            return;
-        };
-        // A candidate is a clip sentence containing the gram whose
-        // every other gram the learner already knows.
-        let mut candidates: Vec<Spur> = clip_sentences_of
-            .get(&gram)
-            .into_iter()
-            .flatten()
-            .copied()
-            .filter(|s| !used_sentences.contains(s) && !word_clip_sentences.contains(s))
-            .filter(|s| {
-                clip_sentence_ranks[s]
-                    .iter()
-                    .all(|&r| r == gram_rank || known_now.contains(r))
-            })
-            .collect();
-        candidates.sort_by_key(|s| {
-            (
-                deck.stats.sentences_reviewed.get(s).copied().unwrap_or(0),
-                clip_sentence_names[s],
-                pack.string_rodeo.resolve(s).chars().count(),
-                pack.string_rodeo.resolve(s),
-            )
-        });
-        let Some((sentence, challenge)) = candidates.into_iter().find_map(|s| {
-            deck.translation_challenge_for_sentence(gram, s)
-                .map(|c| (s, c))
-        }) else {
-            still_pending.push_back(gram);
-            return;
-        };
         // Word notes come before the sentence: the target word, plus
         // every other word the learner did not know at export time
         // that the deck has not presented yet (whether the simulator
@@ -1164,7 +1466,7 @@ impl PlannerState {
             prerequisites.extend(
                 learnable
                     .chain(multiword)
-                    .filter(|g| *g != gram && !known.contains(g)),
+                    .filter(|g| *g != gram && (!known.contains(g) || base_taught.contains(g))),
             );
         }
         for prerequisite in prerequisites {
@@ -1189,25 +1491,13 @@ impl PlannerState {
                     .copied()
                     .filter(|s| !used_sentences.contains(s) && !word_clip_sentences.contains(s))
                     .filter(|s| {
-                        pack.encoded_sentences[s]
-                            .grams
-                            .iter()
-                            .map(|g| {
-                                let (SentenceGram::Learnable(g) | SentenceGram::Obvious(g)) = g;
-                                g.sense
-                            })
-                            .filter(|g| {
-                                pack.gram_rodeo.resolve(&g.gram).iter().any(|atom| {
-                                    matches!(atom, Atom::Tok(Word { word_type, .. }) if !matches!(
-                                        word_type,
-                                        WordType::Other(OtherWord {
-                                            other_tag: OtherWordType::Punct
-                                        })
-                                    ))
-                                })
-                            })
-                            .eq([prerequisite])
+                        !rebuilding
+                            || base_word_clip_sentences
+                                .as_ref()
+                                .unwrap_or(base_sentences)
+                                .contains(s)
                     })
+                    .filter(|s| bare_gram(pack, *s) == Some(prerequisite))
                     // Consume the chosen clip on its word note when possible;
                     // the pending path below then looks for another sentence.
                     .min_by_key(|s| *s != sentence);
@@ -1238,7 +1528,12 @@ impl PlannerState {
                 notes.push(note);
             }
         }
-        if word_clip_sentences.contains(&sentence) {
+        if word_clip_sentences.contains(&sentence)
+            || (rebuilding
+                && base_word_clip_sentences
+                    .as_ref()
+                    .is_some_and(|clips| clips.contains(&sentence)))
+        {
             // The word note represents this clip. Try this gram again for a
             // sentence note, rather than counting the word toward the target.
             still_pending.push_back(gram);
@@ -1370,6 +1665,11 @@ impl PlannerState {
                 .union(&self.word_clip_sentences)
                 .map(|s| pack.string_rodeo.resolve(s).to_owned())
                 .collect(),
+            word_clip_sentences: self
+                .word_clip_sentences
+                .iter()
+                .map(|s| pack.string_rodeo.resolve(s).to_owned())
+                .collect(),
             course_code: course.code(),
             deck_name: if course.native_language == Language::English {
                 format!("Yap • {language}")
@@ -1387,13 +1687,10 @@ impl PlannerState {
             stats: AnkiDeckStats {
                 sentence_count,
                 word_count,
-                card_count: word_count
-                    + sentence_count
-                        * if matches!(self.options.card_types, AnkiCardTypes::Both) {
-                            2
-                        } else {
-                            1
-                        },
+                new_sentence_count: sentence_count - self.base_sentence_count as u32,
+                new_card_count: card_count(&self.options, sentence_count, word_count)
+                    - self.base_card_count,
+                card_count: card_count(&self.options, sentence_count, word_count),
             },
         })
     }
@@ -1410,6 +1707,147 @@ mod tests {
     };
     use std::sync::Arc;
     use weapon::AppState;
+
+    fn record_export(deck: &Deck, plan: AnkiDeckPlan, id: &str, seconds: i64) -> Deck {
+        let state = Deck::process_event(
+            deck.clone().into(),
+            &deck.context,
+            &weapon::data_model::Timestamped {
+                event: deck.anki_deck_exported(plan, id.into()),
+                timestamp: chrono::DateTime::from_timestamp(seconds, 0).unwrap(),
+                timezone: chrono::FixedOffset::east_opt(0).unwrap(),
+                within_device_events_index: 0,
+            },
+        );
+        Deck::finalize(state, &deck.context)
+    }
+
+    fn note_guid(note: &AnkiNote) -> &str {
+        match note {
+            AnkiNote::Word { guid, .. } | AnkiNote::Sentence { guid, .. } => guid,
+        }
+    }
+
+    #[test]
+    fn anki_extension_preserves_base_and_adds_only_new_notes() {
+        for word_cards in [true, false] {
+            let deck = fixture();
+            publish(&deck.context.language_pack, deck.context.course);
+            let base = deck
+                .plan_anki_deck(
+                    AnkiDeckOptions {
+                        word_cards,
+                        ..options()
+                    },
+                    3,
+                    1_700_000_000_000.0,
+                )
+                .unwrap();
+            let deck = record_export(&deck, base.clone(), "base", 1_700_000_000);
+            let view = deck.anki_export_view(None).latest_deck.unwrap();
+            assert_eq!(view.card_count, base.stats.card_count);
+            assert_eq!(view.sentence_count, base.stats.sentence_count);
+            assert!(
+                deck.start_anki_deck_extension("missing".into(), 10, 1_700_000_000_000.0)
+                    .is_err()
+            );
+            for extra in [0, 10] {
+                let planner = deck
+                    .start_anki_deck_extension("base".into(), extra, 1_700_000_000_000.0)
+                    .unwrap();
+                let mut stepped = Vec::new();
+                loop {
+                    let step = planner.step();
+                    stepped.extend(step.notes);
+                    if step.done {
+                        break;
+                    }
+                }
+                let extended = planner.finish().unwrap();
+                let base_guids: BTreeSet<_> = base.notes.iter().map(note_guid).collect();
+                let prefix: BTreeSet<_> = extended.notes[..base.notes.len()]
+                    .iter()
+                    .map(note_guid)
+                    .collect();
+                assert_eq!(prefix, base_guids);
+                let guids: BTreeSet<_> = extended.notes.iter().map(note_guid).collect();
+                assert_eq!(guids.len(), extended.notes.len());
+                assert_eq!(extended.stats.new_sentence_count, extra);
+                assert_eq!(
+                    extended.stats.sentence_count,
+                    base.stats.sentence_count + extra
+                );
+                assert_eq!(
+                    extended.stats.new_card_count,
+                    extended.stats.card_count - base.stats.card_count
+                );
+                assert_eq!(
+                    stepped.iter().map(note_guid).collect::<Vec<_>>(),
+                    extended.notes.iter().map(note_guid).collect::<Vec<_>>()
+                );
+                assert!(
+                    base.taught_words
+                        .iter()
+                        .all(|g| extended.taught_words.contains(g))
+                );
+                assert!(
+                    base.sentences
+                        .iter()
+                        .all(|s| extended.sentences.contains(s))
+                );
+                if extra == 0 {
+                    assert_eq!(guids, base_guids);
+                }
+                let base_words: BTreeSet<_> = base
+                    .notes
+                    .iter()
+                    .filter_map(|n| match n {
+                        AnkiNote::Word { word, .. } => Some(word),
+                        _ => None,
+                    })
+                    .collect();
+                assert!(extended.notes[base.notes.len()..].iter().all(|n| match n {
+                    AnkiNote::Word { word, .. } => !base_words.contains(word),
+                    _ => true,
+                }));
+            }
+        }
+    }
+
+    #[test]
+    fn anki_fold_keeps_latest_matching_course_without_activity() {
+        let deck = fixture();
+        publish(&deck.context.language_pack, deck.context.course);
+        let plan = deck
+            .plan_anki_deck(options(), 3, 1_700_000_000_000.0)
+            .unwrap();
+        let deck = record_export(&deck, plan.clone(), "first", 1_700_000_000);
+        let deck = record_export(&deck, plan.clone(), "latest", 1_700_000_010);
+        let deck = record_export(&deck, plan.clone(), "older", 1_700_000_005);
+        for other_native in [true, false] {
+            let mut other = plan.clone();
+            if other_native {
+                other.native_language = Language::English;
+            } else {
+                other.language = Language::French;
+            }
+            let deck = record_export(&deck, other, "other-course", 1_700_000_020);
+            assert_eq!(deck.latest_anki_export.as_ref().unwrap().deck_id, "latest");
+            assert_eq!(
+                deck.latest_anki_export
+                    .as_ref()
+                    .unwrap()
+                    .timestamp
+                    .timestamp(),
+                1_700_000_010
+            );
+            assert!(deck.stats.start_time.is_none());
+            assert!(deck.stats.today.is_none());
+            assert!(deck.stats.daily_streak.is_none());
+            assert_eq!(deck.stats.total_reviews, 0);
+            assert_eq!(deck.num_cards_added(), 0);
+        }
+    }
 
     fn options() -> AnkiDeckOptions {
         AnkiDeckOptions {
@@ -2110,6 +2548,86 @@ mod tests {
         assert_eq!(plan.sentences.len(), 2);
     }
 
+    #[test]
+    fn anki_bare_sentence_notes_keep_their_kind_when_rebuilt() {
+        let deck = fixture_with_data(false, "word00", |data| {
+            let mut encoded = data.encoded_sentences[0].1.clone();
+            encoded.capitalize_first = true;
+            data.encoded_sentences.push(("Word00".into(), encoded));
+            data.target_language_sentences.push("Word00".into());
+            data.translations
+                .push(("Word00".into(), vec!["a word".into()]));
+        });
+        publish(&deck.context.language_pack, deck.context.course);
+        let planner = AnkiDeckPlanner::new(&deck, options(), 1, 1_700_000_000_000.0).unwrap();
+        {
+            let mut state = planner.state.borrow_mut();
+            while !state.unindexed.is_empty() {
+                state.index_sentences();
+            }
+            let pack = &deck.context.language_pack;
+            let target = *pack.gram_frequencies.entries.get_index(0).unwrap().0;
+            // The word clip sorts AFTER its bare sentence note on rebuild. A
+            // heuristic would steal the sentence note's clip for the word.
+            for text in ["word00", "Word00"] {
+                let sentence = pack.string_rodeo.get(text).unwrap();
+                let challenge = deck
+                    .translation_challenge_for_sentence(target, sentence)
+                    .unwrap();
+                state.emit_sentence(target, sentence, challenge, false);
+            }
+            state.done = true;
+        }
+        let plan = planner.finish().unwrap();
+        assert_eq!(plan.word_clip_sentences, ["word00"]);
+        assert_eq!(plan.stats.sentence_count, 1);
+        let deck = record_export(&deck, plan.clone(), "bare", 1_700_000_000);
+        let view = deck.anki_export_view(None).latest_deck.unwrap();
+        assert_eq!(view.sentence_count, plan.stats.sentence_count);
+        assert_eq!(view.word_count, plan.stats.word_count);
+        assert_eq!(view.card_count, plan.stats.card_count);
+        assert_eq!(view.extension_choices[2].label, "+1,000");
+        let rebuild = deck
+            .start_anki_deck_extension("bare".into(), 0, 1_700_000_000_000.0)
+            .unwrap();
+        while !rebuild.step().done {}
+        let rebuilt = rebuild.finish().unwrap();
+        assert_eq!(rebuilt.word_clip_sentences, plan.word_clip_sentences);
+        assert_eq!(rebuilt.stats.sentence_count, plan.stats.sentence_count);
+        assert_eq!(rebuilt.stats.card_count, plan.stats.card_count);
+        assert_eq!(
+            rebuilt.notes.iter().map(note_guid).collect::<BTreeSet<_>>(),
+            plan.notes.iter().map(note_guid).collect::<BTreeSet<_>>()
+        );
+        assert!(rebuilt.notes.iter().any(
+            |note| matches!(note, AnkiNote::Sentence { sentence, .. } if sentence == "Word00")
+        ));
+        // Legacy events still have a best-effort view instead of assuming the
+        // newly added field existed in their JSON.
+        let mut legacy = deck;
+        legacy
+            .latest_anki_export
+            .as_mut()
+            .unwrap()
+            .word_clip_sentences = None;
+        assert_eq!(
+            legacy
+                .anki_export_view(None)
+                .latest_deck
+                .unwrap()
+                .sentence_count,
+            0
+        );
+    }
+
+    #[test]
+    fn anki_export_age_under_a_minute_is_just_now() {
+        for elapsed in [0.0, 1_000.0, 59_999.0] {
+            assert_eq!(anki_export_relative_time(0.0, elapsed), "just now");
+        }
+        assert_eq!(anki_export_relative_time(0.0, 60_000.0), "1 minute ago");
+    }
+
     fn assert_prerequisite_clip(deck: Deck, clip_text: &str, expected: bool) {
         let pack = &deck.context.language_pack;
         let prerequisite = pack.gram_frequencies.entries.get_index(0).unwrap().0;
@@ -2253,7 +2771,7 @@ mod tests {
         let exported =
             deck.anki_deck_exported(plan.clone(), "70270b11-a563-4f91-baa5-f2f5cc28c331".into());
         let before: crate::DeckState = deck.clone().into();
-        let after = Deck::process_event(
+        let mut after = Deck::process_event(
             before.clone(),
             &deck.context,
             &weapon::data_model::Timestamped {
@@ -2263,6 +2781,7 @@ mod tests {
                 within_device_events_index: 0,
             },
         );
+        assert!(after.latest_anki_export.take().is_some());
         assert_eq!(
             format!("{before:?}"),
             format!("{after:?}"),
