@@ -201,7 +201,7 @@ function AnkiScreen({
 }) {
   const weapon = useWeapon();
   const navigate = useNavigate();
-  const { openSignIn } = useAuthDialog();
+  const { openSignUp } = useAuthDialog();
   const [reading, setReading] = useState(true);
   const [listening, setListening] = useState(true);
   const [wordCards, setWordCards] = useState(true);
@@ -587,7 +587,7 @@ function AnkiScreen({
                   ),
                 )
               }
-              onSignIn={openSignIn}
+              onSignUp={openSignUp}
             />
             {retryManifest}
             {errorMessage}
@@ -735,7 +735,7 @@ function ExistingDeck({
   canRebuild,
   onAdd,
   onRebuild,
-  onSignIn,
+  onSignUp,
 }: {
   existing: AnkiExistingDeckView;
   signedIn: boolean;
@@ -744,7 +744,7 @@ function ExistingDeck({
   canRebuild: boolean;
   onAdd: (extraSentences: number) => void;
   onRebuild: () => void;
-  onSignIn: () => void;
+  onSignUp: () => void;
 }) {
   const choices = existing.extension_choices;
   const [extra, setExtra] = useState(choices[0].extra_sentences);
@@ -761,20 +761,20 @@ function ExistingDeck({
       </div>
       <div className="flex flex-col gap-2 border-t pt-5">
         <h3 className="font-semibold">{t("anki-want-more-cards")}</h3>
+        <p className="text-muted-foreground">{t("anki-more-cards-merge")}</p>
         {!signedIn && (
-          <p className="text-muted-foreground">
-            {t("anki-sign-in-to-save-deck")}{" "}
+          <div className="flex flex-col items-start gap-3 rounded-lg border bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm">{t("anki-sign-up-to-save-deck")}</p>
             <Button
               type="button"
-              variant="link"
-              className="h-auto p-0 text-base"
-              onClick={onSignIn}
+              variant="outline"
+              className="shrink-0"
+              onClick={onSignUp}
             >
-              {t("anki-sign-in")}
+              {t("anki-sign-up")}
             </Button>
-          </p>
+          </div>
         )}
-        <p className="text-muted-foreground">{t("anki-more-cards-merge")}</p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div
