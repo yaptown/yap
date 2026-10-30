@@ -1293,3 +1293,15 @@ anki-deck-downloaded = Mazo descargado
 anki-added-new-cards = Se han añadido { $sentences } frases nuevas ({ $cards } tarjetas nuevas).
 anki-merge-hint = Impórtalo igual que tu primer mazo. Anki reconocerá las tarjetas que ya tienes, conservará tu progreso en ellas y pondrá las nuevas después.
 anki-just-now = ahora mismo
+common-show-more = Mostrar más
+your-cards-title = Tus tarjetas
+your-cards-summary = { $count ->
+        [one] { $number } tarjeta que añadiste
+       *[other] { $number } tarjetas que añadiste
+    }
+assumed-known-title = Se dan por sabidas
+assumed-known-summary = { $count ->
+        [one] { $number } palabra que Yap da por sabida
+       *[other] { $number } palabras que Yap da por sabidas
+    }
+assumed-known-note = Yap cree que ya conoces estas palabras, pero si quieres estudiarlas puedes añadirlas a tu mazo.

@@ -60,6 +60,7 @@ pub struct PopularMovieAttributes {
 #[derive(Debug, Deserialize)]
 pub struct SubtitleSearchResponse {
     pub data: Vec<SubtitleResult>,
+    pub total_pages: u32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -92,6 +93,9 @@ pub struct FeatureDetails {
     pub imdb_id: Option<u64>,
     pub title: Option<String>,
     pub year: Option<u16>,
+    pub parent_title: Option<String>,
+    pub season_number: Option<u32>,
+    pub episode_number: Option<u32>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -248,6 +252,96 @@ impl OpenSubtitlesClient {
             .with_context(|| format!("Failed to parse subtitle search response: {body}"))?;
 
         Ok(search_response.data)
+    }
+
+    /// The season numbers OpenSubtitles lists for a show, specials included.
+    async fn show_seasons(&self, parent_imdb_id: u64) -> Result<Vec<u32>> {
+        #[derive(Deserialize)]
+        struct Features {
+            data: Vec<Feature>,
+        }
+        #[derive(Deserialize)]
+        struct Feature {
+            attributes: FeatureAttributes,
+        }
+        #[derive(Deserialize)]
+        struct FeatureAttributes {
+            #[serde(default)]
+            seasons: Vec<Season>,
+        }
+        #[derive(Deserialize)]
+        struct Season {
+            season_number: u32,
+        }
+        let features: Features = self
+            .client
+            .get("https://api.opensubtitles.com/api/v1/features")
+            .query(&[("imdb_id", parent_imdb_id)])
+            .header("Api-Key", &self.api_key)
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
+        Ok(features
+            .data
+            .into_iter()
+            .flat_map(|f| f.attributes.seasons)
+            .map(|s| s.season_number)
+            .collect())
+    }
+
+    /// Search one page of a season's episodes. Parameters must be alphabetically
+    /// ordered to avoid OpenSubtitles' canonical-URL redirects.
+    async fn search_subtitles_for_season_page(
+        &self,
+        parent_imdb_id: u64,
+        season: u32,
+        language: &str,
+        page: u32,
+    ) -> Result<SubtitleSearchResponse> {
+        let response = self
+            .client
+            .get("https://api.opensubtitles.com/api/v1/subtitles")
+            .query(&[
+                ("languages", language.to_owned()),
+                ("page", page.to_string()),
+                ("parent_imdb_id", parent_imdb_id.to_string()),
+                ("season_number", season.to_string()),
+            ])
+            .header("Api-Key", &self.api_key)
+            .send()
+            .await?;
+        if let Some(throttled) = throttle_reason(response.status()) {
+            return Err(throttled.into());
+        }
+        Ok(response.error_for_status()?.json().await?)
+    }
+
+    /// Every subtitle for a show, searched a season at a time: OpenSubtitles
+    /// serves at most 20 pages per query, which long-running shows exceed.
+    pub async fn search_subtitles_for_show(
+        &self,
+        parent_imdb_id: u64,
+        language: &str,
+    ) -> Result<Vec<SubtitleResult>> {
+        let mut results = Vec::new();
+        for season in self.show_seasons(parent_imdb_id).await? {
+            let mut page = 1;
+            loop {
+                let response = self
+                    .search_subtitles_for_season_page(parent_imdb_id, season, language, page)
+                    .await?;
+                results.extend(response.data);
+                if page >= response.total_pages {
+                    break;
+                }
+                page += 1;
+                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            }
+        }
+        println!("  Found {} subtitle options", results.len());
+        Ok(results)
     }
 
     /// Download a subtitle file, returning its raw contents.

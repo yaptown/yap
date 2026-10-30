@@ -6,11 +6,15 @@ Every `fixtures/*/*.json` is a Rust `Fixture`, an adjacent-tagged envelope:
 { "screen": "Review", "view": { "...": "the screen's Rust snapshot" } }
 ```
 
-`screen` is `Review`, `Home`, `Stats`, or `Due`; `view` is respectively
-`ReviewScreenView`, `HomeScreenView`, `StatsScreenView`, or `DueWordsScreenView`. Directory names organize captures, not dispatch. Discovery
+`screen` is `Review`, `Home`, `Stats`, `Due`, `YourCards`, or `AssumedKnown`; `view` is respectively
+`ReviewScreenView`, `HomeScreenView`, `StatsScreenView`, `DueWordsScreenView`, `YourCardsScreenView`, or `AssumedKnownScreenView`. Directory names organize captures, not dispatch. Discovery
 visits every immediate fixture subdirectory; names must be unique across them.
 All captures are real (no synthetic data): `home/`, `stats/`, and
-`due/` now hold live snapshots alongside `challenges/` and `screens/`.
+`due/` now hold live snapshots alongside `challenges/` and `screens/`. Two
+exceptions: `words/` was rendered from the real French pack with a test
+deck (a placement test plus eight added cards), and `stats-overview`'s
+`your_cards` and `assumed_known` counts were filled in by hand when those
+fields were added.
 
 The current `challenges/*.json` and `screens/*.json` are real Review screens
 captured from the throwaway test account. Their view contains target language,

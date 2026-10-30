@@ -3,7 +3,7 @@ import Charts
 
 struct StatsScreen: View {
     let review: ReviewModel
-    let showDue: () -> Void
+    let open: (CourseRoute) -> Void
     var view: StatsScreenView? = nil
     var body: some View {
         TimelineView(.every(10)) { _ in
@@ -21,12 +21,13 @@ struct StatsScreen: View {
                                 }
                             }
                         }.fixedSize(horizontal: false, vertical: true).id("stats")
-                        Button(action: showDue) {
-                            StudyCard {
-                                Text("\(view.due.title) →").font(.headline).foregroundStyle(Color.yapText)
-                                Text(view.due.label).font(.subheadline).foregroundStyle(Color.yapMuted)
+                        ListLink(title: view.due.title, label: view.due.label) { open(.due) }.id("due")
+                        Grid(horizontalSpacing: 16) {
+                            GridRow {
+                                ListLink(title: view.your_cards.title, label: view.your_cards.label) { open(.yourCards) }
+                                ListLink(title: view.assumed_known.title, label: view.assumed_known.label) { open(.assumedKnown) }
                             }
-                        }.buttonStyle(.plain).id("due")
+                        }.fixedSize(horizontal: false, vertical: true).id("words")
                         StudyCard {
                             Text(view.frequency_knowledge_chart_title).font(.title2.bold()).foregroundStyle(Color.yapText)
                             KnowledgeChart(points: view.frequency_knowledge_chart_data)
@@ -51,6 +52,22 @@ struct StatsScreen: View {
                 #endif
             }
         }
+    }
+}
+
+private struct ListLink: View {
+    let title: String
+    let label: String
+    let action: () -> Void
+    var body: some View {
+        // Like StatTile, the surface fills the row so paired links match heights.
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("\(title) →").font(.headline).foregroundStyle(Color.yapText)
+                Text(label).font(.subheadline).foregroundStyle(Color.yapMuted)
+            }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .padding(16).cardSurface()
+        }.buttonStyle(.plain)
     }
 }
 

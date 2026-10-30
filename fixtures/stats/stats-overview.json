@@ -34,6 +34,16 @@
       "total": 6,
       "label": "2 ready now · 6 cards"
     },
+    "your_cards": {
+      "title": "Your cards",
+      "count": 6,
+      "label": "6 cards you added"
+    },
+    "assumed_known": {
+      "title": "Assumed known",
+      "count": 1240,
+      "label": "1,240 words Yap counts as known"
+    },
     "leeches": [],
     "leech_count": 0,
     "leeches_label": "0 leeches",

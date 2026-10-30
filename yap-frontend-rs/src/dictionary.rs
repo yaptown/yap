@@ -1,6 +1,6 @@
 use language_utils::features::WordPrefix;
 use language_utils::text_cleanup::remove_accents_lowercase;
-use language_utils::{GramDefinition, Language};
+use language_utils::{GramDefinition, Language, SpurGram, TaggedGram};
 use rustc_hash::{FxHashMap, FxHashSet};
 use yap_frontend_reducers::{DefinitionView, definition_view};
 
@@ -121,24 +121,9 @@ impl Deck {
                     .gram_frequencies
                     .entries
                     .get_index_of(sense_gram)?;
-                let is_in_deck = language_pack
-                    .redundant_with(*sense_gram)
-                    .iter()
-                    .filter(|member| {
-                        language_pack
-                            .resolve_gram(&member.gram)
-                            .to_display_string(target_language)
-                            == language_pack
-                                .resolve_gram(&sense_gram.gram)
-                                .to_display_string(target_language)
-                    })
-                    .any(|gram| {
-                        let card = CardIndicator::WrittenGram { gram: *gram };
-                        matches!(self.cards.get(&card), Some(CardData::Added { .. }))
-                    });
                 Some(DictionarySense {
                     frequency_index,
-                    is_in_deck,
+                    is_in_deck: self.sense_in_deck(*sense_gram),
                     gloss: definition
                         .senses
                         .iter()
@@ -214,6 +199,41 @@ impl Deck {
     }
 }
 
+impl Deck {
+    /// Whether the learner added this sense, or a same-text member of its
+    /// redundancy set.
+    pub(crate) fn sense_in_deck(&self, sense: TaggedGram<SpurGram>) -> bool {
+        let language_pack = &self.context.language_pack;
+        let display = |gram: &TaggedGram<SpurGram>| {
+            language_pack
+                .resolve_gram(&gram.gram)
+                .to_display_string(self.context.course.target_language)
+        };
+        language_pack
+            .redundant_with(sense)
+            .iter()
+            .filter(|member| display(member) == display(&sense))
+            .any(|gram| {
+                let card = CardIndicator::WrittenGram { gram: *gram };
+                matches!(self.cards.get(&card), Some(CardData::Added { .. }))
+            })
+    }
+}
+
+pub(crate) fn word_audio_request(text: &str, language: Language) -> AudioRequest {
+    AudioRequest {
+        request: TtsRequest {
+            text: text.to_string(),
+            language,
+            is_ssml: false,
+            instructions: None,
+            speed: 1.0,
+            verification_hints: Vec::new(),
+        },
+        provider: TtsProvider::Google,
+    }
+}
+
 #[derive(Debug, Clone)]
 #[bridgerton::bridge(opaque)]
 pub struct DictionaryWord {
@@ -286,17 +306,7 @@ impl DictionaryWord {
 
     #[bridge(getter)]
     pub fn audio_request(&self) -> AudioRequest {
-        AudioRequest {
-            request: TtsRequest {
-                text: self.display_text.clone(),
-                language: self.target_language,
-                is_ssml: false,
-                instructions: None,
-                speed: 1.0,
-                verification_hints: Vec::new(),
-            },
-            provider: TtsProvider::Google,
-        }
+        word_audio_request(&self.display_text, self.target_language)
     }
 }
 

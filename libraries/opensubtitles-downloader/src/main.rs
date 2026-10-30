@@ -2,7 +2,10 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use language_utils::Language;
 use movie_metadata::{OmdbClient, TmdbClient};
-use opensubtitles_downloader::{download::process_movie, OpenSubtitlesClient};
+use opensubtitles_downloader::{
+    download::{process_movie, process_show},
+    OpenSubtitlesClient, Throttled,
+};
 use std::fs;
 use std::path::PathBuf;
 
@@ -14,6 +17,51 @@ use std::path::PathBuf;
 /// is flat and every entry is tried for every target language.
 const EXTRA_MOVIES: &[&str] = &[
     // English classics & blockbusters
+    "tt0107290",  // Jurassic Park (1993)
+    "tt0119567",  // The Lost World: Jurassic Park (1997)
+    "tt0088763",  // Back to the Future (1985)
+    "tt0096874",  // Back to the Future Part II (1989)
+    "tt0133093",  // The Matrix (1999)
+    "tt0110148",  // Interview with the Vampire (1994)
+    "tt0110475",  // The Mask (1994)
+    "tt0109040",  // Ace Ventura: Pet Detective (1994)
+    "tt0172495",  // Gladiator (2000)
+    "tt0253474",  // The Pianist (2002)
+    "tt1160419",  // Dune (2021)
+    "tt15239678", // Dune: Part Two (2024)
+    "tt0120201",  // Starship Troopers (1997)
+    "tt0109830",  // Forrest Gump (1994)
+    "tt0365830",  // Tenacious D in The Pick of Destiny (2006)
+    "tt0096928",  // Bill & Ted's Excellent Adventure (1989)
+    "tt0101452",  // Bill & Ted's Bogus Journey (1991)
+    "tt0468569",  // The Dark Knight (2008)
+    "tt0118583",  // Alien Resurrection (1997)
+    "tt0816692",  // Interstellar (2014)
+    "tt3659388",  // The Martian (2015)
+    "tt0091064",  // The Fly (1986)
+    "tt0088247",  // The Terminator (1984)
+    "tt0103064",  // Terminator 2: Judgment Day (1991)
+    "tt0093773",  // Predator (1987)
+    "tt0387808",  // Idiocracy (2006)
+    "tt0078748",  // Alien (1979)
+    "tt0090605",  // Aliens (1986)
+    "tt0103644",  // Alien³ (1992)
+    "tt0116629",  // Independence Day (1996)
+    "tt0111282",  // Stargate (1994)
+    "tt0076759",  // Star Wars (1977)
+    "tt0080684",  // The Empire Strikes Back (1980)
+    "tt0086190",  // Return of the Jedi (1983)
+    "tt0079945",  // Star Trek: The Motion Picture (1979)
+    "tt0088170",  // Star Trek III: The Search for Spock (1984)
+    "tt0092007",  // Star Trek IV: The Voyage Home (1986)
+    "tt0098382",  // Star Trek V: The Final Frontier (1989)
+    "tt0102975",  // Star Trek VI: The Undiscovered Country (1991)
+    "tt0796366",  // Star Trek (2009)
+    "tt1408101",  // Star Trek Into Darkness (2013)
+    "tt2660888",  // Star Trek Beyond (2016)
+    "tt0110357",  // The Lion King (1994)
+    "tt0119654",  // Men in Black (1997)
+    "tt0120903",  // X-Men (2000)
     "tt20215234", // Conclave (2024)
     "tt15398776", // Oppenheimer (2023)
     "tt2584384",  // Jojo Rabbit (2019)
@@ -152,7 +200,6 @@ const EXTRA_MOVIES: &[&str] = &[
     "tt0088323", // The NeverEnding Story (1984)
     "tt0405094", // The Lives of Others (2006)
     "tt1063669", // The Wave (2008)
-    "tt0017136", // Metropolis (1927)
     "tt0301357", // Good Bye, Lenin! (2003)
     "tt0130827", // Run Lola Run (1998)
     "tt0082096", // Das Boot (1981)
@@ -393,6 +440,8 @@ const EXTRA_MOVIES: &[&str] = &[
     "tt1702014",  // The Way He Looks (2014)
     "tt0317887",  // Madame Satã (2002)
     // Italian
+    "tt0085327",  // Who Finds a Friend Finds a Treasure (1981)
+    "tt0082045",  // Banana Joe (1982)
     "tt0095765",  // Cinema Paradiso (1988)
     "tt0076085",  // A Special Day (1977)
     "tt0118799",  // Life Is Beautiful (1997)
@@ -421,6 +470,31 @@ const EXTRA_MOVIES: &[&str] = &[
     // Swedish
     "tt0091670", // The Sacrifice (1986)
     "tt0050986", // Wild Strawberries (1957)
+];
+
+/// Parent IMDb IDs, searched for every target language after the extra movies.
+const EXTRA_SHOWS: &[&str] = &[
+    "tt0060028",  // Star Trek (1966)
+    "tt0092455",  // Star Trek: The Next Generation (1987)
+    "tt0112178",  // Star Trek: Voyager (1995)
+    "tt0106145",  // Star Trek: Deep Space Nine (1993)
+    "tt12327578", // Star Trek: Strange New Worlds (2022)
+    "tt5171438",  // Star Trek: Discovery (2017)
+    "tt0244365",  // Star Trek: Enterprise (2001)
+    "tt8806524",  // Star Trek: Picard (2020)
+    "tt0118480",  // Stargate SG-1 (1997)
+    "tt0374455",  // Stargate Atlantis (2004)
+    "tt1286039",  // Stargate Universe (2009)
+    "tt0407362",  // Battlestar Galactica (2004)
+    "tt0314979",  // Battlestar Galactica (2003) — OpenSubtitles: Tvshow
+    "tt0346293",  // Hitler: The Rise of Evil (2003) — OpenSubtitles: Tvshow
+    "tt0112167",  // Sliders (1995)
+    "tt0105946",  // Babylon 5 (1994)
+    "tt2861424",  // Rick and Morty (2013)
+    "tt0121220",  // Dragon Ball Z (1989)
+    "tt0121955",  // South Park (1997)
+    // Korean; TMDB verified, not yet indexed by OpenSubtitles features.
+    "tt3270208", // Tayo the Little Bus (2010)
 ];
 
 /// Movies deliberately kept out of yap even when `discover/popular` offers
@@ -453,6 +527,32 @@ struct Args {
     /// Number of movies to download per language
     #[arg(short, long, default_value_t = 5)]
     count: usize,
+}
+
+fn until_quota_reset(now: std::time::SystemTime) -> std::time::Duration {
+    let elapsed = now.duration_since(std::time::UNIX_EPOCH).unwrap();
+    // UTC days are Unix days; resume five seconds after the next midnight.
+    std::time::Duration::from_secs((elapsed.as_secs() / 86_400 + 1) * 86_400 + 5) - elapsed
+}
+
+async fn retry_quota<T, F, Fut>(mut operation: F) -> Result<T>
+where
+    F: FnMut() -> Fut,
+    Fut: std::future::Future<Output = Result<T>>,
+{
+    loop {
+        match operation().await {
+            Err(error) if error.downcast_ref::<Throttled>() == Some(&Throttled::QuotaExhausted) => {
+                let delay = until_quota_reset(std::time::SystemTime::now());
+                println!(
+                    "Daily quota exhausted; retrying this title after UTC midnight ({}s)",
+                    delay.as_secs()
+                );
+                tokio::time::sleep(delay).await;
+            }
+            result => return result,
+        }
+    }
 }
 
 #[tokio::main]
@@ -559,15 +659,18 @@ async fn main() -> Result<()> {
                 attrs.year.as_deref().unwrap_or("Unknown")
             );
 
-            match process_movie(
-                &imdb_id_str,
-                &opensub_client,
-                &output_dir,
-                language,
-                &output_dir
-                    .join("fetch-failures")
-                    .join(format!("{imdb_id_str}.json")),
-            )
+            let failed_path = output_dir
+                .join("fetch-failures")
+                .join(format!("{imdb_id_str}.json"));
+            match retry_quota(|| {
+                process_movie(
+                    &imdb_id_str,
+                    &opensub_client,
+                    &output_dir,
+                    language,
+                    &failed_path,
+                )
+            })
             .await
             {
                 Ok(true) => downloaded_count += 1,
@@ -588,18 +691,31 @@ async fn main() -> Result<()> {
         for &imdb_id_str in EXTRA_MOVIES {
             println!("\n  Processing {imdb_id_str}...");
 
-            if let Err(e) = process_movie(
-                imdb_id_str,
-                &opensub_client,
-                &output_dir,
-                language,
-                &output_dir
-                    .join("fetch-failures")
-                    .join(format!("{imdb_id_str}.json")),
-            )
+            let failed_path = output_dir
+                .join("fetch-failures")
+                .join(format!("{imdb_id_str}.json"));
+            if let Err(e) = retry_quota(|| {
+                process_movie(
+                    imdb_id_str,
+                    &opensub_client,
+                    &output_dir,
+                    language,
+                    &failed_path,
+                )
+            })
             .await
             {
                 println!("  ✗ Error: {e}");
+            }
+        }
+
+        println!("\nProcessing extra shows list...");
+        for &imdb in EXTRA_SHOWS {
+            println!("\n  Processing show {imdb}...");
+            if let Err(error) =
+                retry_quota(|| process_show(imdb, &opensub_client, &output_dir, language)).await
+            {
+                println!("  Error: {error:#}");
             }
         }
 
@@ -622,4 +738,39 @@ async fn main() -> Result<()> {
     println!("========================================");
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn quota_reset_is_just_after_next_utc_midnight() {
+        use std::time::{Duration, UNIX_EPOCH};
+        for (seconds, expected) in [(0, 86405), (86399, 6), (86400, 86405), (172799, 6)] {
+            assert_eq!(
+                until_quota_reset(UNIX_EPOCH + Duration::from_secs(seconds)),
+                Duration::from_secs(expected)
+            );
+        }
+        assert_eq!(
+            until_quota_reset(UNIX_EPOCH + Duration::from_millis(86399900)),
+            Duration::from_millis(5100)
+        );
+    }
+
+    #[test]
+    fn curated_ids_do_not_include_excluded_movies() {
+        for id in EXTRA_MOVIES.iter().chain(EXTRA_SHOWS) {
+            assert!(!EXCLUDED_MOVIES.contains(id), "excluded curated ID {id}");
+        }
+    }
+
+    #[test]
+    fn curated_ids_are_unique_across_movies_and_shows() {
+        let mut ids = std::collections::BTreeSet::new();
+        for id in EXTRA_MOVIES.iter().chain(EXTRA_SHOWS) {
+            assert!(ids.insert(id), "duplicate {id}");
+        }
+    }
 }

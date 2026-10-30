@@ -2,6 +2,7 @@ import { BooksPage } from "@/browse/BooksScreen";
 import { HomePage } from "@/browse/HomeScreen";
 import { StatsPage } from "@/browse/StatsScreen";
 import { DueWordsPage } from "@/browse/DueWordsScreen";
+import { AssumedKnownPage, YourCardsPage } from "@/browse/WordListScreens";
 import { CourseRoutes } from "@/review/course-study";
 import {
   createBrowserRouter,
@@ -71,6 +72,8 @@ const router = createBrowserRouter([
               { path: "home", element: <HomePage /> },
               { path: "stats", element: <StatsPage /> },
               { path: "due", element: <DueWordsPage /> },
+              { path: "your-cards", element: <YourCardsPage /> },
+              { path: "assumed-known", element: <AssumedKnownPage /> },
               { path: "dictionary", element: <DictionaryPage /> },
               { path: "books", element: <BooksPage /> },
               { path: "books/:slug", element: <BooksPage /> },

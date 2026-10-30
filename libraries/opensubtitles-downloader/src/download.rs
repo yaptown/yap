@@ -59,20 +59,15 @@ fn parse_and_check(srt: &str, language: Language) -> Result<Vec<SubtitleLine>, S
     Ok(lines)
 }
 
-async fn download_movie_subtitles(
+async fn download_candidates(
     client: &OpenSubtitlesClient,
     imdb: &str,
     movies: &Path,
     language: Language,
     failed_path: &Path,
+    mut candidates: Vec<crate::SubtitleResult>,
 ) -> Result<bool> {
     let mut failed = Failed::load(failed_path)?;
-    let mut candidates = client
-        .search_subtitles_for_movie(
-            imdb.strip_prefix("tt").unwrap().parse()?,
-            language.opensubtitles_languages(),
-        )
-        .await?;
     rank_by_quality(&mut candidates);
     println!("  Found {} subtitle options", candidates.len());
 
@@ -146,6 +141,19 @@ pub async fn process_movie(
     language: Language,
     failed_path: &Path,
 ) -> Result<bool> {
+    if already_downloaded(movies, imdb)? {
+        return Ok(false);
+    }
+    let candidates = client
+        .search_subtitles_for_movie(
+            imdb.strip_prefix("tt").unwrap().parse()?,
+            language.opensubtitles_languages(),
+        )
+        .await?;
+    download_candidates(client, imdb, movies, language, failed_path, candidates).await
+}
+
+fn already_downloaded(movies: &Path, imdb: &str) -> Result<bool> {
     let raw = movie_subtitles::raw_srt_path(movies, imdb);
     let derived = movie_subtitles::derived_jsonl_path(movies, imdb);
     if raw.exists() {
@@ -154,9 +162,66 @@ pub async fn process_movie(
             movie_subtitles::write_derived_jsonl(&derived, &lines)?;
         }
         println!("  Subtitle already downloaded");
-        return Ok(false);
+        return Ok(true);
     }
-    download_movie_subtitles(client, imdb, movies, language, failed_path).await
+    Ok(false)
+}
+
+/// Group uploads by episode IMDb, never by the parent show's ID.
+pub fn group_episodes(
+    candidates: Vec<crate::SubtitleResult>,
+) -> BTreeMap<String, Vec<crate::SubtitleResult>> {
+    let mut episodes = BTreeMap::new();
+    for candidate in candidates {
+        if let Some(id) = candidate
+            .attributes
+            .feature_details
+            .imdb_id
+            .filter(|id| *id != 0)
+        {
+            episodes
+                .entry(format!("tt{id:07}"))
+                .or_insert_with(Vec::new)
+                .push(candidate);
+        }
+    }
+    episodes
+}
+
+/// Acquire each episode independently, sharing the movie quality and retry path.
+pub async fn process_show(
+    parent_imdb: &str,
+    client: &OpenSubtitlesClient,
+    movies: &Path,
+    language: Language,
+) -> Result<usize> {
+    let candidates = client
+        .search_subtitles_for_show(
+            parent_imdb.strip_prefix("tt").unwrap().parse()?,
+            language.opensubtitles_languages(),
+        )
+        .await?;
+    let mut downloaded = 0;
+    for (imdb, candidates) in group_episodes(candidates) {
+        let details = &candidates[0].attributes.feature_details;
+        println!(
+            "  {} S{:02}E{:02} ({imdb})",
+            details.parent_title.as_deref().unwrap_or(parent_imdb),
+            details.season_number.unwrap_or(0),
+            details.episode_number.unwrap_or(0)
+        );
+        if already_downloaded(movies, &imdb)? {
+            continue;
+        }
+        let failed_path = movies.join("fetch-failures").join(format!("{imdb}.json"));
+        match download_candidates(client, &imdb, movies, language, &failed_path, candidates).await {
+            Ok(true) => downloaded += 1,
+            Ok(false) => {}
+            Err(e) if e.downcast_ref::<Throttled>().is_some() => return Err(e),
+            Err(e) => println!("  Error for {imdb}: {e:#}"),
+        }
+    }
+    Ok(downloaded)
 }
 
 #[cfg(test)]
@@ -171,6 +236,23 @@ mod tests {
             "machine_translated": machine
         }))
         .unwrap()
+    }
+
+    #[test]
+    fn groups_episode_uploads_by_padded_imdb_not_episode_number() {
+        let candidates = [Some(708760), Some(708760), Some(12345678), None, Some(0)]
+            .into_iter()
+            .map(|id| {
+                serde_json::from_value(serde_json::json!({
+                    "attributes": {"feature_details": {"imdb_id": id}, "files": []}
+                }))
+                .unwrap()
+            })
+            .collect();
+        let episodes = group_episodes(candidates);
+        assert_eq!(episodes.len(), 2);
+        assert_eq!(episodes["tt0708760"].len(), 2);
+        assert_eq!(episodes["tt12345678"].len(), 1);
     }
 
     #[test]

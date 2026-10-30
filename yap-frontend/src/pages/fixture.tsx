@@ -9,6 +9,7 @@ import { TopPageLayout } from "@/components/TopPageLayout";
 import { HomeScreen } from "../browse/HomeScreen";
 import { StatsScreen } from "../browse/StatsScreen";
 import { DueWordsScreen } from "../browse/DueWordsScreen";
+import { AssumedKnownScreen, YourCardsScreen } from "../browse/WordListScreens";
 import type {
   ChallengeView,
   Fixture,
@@ -107,6 +108,16 @@ export function FixturePage() {
         )}
         {snapshot.screen === "Due" && (
           <DueWordsScreen {...props} view={snapshot.view} />
+        )}
+        {snapshot.screen === "YourCards" && (
+          <YourCardsScreen {...props} view={snapshot.view} />
+        )}
+        {snapshot.screen === "AssumedKnown" && (
+          <AssumedKnownScreen
+            {...props}
+            accessToken={accessToken}
+            view={snapshot.view}
+          />
         )}
       </div>
     );

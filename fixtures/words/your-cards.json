@@ -1,0 +1,280 @@
+{
+  "screen": "YourCards",
+  "view": {
+    "target_language": "French",
+    "summary": {
+      "title": "Your cards",
+      "count": 8,
+      "label": "8 cards you added"
+    },
+    "cards": [
+      {
+        "card_indicator": {
+          "type": "WrittenGram",
+          "gram": {
+            "gram": [
+              {
+                "Tok": {
+                  "text": "je",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "je",
+                    "lemma": "je",
+                    "pos": "PRON"
+                  }
+                }
+              },
+              {
+                "Tok": {
+                  "text": "suis",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "suis",
+                    "lemma": "être",
+                    "pos": "VERB"
+                  }
+                }
+              }
+            ],
+            "sense": null
+          }
+        },
+        "due_timestamp_ms": 1793332940675.0,
+        "state": "new",
+        "card_text": "je suis",
+        "card_subtitle": "pron"
+      },
+      {
+        "card_indicator": {
+          "type": "WrittenGram",
+          "gram": {
+            "gram": [
+              {
+                "Tok": {
+                  "text": "ça",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "ça",
+                    "lemma": "cela",
+                    "pos": "PRON"
+                  }
+                }
+              }
+            ],
+            "sense": null
+          }
+        },
+        "due_timestamp_ms": 1793332940675.0,
+        "state": "new",
+        "card_text": "ça",
+        "card_subtitle": "pron"
+      },
+      {
+        "card_indicator": {
+          "type": "WrittenGram",
+          "gram": {
+            "gram": [
+              {
+                "Tok": {
+                  "text": "est",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "est",
+                    "lemma": "être",
+                    "pos": "VERB"
+                  }
+                }
+              }
+            ],
+            "sense": 1
+          }
+        },
+        "due_timestamp_ms": 1793332940675.0,
+        "state": "new",
+        "card_text": "est",
+        "card_subtitle": "verb"
+      },
+      {
+        "card_indicator": {
+          "type": "WrittenGram",
+          "gram": {
+            "gram": [
+              {
+                "Tok": {
+                  "text": "a",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "a",
+                    "lemma": "avoir",
+                    "pos": "VERB"
+                  }
+                }
+              },
+              {
+                "Tok": {
+                  "text": "un",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "un",
+                    "lemma": "un",
+                    "pos": "DET"
+                  }
+                }
+              }
+            ],
+            "sense": null
+          }
+        },
+        "due_timestamp_ms": 1793332940675.0,
+        "state": "new",
+        "card_text": "a un",
+        "card_subtitle": "verb"
+      },
+      {
+        "card_indicator": {
+          "type": "WrittenGram",
+          "gram": {
+            "gram": [
+              {
+                "Tok": {
+                  "text": "est",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "est",
+                    "lemma": "être",
+                    "pos": "VERB"
+                  }
+                }
+              },
+              {
+                "Tok": {
+                  "text": "le",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "le",
+                    "lemma": "le",
+                    "pos": "DET"
+                  }
+                }
+              }
+            ],
+            "sense": null
+          }
+        },
+        "due_timestamp_ms": 1793332940675.0,
+        "state": "new",
+        "card_text": "est le",
+        "card_subtitle": "verb"
+      },
+      {
+        "card_indicator": {
+          "type": "WrittenGram",
+          "gram": {
+            "gram": [
+              {
+                "Tok": {
+                  "text": "qu'",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "que",
+                    "lemma": "que",
+                    "pos": "SCONJ"
+                  }
+                }
+              },
+              {
+                "Tok": {
+                  "text": "il",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "il",
+                    "lemma": "il",
+                    "pos": "PRON"
+                  }
+                }
+              }
+            ],
+            "sense": null
+          }
+        },
+        "due_timestamp_ms": 1793332940675.0,
+        "state": "new",
+        "card_text": "qu'il",
+        "card_subtitle": "sconj"
+      },
+      {
+        "card_indicator": {
+          "type": "WrittenGram",
+          "gram": {
+            "gram": [
+              {
+                "Tok": {
+                  "text": "c'",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "ce",
+                    "lemma": "ce",
+                    "pos": "PRON"
+                  }
+                }
+              },
+              {
+                "Tok": {
+                  "text": "est",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "est",
+                    "lemma": "être",
+                    "pos": "VERB"
+                  }
+                }
+              }
+            ],
+            "sense": null
+          }
+        },
+        "due_timestamp_ms": 1793332940675.0,
+        "state": "new",
+        "card_text": "c'est",
+        "card_subtitle": "pron"
+      },
+      {
+        "card_indicator": {
+          "type": "WrittenGram",
+          "gram": {
+            "gram": [
+              {
+                "Tok": {
+                  "text": "je",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "je",
+                    "lemma": "je",
+                    "pos": "PRON"
+                  }
+                }
+              },
+              {
+                "Tok": {
+                  "text": "ne",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "ne",
+                    "lemma": "ne",
+                    "pos": "ADV"
+                  }
+                }
+              }
+            ],
+            "sense": null
+          }
+        },
+        "due_timestamp_ms": 1793332940675.0,
+        "state": "new",
+        "card_text": "je ne",
+        "card_subtitle": "pron"
+      }
+    ],
+    "show_more": null
+  }
+}

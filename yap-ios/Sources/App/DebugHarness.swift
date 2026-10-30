@@ -3,7 +3,7 @@ import Foundation
 import Observation
 
 enum DebugScreen: String {
-    case review, home, stats, dictionary, due, settings, books, bookReader
+    case review, home, stats, dictionary, due, yourCards, assumedKnown, settings, books, bookReader
 }
 
 /// Explicit opt-in simulator driver. Never compiled into release builds. Commands

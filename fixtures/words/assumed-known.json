@@ -1,0 +1,698 @@
+{
+  "screen": "AssumedKnown",
+  "view": {
+    "target_language": "French",
+    "summary": {
+      "title": "Assumed known",
+      "count": 3501,
+      "label": "3,501 words Yap counts as known"
+    },
+    "note": "Yap thinks you already know these words, but if you want to study them you can add them to your deck.",
+    "words": [
+      {
+        "frequency_index": 0,
+        "display_text": "c'est",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "it is",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "c'est",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 1,
+        "display_text": "ne pas",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "not; to not",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "ne pas",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 2,
+        "display_text": "de",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "of, from; about",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "de",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 3,
+        "display_text": "et",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "and",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "et",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 4,
+        "display_text": "je ne",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "I do not …",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "je ne",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 5,
+        "display_text": "pas",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "not; not a, not any",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "pas",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 6,
+        "display_text": "à",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "to, at, in",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "à",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 7,
+        "display_text": "j'ai",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "I have",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "j'ai",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 8,
+        "display_text": "je suis",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "I am",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "je suis",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 9,
+        "display_text": "ne soit",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "not be",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "ne soit",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 10,
+        "display_text": "pour",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "for; in order to, to",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "pour",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 11,
+        "display_text": "sois pas",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "don't be",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "sois pas",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 12,
+        "display_text": "ça",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "this, that, it",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "ça",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 13,
+        "display_text": "est un",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "is a",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "est un",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 14,
+        "display_text": "il est",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "he is",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "il est",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 15,
+        "display_text": "ce que",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "what",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "ce que",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 16,
+        "display_text": "est le",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "is the",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "est le",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 17,
+        "display_text": "que je",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "that I",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "que je",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 19,
+        "display_text": "y avoir",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "to be; to exist; there to be",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "y avoir",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 20,
+        "display_text": "le",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "the",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "le",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 21,
+        "display_text": "est",
+        "ruby": [],
+        "prefix": {
+          "prefix": "il",
+          "separator": " "
+        },
+        "gloss": "is",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "est",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 22,
+        "display_text": "ne sont pas",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "are not",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "ne sont pas",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 23,
+        "display_text": "que",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "that",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "que",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 25,
+        "display_text": "mais",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "but; wait, though",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "mais",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 26,
+        "display_text": "a un",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "has a",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "a un",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 27,
+        "display_text": "il",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "he; it",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "il",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 28,
+        "display_text": "l'avoir",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "to have it",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "l'avoir",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 29,
+        "display_text": "ici",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "here",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "ici",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 30,
+        "display_text": "qu'il",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "that he",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "qu'il",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 31,
+        "display_text": "que tu",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "that you",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "que tu",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 32,
+        "display_text": "est-ce que",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "is it that",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "est-ce que",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 33,
+        "display_text": "il ne",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "he does not …",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "il ne",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 34,
+        "display_text": "dans le",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "in the",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "dans le",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 35,
+        "display_text": "un",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "a, an, one",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "un",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 36,
+        "display_text": "vous",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "you",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "vous",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 37,
+        "display_text": "les",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "the",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "les",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 38,
+        "display_text": "de la",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "some",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "de la",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 39,
+        "display_text": "d'",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "of, from; about",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "d'",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 40,
+        "display_text": "je veux",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "I want",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "je veux",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      },
+      {
+        "frequency_index": 41,
+        "display_text": "des",
+        "ruby": [],
+        "prefix": null,
+        "gloss": "some",
+        "add_label": "Add to deck",
+        "audio_request": {
+          "request": {
+            "text": "des",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Google"
+        }
+      }
+    ],
+    "show_more": "Show more"
+  }
+}

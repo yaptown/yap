@@ -47,6 +47,8 @@ pub use placement_session::{
 };
 pub mod profile;
 mod screens;
+mod your_words;
+pub use your_words::*;
 pub mod simulation;
 pub use screens::*;
 mod study_options;

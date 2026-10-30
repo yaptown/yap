@@ -1291,3 +1291,15 @@ anki-added-new-cards = Added { $sentences } new sentences ({ $cards } new cards)
 anki-merge-hint = Import it the same way as your first deck. Anki will recognize the cards you already have, keep your progress on them, and put the new cards after them.
 
 anki-just-now = just now
+common-show-more = Show more
+your-cards-title = Your cards
+your-cards-summary = { $count ->
+        [one] { $number } card you added
+       *[other] { $number } cards you added
+    }
+assumed-known-title = Assumed known
+assumed-known-summary = { $count ->
+        [one] { $number } word Yap counts as known
+       *[other] { $number } words Yap counts as known
+    }
+assumed-known-note = Yap thinks you already know these words, but if you want to study them you can add them to your deck.

@@ -1357,3 +1357,15 @@ anki-deck-downloaded = Paquet téléchargé
 anki-added-new-cards = { $sentences } nouvelles phrases ajoutées ({ $cards } nouvelles cartes).
 anki-merge-hint = Importe-le comme ton premier paquet. Anki reconnaîtra les cartes que tu as déjà, gardera ta progression dessus et placera les nouvelles cartes après.
 anki-just-now = à l'instant
+common-show-more = Afficher plus
+your-cards-title = Tes cartes
+your-cards-summary = { $count ->
+        [one] { $number } carte que tu as ajoutée
+       *[other] { $number } cartes que tu as ajoutées
+    }
+assumed-known-title = Supposés connus
+assumed-known-summary = { $count ->
+        [one] { $number } mot que Yap considère comme connu
+       *[other] { $number } mots que Yap considère comme connus
+    }
+assumed-known-note = Yap pense que tu connais déjà ces mots, mais si tu veux les étudier, tu peux les ajouter à ton paquet.

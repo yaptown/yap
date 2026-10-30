@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum CourseRoute: Hashable {
-    case review, stats, dictionary(searching: Bool = false), due, settings, books
+    case review, stats, dictionary(searching: Bool = false), due, yourCards, assumedKnown, settings, books
     case book(String)
 }
 
@@ -35,13 +35,15 @@ struct CourseHome: View {
                     Group {
                         switch route {
                         case .review: reviewScreen.id(ObjectIdentifier(review.deck))
-                        case .stats: StatsScreen(review: review) { navigate(.due) }
+                        case .stats: StatsScreen(review: review, open: navigate)
                         case let .dictionary(searching):
                             DictionaryScreen(session: session, searching: searching)
                                 .navigationTransition(.zoom(sourceID: DictionarySearchBar.id, in: dictionarySearch))
                         case .books: BooksScreen(language: deck.get_target_language(), nativeLanguage: deck.get_native_language())
                         case let .book(slug): BookReaderScreen(language: deck.get_target_language(), nativeLanguage: deck.get_native_language(), slug: slug)
                         case .due: DueWordsScreen(review: review)
+                        case .yourCards: YourCardsScreen(review: review)
+                        case .assumedKnown: AssumedKnownScreen(review: review, session: session)
                         case .settings: SettingsScreen(session: session)
                         }
                     }.containerBackground(.clear, for: .navigation)
@@ -92,6 +94,8 @@ struct CourseHome: View {
                 case "dictionary": navigate(.dictionary())
                 case "books": navigate(.books)
                 case "due": navigate(.due)
+                case "your-cards": navigate(.yourCards)
+                case "assumed-known": navigate(.assumedKnown)
                 case "settings": navigate(.settings)
                 default: break
                 }
@@ -138,8 +142,10 @@ struct CourseHome: View {
             switch fixture {
             case let .Review(view): ReviewScreen(view: view)
             case let .Home(view): HomeScreen(review: review, navigate: { _ in }, searchTransition: dictionarySearch, view: view)
-            case let .Stats(view): StatsScreen(review: review, showDue: {}, view: view)
+            case let .Stats(view): StatsScreen(review: review, open: { _ in }, view: view)
             case let .Due(view): DueWordsScreen(review: review, view: view)
+            case let .YourCards(view): YourCardsScreen(review: review, view: view)
+            case let .AssumedKnown(view): AssumedKnownScreen(review: review, session: session, view: view)
             }
         }
         .environment(\.reviewActions, ReviewActions.inert)

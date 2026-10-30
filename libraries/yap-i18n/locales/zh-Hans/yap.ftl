@@ -1246,3 +1246,13 @@ anki-deck-downloaded = 牌组已下载
 anki-added-new-cards = 新增 { $sentences } 个句子（{ $cards } 张新卡片）。
 anki-merge-hint = 像导入第一个牌组那样导入它。Anki 会识别你已有的卡片，保留它们的进度，并把新卡片排在后面。
 anki-just-now = 刚刚
+common-show-more = 显示更多
+your-cards-title = 你的卡片
+your-cards-summary = { $count ->
+       *[other] 你添加的 { $number } 张卡片
+    }
+assumed-known-title = 默认已会
+assumed-known-summary = { $count ->
+       *[other] Yap 认为你已会的 { $number } 个词
+    }
+assumed-known-note = Yap 认为你已经认识这些词，但如果想学习它们，可以把它们加入你的牌组。
