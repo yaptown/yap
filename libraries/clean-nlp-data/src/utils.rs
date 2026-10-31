@@ -18,9 +18,10 @@ pub enum ValidationResult {
     },
 }
 
-/// Derive gaps from the original sentence, then validate the corrected analysis.
+/// Rewrite the corrected tokens in place (whitespace re-derived from the original
+/// sentence, language-specific token and lemma fixes), then validate the result.
 /// Token text is never rewritten to make an alignment succeed.
-pub fn validate_and_fix_whitespace(
+pub fn normalize_and_validate_tokens(
     original: &str,
     corrected_tokens: &mut Vec<SimplifiedTokenPrime>,
     language: Language,
@@ -127,7 +128,7 @@ mod tests {
             let original = format!("Hello{gap}world");
             let mut tokens = vec![token("Hello", gap), token("world", Whitespace::None)];
             assert!(matches!(
-                validate_and_fix_whitespace(&original, &mut tokens, Language::English),
+                normalize_and_validate_tokens(&original, &mut tokens, Language::English),
                 ValidationResult::Valid
             ));
             assert_eq!(tokens[0].whitespace, gap);
@@ -139,7 +140,7 @@ mod tests {
         for text in ["New York", "pommes de terre", "वास्तव में"] {
             let mut tokens = vec![token(text, Whitespace::None)];
             assert!(matches!(
-                validate_and_fix_whitespace(text, &mut tokens, Language::English),
+                normalize_and_validate_tokens(text, &mut tokens, Language::English),
                 ValidationResult::Valid
             ));
             assert_eq!(tokens[0].text, text);
@@ -147,7 +148,7 @@ mod tests {
         for text in [" two words", "two words ", ""] {
             let mut tokens = vec![token(text, Whitespace::None)];
             assert!(matches!(
-                validate_and_fix_whitespace(text, &mut tokens, Language::English),
+                normalize_and_validate_tokens(text, &mut tokens, Language::English),
                 ValidationResult::Invalid { .. }
             ));
         }
@@ -163,7 +164,7 @@ mod tests {
             token("world", Whitespace::None),
         ];
 
-        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
+        let result = normalize_and_validate_tokens(original, &mut tokens, Language::French);
 
         // Should auto-fix to use narrow non-breaking space
         assert!(matches!(result, ValidationResult::AutoFixed));
@@ -188,7 +189,7 @@ mod tests {
             token("world", Whitespace::None),
         ];
 
-        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
+        let result = normalize_and_validate_tokens(original, &mut tokens, Language::French);
 
         // Should auto-fix by adding the narrow non-breaking space
         assert!(matches!(result, ValidationResult::AutoFixed));
@@ -214,7 +215,7 @@ mod tests {
             token("C", Whitespace::None),
         ];
 
-        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
+        let result = normalize_and_validate_tokens(original, &mut tokens, Language::French);
 
         // Should auto-fix
         assert!(matches!(result, ValidationResult::AutoFixed));
@@ -238,7 +239,7 @@ mod tests {
             token("world", Whitespace::None),
         ];
 
-        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
+        let result = normalize_and_validate_tokens(original, &mut tokens, Language::French);
 
         assert!(matches!(result, ValidationResult::Valid));
     }
@@ -256,7 +257,7 @@ mod tests {
             token("C", Whitespace::None),
         ];
 
-        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
+        let result = normalize_and_validate_tokens(original, &mut tokens, Language::French);
 
         // Should auto-fix
         assert!(matches!(result, ValidationResult::AutoFixed));
@@ -291,7 +292,7 @@ mod tests {
             token("?", Whitespace::None),
         ];
 
-        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
+        let result = normalize_and_validate_tokens(original, &mut tokens, Language::French);
 
         // Should auto-fix
         assert!(matches!(result, ValidationResult::AutoFixed));
@@ -341,7 +342,7 @@ mod tests {
                 .map(|t| format!("{:?}", t.whitespace.as_str().chars().collect::<Vec<_>>()))
                 .collect::<Vec<_>>()
         );
-        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
+        let result = normalize_and_validate_tokens(original, &mut tokens, Language::French);
         println!(
             "After: {:?}",
             tokens
@@ -378,7 +379,7 @@ mod tests {
     fn whitespace_alignment_never_inserts_letters() {
         let mut tokens = vec![token("a", Whitespace::Space), token("bc", Whitespace::None)];
         assert!(matches!(
-            validate_and_fix_whitespace("ab c ", &mut tokens, Language::English),
+            normalize_and_validate_tokens("ab c ", &mut tokens, Language::English),
             ValidationResult::Invalid { .. }
         ));
         assert_eq!(tokens[0].text, "a");
@@ -392,7 +393,7 @@ mod tests {
             let mut tokens = vec![token("a", Whitespace::Space), token("b", Whitespace::None)];
             assert!(
                 matches!(
-                    validate_and_fix_whitespace(original, &mut tokens, Language::English),
+                    normalize_and_validate_tokens(original, &mut tokens, Language::English),
                     ValidationResult::Invalid { .. }
                 ),
                 "{original:?}"
@@ -407,13 +408,13 @@ mod tests {
             token("जाओ", Whitespace::Space),
         ];
         assert!(matches!(
-            validate_and_fix_whitespace("हाँ\u{202f}जाओ", &mut tokens, Language::Hindi),
+            normalize_and_validate_tokens("हाँ\u{202f}जाओ", &mut tokens, Language::Hindi),
             ValidationResult::AutoFixed
         ));
         assert_eq!(tokens[0].whitespace, Whitespace::NarrowNbsp);
         assert_eq!(tokens[1].whitespace, Whitespace::None);
         assert!(matches!(
-            validate_and_fix_whitespace("हाँ\u{202f}जाओ", &mut tokens, Language::Hindi),
+            normalize_and_validate_tokens("हाँ\u{202f}जाओ", &mut tokens, Language::Hindi),
             ValidationResult::Valid
         ));
     }
