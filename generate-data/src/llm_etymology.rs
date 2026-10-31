@@ -329,7 +329,7 @@ pub async fn generate_llm_aligned_entries(
 
     let language = course.target_language;
     let chat_client = &*CHAT_CLIENT;
-    let mut samples = crate::corpus_samples::SampleCache::load(
+    let mut samples = crate::corpus_samples::PinnedSamples::load(
         crate::pipeline::course_dirs(&course)
             .unwrap()
             .native_specific_dir

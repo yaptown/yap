@@ -1099,7 +1099,7 @@ struct KeyPrompt {
     lines: Vec<(usize, usize, Option<usize>, String)>,
 }
 
-type AdjudicationSamples = crate::corpus_samples::SampleCache<(Gram<String>, usize), Occurrence>;
+type AdjudicationSamples = crate::corpus_samples::PinnedSamples<(Gram<String>, usize), Occurrence>;
 
 fn key_prompt(
     prop: &KeyProposal,
@@ -1769,7 +1769,7 @@ async fn expand_paradigms(
     known_terms: &HashSet<String>,
     known_multi: &HashSet<Vec<SpurAtom>>,
     discovered: &mut Vec<(DiscoveredTerm, Vec<String>)>,
-    samples: &mut crate::corpus_samples::SampleCache<Gram<String>>,
+    samples: &mut crate::corpus_samples::PinnedSamples<Gram<String>>,
 ) -> Result<BTreeMap<usize, String>> {
     if discovered.is_empty() {
         return Ok(BTreeMap::new());
@@ -1964,7 +1964,7 @@ pub async fn discover(
     mode: DiscoverMode,
 ) -> Result<()> {
     let mut timer = crate::StageTimer::new();
-    let mut samples = crate::corpus_samples::SampleCache::load(
+    let mut samples = crate::corpus_samples::PinnedSamples::load(
         format!(
             "out/{}/usage_expression_sentences.jsonl",
             language.corpus_code()

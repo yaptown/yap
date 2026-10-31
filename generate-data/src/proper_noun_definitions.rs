@@ -115,7 +115,7 @@ Output JSON format:
         native_language = native_language.frozen_prompt_name(),
         target_language = target_language.frozen_prompt_name()
     );
-    let mut samples = crate::corpus_samples::SampleCache::load(
+    let mut samples = crate::corpus_samples::PinnedSamples::load(
         crate::pipeline::course_dirs(&course)?
             .native_specific_dir
             .join("proper_noun_sentences.jsonl"),

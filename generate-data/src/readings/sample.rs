@@ -1,6 +1,6 @@
 //! Diverse examples from actual segmentation-gram occurrences, not component words.
 use super::Occurrence;
-use crate::corpus_samples::SampleCache;
+use crate::corpus_samples::PinnedSamples;
 use crate::{
     token_embeddings,
     usage_discovery::{dot, mean_normalized},
@@ -38,7 +38,7 @@ impl Identity {
             })
     }
 }
-pub(super) type Cache = SampleCache<Gram<String>, Identity>;
+pub(super) type Cache = PinnedSamples<Gram<String>, Identity>;
 
 pub(super) async fn persistent_select(
     cache: Option<&Cache>,
