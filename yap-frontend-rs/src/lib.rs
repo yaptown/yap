@@ -2752,13 +2752,14 @@ impl Deck {
         }
     }
 
-    /// Compute the percent known within the first incomplete tier level.
-    fn tier_percent_known_with(
+    /// Locate Essential progress on the same coverage curve used by stats.
+    fn essential_position_with(
         frequency_list: &language_utils::language_pack::FrequencyList,
         known_written: impl GramMembership,
         known_listening: impl GramMembership,
-    ) -> f64 {
-        tiers::first_incomplete_level_pct(frequency_list, known_written, known_listening)
+    ) -> tiers::EssentialPosition {
+        let coverage = Self::percent_known_in(frequency_list, known_written, known_listening);
+        tiers::position(frequency_list, coverage.percent_known)
     }
 
     /// Get the percent known for a sentence list. For movies, uses the movie's frequency list.
@@ -2805,11 +2806,13 @@ impl Deck {
                     })
             }
             None => {
-                let percent_known = Self::tier_percent_known_with(
+                let percent_known = Self::essential_position_with(
                     &self.context.language_pack.gram_frequencies,
                     known_written,
                     known_listening,
-                );
+                )
+                .tier_info
+                .percent_known;
                 ComprehensionScore {
                     percent_known,
                     all_available_learned: false,
@@ -3243,60 +3246,15 @@ impl Deck {
         })
     }
 
-    /// Get the tier level where adding the next batch of cards makes the most progress.
-    /// Falls back to the first incomplete level if no cards improve any level.
+    /// Essential tier and level derived from overall coverage, including planned cards.
     #[bridgerton::stable]
     pub fn get_current_tier(&self) -> TierInfo {
-        let freq_list = &self.context.language_pack.gram_frequencies;
-        let all_grams: Vec<TaggedGram<SpurGram>> = freq_list.entries.keys().copied().collect();
-        let levels = tiers::tier_level_slices(&all_grams, freq_list);
-
-        let current_written = self.get_comprehensible_written_grams(true);
-        let current_listening = self.get_comprehensible_listening_grams(true);
-
-        // Compute what smart add would suggest
-        let max_cards = self.max_cards_to_add();
-        let smart_add_cards: Vec<_> = self
-            .next_unknown_cards(
-                AllowedCards::BannedRequirements(BTreeSet::new()),
-                &self.sentence_list,
-                max_cards,
-            )
-            .take(max_cards)
-            .collect();
-
-        let mut projected_written = current_written.iter().collect::<BTreeSet<_>>();
-        let mut projected_listening = current_listening.iter().collect::<BTreeSet<_>>();
-        for card in &smart_add_cards {
-            match card {
-                CardIndicator::WrittenGram { gram } => {
-                    projected_written.insert(*gram);
-                }
-                CardIndicator::ListeningGram { gram } => {
-                    projected_listening.extend(self.context.language_pack.senses_of(*gram));
-                }
-                CardIndicator::LetterPronunciation { .. } => {}
-            }
-        }
-
-        let level_idx = tiers::best_tier_level_idx(
-            &levels,
-            freq_list,
-            current_written,
-            current_listening,
-            &projected_written,
-            &projected_listening,
-        );
-        let level = &levels[level_idx];
-        let pct = level.known_pct(freq_list, current_written, current_listening);
-        let grand_total_freq: u64 = freq_list.entries.values().map(|f| f.count as u64).sum();
-        let cumulative_freq: u64 = levels[..=level_idx].iter().map(|l| l.total_freq()).sum();
-        let cumulative_pct = if grand_total_freq > 0 {
-            cumulative_freq as f64 / grand_total_freq as f64 * 100.0
-        } else {
-            0.0
-        };
-        level.to_tier_info(pct, cumulative_pct)
+        Self::essential_position_with(
+            &self.context.language_pack.gram_frequencies,
+            self.get_comprehensible_written_grams(true),
+            self.get_comprehensible_listening_grams(true),
+        )
+        .tier_info
     }
 
     #[bridgerton::stable]
@@ -3705,19 +3663,11 @@ impl Deck {
 
         // Select the tier once for both the current label and projected progress.
         let freq_list = &self.context.language_pack.gram_frequencies;
-        let all_grams: Vec<TaggedGram<SpurGram>> = freq_list.entries.keys().copied().collect();
-        let levels = tiers::tier_level_slices(&all_grams, freq_list);
-        let current_written = self.get_comprehensible_written_grams(true);
-        let current_listening = self.get_comprehensible_listening_grams(true);
-        let level_idx = tiers::best_tier_level_idx(
-            &levels,
+        let position = Self::essential_position_with(
             freq_list,
-            current_written,
-            current_listening,
-            &projected_written,
-            &projected_listening,
+            self.get_comprehensible_written_grams(true),
+            self.get_comprehensible_listening_grams(true),
         );
-        let level = &levels[level_idx];
         let percent_known_after = match &sentence_list {
             Some(_) => {
                 self.sentence_list_percent_known_with(
@@ -3727,7 +3677,11 @@ impl Deck {
                 )
                 .percent_known
             }
-            None => level.known_pct(freq_list, &projected_written, &projected_listening),
+            None => position.projected_percent(
+                freq_list,
+                Self::percent_known_in(freq_list, &projected_written, &projected_listening)
+                    .percent_known,
+            ),
         };
 
         // Preview strings
@@ -3758,18 +3712,7 @@ impl Deck {
         // Pre-build smart add event
         let smart_add_event = self.cards_to_event(&smart_add_cards, &sentence_list);
 
-        // Tier info (reuses the projected grams we already computed)
-        let tier_info = {
-            let pct = level.known_pct(freq_list, current_written, current_listening);
-            let grand_total_freq: u64 = freq_list.entries.values().map(|f| f.count as u64).sum();
-            let cumulative_freq: u64 = levels[..=level_idx].iter().map(|l| l.total_freq()).sum();
-            let cumulative_pct = if grand_total_freq > 0 {
-                cumulative_freq as f64 / grand_total_freq as f64 * 100.0
-            } else {
-                0.0
-            };
-            level.to_tier_info(pct, cumulative_pct)
-        };
+        let tier_info = position.tier_info;
 
         // Workload stats
         let past_week_challenge_average = self.get_past_week_challenge_average();

@@ -1,6 +1,4 @@
-use crate::comprehensible::GramMembership;
-
-use language_utils::{SpurGram, TaggedGram};
+use language_utils::language_pack::FrequencyList;
 use serde::{Deserialize, Serialize};
 
 /// Tier definitions for the frequency list. Each tier covers a range of the most frequent grams.
@@ -34,154 +32,181 @@ pub struct TierInfo {
     pub level: u32,
     /// Total number of levels in this tier
     pub total_levels: u32,
-    /// Percent known within the current level (0-100)
+    /// Progress through the current effort slice in equivalent words (0-100)
     pub percent_known: f64,
-    /// What percentage of all word usage the words in this level account for (0-100)
+    /// Cumulative corpus coverage reached at the end of this level (0-100)
     pub percent_of_usage: f64,
 }
 
-pub(crate) struct TierLevelSlice<'a> {
-    tier_idx: usize,
-    tier_name: TierName,
-    level_idx: usize,
-    total_levels_in_tier: usize,
-    grams: &'a [TaggedGram<SpurGram>],
-    total_freq: u64,
+pub(crate) struct EssentialPosition {
+    pub(crate) tier_info: TierInfo,
+    start: usize,
+    end: usize,
 }
 
-impl TierLevelSlice<'_> {
-    pub(crate) fn total_freq(&self) -> u64 {
-        self.total_freq
-    }
-
-    pub(crate) fn known_pct(
-        &self,
-        freq_list: &language_utils::language_pack::FrequencyList,
-        written: impl GramMembership,
-        listening: impl GramMembership,
-    ) -> f64 {
-        if self.total_freq == 0 {
-            return 100.0;
-        }
-        let known: f64 = self
-            .grams
-            .iter()
-            .map(|gram| {
-                let count = freq_list
-                    .entries
-                    .get(gram)
-                    .map(|f| f.count as f64)
-                    .unwrap_or(0.0);
-                match (written.contains(gram), listening.contains(gram)) {
-                    (true, true) => count,
-                    (true, false) | (false, true) => count * 0.5,
-                    (false, false) => 0.0,
-                }
-            })
-            .sum();
-        known / self.total_freq as f64 * 100.0
-    }
-
-    pub(crate) fn to_tier_info(
-        &self,
-        percent_known: f64,
-        cumulative_percent_of_usage: f64,
-    ) -> TierInfo {
-        TierInfo {
-            tier: (self.tier_idx + 1) as u32,
-            name: (self.tier_name)(),
-            level: (self.level_idx + 1) as u32,
-            total_levels: self.total_levels_in_tier as u32,
-            percent_known,
-            percent_of_usage: cumulative_percent_of_usage,
-        }
+impl EssentialPosition {
+    /// Project through the current level, not the projected position's next level.
+    pub(crate) fn projected_percent(&self, frequencies: &FrequencyList, coverage: f64) -> f64 {
+        level_percent(
+            equivalent_words(frequencies, coverage),
+            self.start,
+            self.end,
+        )
     }
 }
 
-/// Build all tier level slices with pre-summed total frequencies.
-pub(crate) fn tier_level_slices<'a>(
-    all_grams: &'a [TaggedGram<SpurGram>],
-    freq_list: &language_utils::language_pack::FrequencyList,
-) -> Vec<TierLevelSlice<'a>> {
-    let mut levels = Vec::new();
-    let mut offset = 0;
-    for (tier_idx, &(name, size)) in TIERS.iter().enumerate() {
-        let end = if size == usize::MAX {
-            all_grams.len()
-        } else {
-            (offset + size).min(all_grams.len())
-        };
-        if offset >= all_grams.len() {
+fn level_percent(words: f64, start: usize, end: usize) -> f64 {
+    if start == end {
+        return 100.0;
+    }
+    ((words - start as f64) / (end - start) as f64 * 100.0).clamp(0.0, 100.0)
+}
+
+/// Invert corpus coverage on the pack's descending-frequency curve. Keep the
+/// stats denominator: total_count includes corpus mass omitted from entries.
+fn equivalent_words(frequencies: &FrequencyList, coverage: f64) -> f64 {
+    invert_counts(
+        frequencies.entries.values().map(|f| f.count as f64),
+        coverage / 100.0 * frequencies.total_count as f64,
+    )
+}
+
+fn invert_counts(counts: impl Iterator<Item = f64>, mut mass: f64) -> f64 {
+    let mut words = 0.0;
+    for count in counts {
+        if mass <= 0.0 {
             break;
         }
-        let tier_grams = &all_grams[offset..end];
-        let total_levels = tier_grams.len().div_ceil(WORDS_PER_LEVEL);
-        for level_idx in 0..total_levels {
-            let start = level_idx * WORDS_PER_LEVEL;
-            let level_end = ((level_idx + 1) * WORDS_PER_LEVEL).min(tier_grams.len());
-            let level_grams = &tier_grams[start..level_end];
-            let total_freq: u64 = level_grams
-                .iter()
-                .filter_map(|g| freq_list.entries.get(g))
+        if mass < count {
+            return words + mass / count;
+        }
+        words += 1.0;
+        mass -= count;
+    }
+    words
+}
+
+/// All Essential displays use the same coverage-derived position. Levels retain
+/// their original word slices, including the short final level of each tier.
+pub(crate) fn position(frequencies: &FrequencyList, coverage: f64) -> EssentialPosition {
+    let words = equivalent_words(frequencies, coverage);
+    let len = frequencies.entries.len();
+    let mut start: usize = 0;
+    for (tier_idx, &(name, size)) in TIERS.iter().enumerate() {
+        let end = start.saturating_add(size).min(len);
+        if words < end as f64 || end == len {
+            let total_levels = (end - start).div_ceil(WORDS_PER_LEVEL).max(1);
+            let level_idx =
+                (((words - start as f64) / WORDS_PER_LEVEL as f64) as usize).min(total_levels - 1);
+            let level_start = start + level_idx * WORDS_PER_LEVEL;
+            let level_end = (level_start + WORDS_PER_LEVEL).min(end);
+            let cumulative_mass: u64 = frequencies
+                .entries
+                .values()
+                .take(level_end)
                 .map(|f| f.count as u64)
                 .sum();
-            levels.push(TierLevelSlice {
-                tier_idx,
-                tier_name: name,
-                level_idx,
-                total_levels_in_tier: total_levels,
-                grams: level_grams,
-                total_freq,
-            });
+            return EssentialPosition {
+                tier_info: TierInfo {
+                    tier: (tier_idx + 1) as u32,
+                    name: name(),
+                    level: (level_idx + 1) as u32,
+                    total_levels: total_levels as u32,
+                    percent_known: level_percent(words, level_start, level_end),
+                    percent_of_usage: if frequencies.total_count == 0 {
+                        0.0
+                    } else {
+                        cumulative_mass as f64 / frequencies.total_count as f64 * 100.0
+                    },
+                },
+                start: level_start,
+                end: level_end,
+            };
         }
-        offset = end;
+        start = end;
     }
-    levels
+    unreachable!("the last tier includes every remaining word")
 }
 
-/// Find the tier level where projected grams show the most improvement over current grams.
-/// Falls back to the first incomplete level if no improvement anywhere.
-pub(crate) fn best_tier_level_idx(
-    levels: &[TierLevelSlice<'_>],
-    freq_list: &language_utils::language_pack::FrequencyList,
-    current_written: impl GramMembership,
-    current_listening: impl GramMembership,
-    projected_written: impl GramMembership,
-    projected_listening: impl GramMembership,
-) -> usize {
-    // Find the earliest level where adding cards makes any progress
-    levels
-        .iter()
-        .position(|level| {
-            let current_pct = level.known_pct(freq_list, current_written, current_listening);
-            let projected_pct = level.known_pct(freq_list, projected_written, projected_listening);
-            projected_pct > current_pct
-        })
-        // Fall back to first incomplete level
-        .unwrap_or_else(|| {
-            levels
-                .iter()
-                .position(|level| {
-                    level.known_pct(freq_list, current_written, current_listening) < 100.0
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn coverage_inversion() {
+        let invert = |mass| invert_counts([60.0, 30.0, 10.0].into_iter(), mass);
+        assert_eq!(invert(0.0), 0.0);
+        assert_eq!(invert(60.0), 1.0);
+        assert_eq!(invert(75.0), 1.5);
+        assert_eq!(invert(100.0), 3.0);
+        assert_eq!(invert(110.0), 3.0);
+        for mass in 0..100 {
+            assert!(invert(mass as f64) <= invert(mass as f64 + 1.0));
+        }
+    }
+
+    #[test]
+    fn position_preserves_slices_and_the_corpus_denominator() {
+        use language_utils::{Frequency, SpurGram, TaggedGram};
+        use lasso::Key;
+        let frequencies = FrequencyList {
+            entries: (0..250)
+                .map(|i| {
+                    (
+                        TaggedGram {
+                            gram: SpurGram::try_from_usize(i).unwrap(),
+                            sense: None,
+                        },
+                        Frequency {
+                            count: 1,
+                            direct_count: 1,
+                            easy: false,
+                            compositional: false,
+                            ease: 0.0,
+                        },
+                    )
                 })
-                .unwrap_or(levels.len().saturating_sub(1))
-        })
-}
-
-/// Compute the percent known within the first tier level that isn't at 100%.
-/// Used for the "essential" (no goal) path when we only have one set of grams.
-pub(crate) fn first_incomplete_level_pct(
-    frequency_list: &language_utils::language_pack::FrequencyList,
-    known_written: impl GramMembership,
-    known_listening: impl GramMembership,
-) -> f64 {
-    let all_grams: Vec<TaggedGram<SpurGram>> = frequency_list.entries.keys().copied().collect();
-    let levels = tier_level_slices(&all_grams, frequency_list);
-    for level in &levels {
-        let pct = level.known_pct(frequency_list, known_written, known_listening);
-        if pct < 100.0 {
-            return pct;
-        }
+                .collect(),
+            total_count: 500,
+        };
+        let zero = position(&frequencies, 0.0);
+        assert_eq!(
+            (
+                zero.tier_info.tier,
+                zero.tier_info.level,
+                zero.tier_info.percent_known
+            ),
+            (1, 1, 0.0)
+        );
+        let boundary = position(&frequencies, 6.2);
+        assert_eq!(
+            (boundary.tier_info.level, boundary.tier_info.percent_known),
+            (2, 0.0)
+        );
+        let next_tier = position(&frequencies, 40.0);
+        assert_eq!(
+            (next_tier.tier_info.tier, next_tier.tier_info.level),
+            (2, 1)
+        );
+        assert_eq!(next_tier.tier_info.percent_of_usage, 46.2);
+        assert_eq!(zero.projected_percent(&frequencies, 40.0), 100.0);
+        let all = position(&frequencies, 50.0);
+        assert_eq!(
+            (
+                all.tier_info.tier,
+                all.tier_info.level,
+                all.tier_info.percent_known
+            ),
+            (2, 2, 100.0)
+        );
+        assert_eq!(all.tier_info.percent_of_usage, 50.0);
     }
-    100.0
+
+    #[test]
+    fn progress_uses_word_units_and_caps_at_current_level_end() {
+        assert_eq!(level_percent(15.5, 0, 31), 50.0);
+        assert_eq!(level_percent(31.0, 31, 62), 0.0);
+        assert_eq!(level_percent(193.0, 186, 200), 50.0);
+        assert_eq!(level_percent(210.0, 186, 200), 100.0);
+    }
 }
