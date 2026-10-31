@@ -1,5 +1,3 @@
-import { t } from "@/lib/i18n";
-import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import type {
   Language,
@@ -8,12 +6,6 @@ import type {
 } from "../../../yap-frontend-rs/pkg";
 import { Card } from "../components/ui/card";
 import { Leeches } from "./Leeches";
-
-const FrequencyKnowledgeChart = lazy(() =>
-  import("./FrequencyKnowledgeChart").then((module) => ({
-    default: module.FrequencyKnowledgeChart,
-  })),
-);
 
 export function Stats({
   view,
@@ -45,23 +37,6 @@ export function Stats({
           label={view.assumed_known.label}
         />
       </div>
-      <Card className="p-4 gap-4">
-        <h2 className="text-lg font-semibold">
-          {view.frequency_knowledge_chart_title}
-        </h2>
-        <Suspense
-          fallback={
-            <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-              {t("stats-loading-chart")}
-            </div>
-          }
-        >
-          <FrequencyKnowledgeChart
-            points={view.frequency_knowledge_chart_data}
-            targetLanguage={targetLanguage}
-          />
-        </Suspense>
-      </Card>
       <Leeches
         leeches={view.leeches}
         label={view.leeches_label}

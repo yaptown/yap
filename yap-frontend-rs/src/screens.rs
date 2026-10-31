@@ -1070,8 +1070,6 @@ pub struct StatsScreenView {
     pub leeches: Vec<CardSummary>,
     pub leech_count: u64,
     pub leeches_label: String,
-    pub frequency_knowledge_chart_data: Vec<FrequencyKnowledgePoint>,
-    pub frequency_knowledge_chart_title: String,
 }
 
 #[bridgerton::bridge(transparent)]
@@ -1385,8 +1383,6 @@ impl Deck {
             leeches,
             leech_count,
             leeches_label: yap_i18n::tr!("stats-leeches", count = leech_count),
-            frequency_knowledge_chart_data: self.get_frequency_knowledge_chart_data(),
-            frequency_knowledge_chart_title: yap_i18n::tr!("stats-word-knowledge-by-frequency"),
         }
     }
 
@@ -2156,10 +2152,6 @@ mod tests {
             assert_eq!(stats.percent_known, deck.get_percent_of_words_known());
             assert_eq!(stats.leech_count, stats.leeches.len() as u64);
             assert_eq!(json(stats.leeches), json(deck.get_leeches()));
-            assert_eq!(
-                json(stats.frequency_knowledge_chart_data),
-                json(deck.get_frequency_knowledge_chart_data())
-            );
         }
     }
 

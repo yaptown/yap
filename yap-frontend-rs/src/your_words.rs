@@ -5,7 +5,10 @@ use language_utils::{Language, features::WordPrefix, readings::RubySegment};
 use serde::{Deserialize, Serialize};
 use yap_frontend_reducers::definition_view;
 
-use crate::{AudioRequest, CardData, CardSummary, Deck, dictionary::word_audio_request};
+use crate::{
+    AudioRequest, CardData, CardSummary, Deck, FrequencyKnowledgePoint,
+    dictionary::word_audio_request,
+};
 
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -32,6 +35,8 @@ pub struct AssumedKnownScreenView {
     pub target_language: Language,
     pub summary: WordListSummaryView,
     pub note: String,
+    pub frequency_knowledge_chart_title: String,
+    pub frequency_knowledge_chart_data: Vec<FrequencyKnowledgePoint>,
     /// Most frequent first.
     pub words: Vec<AssumedKnownWord>,
     /// The button label while more words exist than were asked for.
@@ -178,6 +183,8 @@ impl Deck {
             target_language: self.get_target_language(),
             summary: self.assumed_known_summary(senses.len()),
             note: yap_i18n::tr!("assumed-known-note"),
+            frequency_knowledge_chart_title: yap_i18n::tr!("stats-word-knowledge-by-frequency"),
+            frequency_knowledge_chart_data: self.get_frequency_knowledge_chart_data(),
             show_more: show_more(words.len(), senses.len()),
             words,
         }

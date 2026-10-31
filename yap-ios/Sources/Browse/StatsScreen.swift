@@ -1,5 +1,4 @@
 import SwiftUI
-import Charts
 
 struct StatsScreen: View {
     let review: ReviewModel
@@ -28,10 +27,6 @@ struct StatsScreen: View {
                                 ListLink(title: view.assumed_known.title, label: view.assumed_known.label) { open(.assumedKnown) }
                             }
                         }.fixedSize(horizontal: false, vertical: true).id("words")
-                        StudyCard {
-                            Text(view.frequency_knowledge_chart_title).font(.title2.bold()).foregroundStyle(Color.yapText)
-                            KnowledgeChart(points: view.frequency_knowledge_chart_data)
-                        }.id("chart")
                         VStack(alignment: .leading, spacing: 16) {
                             Text(view.leeches_label).font(.title2.bold()).foregroundStyle(Color.yapText)
                             Text(L("leeches-leeches-are-cards-you-re-really-struggling-with-the"))
@@ -47,7 +42,7 @@ struct StatsScreen: View {
                     let command = DebugHarness.shared.command
                     if command.hasPrefix("dump-fixture ") { DebugHarness.dumpFixture(.Stats(view), name: String(command.dropFirst(13))) }
                     if command.hasPrefix("stats-") { proxy.scrollTo(String(command.dropFirst(6)), anchor: .top) }
-                    if command == "status" { DebugHarness.log("stats xp=\(view.xp) reviews=\(view.total_reviews) chart=\(view.frequency_knowledge_chart_data.count)") }
+                    if command == "status" { DebugHarness.log("stats xp=\(view.xp) reviews=\(view.total_reviews)") }
                 }
                 #endif
             }
@@ -80,54 +75,5 @@ private struct StatTile: View {
             if let caption = tile.caption { Text(caption).font(.subheadline).foregroundStyle(Color.yapMuted) }
         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(16).cardSurface().foregroundStyle(Color.yapText)
-    }
-}
-
-private struct KnowledgeChart: View {
-    let points: [FrequencyKnowledgePoint]
-    @State private var frequency: Double?
-    private let ticks = frequency_knowledge_ticks()
-    // Snap in log space, just as the plotted distances are logarithmic.
-    private var selected: FrequencyKnowledgePoint? {
-        guard let frequency, frequency > 0 else { return nil }
-        return points.min { abs(log($0.frequency / frequency)) < abs(log($1.frequency / frequency)) }
-    }
-    var body: some View {
-        if points.isEmpty { Text(L("frequency-knowledge-chart-no-frequency-data-available")) }
-        else {
-            Chart {
-                ForEach(points, id: \.frequency) { point in
-                    LineMark(x: .value(L("stats-screen-frequency-rank"), point.frequency), y: .value(L("stats-screen-knowledge"), point.predicted_knowledge * 100))
-                        .foregroundStyle(Tokens.palette.chart_1.color).lineStyle(StrokeStyle(lineWidth: 2))
-                    PointMark(x: .value(L("stats-screen-frequency-rank"), point.frequency), y: .value(L("stats-screen-knowledge"), point.predicted_knowledge * 100))
-                        .symbol {
-                            Circle().strokeBorder(Tokens.palette.chart_1.color, lineWidth: 2)
-                                .background(Circle().fill(.white))
-                                .frame(width: selected?.frequency == point.frequency ? 12 : 8,
-                                       height: selected?.frequency == point.frequency ? 12 : 8)
-                        }
-                }
-                if let selected {
-                    RuleMark(x: .value(L("stats-screen-frequency-rank"), selected.frequency)).foregroundStyle(.secondary.opacity(0.4))
-                }
-            }
-                .chartXScale(domain: 1.0...10000.0, type: .log)
-                .chartYScale(domain: 0...100)
-                .chartYAxis { AxisMarks(position: .leading, values: [0, 25, 50, 75, 100]) { _ in AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)).foregroundStyle(.secondary.opacity(0.25)); AxisValueLabel() } }
-                .chartXAxis {
-                    AxisMarks(values: ticks.map(\.value)) { value in
-                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)).foregroundStyle(.secondary.opacity(0.25))
-                        AxisValueLabel(anchor: .topTrailing, collisionResolution: .greedy(priority: value.index == ticks.count - 1 ? 1 : 0)) {
-                            if let rank = value.as(Double.self), let tick = ticks.first(where: { $0.value == rank }) { Text(tick.label).fixedSize() }
-                        }
-                    }
-                }
-                .chartYAxisLabel(L("stats-screen-knowledge"))
-                .chartXSelection(value: $frequency).frame(height: 300)
-            if let selected {
-                Text(L("stats-frequency-knowledge", ["frequency": frequency_rank_label(rank: selected.frequency), "knowledge": String(format: "%.1f", selected.predicted_knowledge * 100)])).font(.caption)
-                Text(L("stats-examples-with-words", ["count": selected.word_count, "examples": selected.example_words])).font(.caption).foregroundStyle(Color.yapMuted)
-            }
-        }
     }
 }

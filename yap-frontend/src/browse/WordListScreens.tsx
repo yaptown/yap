@@ -1,5 +1,5 @@
 import { t } from "@/lib/i18n";
-import { useState, type ReactNode } from "react";
+import { lazy, Suspense, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { CirclePlus } from "lucide-react";
 import { toast } from "sonner";
@@ -20,6 +20,12 @@ import { useStudyScreenInputs } from "@/review/useStudyScreenInputs";
 import { useWeapon } from "@/core/weapon";
 import { Ruby, TargetLanguageText } from "@/components/TargetLanguageText";
 import { AudioButton } from "@/audio/AudioButton";
+
+const FrequencyKnowledgeChart = lazy(() =>
+  import("./FrequencyKnowledgeChart").then((module) => ({
+    default: module.FrequencyKnowledgeChart,
+  })),
+);
 
 // Both lists can run to tens of thousands of words, so they grow a page at a time.
 const PAGE_SIZE = 200;
@@ -109,6 +115,23 @@ export function AssumedKnownScreen({
       onShowMore={() => setLimit((limit) => limit + PAGE_SIZE)}
     >
       <p className="text-sm text-muted-foreground">{view.note}</p>
+      <Card className="p-4 gap-4">
+        <h2 className="text-lg font-semibold">
+          {view.frequency_knowledge_chart_title}
+        </h2>
+        <Suspense
+          fallback={
+            <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+              {t("stats-loading-chart")}
+            </div>
+          }
+        >
+          <FrequencyKnowledgeChart
+            points={view.frequency_knowledge_chart_data}
+            targetLanguage={view.target_language}
+          />
+        </Suspense>
+      </Card>
       {view.words.length > 0 && (
         <Card className="overflow-hidden p-0 gap-0">
           {view.words.map((word) => (
