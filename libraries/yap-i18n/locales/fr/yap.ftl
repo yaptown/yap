@@ -1267,7 +1267,6 @@ use-onesignal-notifications-failed-to-initialize = Échec de l’initialisation
 use-onesignal-notifications-failed-to-send-test-notification = Échec de l’envoi de la notification test
 use-onesignal-notifications-failed-to-subscribe = Échec de l’abonnement
 use-onesignal-notifications-failed-to-unsubscribe = Échec du désabonnement
-use-onesignal-notifications-must-be-logged-in-to-subscribe = Connecte-toi pour t’abonner
 use-onesignal-notifications-not-authenticated = Non authentifié
 use-onesignal-notifications-test-notification = Notification test
 use-onesignal-notifications-this-is-a-test-notification-from-yap-town = Ceci est une notification test de Yap.Town !

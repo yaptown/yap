@@ -132,15 +132,9 @@ export function useOneSignalNotifications() {
       setIsLoading(true);
       setError(null);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error(
-          t("use-onesignal-notifications-must-be-logged-in-to-subscribe"),
-        );
-      }
-
+      // Onboarding asks for notifications before the learner has an account,
+      // so the permission prompt can't wait for one. Linking the subscription
+      // to a Yap account happens here if signed in, else on a later init.
       const accepted = await window.OneSignal.Notifications.requestPermission();
       console.log("accepted", accepted);
 
@@ -152,18 +146,22 @@ export function useOneSignalNotifications() {
       // Wait a moment for OneSignal to process the permission
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Ensure user is logged in with OneSignal
-      try {
-        await window.OneSignal.login(user.id);
-      } catch (loginError) {
-        console.error("Failed to login to OneSignal:", loginError);
-        // Continue anyway - the subscription still works
-      }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        try {
+          await window.OneSignal.login(user.id);
+        } catch (loginError) {
+          console.error("Failed to login to OneSignal:", loginError);
+          // Continue anyway - the subscription still works
+        }
 
-      await window.OneSignal.User.addTags({
-        app: "yap-town",
-        user_id: user.id,
-      });
+        await window.OneSignal.User.addTags({
+          app: "yap-town",
+          user_id: user.id,
+        });
+      }
     } catch (err) {
       console.error("Error subscribing:", err);
       setError(
