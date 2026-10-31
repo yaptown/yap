@@ -25,7 +25,10 @@ export function MoviePosterCard({
       className={`overflow-hidden p-0 transition-all group gap-0${className ? ` ${className}` : ""}`}
       animate
     >
-      <div className="relative aspect-[2/3] bg-muted">
+      {/* Skip painting off-screen posters: "show all movies" can hold
+          hundreds, and Chromium evicts tiles and leaves holes. The aspect
+          ratio sizes the box, so skipping its contents can't shift layout. */}
+      <div className="relative aspect-[2/3] bg-muted [content-visibility:auto]">
         <Poster movieId={movie.id} deck={deck} alt={movie.title} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
           {movie.rotten_tomatoes_score !== undefined && (
