@@ -3236,7 +3236,7 @@ impl Deck {
             .daily_review_target_setting(self.daily_review_target.as_ref())
     }
 
-    pub fn set_daily_review_target(&self, daily_review_target: DailyReviewTarget) -> DeckEvent {
+    pub fn change_daily_review_target(&self, daily_review_target: DailyReviewTarget) -> DeckEvent {
         DeckEvent::Language(LanguageEvent {
             target_language: self.context.course.target_language,
             native_language: self.context.course.native_language,
@@ -5870,7 +5870,7 @@ mod tests {
     #[test]
     fn daily_review_target_explicit_event_overrides_onboarding_goal() {
         let deck = daily_review_target_deck(Some(DailyReviewTarget::Serious));
-        let event = deck.set_daily_review_target(DailyReviewTarget::Casual);
+        let event = deck.change_daily_review_target(DailyReviewTarget::Casual);
         let deck = apply_deck_event(deck, event, Utc::now());
         assert_eq!(
             deck.get_daily_review_target_setting(),

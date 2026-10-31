@@ -869,7 +869,7 @@ impl Deck {
                 minutes_label: yap_i18n::tr!("common-minutes", minutes = option.minutes),
                 target: option.value.clone(),
                 minutes: option.minutes,
-                event: self.set_daily_review_target(option.value),
+                event: self.change_daily_review_target(option.value),
             })
             .collect()
     }
