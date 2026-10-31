@@ -1156,7 +1156,6 @@ use-onesignal-notifications-failed-to-initialize = 初始化失败
 use-onesignal-notifications-failed-to-send-test-notification = 测试通知发送失败
 use-onesignal-notifications-failed-to-subscribe = 订阅失败
 use-onesignal-notifications-failed-to-unsubscribe = 取消订阅失败
-use-onesignal-notifications-must-be-logged-in-to-subscribe = 登录后才能订阅
 use-onesignal-notifications-not-authenticated = 未登录
 use-onesignal-notifications-test-notification = 测试通知
 use-onesignal-notifications-this-is-a-test-notification-from-yap-town = 这是一条来自 Yap.Town 的测试通知！

@@ -1200,7 +1200,6 @@ use-onesignal-notifications-failed-to-initialize = Failed to initialize
 use-onesignal-notifications-failed-to-send-test-notification = Failed to send test notification
 use-onesignal-notifications-failed-to-subscribe = Failed to subscribe
 use-onesignal-notifications-failed-to-unsubscribe = Failed to unsubscribe
-use-onesignal-notifications-must-be-logged-in-to-subscribe = Must be logged in to subscribe
 use-onesignal-notifications-not-authenticated = Not authenticated
 use-onesignal-notifications-test-notification = Test Notification
 use-onesignal-notifications-this-is-a-test-notification-from-yap-town = This is a test notification from Yap.Town!

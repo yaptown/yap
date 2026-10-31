@@ -1203,7 +1203,6 @@ use-onesignal-notifications-failed-to-initialize = Error al iniciar
 use-onesignal-notifications-failed-to-send-test-notification = No se pudo enviar la notificación de prueba
 use-onesignal-notifications-failed-to-subscribe = No se pudo activar la suscripción
 use-onesignal-notifications-failed-to-unsubscribe = No se pudo cancelar la suscripción
-use-onesignal-notifications-must-be-logged-in-to-subscribe = Debes iniciar sesión para suscribirte
 use-onesignal-notifications-not-authenticated = No autenticado
 use-onesignal-notifications-test-notification = Notificación de prueba
 use-onesignal-notifications-this-is-a-test-notification-from-yap-town = ¡Esta es una notificación de prueba de Yap.Town!
