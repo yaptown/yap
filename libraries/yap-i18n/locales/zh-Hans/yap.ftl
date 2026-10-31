@@ -1271,6 +1271,9 @@ activity-day = { $count ->
    *[other] { $date }：{ $number } 次复习
     }
 activity-date = { $year }年{ $month }{ $day }日
+activity-short-date = { $month }{ $day }日
+review-total-title = 累计复习
+review-total-point = { $date }：{ $reviews }
 activity-less = 少
 activity-more = 多
 activity-monday = 周一

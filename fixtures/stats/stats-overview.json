@@ -2544,6 +2544,83 @@
       ],
       "less_label": "Less",
       "more_label": "More"
+    },
+    "review_total": {
+      "title": "Total reviews",
+      "points": [
+        {
+          "day": 0,
+          "total": 0,
+          "label": "Mar 23, 2026 · 0 reviews"
+        },
+        {
+          "day": 1,
+          "total": 1,
+          "label": "Mar 24, 2026 · 1 review"
+        },
+        {
+          "day": 121,
+          "total": 3,
+          "label": "Jul 22, 2026 · 3 reviews"
+        },
+        {
+          "day": 181,
+          "total": 6,
+          "label": "Sep 20, 2026 · 6 reviews"
+        },
+        {
+          "day": 196,
+          "total": 11,
+          "label": "Oct 5, 2026 · 11 reviews"
+        },
+        {
+          "day": 208,
+          "total": 21,
+          "label": "Oct 17, 2026 · 21 reviews"
+        },
+        {
+          "day": 212,
+          "total": 41,
+          "label": "Oct 21, 2026 · 41 reviews"
+        },
+        {
+          "day": 216,
+          "total": 71,
+          "label": "Oct 25, 2026 · 71 reviews"
+        },
+        {
+          "day": 220,
+          "total": 121,
+          "label": "Oct 29, 2026 · 121 reviews"
+        },
+        {
+          "day": 221,
+          "total": 171,
+          "label": "Oct 30, 2026 · 171 reviews"
+        }
+      ],
+      "ticks": [
+        {
+          "day": 0,
+          "label": "Mar 23"
+        },
+        {
+          "day": 55,
+          "label": "May 17"
+        },
+        {
+          "day": 110,
+          "label": "Jul 11"
+        },
+        {
+          "day": 165,
+          "label": "Sep 4"
+        },
+        {
+          "day": 221,
+          "label": "Oct 30"
+        }
+      ]
     }
   }
 }

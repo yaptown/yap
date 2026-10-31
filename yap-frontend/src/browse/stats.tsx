@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import type {
   Language,
@@ -7,6 +8,12 @@ import type {
 import { Card } from "../components/ui/card";
 import { ActivityCalendar } from "./ActivityCalendar";
 import { Leeches } from "./Leeches";
+
+const ReviewTotalChart = lazy(() =>
+  import("./ReviewTotalChart").then((module) => ({
+    default: module.ReviewTotalChart,
+  })),
+);
 
 export function Stats({
   view,
@@ -26,6 +33,14 @@ export function Stats({
         ))}
       </div>
       <ActivityCalendar view={view.activity} />
+      {view.review_total && (
+        <Card className="p-4 gap-3">
+          <h2 className="text-lg font-semibold">{view.review_total.title}</h2>
+          <Suspense fallback={<div className="h-[220px]" />}>
+            <ReviewTotalChart view={view.review_total} />
+          </Suspense>
+        </Card>
+      )}
       <ListLink to="/due" title={view.due.title} label={view.due.label} />
       <div className="grid grid-cols-2 gap-4">
         <ListLink

@@ -129,6 +129,106 @@ pub(crate) fn activity_view(history: &BTreeMap<i64, DaySummary>, today: NaiveDat
     }
 }
 
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ReviewTotalPoint {
+    /// Days since the day before the first study day.
+    pub day: u32,
+    pub total: u32,
+    pub label: String,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ReviewTotalTick {
+    pub day: u32,
+    pub label: String,
+}
+
+/// The running review total: zero the day before the first study day, then
+/// one point per study day and one for today.
+/// Hosts draw it as a step line, since the total only moves on study days.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ReviewTotalView {
+    pub title: String,
+    pub points: Vec<ReviewTotalPoint>,
+    pub ticks: Vec<ReviewTotalTick>,
+}
+
+pub(crate) fn review_total_view(
+    history: &BTreeMap<i64, DaySummary>,
+    today: NaiveDate,
+) -> Option<ReviewTotalView> {
+    let mut days = history
+        .iter()
+        .filter(|(_, day)| day.reviews > 0)
+        .map(|(&day, summary)| {
+            (
+                NaiveDate::from_num_days_from_ce_opt(day as i32).unwrap(),
+                summary.reviews,
+            )
+        })
+        .peekable();
+    // Starting from zero the day before keeps a first-day learner's chart a
+    // line rather than a lone point.
+    let origin = days.peek()?.0 - Duration::days(1);
+    let mut last = origin;
+    let mut total = 0;
+    let mut points = vec![review_total_point(origin, origin, 0)];
+    for (date, reviews) in days {
+        total += reviews;
+        last = date;
+        points.push(review_total_point(origin, date, total));
+    }
+    // A device clock running fast can leave study days after today.
+    if today > last {
+        points.push(review_total_point(origin, today, total));
+    }
+    let span = points.last().unwrap().day;
+    let intervals = span.min(4);
+    let ticks = (0..=intervals)
+        .map(|tick| {
+            let day = span * tick / intervals;
+            let date = origin + Duration::days(day.into());
+            ReviewTotalTick {
+                day,
+                label: yap_i18n::tr!(
+                    "activity-short-date",
+                    month = month_label(date.month()),
+                    day = date.day()
+                ),
+            }
+        })
+        .collect();
+    Some(ReviewTotalView {
+        title: yap_i18n::tr!("review-total-title"),
+        points,
+        ticks,
+    })
+}
+
+fn review_total_point(first: NaiveDate, date: NaiveDate, total: u32) -> ReviewTotalPoint {
+    ReviewTotalPoint {
+        day: (date - first).num_days() as u32,
+        total,
+        label: yap_i18n::tr!(
+            "review-total-point",
+            date = yap_i18n::tr!(
+                "activity-date",
+                year = date.year().to_string(),
+                month = month_label(date.month()),
+                day = date.day()
+            ),
+            reviews = yap_i18n::tr!(
+                "activity-review-count",
+                count = total,
+                number = yap_i18n::format_count(total)
+            )
+        ),
+    }
+}
+
 fn month_label(month: u32) -> String {
     match month {
         1 => yap_i18n::tr!("activity-jan"),
@@ -194,5 +294,33 @@ mod tests {
                 .flatten()
                 .all(|day| day.level == 0)
         );
+    }
+
+    #[test]
+    fn review_total_first_day_and_fast_clock() {
+        let today = NaiveDate::from_ymd_opt(2024, 3, 1).unwrap();
+        let history = |date: NaiveDate| {
+            BTreeMap::from([(
+                i64::from(date.num_days_from_ce()),
+                DaySummary {
+                    reviews: 5,
+                    time_spent_seconds: 0,
+                    new_cards: 0,
+                    learned_cards: 0,
+                    locked_in_cards: 0,
+                },
+            )])
+        };
+        let totals = |view: ReviewTotalView| {
+            view.points
+                .iter()
+                .map(|point| (point.day, point.total))
+                .collect::<Vec<_>>()
+        };
+        let first_day = review_total_view(&history(today), today).unwrap();
+        assert_eq!(totals(first_day), [(0, 0), (1, 5)]);
+        let tomorrow = review_total_view(&history(today + Duration::days(1)), today).unwrap();
+        assert_eq!(totals(tomorrow), [(0, 0), (1, 5)]);
+        assert!(review_total_view(&BTreeMap::new(), today).is_none());
     }
 }

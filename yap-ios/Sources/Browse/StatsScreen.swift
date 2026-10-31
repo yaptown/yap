@@ -21,6 +21,7 @@ struct StatsScreen: View {
                             }
                         }.fixedSize(horizontal: false, vertical: true).id("stats")
                         ActivityCalendar(view: view.activity).id("activity")
+                        if let reviewTotal = view.review_total { ReviewTotalChart(view: reviewTotal).id("reviewTotal") }
                         ListLink(title: view.due.title, label: view.due.label) { open(.due) }.id("due")
                         Grid(horizontalSpacing: 16) {
                             GridRow {

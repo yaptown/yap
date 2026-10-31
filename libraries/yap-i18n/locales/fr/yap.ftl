@@ -1387,6 +1387,9 @@ activity-day = { $count ->
    *[other] { $number } révisions le { $date }
     }
 activity-date = { $day } { $month } { $year }
+activity-short-date = { $day } { $month }
+review-total-title = Révisions au total
+review-total-point = { $date } · { $reviews }
 activity-less = Moins
 activity-more = Plus
 activity-monday = lun.
