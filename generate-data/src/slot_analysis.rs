@@ -199,7 +199,7 @@ async fn placeholder_hints(
         })
         .collect();
     let mut samples =
-        crate::corpus_samples::SampleCache::load(output_dir.join("slot_hint_examples.jsonl"))?;
+        crate::corpus_samples::PinnedSamples::load(output_dir.join("slot_hint_examples.jsonl"))?;
     samples.refresh_with(&(), &pool, |pool| {
         crate::corpus_samples::select_evenly(pool, GROUNDING_SAMPLE_SIZE)
     });
@@ -691,7 +691,7 @@ pub struct GradeRequest {
 }
 
 pub type MatchSamples =
-    crate::corpus_samples::SampleCache<(String, SlotRealization), (String, Vec<String>)>;
+    crate::corpus_samples::PinnedSamples<(String, SlotRealization), (String, Vec<String>)>;
 
 impl GradeRequest {
     pub fn new(

@@ -63,7 +63,7 @@ impl<'a> CorpusIndex<'a> {
 
 /// Persistent, ordered prompt examples. Identity and selection strategy belong
 /// to the caller; the cache populates each key once and never changes non-empty samples.
-pub struct SampleCache<K, I = String> {
+pub struct PinnedSamples<K, I = String> {
     path: PathBuf,
     samples: BTreeMap<K, SavedSamples<I>>,
 }
@@ -84,7 +84,7 @@ struct SampleEntry<K, S>(
 );
 
 impl<K: Ord + Clone + Serialize + DeserializeOwned, I: Clone + Serialize + DeserializeOwned>
-    SampleCache<K, I>
+    PinnedSamples<K, I>
 {
     pub fn load(path: PathBuf) -> anyhow::Result<Self> {
         let samples = if path.exists() {
@@ -164,7 +164,7 @@ impl<K: Ord + Clone + Serialize + DeserializeOwned, I: Clone + Serialize + Deser
     }
 }
 
-impl<K: Ord + Clone + Serialize + DeserializeOwned> SampleCache<K> {
+impl<K: Ord + Clone + Serialize + DeserializeOwned> PinnedSamples<K> {
     /// The original sentence sampler, including its first-population ordering.
     pub fn refresh(&mut self, key: &K, pool: &[&str]) {
         self.refresh_with(
@@ -268,7 +268,7 @@ mod tests {
         for original in ["[1,[2,2,1]]\n", "[1,[2,2,1],3]\n"] {
             let path = dir.path().join("samples.jsonl");
             std::fs::write(&path, original).unwrap();
-            let mut cache = SampleCache::<u32, u32>::load(path.clone()).unwrap();
+            let mut cache = PinnedSamples::<u32, u32>::load(path.clone()).unwrap();
             for pool in [vec![1, 2, 3, 4], vec![1, 2], vec![9], vec![]] {
                 assert!(!cache.needs_refresh(&1));
                 cache.refresh_with(&1, &pool, |_| panic!("saved picks changed"));
@@ -277,7 +277,7 @@ mod tests {
             cache.save().unwrap();
             assert_eq!(std::fs::read_to_string(&path).unwrap(), original);
             assert_eq!(
-                SampleCache::<u32, u32>::load(path).unwrap().get(&1),
+                PinnedSamples::<u32, u32>::load(path).unwrap().get(&1),
                 [2, 2, 1]
             );
         }
@@ -287,7 +287,7 @@ mod tests {
     fn empty_and_missing_keys_populate_in_order() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("samples.jsonl");
-        let mut cache = SampleCache::<u32, u32>::load(path.clone()).unwrap();
+        let mut cache = PinnedSamples::<u32, u32>::load(path.clone()).unwrap();
         cache.refresh_with(&1, &[], |p| select_first(p, 3));
         assert!(cache.needs_refresh(&1));
         cache.refresh_with(&2, &[3, 1, 2], |p| select_first(p, 3));

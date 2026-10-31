@@ -1,4 +1,4 @@
-use crate::corpus_samples::{CorpusIndex, SampleCache};
+use crate::corpus_samples::{CorpusIndex, PinnedSamples};
 use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{
     Atom, Course, DictionaryDefinition, Gram, GramFrequencyEntry, Heteronym,
@@ -101,7 +101,7 @@ fn normalize_phrase(entry: &mut PhrasebookDefinitionEntry, native: language_util
 async fn generate_dictionary_group(
     client: &ChatClient,
     entries: &[(Heteronym<String>, u32)],
-    samples: &SampleCache<Heteronym<String>>,
+    samples: &PinnedSamples<Heteronym<String>>,
     system_prompt: &str,
     policy: DictionaryPolicy,
     progress: &ProgressBar,
@@ -180,7 +180,7 @@ pub async fn create_gram_dictionary(
     course: Course,
     gram_frequencies: &[GramFrequencyEntry<String>],
     corpus: &CorpusIndex<'_>,
-    heteronym_sentences: &mut SampleCache<Heteronym<String>>,
+    heteronym_sentences: &mut PinnedSamples<Heteronym<String>>,
 ) -> anyhow::Result<BTreeMap<Heteronym<String>, DictionaryDefinition>> {
     let target_language_heteronyms = extract_single_atom_heteronyms(gram_frequencies);
     let Course {
@@ -315,7 +315,7 @@ pub async fn create_gram_phrasebook(
     course: Course,
     gram_frequencies: &[GramFrequencyEntry<String>],
     corpus: &CorpusIndex<'_>,
-    gram_sentences: &mut SampleCache<Gram<String>>,
+    gram_sentences: &mut PinnedSamples<Gram<String>>,
 ) -> anyhow::Result<Vec<(Gram<String>, PhrasebookDefinitionEntry)>> {
     let Course {
         native_language,
@@ -550,7 +550,7 @@ Of course, their native language is {native_language}, so you should write the m
 }
 
 fn refresh_sense_examples(
-    samples: &mut SampleCache<language_utils::TaggedGram<Gram<String>>>,
+    samples: &mut PinnedSamples<language_utils::TaggedGram<Gram<String>>>,
     gram: &language_utils::TaggedGram<Gram<String>>,
     anchors: &[String],
 ) {
@@ -577,7 +577,7 @@ pub async fn create_sense_definitions(
         course.native_language.frozen_prompt_name(),
         policy.example_guidance(),
     );
-    let mut samples = SampleCache::load(
+    let mut samples = PinnedSamples::load(
         crate::pipeline::course_dirs(&course)?
             .native_specific_dir
             .join("sense_sentences.jsonl"),
@@ -697,7 +697,7 @@ mod tests {
     #[test]
     fn sense_examples_remain_fixed_when_anchors_change() {
         let dir = tempfile::tempdir().unwrap();
-        let mut samples = SampleCache::load(dir.path().join("senses.jsonl")).unwrap();
+        let mut samples = PinnedSamples::load(dir.path().join("senses.jsonl")).unwrap();
         let gram = language_utils::TaggedGram {
             gram: Gram(Vec::new()),
             sense: std::num::NonZeroU32::new(1),

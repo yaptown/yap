@@ -475,12 +475,12 @@ async fn later_stages(
         )
     );
     let mut words =
-        crate::corpus_samples::SampleCache::load(native.join("heteronym_sentences.jsonl"))?;
+        crate::corpus_samples::PinnedSamples::load(native.join("heteronym_sentences.jsonl"))?;
     let dictionary = measure!(
         "dictionary",
         crate::dict::create_gram_dictionary(course, &filtered, &corpus, &mut words)
     );
-    let mut phrases = crate::corpus_samples::SampleCache::<Gram<String>>::load(
+    let mut phrases = crate::corpus_samples::PinnedSamples::<Gram<String>>::load(
         native.join("gram_sentences.jsonl"),
     )?;
     let phrasebook = if overlays_complete {

@@ -4,7 +4,7 @@ use super::{
     occurrence::{Escape, forced_examples},
     sample::Identity,
 };
-use crate::corpus_samples::SampleCache;
+use crate::corpus_samples::PinnedSamples;
 use language_utils::{Gram, Language};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
@@ -44,8 +44,8 @@ impl Attested {
 }
 
 pub(super) struct Samples {
-    forced: SampleCache<ForcedKey, Forced>,
-    attested: SampleCache<AttestedKey, Attested>,
+    forced: PinnedSamples<ForcedKey, Forced>,
+    attested: PinnedSamples<AttestedKey, Attested>,
 }
 impl Samples {
     pub fn load(language: Language) -> anyhow::Result<Self> {
@@ -54,8 +54,8 @@ impl Samples {
 
     fn load_from(directory: &std::path::Path) -> anyhow::Result<Self> {
         Ok(Self {
-            forced: SampleCache::load(directory.join("reading_repair_escapes.jsonl"))?,
-            attested: SampleCache::load(directory.join("reading_repair_attested.jsonl"))?,
+            forced: PinnedSamples::load(directory.join("reading_repair_escapes.jsonl"))?,
+            attested: PinnedSamples::load(directory.join("reading_repair_attested.jsonl"))?,
         })
     }
 

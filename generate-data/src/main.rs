@@ -429,7 +429,7 @@ async fn main() -> anyhow::Result<()> {
         let phrasebook_stage = async {
             let gram_phrasebook_file = native_specific_dir.join("gram_phrasebook.jsonl");
             let mut gram_sentences =
-                generate_data::corpus_samples::SampleCache::<Gram<String>>::load(
+                generate_data::corpus_samples::PinnedSamples::<Gram<String>>::load(
                     native_specific_dir.join("gram_sentences.jsonl"),
                 )?;
             let mut gram_phrasebook = generate_data::dict::create_gram_phrasebook(
@@ -671,7 +671,7 @@ async fn main() -> anyhow::Result<()> {
             anyhow::Ok((morphology, etymology_segmentations, morphemes))
         };
         let dictionary_stage = async {
-            let mut samples = generate_data::corpus_samples::SampleCache::<
+            let mut samples = generate_data::corpus_samples::PinnedSamples::<
                 language_utils::Heteronym<String>,
             >::load(
                 native_specific_dir.join("heteronym_sentences.jsonl")

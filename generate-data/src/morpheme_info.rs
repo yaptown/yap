@@ -483,7 +483,7 @@ You'll receive a morpheme plus a small sample of words it appears in. Pick the s
     );
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
-    let mut samples = crate::corpus_samples::SampleCache::load(
+    let mut samples = crate::corpus_samples::PinnedSamples::load(
         crate::pipeline::course_dirs(&course)
             .unwrap()
             .native_specific_dir
