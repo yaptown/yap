@@ -205,7 +205,7 @@ import Observation
         case let command where command.hasPrefix("goal "):
             let options = get_daily_goal_options()
             if let i = Int(command.dropFirst(5)), options.indices.contains(i) {
-                session.addDeckEvent(deck.set_daily_review_target(daily_review_target: options[i].value))
+                session.addDeckEvent(deck.change_daily_review_target(daily_review_target: options[i].value))
             }
         case "cant-listen": cantListen()
         case "dismiss-step": actions.dismissAccomplishment()
