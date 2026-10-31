@@ -13,7 +13,8 @@ struct ActivityCalendar: View {
             }
             HStack(alignment: .top, spacing: 4) {
                 VStack(alignment: .leading, spacing: gap) {
-                    Color.clear.frame(height: cell)
+                    // Zero width: a flexible spacer here would claim half the row.
+                    Color.clear.frame(width: 0, height: cell)
                     ForEach(Array(view.weekdays.enumerated()), id: \.offset) { _, label in
                         Text(label).frame(height: cell)
                     }
