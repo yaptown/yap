@@ -1245,7 +1245,6 @@ anki-deck-downloaded = 牌组已下载
 anki-added-new-cards = 新增 { $sentences } 个句子（{ $cards } 张新卡片）。
 anki-merge-hint = 像导入第一个牌组那样导入它。Anki 会识别你已有的卡片，保留它们的进度，并把新卡片排在后面。
 anki-just-now = 刚刚
-common-show-more = 显示更多
 your-cards-title = 你的卡片
 your-cards-summary = { $count ->
        *[other] 你添加的 { $number } 张卡片
@@ -1255,3 +1254,37 @@ assumed-known-summary = { $count ->
        *[other] Yap 认为你已会的 { $number } 个词
     }
 assumed-known-note = Yap 认为你已经认识这些词，但如果想学习它们，可以把它们加入你的牌组。
+
+assumed-known-frequency-rank = 词频排名第 { $rank } 位
+pagination-previous = 上一页
+pagination-next = 下一页
+pagination-status = 第 { $page } 页，共 { $pages } 页
+activity-title = 学习记录
+activity-summary = 过去一年：{ $reviews } · { $days }
+activity-review-count = { $count ->
+   *[other] { $number } 次复习
+    }
+activity-day-count = { $count ->
+   *[other] { $number } 个学习日
+    }
+activity-day = { $count ->
+   *[other] { $date }：{ $number } 次复习
+    }
+activity-date = { $year }年{ $month }{ $day }日
+activity-less = 少
+activity-more = 多
+activity-monday = 周一
+activity-wednesday = 周三
+activity-friday = 周五
+activity-jan = 1月
+activity-feb = 2月
+activity-mar = 3月
+activity-apr = 4月
+activity-may = 5月
+activity-jun = 6月
+activity-jul = 7月
+activity-aug = 8月
+activity-sep = 9月
+activity-oct = 10月
+activity-nov = 11月
+activity-dec = 12月

@@ -254,6 +254,8 @@
     "words": [
       {
         "frequency_index": 0,
+        "frequency_rank_label": "#1",
+        "frequency_rank_accessibility_label": "Frequency rank 1",
         "display_text": "c'est",
         "ruby": [],
         "prefix": null,
@@ -271,6 +273,8 @@
       },
       {
         "frequency_index": 1,
+        "frequency_rank_label": "#2",
+        "frequency_rank_accessibility_label": "Frequency rank 2",
         "display_text": "ne pas",
         "ruby": [],
         "prefix": null,
@@ -288,6 +292,8 @@
       },
       {
         "frequency_index": 2,
+        "frequency_rank_label": "#3",
+        "frequency_rank_accessibility_label": "Frequency rank 3",
         "display_text": "de",
         "ruby": [],
         "prefix": null,
@@ -305,6 +311,8 @@
       },
       {
         "frequency_index": 3,
+        "frequency_rank_label": "#4",
+        "frequency_rank_accessibility_label": "Frequency rank 4",
         "display_text": "et",
         "ruby": [],
         "prefix": null,
@@ -322,6 +330,8 @@
       },
       {
         "frequency_index": 4,
+        "frequency_rank_label": "#5",
+        "frequency_rank_accessibility_label": "Frequency rank 5",
         "display_text": "je ne",
         "ruby": [],
         "prefix": null,
@@ -339,6 +349,8 @@
       },
       {
         "frequency_index": 5,
+        "frequency_rank_label": "#6",
+        "frequency_rank_accessibility_label": "Frequency rank 6",
         "display_text": "pas",
         "ruby": [],
         "prefix": null,
@@ -356,6 +368,8 @@
       },
       {
         "frequency_index": 6,
+        "frequency_rank_label": "#7",
+        "frequency_rank_accessibility_label": "Frequency rank 7",
         "display_text": "à",
         "ruby": [],
         "prefix": null,
@@ -373,6 +387,8 @@
       },
       {
         "frequency_index": 7,
+        "frequency_rank_label": "#8",
+        "frequency_rank_accessibility_label": "Frequency rank 8",
         "display_text": "j'ai",
         "ruby": [],
         "prefix": null,
@@ -390,6 +406,8 @@
       },
       {
         "frequency_index": 8,
+        "frequency_rank_label": "#9",
+        "frequency_rank_accessibility_label": "Frequency rank 9",
         "display_text": "je suis",
         "ruby": [],
         "prefix": null,
@@ -407,6 +425,8 @@
       },
       {
         "frequency_index": 9,
+        "frequency_rank_label": "#10",
+        "frequency_rank_accessibility_label": "Frequency rank 10",
         "display_text": "ne soit",
         "ruby": [],
         "prefix": null,
@@ -424,6 +444,8 @@
       },
       {
         "frequency_index": 10,
+        "frequency_rank_label": "#11",
+        "frequency_rank_accessibility_label": "Frequency rank 11",
         "display_text": "pour",
         "ruby": [],
         "prefix": null,
@@ -441,6 +463,8 @@
       },
       {
         "frequency_index": 11,
+        "frequency_rank_label": "#12",
+        "frequency_rank_accessibility_label": "Frequency rank 12",
         "display_text": "sois pas",
         "ruby": [],
         "prefix": null,
@@ -458,6 +482,8 @@
       },
       {
         "frequency_index": 12,
+        "frequency_rank_label": "#13",
+        "frequency_rank_accessibility_label": "Frequency rank 13",
         "display_text": "ça",
         "ruby": [],
         "prefix": null,
@@ -475,6 +501,8 @@
       },
       {
         "frequency_index": 13,
+        "frequency_rank_label": "#14",
+        "frequency_rank_accessibility_label": "Frequency rank 14",
         "display_text": "est un",
         "ruby": [],
         "prefix": null,
@@ -492,6 +520,8 @@
       },
       {
         "frequency_index": 14,
+        "frequency_rank_label": "#15",
+        "frequency_rank_accessibility_label": "Frequency rank 15",
         "display_text": "il est",
         "ruby": [],
         "prefix": null,
@@ -509,6 +539,8 @@
       },
       {
         "frequency_index": 15,
+        "frequency_rank_label": "#16",
+        "frequency_rank_accessibility_label": "Frequency rank 16",
         "display_text": "ce que",
         "ruby": [],
         "prefix": null,
@@ -526,6 +558,8 @@
       },
       {
         "frequency_index": 16,
+        "frequency_rank_label": "#17",
+        "frequency_rank_accessibility_label": "Frequency rank 17",
         "display_text": "est le",
         "ruby": [],
         "prefix": null,
@@ -543,6 +577,8 @@
       },
       {
         "frequency_index": 17,
+        "frequency_rank_label": "#18",
+        "frequency_rank_accessibility_label": "Frequency rank 18",
         "display_text": "que je",
         "ruby": [],
         "prefix": null,
@@ -560,6 +596,8 @@
       },
       {
         "frequency_index": 19,
+        "frequency_rank_label": "#20",
+        "frequency_rank_accessibility_label": "Frequency rank 20",
         "display_text": "y avoir",
         "ruby": [],
         "prefix": null,
@@ -577,6 +615,8 @@
       },
       {
         "frequency_index": 20,
+        "frequency_rank_label": "#21",
+        "frequency_rank_accessibility_label": "Frequency rank 21",
         "display_text": "le",
         "ruby": [],
         "prefix": null,
@@ -594,6 +634,8 @@
       },
       {
         "frequency_index": 21,
+        "frequency_rank_label": "#22",
+        "frequency_rank_accessibility_label": "Frequency rank 22",
         "display_text": "est",
         "ruby": [],
         "prefix": {
@@ -614,6 +656,8 @@
       },
       {
         "frequency_index": 22,
+        "frequency_rank_label": "#23",
+        "frequency_rank_accessibility_label": "Frequency rank 23",
         "display_text": "ne sont pas",
         "ruby": [],
         "prefix": null,
@@ -631,6 +675,8 @@
       },
       {
         "frequency_index": 23,
+        "frequency_rank_label": "#24",
+        "frequency_rank_accessibility_label": "Frequency rank 24",
         "display_text": "que",
         "ruby": [],
         "prefix": null,
@@ -648,6 +694,8 @@
       },
       {
         "frequency_index": 25,
+        "frequency_rank_label": "#26",
+        "frequency_rank_accessibility_label": "Frequency rank 26",
         "display_text": "mais",
         "ruby": [],
         "prefix": null,
@@ -665,6 +713,8 @@
       },
       {
         "frequency_index": 26,
+        "frequency_rank_label": "#27",
+        "frequency_rank_accessibility_label": "Frequency rank 27",
         "display_text": "a un",
         "ruby": [],
         "prefix": null,
@@ -682,6 +732,8 @@
       },
       {
         "frequency_index": 27,
+        "frequency_rank_label": "#28",
+        "frequency_rank_accessibility_label": "Frequency rank 28",
         "display_text": "il",
         "ruby": [],
         "prefix": null,
@@ -699,6 +751,8 @@
       },
       {
         "frequency_index": 28,
+        "frequency_rank_label": "#29",
+        "frequency_rank_accessibility_label": "Frequency rank 29",
         "display_text": "l'avoir",
         "ruby": [],
         "prefix": null,
@@ -716,6 +770,8 @@
       },
       {
         "frequency_index": 29,
+        "frequency_rank_label": "#30",
+        "frequency_rank_accessibility_label": "Frequency rank 30",
         "display_text": "ici",
         "ruby": [],
         "prefix": null,
@@ -733,6 +789,8 @@
       },
       {
         "frequency_index": 30,
+        "frequency_rank_label": "#31",
+        "frequency_rank_accessibility_label": "Frequency rank 31",
         "display_text": "qu'il",
         "ruby": [],
         "prefix": null,
@@ -750,6 +808,8 @@
       },
       {
         "frequency_index": 31,
+        "frequency_rank_label": "#32",
+        "frequency_rank_accessibility_label": "Frequency rank 32",
         "display_text": "que tu",
         "ruby": [],
         "prefix": null,
@@ -767,6 +827,8 @@
       },
       {
         "frequency_index": 32,
+        "frequency_rank_label": "#33",
+        "frequency_rank_accessibility_label": "Frequency rank 33",
         "display_text": "est-ce que",
         "ruby": [],
         "prefix": null,
@@ -784,6 +846,8 @@
       },
       {
         "frequency_index": 33,
+        "frequency_rank_label": "#34",
+        "frequency_rank_accessibility_label": "Frequency rank 34",
         "display_text": "il ne",
         "ruby": [],
         "prefix": null,
@@ -801,6 +865,8 @@
       },
       {
         "frequency_index": 34,
+        "frequency_rank_label": "#35",
+        "frequency_rank_accessibility_label": "Frequency rank 35",
         "display_text": "dans le",
         "ruby": [],
         "prefix": null,
@@ -818,6 +884,8 @@
       },
       {
         "frequency_index": 35,
+        "frequency_rank_label": "#36",
+        "frequency_rank_accessibility_label": "Frequency rank 36",
         "display_text": "un",
         "ruby": [],
         "prefix": null,
@@ -835,6 +903,8 @@
       },
       {
         "frequency_index": 36,
+        "frequency_rank_label": "#37",
+        "frequency_rank_accessibility_label": "Frequency rank 37",
         "display_text": "vous",
         "ruby": [],
         "prefix": null,
@@ -852,6 +922,8 @@
       },
       {
         "frequency_index": 37,
+        "frequency_rank_label": "#38",
+        "frequency_rank_accessibility_label": "Frequency rank 38",
         "display_text": "les",
         "ruby": [],
         "prefix": null,
@@ -869,6 +941,8 @@
       },
       {
         "frequency_index": 38,
+        "frequency_rank_label": "#39",
+        "frequency_rank_accessibility_label": "Frequency rank 39",
         "display_text": "de la",
         "ruby": [],
         "prefix": null,
@@ -886,6 +960,8 @@
       },
       {
         "frequency_index": 39,
+        "frequency_rank_label": "#40",
+        "frequency_rank_accessibility_label": "Frequency rank 40",
         "display_text": "d'",
         "ruby": [],
         "prefix": null,
@@ -903,6 +979,8 @@
       },
       {
         "frequency_index": 40,
+        "frequency_rank_label": "#41",
+        "frequency_rank_accessibility_label": "Frequency rank 41",
         "display_text": "je veux",
         "ruby": [],
         "prefix": null,
@@ -920,6 +998,8 @@
       },
       {
         "frequency_index": 41,
+        "frequency_rank_label": "#42",
+        "frequency_rank_accessibility_label": "Frequency rank 42",
         "display_text": "des",
         "ruby": [],
         "prefix": null,
@@ -936,6 +1016,88 @@
         }
       }
     ],
-    "show_more": "Show more"
+    "pagination": {
+      "page": 0,
+      "page_count": 18,
+      "previous": null,
+      "next": 1,
+      "previous_label": "Previous",
+      "next_label": "Next",
+      "status": "Page 1 of 18",
+      "options": [
+        {
+          "page": 0,
+          "label": "1–200"
+        },
+        {
+          "page": 1,
+          "label": "201–400"
+        },
+        {
+          "page": 2,
+          "label": "401–600"
+        },
+        {
+          "page": 3,
+          "label": "601–800"
+        },
+        {
+          "page": 4,
+          "label": "801–1,000"
+        },
+        {
+          "page": 5,
+          "label": "1,001–1,200"
+        },
+        {
+          "page": 6,
+          "label": "1,201–1,400"
+        },
+        {
+          "page": 7,
+          "label": "1,401–1,600"
+        },
+        {
+          "page": 8,
+          "label": "1,601–1,800"
+        },
+        {
+          "page": 9,
+          "label": "1,801–2,000"
+        },
+        {
+          "page": 10,
+          "label": "2,001–2,200"
+        },
+        {
+          "page": 11,
+          "label": "2,201–2,400"
+        },
+        {
+          "page": 12,
+          "label": "2,401–2,600"
+        },
+        {
+          "page": 13,
+          "label": "2,601–2,800"
+        },
+        {
+          "page": 14,
+          "label": "2,801–3,000"
+        },
+        {
+          "page": 15,
+          "label": "3,001–3,200"
+        },
+        {
+          "page": 16,
+          "label": "3,201–3,400"
+        },
+        {
+          "page": 17,
+          "label": "3,401–3,501"
+        }
+      ]
+    }
   }
 }

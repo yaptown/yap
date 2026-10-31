@@ -1,18 +1,15 @@
 import SwiftUI
 import Charts
 
-/// Both lists can run to tens of thousands of words, so they grow a page at a time.
-private let pageSize: UInt32 = 200
-
 struct YourCardsScreen: View {
     let review: ReviewModel
     var view: YourCardsScreenView? = nil
-    @State private var limit = pageSize
+    @State private var page: UInt32 = 0
     var body: some View {
         TimelineView(.every(10)) { _ in
             let now = ReviewModel.now
-            let view = self.view ?? review.deck.your_cards_view(limit: limit)
-            WordList(title: view.summary.title, label: view.summary.label, showMore: view.show_more, onShowMore: { limit += pageSize }) {
+            let view = self.view ?? review.deck.your_cards_view(page: page)
+            WordList(title: view.summary.title, label: view.summary.label, pagination: view.pagination, page: $page) {
                 if !view.cards.isEmpty { CardSummaryList(cards: view.cards, timestampMs: now) }
             }
         }
@@ -27,10 +24,10 @@ struct AssumedKnownScreen: View {
     let review: ReviewModel
     let session: YapSession
     var view: AssumedKnownScreenView? = nil
-    @State private var limit = pageSize
+    @State private var page: UInt32 = 0
     var body: some View {
-        let view = self.view ?? review.deck.assumed_known_view(limit: limit)
-        WordList(title: view.summary.title, label: view.summary.label, showMore: view.show_more, onShowMore: { limit += pageSize }) {
+        let view = self.view ?? review.deck.assumed_known_view(page: page)
+        WordList(title: view.summary.title, label: view.summary.label, pagination: view.pagination, page: $page) {
             Text(view.note).font(.subheadline).foregroundStyle(Color.yapMuted)
             StudyCard {
                 Text(view.frequency_knowledge_chart_title).font(.title2.bold()).foregroundStyle(Color.yapText)
@@ -73,6 +70,8 @@ private struct AssumedKnownRow: View {
                 }.fontWeight(.semibold).foregroundStyle(Color.yapText)
                 if !word.gloss.isEmpty { Text(word.gloss).font(.subheadline).foregroundStyle(Color.yapMuted) }
             }.frame(maxWidth: .infinity, alignment: .leading)
+            Text(word.frequency_rank_label).font(.caption).monospacedDigit().foregroundStyle(Color.yapMuted)
+                .accessibilityLabel(word.frequency_rank_accessibility_label)
             Button(word.add_label, systemImage: "plus.circle", action: add)
                 .labelStyle(.iconOnly).font(.title3).foregroundStyle(Color.yapText)
                 .accessibilityLabel("\(word.add_label): \(word.display_text)")
@@ -83,17 +82,45 @@ private struct AssumedKnownRow: View {
 private struct WordList<Content: View>: View {
     let title: String
     let label: String
-    let showMore: String?
-    let onShowMore: () -> Void
+    let pagination: PaginationView?
+    @Binding var page: UInt32
     @ViewBuilder let content: Content
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text(label).foregroundStyle(Color.yapMuted)
-                content
-                if let showMore { Button(showMore, action: onShowMore).buttonStyle(.bordered).frame(maxWidth: .infinity) }
-            }.padding(20).frame(maxWidth: .readableColumn).frame(maxWidth: .infinity)
-        }.background(.clear).navigationTitle(title)
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(label).foregroundStyle(Color.yapMuted).id("top")
+                    content
+                    if let pagination { Pagination(view: pagination, page: $page) }
+                }.padding(20).frame(maxWidth: .readableColumn).frame(maxWidth: .infinity)
+            }.background(.clear).navigationTitle(title)
+                .onChange(of: page) { _, _ in proxy.scrollTo("top", anchor: .top) }
+        }
+    }
+}
+
+/// The web's Pagination: previous, a menu of word ranges to jump to, next.
+private struct Pagination: View {
+    let view: PaginationView
+    @Binding var page: UInt32
+    var body: some View {
+        HStack(spacing: 8) {
+            step(view.previous, label: view.previous_label, systemImage: "chevron.left")
+            Menu {
+                Picker(view.status, selection: $page) {
+                    ForEach(view.options, id: \.page) { option in
+                        Text(option.label).monospacedDigit().tag(option.page)
+                    }
+                }
+            } label: {
+                Text(view.status).monospacedDigit().frame(minWidth: 140)
+            }.buttonStyle(.bordered)
+            step(view.next, label: view.next_label, systemImage: "chevron.right")
+        }.frame(maxWidth: .infinity).foregroundStyle(Color.yapText)
+    }
+    private func step(_ target: UInt32?, label: String, systemImage: String) -> some View {
+        Button(label, systemImage: systemImage) { if let target { page = target } }
+            .labelStyle(.iconOnly).buttonStyle(.bordered).disabled(target == nil)
     }
 }
 

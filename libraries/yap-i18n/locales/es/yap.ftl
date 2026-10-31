@@ -1292,7 +1292,6 @@ anki-deck-downloaded = Mazo descargado
 anki-added-new-cards = Se han añadido { $sentences } frases nuevas ({ $cards } tarjetas nuevas).
 anki-merge-hint = Impórtalo igual que tu primer mazo. Anki reconocerá las tarjetas que ya tienes, conservará tu progreso en ellas y pondrá las nuevas después.
 anki-just-now = ahora mismo
-common-show-more = Mostrar más
 your-cards-title = Tus tarjetas
 your-cards-summary = { $count ->
         [one] { $number } tarjeta que añadiste
@@ -1304,3 +1303,40 @@ assumed-known-summary = { $count ->
        *[other] { $number } palabras que Yap da por sabidas
     }
 assumed-known-note = Yap cree que ya conoces estas palabras, pero si quieres estudiarlas puedes añadirlas a tu mazo.
+
+assumed-known-frequency-rank = Puesto de frecuencia { $rank }
+pagination-previous = Anterior
+pagination-next = Siguiente
+pagination-status = Página { $page } de { $pages }
+activity-title = Actividad
+activity-summary = { $reviews } · { $days } en el último año
+activity-review-count = { $count ->
+    [one] { $number } repaso
+   *[other] { $number } repasos
+    }
+activity-day-count = { $count ->
+    [one] { $number } día activo
+   *[other] { $number } días activos
+    }
+activity-day = { $count ->
+    [one] { $number } repaso el { $date }
+   *[other] { $number } repasos el { $date }
+    }
+activity-date = { $day } { $month } { $year }
+activity-less = Menos
+activity-more = Más
+activity-monday = lun
+activity-wednesday = mié
+activity-friday = vie
+activity-jan = ene
+activity-feb = feb
+activity-mar = mar
+activity-apr = abr
+activity-may = may
+activity-jun = jun
+activity-jul = jul
+activity-aug = ago
+activity-sep = sep
+activity-oct = oct
+activity-nov = nov
+activity-dec = dic

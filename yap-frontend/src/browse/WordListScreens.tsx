@@ -1,13 +1,14 @@
 import { t } from "@/lib/i18n";
 import { lazy, Suspense, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { CirclePlus } from "lucide-react";
+import { ChevronLeft, ChevronRight, CirclePlus } from "lucide-react";
 import { toast } from "sonner";
 import type {
   AssumedKnownScreenView,
   AssumedKnownWord,
   Deck,
   Language,
+  PaginationView,
   YourCardsScreenView,
 } from "../../../yap-frontend-rs/pkg";
 import type { UserInfo } from "@/app/context";
@@ -15,6 +16,13 @@ import { DeckPage } from "@/app/DeckPage";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CardSummaryList } from "@/browse/CardSummaryList";
 import { useStudyScreenInputs } from "@/review/useStudyScreenInputs";
 import { useWeapon } from "@/core/weapon";
@@ -26,9 +34,6 @@ const FrequencyKnowledgeChart = lazy(() =>
     default: module.FrequencyKnowledgeChart,
   })),
 );
-
-// Both lists can run to tens of thousands of words, so they grow a page at a time.
-const PAGE_SIZE = 200;
 
 export function YourCardsPage() {
   return (
@@ -63,16 +68,16 @@ export function YourCardsScreen({
   deck: Deck;
   userInfo: UserInfo | undefined;
 }) {
-  const [limit, setLimit] = useState(PAGE_SIZE);
-  const view = injectedView ?? deck.your_cards_view(limit);
+  const [page, setPage] = useState(0);
+  const view = injectedView ?? deck.your_cards_view(page);
   const { timestamp_ms } = useStudyScreenInputs(!injectedView);
   return (
     <WordListLayout
       userInfo={userInfo}
       title={view.summary.title}
       label={view.summary.label}
-      showMore={view.show_more}
-      onShowMore={() => setLimit((limit) => limit + PAGE_SIZE)}
+      pagination={view.pagination}
+      onPage={setPage}
     >
       {view.cards.length > 0 && (
         <CardSummaryList
@@ -97,8 +102,8 @@ export function AssumedKnownScreen({
   accessToken: string | undefined;
 }) {
   const weapon = useWeapon();
-  const [limit, setLimit] = useState(PAGE_SIZE);
-  const view = injectedView ?? deck.assumed_known_view(limit);
+  const [page, setPage] = useState(0);
+  const view = injectedView ?? deck.assumed_known_view(page);
   // An added word leaves the list once the next deck snapshot lands.
   const add = (word: AssumedKnownWord) => {
     const event = deck.add_gram_by_frequency_index(word.frequency_index);
@@ -111,8 +116,8 @@ export function AssumedKnownScreen({
       userInfo={userInfo}
       title={view.summary.title}
       label={view.summary.label}
-      showMore={view.show_more}
-      onShowMore={() => setLimit((limit) => limit + PAGE_SIZE)}
+      pagination={view.pagination}
+      onPage={setPage}
     >
       <p className="text-sm text-muted-foreground">{view.note}</p>
       <Card className="p-4 gap-4">
@@ -185,6 +190,13 @@ function AssumedKnownRow({
           </span>
         )}
       </div>
+      <span
+        className="shrink-0 text-xs tabular-nums text-muted-foreground"
+        title={word.frequency_rank_accessibility_label}
+        aria-label={word.frequency_rank_accessibility_label}
+      >
+        {word.frequency_rank_label}
+      </span>
       <Button variant="ghost" size="sm" className="shrink-0" onClick={onAdd}>
         <CirclePlus />
         {word.add_label}
@@ -197,18 +209,22 @@ function WordListLayout({
   userInfo,
   title,
   label,
-  showMore,
-  onShowMore,
+  pagination,
+  onPage,
   children,
 }: {
   userInfo: UserInfo | undefined;
   title: string;
   label: string;
-  showMore: string | undefined;
-  onShowMore: () => void;
+  pagination: PaginationView | undefined;
+  onPage: (page: number) => void;
   children: ReactNode;
 }) {
   const navigate = useNavigate();
+  const goTo = (page: number) => {
+    onPage(page);
+    window.scrollTo({ top: 0 });
+  };
   return (
     <TopPageLayout
       userInfo={userInfo}
@@ -223,12 +239,56 @@ function WordListLayout({
         <h1 className="text-2xl font-bold">{title}</h1>
         <p className="text-muted-foreground">{label}</p>
         {children}
-        {showMore && (
-          <Button variant="outline" className="self-center" onClick={onShowMore}>
-            {showMore}
-          </Button>
-        )}
+        {pagination && <Pagination view={pagination} onPage={goTo} />}
       </main>
     </TopPageLayout>
+  );
+}
+
+function Pagination({
+  view,
+  onPage,
+}: {
+  view: PaginationView;
+  onPage: (page: number) => void;
+}) {
+  return (
+    <nav className="flex items-center justify-center gap-2">
+      <Button
+        variant="outline"
+        size="icon"
+        aria-label={view.previous_label}
+        title={view.previous_label}
+        disabled={view.previous === undefined}
+        onClick={() => view.previous !== undefined && onPage(view.previous)}
+      >
+        <ChevronLeft />
+      </Button>
+      <Select
+        value={String(view.page)}
+        onValueChange={(page) => onPage(Number(page))}
+      >
+        <SelectTrigger className="min-w-40 justify-between">
+          <SelectValue>{view.status}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {view.options.map((option) => (
+            <SelectItem key={option.page} value={String(option.page)}>
+              <span className="tabular-nums">{option.label}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Button
+        variant="outline"
+        size="icon"
+        aria-label={view.next_label}
+        title={view.next_label}
+        disabled={view.next === undefined}
+        onClick={() => view.next !== undefined && onPage(view.next)}
+      >
+        <ChevronRight />
+      </Button>
+    </nav>
   );
 }

@@ -46,6 +46,2504 @@
     },
     "leeches": [],
     "leech_count": 0,
-    "leeches_label": "0 leeches"
+    "leeches_label": "0 leeches",
+    "activity": {
+      "title": "Activity",
+      "summary": "171 reviews · 9 active days in the past year",
+      "weekdays": [
+        "Mon",
+        "",
+        "Wed",
+        "",
+        "Fri",
+        "",
+        ""
+      ],
+      "weeks": [
+        {
+          "month_label": "Nov",
+          "days": [
+            {
+              "date": "2025-10-27",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 27, 2025"
+            },
+            {
+              "date": "2025-10-28",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 28, 2025"
+            },
+            {
+              "date": "2025-10-29",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 29, 2025"
+            },
+            {
+              "date": "2025-10-30",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 30, 2025"
+            },
+            {
+              "date": "2025-10-31",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 31, 2025"
+            },
+            {
+              "date": "2025-11-01",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 1, 2025"
+            },
+            {
+              "date": "2025-11-02",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 2, 2025"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2025-11-03",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 3, 2025"
+            },
+            {
+              "date": "2025-11-04",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 4, 2025"
+            },
+            {
+              "date": "2025-11-05",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 5, 2025"
+            },
+            {
+              "date": "2025-11-06",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 6, 2025"
+            },
+            {
+              "date": "2025-11-07",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 7, 2025"
+            },
+            {
+              "date": "2025-11-08",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 8, 2025"
+            },
+            {
+              "date": "2025-11-09",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 9, 2025"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2025-11-10",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 10, 2025"
+            },
+            {
+              "date": "2025-11-11",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 11, 2025"
+            },
+            {
+              "date": "2025-11-12",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 12, 2025"
+            },
+            {
+              "date": "2025-11-13",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 13, 2025"
+            },
+            {
+              "date": "2025-11-14",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 14, 2025"
+            },
+            {
+              "date": "2025-11-15",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 15, 2025"
+            },
+            {
+              "date": "2025-11-16",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 16, 2025"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2025-11-17",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 17, 2025"
+            },
+            {
+              "date": "2025-11-18",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 18, 2025"
+            },
+            {
+              "date": "2025-11-19",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 19, 2025"
+            },
+            {
+              "date": "2025-11-20",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 20, 2025"
+            },
+            {
+              "date": "2025-11-21",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 21, 2025"
+            },
+            {
+              "date": "2025-11-22",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 22, 2025"
+            },
+            {
+              "date": "2025-11-23",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 23, 2025"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2025-11-24",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 24, 2025"
+            },
+            {
+              "date": "2025-11-25",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 25, 2025"
+            },
+            {
+              "date": "2025-11-26",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 26, 2025"
+            },
+            {
+              "date": "2025-11-27",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 27, 2025"
+            },
+            {
+              "date": "2025-11-28",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 28, 2025"
+            },
+            {
+              "date": "2025-11-29",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 29, 2025"
+            },
+            {
+              "date": "2025-11-30",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Nov 30, 2025"
+            }
+          ]
+        },
+        {
+          "month_label": "Dec",
+          "days": [
+            {
+              "date": "2025-12-01",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 1, 2025"
+            },
+            {
+              "date": "2025-12-02",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 2, 2025"
+            },
+            {
+              "date": "2025-12-03",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 3, 2025"
+            },
+            {
+              "date": "2025-12-04",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 4, 2025"
+            },
+            {
+              "date": "2025-12-05",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 5, 2025"
+            },
+            {
+              "date": "2025-12-06",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 6, 2025"
+            },
+            {
+              "date": "2025-12-07",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 7, 2025"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2025-12-08",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 8, 2025"
+            },
+            {
+              "date": "2025-12-09",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 9, 2025"
+            },
+            {
+              "date": "2025-12-10",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 10, 2025"
+            },
+            {
+              "date": "2025-12-11",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 11, 2025"
+            },
+            {
+              "date": "2025-12-12",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 12, 2025"
+            },
+            {
+              "date": "2025-12-13",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 13, 2025"
+            },
+            {
+              "date": "2025-12-14",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 14, 2025"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2025-12-15",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 15, 2025"
+            },
+            {
+              "date": "2025-12-16",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 16, 2025"
+            },
+            {
+              "date": "2025-12-17",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 17, 2025"
+            },
+            {
+              "date": "2025-12-18",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 18, 2025"
+            },
+            {
+              "date": "2025-12-19",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 19, 2025"
+            },
+            {
+              "date": "2025-12-20",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 20, 2025"
+            },
+            {
+              "date": "2025-12-21",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 21, 2025"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2025-12-22",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 22, 2025"
+            },
+            {
+              "date": "2025-12-23",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 23, 2025"
+            },
+            {
+              "date": "2025-12-24",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 24, 2025"
+            },
+            {
+              "date": "2025-12-25",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 25, 2025"
+            },
+            {
+              "date": "2025-12-26",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 26, 2025"
+            },
+            {
+              "date": "2025-12-27",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 27, 2025"
+            },
+            {
+              "date": "2025-12-28",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 28, 2025"
+            }
+          ]
+        },
+        {
+          "month_label": "Jan",
+          "days": [
+            {
+              "date": "2025-12-29",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 29, 2025"
+            },
+            {
+              "date": "2025-12-30",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 30, 2025"
+            },
+            {
+              "date": "2025-12-31",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Dec 31, 2025"
+            },
+            {
+              "date": "2026-01-01",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 1, 2026"
+            },
+            {
+              "date": "2026-01-02",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 2, 2026"
+            },
+            {
+              "date": "2026-01-03",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 3, 2026"
+            },
+            {
+              "date": "2026-01-04",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 4, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-01-05",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 5, 2026"
+            },
+            {
+              "date": "2026-01-06",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 6, 2026"
+            },
+            {
+              "date": "2026-01-07",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 7, 2026"
+            },
+            {
+              "date": "2026-01-08",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 8, 2026"
+            },
+            {
+              "date": "2026-01-09",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 9, 2026"
+            },
+            {
+              "date": "2026-01-10",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 10, 2026"
+            },
+            {
+              "date": "2026-01-11",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 11, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-01-12",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 12, 2026"
+            },
+            {
+              "date": "2026-01-13",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 13, 2026"
+            },
+            {
+              "date": "2026-01-14",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 14, 2026"
+            },
+            {
+              "date": "2026-01-15",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 15, 2026"
+            },
+            {
+              "date": "2026-01-16",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 16, 2026"
+            },
+            {
+              "date": "2026-01-17",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 17, 2026"
+            },
+            {
+              "date": "2026-01-18",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 18, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-01-19",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 19, 2026"
+            },
+            {
+              "date": "2026-01-20",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 20, 2026"
+            },
+            {
+              "date": "2026-01-21",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 21, 2026"
+            },
+            {
+              "date": "2026-01-22",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 22, 2026"
+            },
+            {
+              "date": "2026-01-23",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 23, 2026"
+            },
+            {
+              "date": "2026-01-24",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 24, 2026"
+            },
+            {
+              "date": "2026-01-25",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 25, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": "Feb",
+          "days": [
+            {
+              "date": "2026-01-26",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 26, 2026"
+            },
+            {
+              "date": "2026-01-27",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 27, 2026"
+            },
+            {
+              "date": "2026-01-28",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 28, 2026"
+            },
+            {
+              "date": "2026-01-29",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 29, 2026"
+            },
+            {
+              "date": "2026-01-30",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 30, 2026"
+            },
+            {
+              "date": "2026-01-31",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jan 31, 2026"
+            },
+            {
+              "date": "2026-02-01",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 1, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-02-02",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 2, 2026"
+            },
+            {
+              "date": "2026-02-03",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 3, 2026"
+            },
+            {
+              "date": "2026-02-04",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 4, 2026"
+            },
+            {
+              "date": "2026-02-05",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 5, 2026"
+            },
+            {
+              "date": "2026-02-06",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 6, 2026"
+            },
+            {
+              "date": "2026-02-07",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 7, 2026"
+            },
+            {
+              "date": "2026-02-08",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 8, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-02-09",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 9, 2026"
+            },
+            {
+              "date": "2026-02-10",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 10, 2026"
+            },
+            {
+              "date": "2026-02-11",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 11, 2026"
+            },
+            {
+              "date": "2026-02-12",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 12, 2026"
+            },
+            {
+              "date": "2026-02-13",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 13, 2026"
+            },
+            {
+              "date": "2026-02-14",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 14, 2026"
+            },
+            {
+              "date": "2026-02-15",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 15, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-02-16",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 16, 2026"
+            },
+            {
+              "date": "2026-02-17",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 17, 2026"
+            },
+            {
+              "date": "2026-02-18",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 18, 2026"
+            },
+            {
+              "date": "2026-02-19",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 19, 2026"
+            },
+            {
+              "date": "2026-02-20",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 20, 2026"
+            },
+            {
+              "date": "2026-02-21",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 21, 2026"
+            },
+            {
+              "date": "2026-02-22",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 22, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": "Mar",
+          "days": [
+            {
+              "date": "2026-02-23",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 23, 2026"
+            },
+            {
+              "date": "2026-02-24",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 24, 2026"
+            },
+            {
+              "date": "2026-02-25",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 25, 2026"
+            },
+            {
+              "date": "2026-02-26",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 26, 2026"
+            },
+            {
+              "date": "2026-02-27",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 27, 2026"
+            },
+            {
+              "date": "2026-02-28",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Feb 28, 2026"
+            },
+            {
+              "date": "2026-03-01",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 1, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-03-02",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 2, 2026"
+            },
+            {
+              "date": "2026-03-03",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 3, 2026"
+            },
+            {
+              "date": "2026-03-04",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 4, 2026"
+            },
+            {
+              "date": "2026-03-05",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 5, 2026"
+            },
+            {
+              "date": "2026-03-06",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 6, 2026"
+            },
+            {
+              "date": "2026-03-07",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 7, 2026"
+            },
+            {
+              "date": "2026-03-08",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 8, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-03-09",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 9, 2026"
+            },
+            {
+              "date": "2026-03-10",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 10, 2026"
+            },
+            {
+              "date": "2026-03-11",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 11, 2026"
+            },
+            {
+              "date": "2026-03-12",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 12, 2026"
+            },
+            {
+              "date": "2026-03-13",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 13, 2026"
+            },
+            {
+              "date": "2026-03-14",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 14, 2026"
+            },
+            {
+              "date": "2026-03-15",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 15, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-03-16",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 16, 2026"
+            },
+            {
+              "date": "2026-03-17",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 17, 2026"
+            },
+            {
+              "date": "2026-03-18",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 18, 2026"
+            },
+            {
+              "date": "2026-03-19",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 19, 2026"
+            },
+            {
+              "date": "2026-03-20",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 20, 2026"
+            },
+            {
+              "date": "2026-03-21",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 21, 2026"
+            },
+            {
+              "date": "2026-03-22",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 22, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-03-23",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 23, 2026"
+            },
+            {
+              "date": "2026-03-24",
+              "reviews": 1,
+              "level": 1,
+              "label": "1 review on Mar 24, 2026"
+            },
+            {
+              "date": "2026-03-25",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 25, 2026"
+            },
+            {
+              "date": "2026-03-26",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 26, 2026"
+            },
+            {
+              "date": "2026-03-27",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 27, 2026"
+            },
+            {
+              "date": "2026-03-28",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 28, 2026"
+            },
+            {
+              "date": "2026-03-29",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 29, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": "Apr",
+          "days": [
+            {
+              "date": "2026-03-30",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 30, 2026"
+            },
+            {
+              "date": "2026-03-31",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Mar 31, 2026"
+            },
+            {
+              "date": "2026-04-01",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 1, 2026"
+            },
+            {
+              "date": "2026-04-02",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 2, 2026"
+            },
+            {
+              "date": "2026-04-03",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 3, 2026"
+            },
+            {
+              "date": "2026-04-04",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 4, 2026"
+            },
+            {
+              "date": "2026-04-05",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 5, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-04-06",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 6, 2026"
+            },
+            {
+              "date": "2026-04-07",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 7, 2026"
+            },
+            {
+              "date": "2026-04-08",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 8, 2026"
+            },
+            {
+              "date": "2026-04-09",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 9, 2026"
+            },
+            {
+              "date": "2026-04-10",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 10, 2026"
+            },
+            {
+              "date": "2026-04-11",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 11, 2026"
+            },
+            {
+              "date": "2026-04-12",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 12, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-04-13",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 13, 2026"
+            },
+            {
+              "date": "2026-04-14",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 14, 2026"
+            },
+            {
+              "date": "2026-04-15",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 15, 2026"
+            },
+            {
+              "date": "2026-04-16",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 16, 2026"
+            },
+            {
+              "date": "2026-04-17",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 17, 2026"
+            },
+            {
+              "date": "2026-04-18",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 18, 2026"
+            },
+            {
+              "date": "2026-04-19",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 19, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-04-20",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 20, 2026"
+            },
+            {
+              "date": "2026-04-21",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 21, 2026"
+            },
+            {
+              "date": "2026-04-22",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 22, 2026"
+            },
+            {
+              "date": "2026-04-23",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 23, 2026"
+            },
+            {
+              "date": "2026-04-24",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 24, 2026"
+            },
+            {
+              "date": "2026-04-25",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 25, 2026"
+            },
+            {
+              "date": "2026-04-26",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 26, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": "May",
+          "days": [
+            {
+              "date": "2026-04-27",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 27, 2026"
+            },
+            {
+              "date": "2026-04-28",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 28, 2026"
+            },
+            {
+              "date": "2026-04-29",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 29, 2026"
+            },
+            {
+              "date": "2026-04-30",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Apr 30, 2026"
+            },
+            {
+              "date": "2026-05-01",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 1, 2026"
+            },
+            {
+              "date": "2026-05-02",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 2, 2026"
+            },
+            {
+              "date": "2026-05-03",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 3, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-05-04",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 4, 2026"
+            },
+            {
+              "date": "2026-05-05",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 5, 2026"
+            },
+            {
+              "date": "2026-05-06",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 6, 2026"
+            },
+            {
+              "date": "2026-05-07",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 7, 2026"
+            },
+            {
+              "date": "2026-05-08",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 8, 2026"
+            },
+            {
+              "date": "2026-05-09",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 9, 2026"
+            },
+            {
+              "date": "2026-05-10",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 10, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-05-11",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 11, 2026"
+            },
+            {
+              "date": "2026-05-12",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 12, 2026"
+            },
+            {
+              "date": "2026-05-13",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 13, 2026"
+            },
+            {
+              "date": "2026-05-14",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 14, 2026"
+            },
+            {
+              "date": "2026-05-15",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 15, 2026"
+            },
+            {
+              "date": "2026-05-16",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 16, 2026"
+            },
+            {
+              "date": "2026-05-17",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 17, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-05-18",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 18, 2026"
+            },
+            {
+              "date": "2026-05-19",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 19, 2026"
+            },
+            {
+              "date": "2026-05-20",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 20, 2026"
+            },
+            {
+              "date": "2026-05-21",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 21, 2026"
+            },
+            {
+              "date": "2026-05-22",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 22, 2026"
+            },
+            {
+              "date": "2026-05-23",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 23, 2026"
+            },
+            {
+              "date": "2026-05-24",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 24, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-05-25",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 25, 2026"
+            },
+            {
+              "date": "2026-05-26",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 26, 2026"
+            },
+            {
+              "date": "2026-05-27",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 27, 2026"
+            },
+            {
+              "date": "2026-05-28",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 28, 2026"
+            },
+            {
+              "date": "2026-05-29",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 29, 2026"
+            },
+            {
+              "date": "2026-05-30",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 30, 2026"
+            },
+            {
+              "date": "2026-05-31",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on May 31, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": "Jun",
+          "days": [
+            {
+              "date": "2026-06-01",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 1, 2026"
+            },
+            {
+              "date": "2026-06-02",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 2, 2026"
+            },
+            {
+              "date": "2026-06-03",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 3, 2026"
+            },
+            {
+              "date": "2026-06-04",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 4, 2026"
+            },
+            {
+              "date": "2026-06-05",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 5, 2026"
+            },
+            {
+              "date": "2026-06-06",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 6, 2026"
+            },
+            {
+              "date": "2026-06-07",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 7, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-06-08",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 8, 2026"
+            },
+            {
+              "date": "2026-06-09",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 9, 2026"
+            },
+            {
+              "date": "2026-06-10",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 10, 2026"
+            },
+            {
+              "date": "2026-06-11",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 11, 2026"
+            },
+            {
+              "date": "2026-06-12",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 12, 2026"
+            },
+            {
+              "date": "2026-06-13",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 13, 2026"
+            },
+            {
+              "date": "2026-06-14",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 14, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-06-15",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 15, 2026"
+            },
+            {
+              "date": "2026-06-16",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 16, 2026"
+            },
+            {
+              "date": "2026-06-17",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 17, 2026"
+            },
+            {
+              "date": "2026-06-18",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 18, 2026"
+            },
+            {
+              "date": "2026-06-19",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 19, 2026"
+            },
+            {
+              "date": "2026-06-20",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 20, 2026"
+            },
+            {
+              "date": "2026-06-21",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 21, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-06-22",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 22, 2026"
+            },
+            {
+              "date": "2026-06-23",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 23, 2026"
+            },
+            {
+              "date": "2026-06-24",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 24, 2026"
+            },
+            {
+              "date": "2026-06-25",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 25, 2026"
+            },
+            {
+              "date": "2026-06-26",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 26, 2026"
+            },
+            {
+              "date": "2026-06-27",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 27, 2026"
+            },
+            {
+              "date": "2026-06-28",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 28, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": "Jul",
+          "days": [
+            {
+              "date": "2026-06-29",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 29, 2026"
+            },
+            {
+              "date": "2026-06-30",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jun 30, 2026"
+            },
+            {
+              "date": "2026-07-01",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 1, 2026"
+            },
+            {
+              "date": "2026-07-02",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 2, 2026"
+            },
+            {
+              "date": "2026-07-03",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 3, 2026"
+            },
+            {
+              "date": "2026-07-04",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 4, 2026"
+            },
+            {
+              "date": "2026-07-05",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 5, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-07-06",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 6, 2026"
+            },
+            {
+              "date": "2026-07-07",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 7, 2026"
+            },
+            {
+              "date": "2026-07-08",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 8, 2026"
+            },
+            {
+              "date": "2026-07-09",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 9, 2026"
+            },
+            {
+              "date": "2026-07-10",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 10, 2026"
+            },
+            {
+              "date": "2026-07-11",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 11, 2026"
+            },
+            {
+              "date": "2026-07-12",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 12, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-07-13",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 13, 2026"
+            },
+            {
+              "date": "2026-07-14",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 14, 2026"
+            },
+            {
+              "date": "2026-07-15",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 15, 2026"
+            },
+            {
+              "date": "2026-07-16",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 16, 2026"
+            },
+            {
+              "date": "2026-07-17",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 17, 2026"
+            },
+            {
+              "date": "2026-07-18",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 18, 2026"
+            },
+            {
+              "date": "2026-07-19",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 19, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-07-20",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 20, 2026"
+            },
+            {
+              "date": "2026-07-21",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 21, 2026"
+            },
+            {
+              "date": "2026-07-22",
+              "reviews": 2,
+              "level": 1,
+              "label": "2 reviews on Jul 22, 2026"
+            },
+            {
+              "date": "2026-07-23",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 23, 2026"
+            },
+            {
+              "date": "2026-07-24",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 24, 2026"
+            },
+            {
+              "date": "2026-07-25",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 25, 2026"
+            },
+            {
+              "date": "2026-07-26",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 26, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": "Aug",
+          "days": [
+            {
+              "date": "2026-07-27",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 27, 2026"
+            },
+            {
+              "date": "2026-07-28",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 28, 2026"
+            },
+            {
+              "date": "2026-07-29",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 29, 2026"
+            },
+            {
+              "date": "2026-07-30",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 30, 2026"
+            },
+            {
+              "date": "2026-07-31",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Jul 31, 2026"
+            },
+            {
+              "date": "2026-08-01",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 1, 2026"
+            },
+            {
+              "date": "2026-08-02",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 2, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-08-03",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 3, 2026"
+            },
+            {
+              "date": "2026-08-04",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 4, 2026"
+            },
+            {
+              "date": "2026-08-05",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 5, 2026"
+            },
+            {
+              "date": "2026-08-06",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 6, 2026"
+            },
+            {
+              "date": "2026-08-07",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 7, 2026"
+            },
+            {
+              "date": "2026-08-08",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 8, 2026"
+            },
+            {
+              "date": "2026-08-09",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 9, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-08-10",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 10, 2026"
+            },
+            {
+              "date": "2026-08-11",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 11, 2026"
+            },
+            {
+              "date": "2026-08-12",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 12, 2026"
+            },
+            {
+              "date": "2026-08-13",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 13, 2026"
+            },
+            {
+              "date": "2026-08-14",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 14, 2026"
+            },
+            {
+              "date": "2026-08-15",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 15, 2026"
+            },
+            {
+              "date": "2026-08-16",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 16, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-08-17",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 17, 2026"
+            },
+            {
+              "date": "2026-08-18",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 18, 2026"
+            },
+            {
+              "date": "2026-08-19",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 19, 2026"
+            },
+            {
+              "date": "2026-08-20",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 20, 2026"
+            },
+            {
+              "date": "2026-08-21",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 21, 2026"
+            },
+            {
+              "date": "2026-08-22",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 22, 2026"
+            },
+            {
+              "date": "2026-08-23",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 23, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-08-24",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 24, 2026"
+            },
+            {
+              "date": "2026-08-25",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 25, 2026"
+            },
+            {
+              "date": "2026-08-26",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 26, 2026"
+            },
+            {
+              "date": "2026-08-27",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 27, 2026"
+            },
+            {
+              "date": "2026-08-28",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 28, 2026"
+            },
+            {
+              "date": "2026-08-29",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 29, 2026"
+            },
+            {
+              "date": "2026-08-30",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 30, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": "Sep",
+          "days": [
+            {
+              "date": "2026-08-31",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Aug 31, 2026"
+            },
+            {
+              "date": "2026-09-01",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 1, 2026"
+            },
+            {
+              "date": "2026-09-02",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 2, 2026"
+            },
+            {
+              "date": "2026-09-03",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 3, 2026"
+            },
+            {
+              "date": "2026-09-04",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 4, 2026"
+            },
+            {
+              "date": "2026-09-05",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 5, 2026"
+            },
+            {
+              "date": "2026-09-06",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 6, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-09-07",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 7, 2026"
+            },
+            {
+              "date": "2026-09-08",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 8, 2026"
+            },
+            {
+              "date": "2026-09-09",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 9, 2026"
+            },
+            {
+              "date": "2026-09-10",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 10, 2026"
+            },
+            {
+              "date": "2026-09-11",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 11, 2026"
+            },
+            {
+              "date": "2026-09-12",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 12, 2026"
+            },
+            {
+              "date": "2026-09-13",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 13, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-09-14",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 14, 2026"
+            },
+            {
+              "date": "2026-09-15",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 15, 2026"
+            },
+            {
+              "date": "2026-09-16",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 16, 2026"
+            },
+            {
+              "date": "2026-09-17",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 17, 2026"
+            },
+            {
+              "date": "2026-09-18",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 18, 2026"
+            },
+            {
+              "date": "2026-09-19",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 19, 2026"
+            },
+            {
+              "date": "2026-09-20",
+              "reviews": 3,
+              "level": 1,
+              "label": "3 reviews on Sep 20, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-09-21",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 21, 2026"
+            },
+            {
+              "date": "2026-09-22",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 22, 2026"
+            },
+            {
+              "date": "2026-09-23",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 23, 2026"
+            },
+            {
+              "date": "2026-09-24",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 24, 2026"
+            },
+            {
+              "date": "2026-09-25",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 25, 2026"
+            },
+            {
+              "date": "2026-09-26",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 26, 2026"
+            },
+            {
+              "date": "2026-09-27",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 27, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": "Oct",
+          "days": [
+            {
+              "date": "2026-09-28",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 28, 2026"
+            },
+            {
+              "date": "2026-09-29",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 29, 2026"
+            },
+            {
+              "date": "2026-09-30",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Sep 30, 2026"
+            },
+            {
+              "date": "2026-10-01",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 1, 2026"
+            },
+            {
+              "date": "2026-10-02",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 2, 2026"
+            },
+            {
+              "date": "2026-10-03",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 3, 2026"
+            },
+            {
+              "date": "2026-10-04",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 4, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-10-05",
+              "reviews": 5,
+              "level": 2,
+              "label": "5 reviews on Oct 5, 2026"
+            },
+            {
+              "date": "2026-10-06",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 6, 2026"
+            },
+            {
+              "date": "2026-10-07",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 7, 2026"
+            },
+            {
+              "date": "2026-10-08",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 8, 2026"
+            },
+            {
+              "date": "2026-10-09",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 9, 2026"
+            },
+            {
+              "date": "2026-10-10",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 10, 2026"
+            },
+            {
+              "date": "2026-10-11",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 11, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-10-12",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 12, 2026"
+            },
+            {
+              "date": "2026-10-13",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 13, 2026"
+            },
+            {
+              "date": "2026-10-14",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 14, 2026"
+            },
+            {
+              "date": "2026-10-15",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 15, 2026"
+            },
+            {
+              "date": "2026-10-16",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 16, 2026"
+            },
+            {
+              "date": "2026-10-17",
+              "reviews": 10,
+              "level": 2,
+              "label": "10 reviews on Oct 17, 2026"
+            },
+            {
+              "date": "2026-10-18",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 18, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-10-19",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 19, 2026"
+            },
+            {
+              "date": "2026-10-20",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 20, 2026"
+            },
+            {
+              "date": "2026-10-21",
+              "reviews": 20,
+              "level": 3,
+              "label": "20 reviews on Oct 21, 2026"
+            },
+            {
+              "date": "2026-10-22",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 22, 2026"
+            },
+            {
+              "date": "2026-10-23",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 23, 2026"
+            },
+            {
+              "date": "2026-10-24",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 24, 2026"
+            },
+            {
+              "date": "2026-10-25",
+              "reviews": 30,
+              "level": 3,
+              "label": "30 reviews on Oct 25, 2026"
+            }
+          ]
+        },
+        {
+          "month_label": null,
+          "days": [
+            {
+              "date": "2026-10-26",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 26, 2026"
+            },
+            {
+              "date": "2026-10-27",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 27, 2026"
+            },
+            {
+              "date": "2026-10-28",
+              "reviews": 0,
+              "level": 0,
+              "label": "0 reviews on Oct 28, 2026"
+            },
+            {
+              "date": "2026-10-29",
+              "reviews": 50,
+              "level": 4,
+              "label": "50 reviews on Oct 29, 2026"
+            },
+            {
+              "date": "2026-10-30",
+              "reviews": 50,
+              "level": 4,
+              "label": "50 reviews on Oct 30, 2026"
+            },
+            null,
+            null
+          ]
+        }
+      ],
+      "less_label": "Less",
+      "more_label": "More"
+    }
   }
 }

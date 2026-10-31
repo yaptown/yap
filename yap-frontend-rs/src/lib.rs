@@ -45,7 +45,9 @@ mod ruby;
 pub use placement_session::{
     PlacementSession, PlacementSessionInfo, get_placement_session_info, toggle_placement_word,
 };
+mod activity;
 pub mod profile;
+pub use activity::*;
 mod screens;
 mod your_words;
 pub use your_words::*;
@@ -1378,7 +1380,7 @@ pub struct Stats {
     /// Track daily challenge completions for the past week
     /// Key is days since epoch, value is number of challenges completed
     pub past_week_challenges: BTreeMap<i64, u32>,
-    /// Summary stats per day for the past week.
+    /// Summary stats for every study day.
     /// Key is days since the common era (NaiveDate::num_days_from_ce in user's local timezone).
     pub past_days: BTreeMap<i64, DaySummary>,
     /// Timestamp of the first event processed (when the user started using the app)
@@ -2595,8 +2597,6 @@ impl DeckState {
                         .count() as u32,
                 },
             );
-            let cutoff = day_index - 7;
-            self.stats.past_days.retain(|&d, _| d > cutoff);
         }
     }
 }

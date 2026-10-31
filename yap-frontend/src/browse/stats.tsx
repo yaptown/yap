@@ -5,6 +5,7 @@ import type {
   StatTileView,
 } from "../../../yap-frontend-rs/pkg";
 import { Card } from "../components/ui/card";
+import { ActivityCalendar } from "./ActivityCalendar";
 import { Leeches } from "./Leeches";
 
 export function Stats({
@@ -24,6 +25,7 @@ export function Stats({
           <StatTile key={tile.eyebrow} tile={tile} />
         ))}
       </div>
+      <ActivityCalendar view={view.activity} />
       <ListLink to="/due" title={view.due.title} label={view.due.label} />
       <div className="grid grid-cols-2 gap-4">
         <ListLink

@@ -1063,6 +1063,7 @@ pub struct StatsScreenView {
     pub xp: f64,
     pub total_reviews: u64,
     pub tiles: Vec<StatTileView>,
+    pub activity: ActivityView,
     pub percent_known: f64,
     pub due: DueSummaryView,
     pub your_cards: WordListSummaryView,
@@ -1376,6 +1377,13 @@ impl Deck {
                     )),
                 },
             ],
+            activity: activity::activity_view(
+                &self.stats.past_days,
+                DateTime::<Utc>::from_timestamp_millis(timestamp_ms as i64)
+                    .unwrap_or_else(Utc::now)
+                    .with_timezone(&self.context.timezone)
+                    .date_naive(),
+            ),
             percent_known,
             due: self.due_summary_view(review.due_count() as u64),
             your_cards: self.your_cards_summary(self.added_card_count()),

@@ -1356,7 +1356,6 @@ anki-deck-downloaded = Paquet téléchargé
 anki-added-new-cards = { $sentences } nouvelles phrases ajoutées ({ $cards } nouvelles cartes).
 anki-merge-hint = Importe-le comme ton premier paquet. Anki reconnaîtra les cartes que tu as déjà, gardera ta progression dessus et placera les nouvelles cartes après.
 anki-just-now = à l'instant
-common-show-more = Afficher plus
 your-cards-title = Tes cartes
 your-cards-summary = { $count ->
         [one] { $number } carte que tu as ajoutée
@@ -1368,3 +1367,40 @@ assumed-known-summary = { $count ->
        *[other] { $number } mots que Yap considère comme connus
     }
 assumed-known-note = Yap pense que tu connais déjà ces mots, mais si tu veux les étudier, tu peux les ajouter à ton paquet.
+
+assumed-known-frequency-rank = Rang de fréquence { $rank }
+pagination-previous = Précédent
+pagination-next = Suivant
+pagination-status = Page { $page } sur { $pages }
+activity-title = Activité
+activity-summary = { $reviews } · { $days } sur l’année écoulée
+activity-review-count = { $count ->
+    [one] { $number } révision
+   *[other] { $number } révisions
+    }
+activity-day-count = { $count ->
+    [one] { $number } jour actif
+   *[other] { $number } jours actifs
+    }
+activity-day = { $count ->
+    [one] { $number } révision le { $date }
+   *[other] { $number } révisions le { $date }
+    }
+activity-date = { $day } { $month } { $year }
+activity-less = Moins
+activity-more = Plus
+activity-monday = lun.
+activity-wednesday = mer.
+activity-friday = ven.
+activity-jan = janv.
+activity-feb = févr.
+activity-mar = mars
+activity-apr = avr.
+activity-may = mai
+activity-jun = juin
+activity-jul = juil.
+activity-aug = août
+activity-sep = sept.
+activity-oct = oct.
+activity-nov = nov.
+activity-dec = déc.

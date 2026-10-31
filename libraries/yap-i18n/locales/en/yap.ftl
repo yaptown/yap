@@ -1290,7 +1290,6 @@ anki-added-new-cards = Added { $sentences } new sentences ({ $cards } new cards)
 anki-merge-hint = Import it the same way as your first deck. Anki will recognize the cards you already have, keep your progress on them, and put the new cards after them.
 
 anki-just-now = just now
-common-show-more = Show more
 your-cards-title = Your cards
 your-cards-summary = { $count ->
         [one] { $number } card you added
@@ -1302,3 +1301,40 @@ assumed-known-summary = { $count ->
        *[other] { $number } words Yap counts as known
     }
 assumed-known-note = Yap thinks you already know these words, but if you want to study them you can add them to your deck.
+
+assumed-known-frequency-rank = Frequency rank { $rank }
+pagination-previous = Previous
+pagination-next = Next
+pagination-status = Page { $page } of { $pages }
+activity-title = Activity
+activity-summary = { $reviews } · { $days } in the past year
+activity-review-count = { $count ->
+    [one] { $number } review
+   *[other] { $number } reviews
+    }
+activity-day-count = { $count ->
+    [one] { $number } active day
+   *[other] { $number } active days
+    }
+activity-day = { $count ->
+    [one] { $number } review on { $date }
+   *[other] { $number } reviews on { $date }
+    }
+activity-date = { $month } { $day }, { $year }
+activity-less = Less
+activity-more = More
+activity-monday = Mon
+activity-wednesday = Wed
+activity-friday = Fri
+activity-jan = Jan
+activity-feb = Feb
+activity-mar = Mar
+activity-apr = Apr
+activity-may = May
+activity-jun = Jun
+activity-jul = Jul
+activity-aug = Aug
+activity-sep = Sep
+activity-oct = Oct
+activity-nov = Nov
+activity-dec = Dec

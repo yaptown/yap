@@ -1943,11 +1943,15 @@ impl YapMcp {
         let now_ms = Utc::now().timestamp_millis() as f64;
         let due = deck.due_card_summaries(now_ms).len();
 
+        // History is retained in full; this endpoint still shows the latest study week.
+        let first_day = stats
+            .past_days
+            .last_key_value()
+            .map_or(0, |(&day, _)| day - 6);
         let past_days: Vec<DayOut> = stats
             .past_days
-            .iter()
+            .range(first_day..)
             .rev()
-            .take(7)
             .map(|(day, summary)| DayOut {
                 date: chrono::NaiveDate::from_num_days_from_ce_opt(*day as i32)
                     .map(|d| d.to_string()),
