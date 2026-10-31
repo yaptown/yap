@@ -761,4 +761,41 @@ mod tests {
             "Second and third simulation runs differ"
         );
     }
+
+    /// "Attends, attends, attends." is the gram "attends" followed by the
+    /// supertoken "attends, attends". Testing "attends" must blank both, or the
+    /// printed supertoken gives the answer away.
+    #[test]
+    fn transcription_blanks_grams_containing_the_tested_gram() {
+        let course = language_utils::Course {
+            target_language: language_utils::Language::French,
+            native_language: language_utils::Language::English,
+        };
+        let deck = load_test_data_deck(load_language_pack(&course));
+        let lp = &deck.context.language_pack;
+        let sentence = lp.sentence_key("Attends, attends, attends.").unwrap();
+        let attends = lp
+            .sentence_grams(sentence)
+            .unwrap()
+            .grams
+            .into_iter()
+            .find_map(|gram| match gram {
+                SentenceGram::Learnable(gram)
+                    if lp.gram_rodeo.resolve(&gram.sense.gram).len() == 1 =>
+                {
+                    Some(gram.sense.gram)
+                }
+                _ => None,
+            })
+            .unwrap();
+
+        let challenge = deck
+            .transcription_challenge_for_sentence(attends, sentence)
+            .unwrap();
+        for part in &challenge.parts {
+            if let transcription_challenge::Part::Provided { part } = part {
+                assert_ne!(part.word.text.to_lowercase(), "attends");
+            }
+        }
+    }
 }

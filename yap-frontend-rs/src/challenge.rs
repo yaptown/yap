@@ -402,10 +402,22 @@ impl Deck {
             breakdowns.push(language_pack.compute_breakdown(gram_spur.gram));
             idx
         };
+        // A gram that contains the tested gram (the supertoken "attends,
+        // attends" when testing "attends") is blanked too: printing it would
+        // give the answer away.
+        let tested_atoms = language_pack.gram_rodeo.resolve(&gram).atoms();
+        let contains_tested_gram = |sentence_gram: SpurGram| {
+            language_pack
+                .gram_rodeo
+                .resolve(&sentence_gram)
+                .atoms()
+                .windows(tested_atoms.len())
+                .any(|window| window == tested_atoms)
+        };
         for sentence_gram in sentence_grams {
             match sentence_gram {
                 SentenceGram::Learnable((sentence_gram, literals))
-                    if sentence_gram.gram == gram
+                    if contains_tested_gram(sentence_gram.gram)
                         || self.is_listened_gram_comprehensible(&sentence_gram, false) =>
                 {
                     let gram_idx = register_gram(
