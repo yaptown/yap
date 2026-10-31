@@ -163,7 +163,9 @@ export function useOneSignalNotifications() {
         });
       }
     } catch (err) {
-      console.error("Error subscribing:", err);
+      // Expected failures (prompt dismissed, browser without a push service)
+      // are surfaced to the user via `error`; warn so Sentry doesn't capture them.
+      console.warn("Error subscribing:", err);
       setError(
         err instanceof Error
           ? err.message
