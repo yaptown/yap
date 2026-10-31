@@ -12,6 +12,10 @@ const cardVariants = cva(
           "backdrop-brightness-115 backdrop-saturate-125 dark:backdrop-brightness-180 dark:backdrop-saturate-180 backdrop-blur-lg dark:backdrop-blur-2xl dark:bg-card/25 shadow-sm dark:shadow-xl dark:border-3",
         light:
           "backdrop-brightness-105 backdrop-saturate-120 dark:backdrop-brightness-100 dark:backdrop-blur-lg backdrop-blur-sm",
+        // For cards that cover their backdrop anyway, like movie posters.
+        // Backdrop filters cost a GPU layer each, and a few hundred of
+        // them made Chromium drop tiles and leave blank cards.
+        opaque: "bg-card shadow-sm dark:shadow-xl dark:border-3",
       },
     },
     defaultVariants: {

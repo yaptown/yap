@@ -22,6 +22,7 @@ export function MoviePosterCard({
   return (
     <Card
       key={movie.id}
+      variant="opaque"
       className={`overflow-hidden p-0 transition-all group gap-0${className ? ` ${className}` : ""}`}
       animate
     >
