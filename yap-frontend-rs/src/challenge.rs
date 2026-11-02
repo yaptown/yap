@@ -377,7 +377,7 @@ impl Deck {
     pub fn transcription_challenge_for_sentence(
         &self,
         gram: SpurGram,
-        sentence: Spur,
+        sentence: language_utils::SentenceSpur,
     ) -> Option<TranscribeComprehensibleSentence> {
         let language_pack = &self.context.language_pack;
         let sentence = crate::comprehensible_sentence_from_spur(language_pack, sentence)?;
@@ -507,11 +507,11 @@ impl Deck {
         Some(TranscribeComprehensibleSentence {
             literal_ruby,
             target_language: language_pack
-                .string_rodeo
+                .sentence_rodeo
                 .resolve(&sentence.target_language)
                 .to_string(),
             native_language: language_pack
-                .string_rodeo
+                .translation_rodeo
                 .resolve(sentence.native_languages.first()?)
                 .to_string(),
             parts,
@@ -521,7 +521,7 @@ impl Deck {
             audio: AudioRequest {
                 request: TtsRequest {
                     text: language_pack
-                        .string_rodeo
+                        .sentence_rodeo
                         .resolve(&sentence.target_language)
                         .to_string(),
                     language: self.context.course.target_language,
@@ -553,7 +553,7 @@ impl Deck {
     pub fn translation_challenge_for_sentence(
         &self,
         gram: TaggedGram<SpurGram>,
-        sentence: Spur,
+        sentence: language_utils::SentenceSpur,
     ) -> Option<TranslateComprehensibleSentence> {
         let language_pack: &Arc<LanguagePack> = &self.context.language_pack;
         if !language_pack
@@ -672,7 +672,7 @@ impl Deck {
         Some(TranslateComprehensibleSentence {
             literal_ruby,
             target_language: language_pack
-                .string_rodeo
+                .sentence_rodeo
                 .resolve(&target_language)
                 .to_string(),
             target_language_literals,
@@ -696,12 +696,12 @@ impl Deck {
                 .collect(),
             native_translations: native_languages
                 .iter()
-                .map(|n| language_pack.string_rodeo.resolve(n).to_string())
+                .map(|n| language_pack.translation_rodeo.resolve(n).to_string())
                 .collect(),
             audio: AudioRequest {
                 request: TtsRequest {
                     text: language_pack
-                        .string_rodeo
+                        .sentence_rodeo
                         .resolve(&target_language)
                         .to_string(),
                     language: self.context.course.target_language,

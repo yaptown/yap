@@ -79,7 +79,7 @@ mod tests {
     use crate::{DictionaryEntry, Heteronym, PartOfSpeech, Word};
 
     #[test]
-    fn cross_gram_pages_and_prefix_extension_survive_split() {
+    fn cross_gram_pages_and_prefixed_text_survive_split() {
         use crate::{
             ConsolidatedLanguageData, Course, GramFrequencyEntry, GramFrequencyList,
             GramVocabEntry, TaggedGram, language_pack::LanguagePack,
@@ -176,7 +176,7 @@ mod tests {
         assert!(pack.is_visible(pack.resolve_entry(&noun).unwrap(), Language::French));
         assert!(!pack.is_visible(pack.resolve_entry(&particle).unwrap(), Language::French));
         let (core, sentences) = pack.split();
-        assert!(sentences.string_extension.contains(&"il est".into()));
+        assert!(core.string_rodeo.get("il est").is_some());
         let core = LanguagePack::from_parts(core, None);
         assert!(core.prefixed_text.is_empty());
         let full = core.with_sentences(sentences);

@@ -106,7 +106,7 @@ struct Sense {
     /// Sentence spurs stored temporarily during extraction, replaced with rich
     /// segments in a second pass once we have the gram→slug map.
     #[serde(skip)]
-    sentence_spurs: Vec<Spur>,
+    sentence_spurs: Vec<language_utils::SentenceSpur>,
     /// Rich linked sentences with optional translation.
     example_sentences: Vec<ExampleSentence>,
 }
@@ -332,9 +332,9 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
 
         // Collect example sentences, prioritizing those where the gram appears
         // as a direct encoded gram over those where it only appears via multiword terms.
-        let sentence_spurs: Vec<Spur> = {
+        let sentence_spurs: Vec<language_utils::SentenceSpur> = {
             let mut seen_sentences = std::collections::HashSet::new();
-            let all_sentences: Vec<Spur> = language_pack
+            let all_sentences: Vec<language_utils::SentenceSpur> = language_pack
                 .sentences_containing_gram_index
                 .get(spur_gram)
                 .into_iter()
@@ -710,7 +710,7 @@ struct GramInfo {
 /// and linked to their dictionary page.
 fn resolve_sentence(
     language_pack: &LanguagePack,
-    sentence_spur: &Spur,
+    sentence_spur: &language_utils::SentenceSpur,
     language: language_utils::Language,
     gram_to_info: &FxHashMap<language_utils::TaggedGram<language_utils::SpurGram>, GramInfo>,
 ) -> Option<ExampleSentence> {
@@ -774,7 +774,7 @@ fn resolve_sentence(
         .translations
         .get(sentence_spur)
         .and_then(|ts| ts.first())
-        .map(|t| language_pack.string_rodeo.resolve(t).to_string());
+        .map(|t| language_pack.translation_rodeo.resolve(t).to_string());
 
     // Look up sentence source for attribution
     let source = language_pack

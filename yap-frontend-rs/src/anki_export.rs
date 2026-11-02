@@ -8,12 +8,12 @@ use crate::{
 };
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use bridgerton::Error;
+use language_utils::SentenceSpur;
 use language_utils::{
     Atom, Course, GramDefinition, Language, Literal, MovieMetadataBasic, OtherWord, OtherWordType,
     SentenceGram, SpurGram, TaggedGram, TtsProvider, TtsRequest, Word, WordType, clip_url,
     dictionary_entry_slug, language_pack::LanguagePack, tts_cache_filename, tts_cache_url,
 };
-use lasso::Spur;
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
 use rustc_hash::{FxHashMap, FxHashSet};
 use serde::{Deserialize, Serialize};
@@ -540,7 +540,7 @@ fn ruby_furigana(text: &str, segments: &[language_utils::readings::RubySegment])
 fn sentence_html(
     pack: &LanguagePack,
     language: Language,
-    sentence: Spur,
+    sentence: SentenceSpur,
     literals: &[Literal<String>],
     indices: &[usize],
 ) -> String {
@@ -717,7 +717,7 @@ impl AnkiExport {
                 }
                 !self.options.word_cards
                     || pack
-                        .string_rodeo
+                        .sentence_rodeo
                         .get(text)
                         .and_then(|s| bare_gram(pack, s))
                         .is_none_or(|g| {
@@ -767,7 +767,7 @@ impl AnkiExport {
     }
 }
 
-fn bare_gram(pack: &LanguagePack, sentence: Spur) -> Option<TaggedGram<SpurGram>> {
+fn bare_gram(pack: &LanguagePack, sentence: SentenceSpur) -> Option<TaggedGram<SpurGram>> {
     let mut grams = pack
         .encoded_sentences
         .get(&sentence)?
@@ -829,7 +829,7 @@ impl Deck {
         let too_advanced = !pack.gram_frequencies.entries.is_empty() && known.all_available_learned;
         // Walk the clip manifest, not every translated sentence in the pack.
         let clip_sentence_count = clips::map_clip_sentences(language, |text| {
-            let sentence = pack.string_rodeo.get(text)?;
+            let sentence = pack.sentence_rodeo.get(text)?;
             pack.sentence_is_comprehensible(sentence, None, &|_| true)
                 .then_some(())
         })
@@ -1014,8 +1014,8 @@ struct PlannerState {
     base: Option<AnkiExport>,
     base_taught: FxHashSet<TaggedGram<SpurGram>>,
     base_ranks: FxHashSet<u32>,
-    base_sentences: BTreeSet<Spur>,
-    base_word_clip_sentences: Option<BTreeSet<Spur>>,
+    base_sentences: BTreeSet<SentenceSpur>,
+    base_word_clip_sentences: Option<BTreeSet<SentenceSpur>>,
     base_sentence_count: usize,
     base_card_count: u32,
     /// The current simulated day introduced a word the base deck already
@@ -1023,12 +1023,12 @@ struct PlannerState {
     replayed_base: bool,
     options: AnkiDeckOptions,
     size: usize,
-    unindexed: Vec<Spur>,
-    clip_sentence_ranks: FxHashMap<Spur, Vec<u32>>,
+    unindexed: Vec<SentenceSpur>,
+    clip_sentence_ranks: FxHashMap<SentenceSpur, Vec<u32>>,
     /// Proper nouns per clip sentence. They count as known, so a beginner's
     /// shortest candidates are often a word plus a name ("De Niort ?").
-    clip_sentence_names: FxHashMap<Spur, usize>,
-    clip_sentences_of: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>>,
+    clip_sentence_names: FxHashMap<SentenceSpur, usize>,
+    clip_sentences_of: FxHashMap<TaggedGram<SpurGram>, Vec<SentenceSpur>>,
     simulation: Option<DailySimulationIterator>,
     day: Option<DayChallengeIterator>,
     known_now: Option<RankBitset>,
@@ -1039,8 +1039,8 @@ struct PlannerState {
     done: bool,
     notes: Vec<AnkiNote>,
     bundled: Vec<AnkiBundledMedia>,
-    used_sentences: BTreeSet<Spur>,
-    word_clip_sentences: BTreeSet<Spur>,
+    used_sentences: BTreeSet<SentenceSpur>,
+    word_clip_sentences: BTreeSet<SentenceSpur>,
     spelling_ranks: FxHashMap<String, usize>,
     used_words: BTreeSet<String>,
     /// Every gram a word note or sentence teaches, for the coverage figure.
@@ -1068,7 +1068,7 @@ impl AnkiDeckPlanner {
         let unindexed = clips::map_clip_sentences_where(
             language,
             |row| options.allows_clip(row),
-            |text| pack.string_rodeo.get(text),
+            |text| pack.sentence_rodeo.get(text),
         );
         Ok(Self {
             state: RefCell::new(PlannerState {
@@ -1241,13 +1241,13 @@ impl PlannerState {
         self.base_word_clip_sentences = base.word_clip_sentences.as_ref().map(|sentences| {
             sentences
                 .iter()
-                .filter_map(|s| pack.string_rodeo.get(s))
+                .filter_map(|s| pack.sentence_rodeo.get(s))
                 .collect()
         });
         self.base_sentences = base
             .sentences
             .iter()
-            .filter_map(|s| pack.string_rodeo.get(s))
+            .filter_map(|s| pack.sentence_rodeo.get(s))
             .collect();
         let mut sentences: Vec<_> = self
             .base_sentences
@@ -1267,7 +1267,7 @@ impl PlannerState {
             })
             .collect();
         // Reconstruct easy-to-hard order; the event deliberately did not retain order.
-        sentences.sort_by_key(|(s, _, rank)| (*rank, pack.string_rodeo.resolve(s).to_owned()));
+        sentences.sort_by_key(|(s, _, rank)| (*rank, pack.sentence_rodeo.resolve(s).to_owned()));
         for (sentence, gram, _) in sentences {
             if !self.word_clip_sentences.contains(&sentence)
                 && let Some(challenge) =
@@ -1376,7 +1376,7 @@ impl PlannerState {
         };
         // A candidate is a clip sentence containing the gram whose
         // every other gram the learner already knows.
-        let mut candidates: Vec<Spur> = self
+        let mut candidates: Vec<SentenceSpur> = self
             .clip_sentences_of
             .get(&gram)
             .into_iter()
@@ -1397,8 +1397,8 @@ impl PlannerState {
             (
                 deck.stats.sentences_reviewed.get(s).copied().unwrap_or(0),
                 self.clip_sentence_names[s],
-                pack.string_rodeo.resolve(s).chars().count(),
-                pack.string_rodeo.resolve(s),
+                pack.sentence_rodeo.resolve(s).chars().count(),
+                pack.sentence_rodeo.resolve(s),
             )
         });
         let Some((sentence, challenge)) = candidates.into_iter().find_map(|s| {
@@ -1414,7 +1414,7 @@ impl PlannerState {
     fn emit_sentence(
         &mut self,
         gram: TaggedGram<SpurGram>,
-        sentence: Spur,
+        sentence: SentenceSpur,
         challenge: crate::TranslateComprehensibleSentence,
         rebuilding: bool,
     ) {
@@ -1514,7 +1514,7 @@ impl PlannerState {
                     };
                     let row = clips::clip_for_sentence_where(
                         language,
-                        pack.string_rodeo.resolve(&bare),
+                        pack.sentence_rodeo.resolve(&bare),
                         |row| options.allows_clip(row),
                     )
                     .unwrap();
@@ -1663,12 +1663,12 @@ impl PlannerState {
             sentences: self
                 .used_sentences
                 .union(&self.word_clip_sentences)
-                .map(|s| pack.string_rodeo.resolve(s).to_owned())
+                .map(|s| pack.sentence_rodeo.resolve(s).to_owned())
                 .collect(),
             word_clip_sentences: self
                 .word_clip_sentences
                 .iter()
-                .map(|s| pack.string_rodeo.resolve(s).to_owned())
+                .map(|s| pack.sentence_rodeo.resolve(s).to_owned())
                 .collect(),
             course_code: course.code(),
             deck_name: if course.native_language == Language::English {
@@ -1891,7 +1891,7 @@ mod tests {
             .encoded_sentences
             .keys()
             .flat_map(|sentence| {
-                let text = pack.string_rodeo.resolve(sentence).to_owned();
+                let text = pack.sentence_rodeo.resolve(sentence).to_owned();
                 let make = |prefix, content_ratings| {
                     let mut row = row(text.clone(), format!("{prefix}-{text}"));
                     row.content_ratings = content_ratings;
@@ -2121,7 +2121,7 @@ mod tests {
             pack.encoded_sentences
                 .keys()
                 .map(|s| {
-                    let text = pack.string_rodeo.resolve(s).to_owned();
+                    let text = pack.sentence_rodeo.resolve(s).to_owned();
                     let imdb = pack
                         .sentence_sources
                         .get(s)
@@ -2527,8 +2527,8 @@ mod tests {
             }
             let pack = &deck.context.language_pack;
             let target = *pack.gram_frequencies.entries.get_index(0).unwrap().0;
-            let clip = pack.string_rodeo.get(text).unwrap();
-            let other = pack.string_rodeo.get("word00").unwrap();
+            let clip = pack.sentence_rodeo.get(text).unwrap();
+            let other = pack.sentence_rodeo.get("word00").unwrap();
             // The chosen sentence wins even when another matching clip is first
             // in the index. That distinct clip may still become a sentence note.
             state.clip_sentences_of.insert(target, vec![other, clip]);
@@ -2570,7 +2570,7 @@ mod tests {
             // The word clip sorts AFTER its bare sentence note on rebuild. A
             // heuristic would steal the sentence note's clip for the word.
             for text in ["word00", "Word00"] {
-                let sentence = pack.string_rodeo.get(text).unwrap();
+                let sentence = pack.sentence_rodeo.get(text).unwrap();
                 let challenge = deck
                     .translation_challenge_for_sentence(target, sentence)
                     .unwrap();
@@ -2643,7 +2643,7 @@ mod tests {
             }
             let target = *pack.gram_frequencies.entries.get_index(1).unwrap().0;
             let sentence = pack
-                .string_rodeo
+                .sentence_rodeo
                 .get(format!("{prerequisite_word} word01"))
                 .unwrap();
             // The target has only a multiword clip; its prerequisite still
@@ -2837,7 +2837,7 @@ mod tests {
                 .keys()
                 .take(20)
                 .map(|s| {
-                    let text = pack.string_rodeo.resolve(s).to_owned();
+                    let text = pack.sentence_rodeo.resolve(s).to_owned();
                     row(text, format!("tt0000001-{}-0", s.into_inner()))
                 })
                 .collect(),

@@ -16,7 +16,11 @@ use crate::{Context, DeckState};
 use std::{path::Path, sync::Arc, time::Instant};
 use weapon::{AppState, data_model::Timestamped};
 
-fn word_count(pack: &LanguagePack, sentence: Spur, language: Language) -> usize {
+fn word_count(
+    pack: &LanguagePack,
+    sentence: language_utils::SentenceSpur,
+    language: Language,
+) -> usize {
     pack.sentence_to_literals(&sentence, language)
         .unwrap()
         .iter()
@@ -198,7 +202,7 @@ fn check_skill_levels_at(language: Language, levels: &[usize]) {
                     ..
                 } => Some(serde_json::json!({
                     "sentence": sentence, "target": target_word,
-                    "words": word_count(&pack, pack.string_rodeo.get(sentence).unwrap(), language),
+                    "words": word_count(&pack, pack.sentence_rodeo.get(sentence).unwrap(), language),
                 })),
                 _ => None,
             })

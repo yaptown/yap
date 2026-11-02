@@ -13,6 +13,17 @@ use std::collections::BTreeMap;
 use std::hash::Hash;
 use std::sync::Arc;
 
+/// Sentence identities are independent of shared vocabulary strings.
+#[derive(Debug)]
+pub enum SentenceText {}
+pub type SentenceSpur = Spur<SentenceText>;
+
+/// Native translation identities are independent of sentence and vocabulary keys.
+/// This uses a reader because the pinned lasso does not archive resolvers.
+#[derive(Debug)]
+pub enum TranslationText {}
+pub type TranslationSpur = Spur<TranslationText>;
+
 /// Runtime-only index, independent of the pack's frequency ordering.
 #[derive(Clone, Debug)]
 pub struct EaseOrder<K> {
@@ -98,23 +109,26 @@ pub struct LanguagePack {
     pub grams_with_prefixed_text: FxHashMap<Spur, Vec<TaggedGram<SpurGram>>>,
     lexicon: Arc<LanguagePackLexicon>,
     pub strokes: crate::StrokeTable,
-    pub string_rodeo: lasso::RodeoReader,
-    pub gram_rodeo: lasso::RodeoReader<Gram<Spur>>,
-    pub translations: FxHashMap<Spur, Vec<Spur>>,
+    pub string_rodeo: Arc<lasso::RodeoReader>,
+    pub gram_rodeo: Arc<lasso::RodeoReader<Gram<Spur>>>,
+    pub sentence_rodeo: lasso::RodeoReader<String, SentenceSpur>,
+    pub translation_rodeo: lasso::RodeoReader<String, TranslationSpur>,
+    pub translations: FxHashMap<SentenceSpur, Vec<TranslationSpur>>,
     /// Per-source gram frequencies (movies, Pimsleur lessons, etc.)
     pub source_gram_frequencies: FxHashMap<crate::FrequencySourceId, FrequencyList>,
-    pub homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<Spur>>,
+    pub homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<SentenceSpur>>,
     /// Movie metadata indexed by movie ID. Only films with a poster; see [`visible_movies`].
     pub movies: FxHashMap<String, MovieMetadata>,
     /// Book metadata indexed by book slug
     pub books: FxHashMap<String, BookMetadata>,
     /// Sentence source provenance tracking (maps sentence to its sources)
-    pub sentence_sources: FxHashMap<Spur, SentenceSource>,
+    pub sentence_sources: FxHashMap<SentenceSpur, SentenceSource>,
     /// Encoded sentences: maps sentence to grams with learnability and capitalize_first
     /// The gram Spur is a key into gram_rodeo
-    pub encoded_sentences: FxHashMap<Spur, SentenceGrams<crate::ReadingTaggedGram<SpurGram, Spur>>>,
+    pub encoded_sentences:
+        FxHashMap<SentenceSpur, SentenceGrams<crate::ReadingTaggedGram<SpurGram, Spur>>>,
     /// Index from gram to sentences containing it
-    pub sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>>,
+    pub sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<SentenceSpur>>,
     /// Human-recorded audio clips, indexed by voice actor and then by the
     /// target-language phrase they speak.
     pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
@@ -304,9 +318,9 @@ impl LanguagePack {
         &self,
         required_gram: Option<&TaggedGram<SpurGram>>,
         is_comprehensible: impl Fn(&TaggedGram<SpurGram>) -> bool,
-    ) -> Vec<Spur> {
+    ) -> Vec<SentenceSpur> {
         // Search through all sentences - if we have a required gram, only look at sentences containing it
-        let candidate_sentences: &[Spur] = if let Some(required) = required_gram {
+        let candidate_sentences: &[SentenceSpur] = if let Some(required) = required_gram {
             match self.sentences_containing_gram_index.get(required) {
                 Some(sentences) => sentences,
                 None => return Vec::new(),
@@ -331,7 +345,7 @@ impl LanguagePack {
     /// know their candidates use it directly.
     pub fn sentence_is_comprehensible(
         &self,
-        sentence: Spur,
+        sentence: SentenceSpur,
         required_gram: Option<&TaggedGram<SpurGram>>,
         is_comprehensible: &impl Fn(&TaggedGram<SpurGram>) -> bool,
     ) -> bool {
@@ -388,7 +402,7 @@ impl LanguagePack {
     /// storing a separate precomputed map.
     pub fn sentence_to_literals(
         &self,
-        sentence: &Spur,
+        sentence: &SentenceSpur,
         language: crate::Language,
     ) -> Option<Vec<Literal<String>>> {
         Some(
@@ -571,21 +585,56 @@ impl LanguagePack {
             rodeo.into_reader()
         };
 
-        let translations = {
+        let mut sentence_rodeo: lasso::Rodeo<String, SentenceSpur> = lasso::Rodeo::new();
+        let mut sentence_texts: std::collections::BTreeSet<&str> = language_data
+            .target_language_sentences
+            .iter()
+            .map(String::as_str)
+            .collect();
+        sentence_texts.extend(language_data.translations.iter().map(|(s, _)| s.as_str()));
+        sentence_texts.extend(
             language_data
-                .translations
+                .encoded_sentences
                 .iter()
-                .map(|(target_language, native_languages)| {
-                    (
-                        rodeo.get(target_language).unwrap(),
-                        native_languages
-                            .iter()
-                            .map(|n| rodeo.get(n).unwrap())
-                            .collect(),
-                    )
-                })
-                .collect()
-        };
+                .map(|(s, _)| s.as_str()),
+        );
+        sentence_texts.extend(
+            language_data
+                .sentence_sources
+                .iter()
+                .map(|(s, _)| s.as_str()),
+        );
+        for practice in language_data.homophone_practice.values() {
+            for pair in &practice.sentence_pairs {
+                sentence_texts.extend([pair.sentence1.as_str(), pair.sentence2.as_str()]);
+            }
+        }
+        for text in sentence_texts {
+            sentence_rodeo.get_or_intern(text);
+        }
+        let sentence_rodeo = sentence_rodeo.into_reader();
+        let mut translation_rodeo: lasso::Rodeo<String, TranslationSpur> = lasso::Rodeo::new();
+        let translation_texts: std::collections::BTreeSet<&str> = language_data
+            .translations
+            .iter()
+            .flat_map(|(_, ts)| ts.iter().map(String::as_str))
+            .collect();
+        for text in translation_texts {
+            translation_rodeo.get_or_intern(text);
+        }
+        let translations = language_data
+            .translations
+            .iter()
+            .map(|(s, ts)| {
+                (
+                    sentence_rodeo.get(s).unwrap(),
+                    ts.iter()
+                        .map(|t| translation_rodeo.get(t).unwrap())
+                        .collect(),
+                )
+            })
+            .collect();
+        let translation_rodeo = translation_rodeo.into_reader();
 
         let words_to_heteronyms: FxHashMap<Spur, Vec<Heteronym<Spur>>> = {
             let mut map: FxHashMap<Spur, Vec<(Heteronym<Spur>, u32)>> = FxHashMap::default();
@@ -665,7 +714,7 @@ impl LanguagePack {
             .map(|(word_pair, practice)| {
                 (
                     word_pair.get_interned(&rodeo).unwrap(),
-                    practice.get_interned(&rodeo).unwrap(),
+                    practice.get_interned(&sentence_rodeo).unwrap(),
                 )
             })
             .collect();
@@ -682,7 +731,7 @@ impl LanguagePack {
             language_data
                 .sentence_sources
                 .iter()
-                .map(|(sentence, source)| (rodeo.get(sentence).unwrap(), source.clone()))
+                .map(|(sentence, source)| (sentence_rodeo.get(sentence).unwrap(), source.clone()))
                 .collect()
         };
 
@@ -715,7 +764,7 @@ impl LanguagePack {
         };
 
         let encoded_sentences: FxHashMap<
-            Spur,
+            SentenceSpur,
             SentenceGrams<crate::ReadingTaggedGram<SpurGram, Spur>>,
         > = language_data
             .encoded_sentences
@@ -768,7 +817,7 @@ impl LanguagePack {
                     })
                     .collect();
                 Some((
-                    rodeo.get(sentence)?,
+                    sentence_rodeo.get(sentence)?,
                     SentenceGrams::<crate::ReadingTaggedGram<SpurGram, Spur>> {
                         grams: interned_grams?,
                         capitalize_first: encoded.capitalize_first,
@@ -986,8 +1035,8 @@ impl LanguagePack {
                 .collect()
         };
 
-        let sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>> = {
-            let mut map: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>> = FxHashMap::default();
+        let sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<SentenceSpur>> = {
+            let mut map: FxHashMap<TaggedGram<SpurGram>, Vec<SentenceSpur>> = FxHashMap::default();
             for (sentence_spur, sentence_grams) in encoded_sentences.iter() {
                 for gram in sentence_grams.all_grams() {
                     map.entry(gram.sense).or_default().push(*sentence_spur);
@@ -1189,8 +1238,10 @@ impl LanguagePack {
                 morphemes,
                 pronunciation_audio,
             }),
-            string_rodeo: rodeo,
-            gram_rodeo,
+            string_rodeo: Arc::new(rodeo),
+            gram_rodeo: Arc::new(gram_rodeo),
+            sentence_rodeo,
+            translation_rodeo,
             translations,
             source_gram_frequencies,
             homophone_practice,
@@ -1256,15 +1307,13 @@ fn is_dictionary_entry_easy(entry: &DictionaryEntry) -> bool {
 }
 
 /// The word-level half of a language pack: dictionary, frequency,
-/// pronunciation and morphology data. Small enough (~5x smaller than the
-/// sentence half) to download first, so the placement test can run before
-/// the sentence data has arrived.
+/// pronunciation and morphology data, plus all shared strings and grams.
+/// Downloaded first so the placement test can run before sentence data arrives.
 ///
-/// The two halves share one spur space: `string_rodeo` holds strings `0..N`
-/// and `gram_rodeo` grams `0..G`; [`LanguagePackSentences`] carries the
-/// extensions (`N..M` strings, `G..H` grams). A core and a sentences part
-/// only fit together when they come from the same [`LanguagePack::split`]
-/// call — the pair must be versioned and shipped as one unit.
+/// The core owns every shared string and gram referenced by either half.
+/// Sentence texts and native translations have independent typed interners in
+/// [`LanguagePackSentences`]. The halves must come from the same
+/// [`LanguagePack::split`] call and be versioned and shipped as one unit.
 #[derive(Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct LanguagePackCore {
     /// Fingerprint of this core's spur space (see [`spur_space_fingerprint`]).
@@ -1307,19 +1356,17 @@ pub struct LanguagePackSentences {
     pub strokes: crate::StrokeTable,
     /// Fingerprint of the core spur space this half was built against.
     pub spur_space_fingerprint: u64,
-    /// Strings `N..M` of the shared spur space, in spur order.
-    pub string_extension: Vec<String>,
-    /// Grams `G..H` of the shared spur space, in spur order. Their atoms may
-    /// reference extension strings.
-    pub gram_extension: Vec<Gram<Spur>>,
-    pub translations: FxHashMap<Spur, Vec<Spur>>,
+    pub sentence_rodeo: lasso::RodeoReader<String, SentenceSpur>,
+    pub translation_rodeo: lasso::RodeoReader<String, TranslationSpur>,
+    pub translations: FxHashMap<SentenceSpur, Vec<TranslationSpur>>,
     pub source_gram_frequencies: FxHashMap<crate::FrequencySourceId, FrequencyList>,
-    pub homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<Spur>>,
+    pub homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<SentenceSpur>>,
     pub movies: FxHashMap<String, MovieMetadata>,
     pub books: FxHashMap<String, BookMetadata>,
-    pub sentence_sources: FxHashMap<Spur, SentenceSource>,
-    pub encoded_sentences: FxHashMap<Spur, SentenceGrams<crate::ReadingTaggedGram<SpurGram, Spur>>>,
-    pub sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>>,
+    pub sentence_sources: FxHashMap<SentenceSpur, SentenceSource>,
+    pub encoded_sentences:
+        FxHashMap<SentenceSpur, SentenceGrams<crate::ReadingTaggedGram<SpurGram, Spur>>>,
+    pub sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<SentenceSpur>>,
     pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
 }
 
@@ -1349,10 +1396,8 @@ fn spur_space_fingerprint(core_strings: &[String], core_grams: &[Gram<Spur>]) ->
     hasher.digest()
 }
 
-/// Re-interns spurs from an existing pack's rodeos into a fresh, ordered
-/// spur space. Interning order is what establishes the core/extension
-/// partition: everything interned before the cutoff snapshot lands in the
-/// core, everything after in the extension.
+/// Re-interns only referenced shared strings and grams into the core's
+/// deterministic spur space. Sentence and translation keys are independent.
 struct SpurRemapper<'a> {
     old_strings: &'a lasso::RodeoReader,
     old_grams: &'a lasso::RodeoReader<Gram<Spur>>,
@@ -1419,7 +1464,7 @@ fn sorted<K: Ord, V>(map: FxHashMap<K, V>) -> Vec<(K, V)> {
 }
 
 fn derive_readings(
-    sentences: &FxHashMap<Spur, SentenceGrams<crate::ReadingTaggedGram<SpurGram, Spur>>>,
+    sentences: &FxHashMap<SentenceSpur, SentenceGrams<crate::ReadingTaggedGram<SpurGram, Spur>>>,
     strings: &lasso::RodeoReader,
     grams: &lasso::RodeoReader<Gram<Spur>>,
 ) -> FxHashMap<TaggedGram<SpurGram>, Vec<Spur>> {
@@ -1499,12 +1544,10 @@ impl LanguagePack {
             .map(|s| self.string_rodeo.resolve(s))
     }
 
-    /// Split this pack into its core (word-level) and sentence halves,
-    /// re-interning everything into a fresh spur space where all core
-    /// strings/grams come before all sentence-side ones. The partition is
-    /// established purely by processing order, so a future field added to
-    /// the pack just needs to be handled on the correct side of the cutoff —
-    /// the exhaustive destructure below makes forgetting one a compile error.
+    /// Split this pack into its core and sentence halves. All referenced
+    /// shared strings and grams belong to the core, including references from
+    /// sentence-side fields. Unreferenced construction-time entries are dropped.
+    /// The exhaustive destructure makes forgetting a new field a compile error.
     pub fn split(self) -> (LanguagePackCore, LanguagePackSentences) {
         let LanguagePack {
             ruby_segmentations,
@@ -1516,6 +1559,8 @@ impl LanguagePack {
             strokes,
             string_rodeo,
             gram_rodeo,
+            sentence_rodeo,
+            translation_rodeo,
             translations,
             source_gram_frequencies,
             homophone_practice,
@@ -1554,7 +1599,7 @@ impl LanguagePack {
             grams: lasso::Rodeo::new(),
         };
 
-        // ---- Core phase: everything interned here lands below the cutoff. ----
+        // Word-level references first, in frequency order where available.
 
         // Frequencies first so the most common words get the densest spurs.
         let gram_frequencies = FrequencyList {
@@ -1653,20 +1698,55 @@ impl LanguagePack {
             })
             .collect();
 
-        // ---- Cutoff: spurs below these counts are the core's. ----
-        let core_string_count = r.strings.len();
-        let core_gram_count = r.grams.len();
-
-        // ---- Sentence phase: everything from here lands in the extension. ----
+        // The sentence half only references the core's strings and grams, so
+        // intern everything it references here, before building it.
+        let mut strings = std::collections::BTreeSet::new();
+        let mut grams = std::collections::BTreeSet::new();
+        for encoded in encoded_sentences.values() {
+            for entry in encoded.all_grams() {
+                grams.insert(entry.sense.gram);
+                strings.extend(entry.reading);
+            }
+        }
+        grams.extend(sentences_containing_gram_index.keys().map(|g| g.gram));
+        for list in source_gram_frequencies.values() {
+            grams.extend(list.entries.keys().map(|g| g.gram));
+        }
+        for pair in homophone_practice.keys() {
+            strings.extend([pair.word1, pair.word2]);
+        }
+        for (gram, readings) in &gram_readings {
+            grams.insert(gram.gram);
+            strings.extend(readings.iter().copied());
+        }
+        for (gram, text) in &prefixed_text {
+            grams.insert(*gram);
+            strings.insert(*text);
+        }
+        for (text, entries) in &grams_with_prefixed_text {
+            strings.insert(*text);
+            grams.extend(entries.iter().map(|g| g.gram));
+        }
+        for (text, sets) in &redundant_senses {
+            strings.insert(*text);
+            grams.extend(sets.iter().flatten().map(|g| g.gram));
+        }
+        for gram in grams {
+            r.bare_g(gram);
+        }
+        for string in strings {
+            r.s(string);
+        }
+        let shared_counts = (r.strings.len(), r.grams.len());
 
         let encoded_sentences: FxHashMap<
-            Spur,
+            SentenceSpur,
             SentenceGrams<crate::ReadingTaggedGram<SpurGram, Spur>>,
         > = sorted(encoded_sentences)
             .into_iter()
             .map(|(sentence, sg)| {
                 (
-                    r.s(sentence),
+                    sentence,
                     sg.map(|g| crate::ReadingTaggedGram {
                         sense: r.g(g.sense),
                         reading: g.reading.map(|s| r.s(s)),
@@ -1675,21 +1755,13 @@ impl LanguagePack {
             })
             .collect();
 
-        let translations: FxHashMap<Spur, Vec<Spur>> = sorted(translations)
-            .into_iter()
-            .map(|(s, ts)| (r.s(s), ts.into_iter().map(|t| r.s(t)).collect()))
-            .collect();
-
-        let sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>> =
+        let translations = sorted(translations).into_iter().collect();
+        let sentence_sources = sorted(sentence_sources).into_iter().collect();
+        let sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<SentenceSpur>> =
             sorted(sentences_containing_gram_index)
                 .into_iter()
-                .map(|(g, ss)| (r.g(g), ss.into_iter().map(|s| r.s(s)).collect()))
+                .map(|(g, ss)| (r.g(g), ss))
                 .collect();
-
-        let sentence_sources: FxHashMap<Spur, SentenceSource> = sorted(sentence_sources)
-            .into_iter()
-            .map(|(s, src)| (r.s(s), src))
-            .collect();
 
         let source_gram_frequencies: FxHashMap<crate::FrequencySourceId, FrequencyList> =
             sorted(source_gram_frequencies)
@@ -1705,28 +1777,21 @@ impl LanguagePack {
                 })
                 .collect();
 
-        let homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<Spur>> =
-            sorted(homophone_practice)
-                .into_iter()
-                .map(|(pair, practice)| {
-                    (
-                        HomophoneWordPair {
-                            word1: r.s(pair.word1),
-                            word2: r.s(pair.word2),
-                        },
-                        HomophonePractice {
-                            sentence_pairs: practice
-                                .sentence_pairs
-                                .into_iter()
-                                .map(|p| crate::HomophoneSentencePair {
-                                    sentence1: r.s(p.sentence1),
-                                    sentence2: r.s(p.sentence2),
-                                })
-                                .collect(),
-                        },
-                    )
-                })
-                .collect();
+        let homophone_practice: FxHashMap<
+            HomophoneWordPair<Spur>,
+            HomophonePractice<SentenceSpur>,
+        > = sorted(homophone_practice)
+            .into_iter()
+            .map(|(pair, practice)| {
+                (
+                    HomophoneWordPair {
+                        word1: r.s(pair.word1),
+                        word2: r.s(pair.word2),
+                    },
+                    practice,
+                )
+            })
+            .collect();
 
         let gram_readings = sorted(gram_readings)
             .into_iter()
@@ -1757,65 +1822,32 @@ impl LanguagePack {
             })
             .collect();
 
-        // Sweep everything else the old rodeos held (strings/grams referenced
-        // by no field) into the extension, so the assembled pack's rodeos
-        // resolve exactly the same set as the original.
-        for i in 0..string_rodeo.len() {
-            let spur = <Spur as lasso::Key>::try_from_usize(i).unwrap();
-            r.s(spur);
-        }
-        for i in 0..gram_rodeo.len() {
-            let spur = <SpurGram as lasso::Key>::try_from_usize(i).unwrap();
-            r.bare_g(spur);
-        }
-
+        assert_eq!(
+            shared_counts,
+            (r.strings.len(), r.grams.len()),
+            "sentence fields introduced an uncollected shared string or gram"
+        );
         let SpurRemapper { strings, grams, .. } = r;
-        let full_strings = strings.into_reader();
-        let full_grams = grams.into_reader();
-
-        let resolve_range_strings = |from: usize, to: usize| -> Vec<String> {
-            (from..to)
-                .map(|i| {
-                    full_strings
-                        .resolve(&<Spur as lasso::Key>::try_from_usize(i).unwrap())
-                        .to_owned()
-                })
-                .collect()
-        };
-        let resolve_range_grams = |from: usize, to: usize| -> Vec<Gram<Spur>> {
-            (from..to)
-                .map(|i| {
-                    Gram(
-                        full_grams
-                            .resolve(&<SpurGram as lasso::Key>::try_from_usize(i).unwrap())
-                            .atoms()
-                            .to_vec(),
-                    )
-                })
-                .collect()
-        };
-
-        // The core ships rodeos holding only the below-cutoff entries.
-        let core_strings = resolve_range_strings(0, core_string_count);
-        let core_grams = resolve_range_grams(0, core_gram_count);
+        let core_string_rodeo = strings.into_reader();
+        let core_gram_rodeo = grams.into_reader();
+        let core_strings = (0..core_string_rodeo.len())
+            .map(|i| {
+                core_string_rodeo
+                    .resolve(&<Spur as lasso::Key>::try_from_usize(i).unwrap())
+                    .to_owned()
+            })
+            .collect::<Vec<_>>();
+        let core_grams = (0..core_gram_rodeo.len())
+            .map(|i| {
+                Gram(
+                    core_gram_rodeo
+                        .resolve(&<SpurGram as lasso::Key>::try_from_usize(i).unwrap())
+                        .atoms()
+                        .to_vec(),
+                )
+            })
+            .collect::<Vec<_>>();
         let fingerprint = spur_space_fingerprint(&core_strings, &core_grams);
-        let core_string_rodeo = {
-            let mut rodeo = lasso::Rodeo::new();
-            for s in core_strings {
-                rodeo.get_or_intern(s);
-            }
-            rodeo.into_reader()
-        };
-        let core_gram_rodeo = {
-            let mut rodeo: lasso::Rodeo<Gram<Spur>> = lasso::Rodeo::new();
-            for g in core_grams {
-                rodeo.get_or_intern(g);
-            }
-            rodeo.into_reader()
-        };
-
-        let string_extension = resolve_range_strings(core_string_count, full_strings.len());
-        let gram_extension = resolve_range_grams(core_gram_count, full_grams.len());
 
         (
             LanguagePackCore {
@@ -1845,8 +1877,8 @@ impl LanguagePack {
                 redundant_senses,
                 strokes,
                 spur_space_fingerprint: fingerprint,
-                string_extension,
-                gram_extension,
+                sentence_rodeo,
+                translation_rodeo,
                 translations,
                 source_gram_frequencies,
                 homophone_practice,
@@ -1913,8 +1945,10 @@ impl LanguagePack {
                 morphemes,
             }),
             strokes: crate::StrokeTable::default(),
-            string_rodeo,
-            gram_rodeo,
+            string_rodeo: Arc::new(string_rodeo),
+            gram_rodeo: Arc::new(gram_rodeo),
+            sentence_rodeo: lasso::Rodeo::new().into_reader(),
+            translation_rodeo: lasso::Rodeo::new().into_reader(),
             translations: FxHashMap::default(),
             source_gram_frequencies: FxHashMap::default(),
             homophone_practice: FxHashMap::default(),
@@ -1938,51 +1972,6 @@ impl LanguagePack {
             "language pack halves are from different builds (core spur-space fingerprint \
              doesn't match the one the sentences half was split against)"
         );
-        let string_rodeo = &self.string_rodeo;
-        let gram_rodeo = &self.gram_rodeo;
-
-        // Rebuild the full rodeos: core entries keep their spurs (lasso
-        // assigns keys sequentially in interning order), extension entries
-        // take the spurs after the cutoff. The length asserts catch a
-        // mismatched core/sentences pair.
-        let core_string_count = string_rodeo.len();
-        let string_rodeo = {
-            let mut rodeo = lasso::Rodeo::new();
-            for i in 0..core_string_count {
-                let spur = <Spur as lasso::Key>::try_from_usize(i).unwrap();
-                let interned = rodeo.get_or_intern(string_rodeo.resolve(&spur));
-                debug_assert_eq!(interned, spur);
-            }
-            for s in &sentences.string_extension {
-                rodeo.get_or_intern(s.as_str());
-            }
-            assert_eq!(
-                rodeo.len(),
-                core_string_count + sentences.string_extension.len(),
-                "language pack core/sentences string spaces overlap — mismatched halves?"
-            );
-            rodeo.into_reader()
-        };
-
-        let core_gram_count = gram_rodeo.len();
-        let gram_rodeo = {
-            let mut rodeo: lasso::Rodeo<Gram<Spur>> = lasso::Rodeo::new();
-            for i in 0..core_gram_count {
-                let spur = <SpurGram as lasso::Key>::try_from_usize(i).unwrap();
-                let gram = Gram(gram_rodeo.resolve(&spur).atoms().to_vec());
-                let interned = rodeo.get_or_intern(gram);
-                debug_assert_eq!(interned, spur);
-            }
-            for g in &sentences.gram_extension {
-                rodeo.get_or_intern(g.clone());
-            }
-            assert_eq!(
-                rodeo.len(),
-                core_gram_count + sentences.gram_extension.len(),
-                "language pack core/sentences gram spaces overlap — mismatched halves?"
-            );
-            rodeo.into_reader()
-        };
 
         LanguagePack {
             ruby_segmentations: sentences.ruby_segmentations,
@@ -1991,8 +1980,10 @@ impl LanguagePack {
             grams_with_prefixed_text: sentences.grams_with_prefixed_text,
             redundant_senses: sentences.redundant_senses,
             lexicon: self.lexicon.clone(),
-            string_rodeo,
-            gram_rodeo,
+            string_rodeo: self.string_rodeo.clone(),
+            gram_rodeo: self.gram_rodeo.clone(),
+            sentence_rodeo: sentences.sentence_rodeo,
+            translation_rodeo: sentences.translation_rodeo,
             strokes: sentences.strokes,
             translations: sentences.translations,
             source_gram_frequencies: sentences.source_gram_frequencies,
@@ -2418,6 +2409,9 @@ mod sense_tests {
         let core = LanguagePack::from_parts(core, None);
         let full = core.with_sentences(sentences);
         assert!(Arc::ptr_eq(&core.lexicon, &full.lexicon));
+        assert!(Arc::ptr_eq(&core.string_rodeo, &full.string_rodeo));
+        assert!(Arc::ptr_eq(&core.gram_rodeo, &full.gram_rodeo));
+        assert_eq!(core.spur_space_fingerprint, full.spur_space_fingerprint);
         assert!(core.translations.is_empty());
         assert!(!full.translations.is_empty());
         let gram = core.intern_gram(&gram("bank")).unwrap();
@@ -2425,6 +2419,177 @@ mod sense_tests {
         for (spur, text) in core.string_rodeo.iter() {
             assert_eq!(full.string_rodeo.resolve(&spur), text);
         }
+    }
+
+    #[test]
+    fn sentence_half_only_references_core_keys() {
+        let tagged = |text: &str| TaggedGram {
+            gram: gram(text),
+            sense: None,
+        };
+        let frequency = |text: &str| GramFrequencyEntry {
+            gram: tagged(text),
+            count: 10,
+            direct_count: 10,
+            disambiguation_key: 0,
+        };
+        let encoded = |word: &str, obvious: bool| {
+            let entry = crate::ReadingTaggedGram {
+                sense: tagged(word),
+                reading: Some("reading-only".into()),
+            };
+            SentenceGrams {
+                grams: vec![if obvious {
+                    SentenceGram::Obvious(entry)
+                } else {
+                    SentenceGram::Learnable(entry)
+                }],
+                capitalize_first: false,
+                multiword_terms: vec![],
+                low_confidence_multiword_terms: vec![],
+            }
+        };
+        let data = ConsolidatedLanguageData {
+            target_language_sentences: vec!["bank".into(), "corpus sentence".into()],
+            translations: vec![
+                (
+                    "bank".into(),
+                    vec!["bank".into(), "translation-only".into()],
+                ),
+                ("corpus sentence".into(), vec!["translation-only".into()]),
+            ],
+            gram_vocabulary: ["bank", "corpus-only", "source-only", "unused"]
+                .into_iter()
+                .map(|word| GramVocabEntry {
+                    atoms: gram(word),
+                    frequency: 10,
+                })
+                .collect(),
+            gram_frequencies: GramFrequencyList {
+                entries: vec![frequency("bank")],
+                total_count: 10,
+            },
+            encoded_sentences: vec![
+                ("bank".into(), encoded("bank", false)),
+                ("corpus sentence".into(), encoded("corpus-only", true)),
+            ],
+            sentence_sources: vec![("source sentence".into(), SentenceSource::none())],
+            source_gram_frequencies: [(
+                crate::FrequencySourceId::Movie("film".into()),
+                GramFrequencyList {
+                    entries: vec![frequency("source-only")],
+                    total_count: 10,
+                },
+            )]
+            .into_iter()
+            .collect(),
+            homophone_practice: [(
+                HomophoneWordPair {
+                    word1: "bank".into(),
+                    word2: "banc".into(),
+                },
+                HomophonePractice {
+                    sentence_pairs: vec![crate::HomophoneSentencePair {
+                        sentence1: "bank".into(),
+                        sentence2: "homophone sentence".into(),
+                    }],
+                },
+            )]
+            .into_iter()
+            .collect(),
+            ..Default::default()
+        };
+        let course = Course {
+            target_language: Language::English,
+            native_language: Language::French,
+        };
+        let generated = LanguagePack::new(data, course);
+        let sentence = generated.sentence_rodeo.get("corpus sentence").unwrap();
+        assert_eq!(
+            generated.sentence_rodeo.resolve(&sentence),
+            "corpus sentence"
+        );
+        let original_literals = generated
+            .sentence_to_literals(&sentence, Language::English)
+            .unwrap();
+        let (core, sentences) = generated.split();
+        let fingerprint = core.spur_space_fingerprint;
+        for shared in ["bank", "banc", "corpus-only", "source-only", "reading-only"] {
+            assert!(
+                core.string_rodeo.get(shared).is_some(),
+                "missing shared string: {shared}"
+            );
+        }
+        for non_shared in [
+            "corpus sentence",
+            "source sentence",
+            "homophone sentence",
+            "translation-only",
+            "unused",
+        ] {
+            assert!(
+                core.string_rodeo.get(non_shared).is_none(),
+                "unexpected shared string: {non_shared}"
+            );
+        }
+        assert_eq!(core.gram_rodeo.len(), 3);
+        for text in [
+            "bank",
+            "corpus sentence",
+            "source sentence",
+            "homophone sentence",
+        ] {
+            assert!(sentences.sentence_rodeo.get(text).is_some());
+        }
+        assert_eq!(sentences.translation_rodeo.len(), 2);
+        let core_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&core).unwrap();
+        let sentence_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&sentences).unwrap();
+        let core = rkyv::from_bytes::<LanguagePackCore, rkyv::rancor::Error>(&core_bytes).unwrap();
+        let sentences =
+            rkyv::from_bytes::<LanguagePackSentences, rkyv::rancor::Error>(&sentence_bytes)
+                .unwrap();
+        let core = LanguagePack::from_parts(core, None);
+        let full = core.with_sentences(sentences);
+        assert_eq!(full.spur_space_fingerprint, fingerprint);
+        assert!(Arc::ptr_eq(&core.string_rodeo, &full.string_rodeo));
+        assert!(Arc::ptr_eq(&core.gram_rodeo, &full.gram_rodeo));
+        assert!(core.sentence_rodeo.is_empty());
+        assert!(core.translation_rodeo.is_empty());
+        let SentenceGram::Obvious(entry) = &full.encoded_sentences[&sentence].grams[0] else {
+            panic!("sentence-only gram must remain obvious after assembly")
+        };
+        assert_eq!(full.resolve_gram(&entry.sense.gram), gram("corpus-only"));
+        assert_eq!(
+            full.string_rodeo.resolve(&entry.reading.unwrap()),
+            "reading-only"
+        );
+        assert_eq!(
+            full.sentence_to_literals(&sentence, Language::English)
+                .unwrap(),
+            original_literals
+        );
+        for (sentence, translations) in &full.translations {
+            assert!(full.sentence_rodeo.try_resolve(sentence).is_some());
+            for translation in translations {
+                assert!(full.translation_rodeo.try_resolve(translation).is_some());
+            }
+        }
+        for (words, practice) in &full.homophone_practice {
+            assert_eq!(words.resolve(&full.string_rodeo).word2, "banc");
+            assert_eq!(
+                practice.resolve(&full.sentence_rodeo).sentence_pairs[0].sentence2,
+                "homophone sentence"
+            );
+        }
+        let (resplit_core, resplit_sentences) = full.split();
+        assert_eq!(
+            &*core_bytes,
+            &*rkyv::to_bytes::<rkyv::rancor::Error>(&resplit_core).unwrap()
+        );
+        assert_eq!(
+            &*sentence_bytes,
+            &*rkyv::to_bytes::<rkyv::rancor::Error>(&resplit_sentences).unwrap()
+        );
     }
 
     #[test]
@@ -2663,7 +2828,7 @@ mod sense_tests {
         assert_eq!(expected.len(), 3);
         let (core, sentences) = pack.split();
         for reading in ["ばんく", "ぎんこう", "ていぼう"] {
-            assert!(core.string_rodeo.get(reading).is_none());
+            assert!(core.string_rodeo.get(reading).is_some());
         }
         let core_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&core).unwrap();
         let sentence_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&sentences).unwrap();
@@ -2673,7 +2838,7 @@ mod sense_tests {
                 .unwrap();
         let pack = LanguagePack::from_parts(core, Some(sentences));
         assert_eq!(resolved(&pack), expected);
-        let sentence = &pack.encoded_sentences[&pack.string_rodeo.get("bank").unwrap()];
+        let sentence = &pack.encoded_sentences[&pack.sentence_rodeo.get("bank").unwrap()];
         for (terms, reading) in [
             (&sentence.multiword_terms, "ぎんこう"),
             (&sentence.low_confidence_multiword_terms, "ていぼう"),
@@ -2757,7 +2922,7 @@ mod sense_tests {
                 .unwrap();
         let pack = LanguagePack::from_parts(core, Some(sentences));
         assert_resolution(&pack);
-        let sentence = pack.string_rodeo.get("bank").unwrap();
+        let sentence = pack.sentence_rodeo.get("bank").unwrap();
         let SentenceGram::Learnable(entry) = pack.encoded_sentences[&sentence].grams[0] else {
             panic!("expected a learnable gram")
         };

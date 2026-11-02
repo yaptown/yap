@@ -229,7 +229,7 @@ impl DeckEvent {
                                 context.course.target_language,
                             );
                             let encoded = pack
-                                .string_rodeo
+                                .sentence_rodeo
                                 .get(&cleaned)
                                 .and_then(|sentence| pack.encoded_sentences.get(&sentence));
                             let phrases = phrases
