@@ -100,6 +100,7 @@ use isotonic::{Direction, Point, SmoothRegression};
 use itertools::Itertools;
 use language_utils::Frequency;
 use language_utils::Literal;
+use language_utils::SentenceSpur;
 use language_utils::TtsRequest;
 use language_utils::autograde;
 use language_utils::features::WordPrefix;
@@ -1369,9 +1370,9 @@ pub enum SentenceChallengeType {
 /// Stats contains review statistics and progress tracking
 #[derive(Clone, Debug)]
 pub struct Stats {
-    pub sentences_reviewed: BTreeMap<Spur, u32>,
+    pub sentences_reviewed: BTreeMap<SentenceSpur, u32>,
     pub words_listened_to: BTreeMap<Heteronym<Spur>, u32>,
-    pub sentence_pairs_reviewed: BTreeMap<HomophoneSentencePair<Spur>, u32>,
+    pub sentence_pairs_reviewed: BTreeMap<HomophoneSentencePair<SentenceSpur>, u32>,
     pub total_reviews: u64,
     pub xp: f64,
     pub daily_streak: Option<DailyStreak>,
@@ -1388,7 +1389,7 @@ pub struct Stats {
     /// Track how many times each flashcard type has been seen (for tutorial purposes)
     pub flashcard_type_seen_count: BTreeMap<FlashcardType, u32>,
     /// Last 5 sentences the user got wrong, keyed by (sentence, challenge type).
-    pub wrong_sentences: VecDeque<(Spur, SentenceChallengeType)>,
+    pub wrong_sentences: VecDeque<(SentenceSpur, SentenceChallengeType)>,
 }
 
 #[derive(Clone, Debug)]
@@ -1460,7 +1461,7 @@ pub(crate) struct Regressions {
 }
 
 struct ComprehensibleSentence {
-    target_language: Spur,
+    target_language: SentenceSpur,
     target_language_sentence_grams: SentenceGrams<TaggedGram<SpurGram>>,
     unique_target_language_phrases: Vec<TaggedGram<SpurGram>>,
     native_languages: Vec<Spur>,
@@ -1471,13 +1472,9 @@ struct ComprehensibleSentence {
 /// struct, not a comprehensibility check — callers pick the sentence.)
 fn comprehensible_sentence_from_spur(
     language_pack: &LanguagePack,
-    sentence: Spur,
+    sentence: SentenceSpur,
 ) -> Option<ComprehensibleSentence> {
-    let sentence_grams = language_pack
-        .encoded_sentences
-        .get(&sentence)?
-        .clone()
-        .without_readings();
+    let sentence_grams = language_pack.sentence_grams(sentence)?.without_readings();
 
     // Collect unique phrases (high and low confidence multiword terms)
     let unique_target_language_phrases = {
@@ -1781,9 +1778,9 @@ impl weapon::AppState for Deck {
                 );
 
                 if let Some(sentence_spur) =
-                    context.language_pack.string_rodeo.get(&cleaned_sentence)
+                    context.language_pack.sentence_rodeo.get(&cleaned_sentence)
                     && let Some(encoded_sentence) =
-                        context.language_pack.encoded_sentences.get(&sentence_spur)
+                        context.language_pack.sentence_grams(sentence_spur)
                 {
                     *deck
                         .stats
@@ -1798,7 +1795,7 @@ impl weapon::AppState for Deck {
 
                     // Match grams to literals and log reviews for multi-word grams
                     for (gram, matched) in utils::match_grams_to_literals(
-                        encoded_sentence,
+                        &encoded_sentence,
                         &literals,
                         &context.language_pack,
                     ) {
@@ -2091,12 +2088,11 @@ impl weapon::AppState for Deck {
                 );
 
                 if let Some(sentence_spur) =
-                    context.language_pack.string_rodeo.get(&cleaned_sentence)
+                    context.language_pack.sentence_rodeo.get(&cleaned_sentence)
                 {
                     let mut any_again = false;
 
-                    let encoded_sentence =
-                        context.language_pack.encoded_sentences.get(&sentence_spur);
+                    let encoded_sentence = context.language_pack.sentence_grams(sentence_spur);
                     if let Some(encoded_sentence) = encoded_sentence {
                         // Collect grams by rating (worse ratings take precedence)
                         let mut again_grams = BTreeSet::new();
@@ -2105,7 +2101,7 @@ impl weapon::AppState for Deck {
 
                         // Match grams to literals and categorize by rating
                         for (gram, matched) in utils::match_grams_to_literals(
-                            encoded_sentence,
+                            &encoded_sentence,
                             &literals,
                             &context.language_pack,
                         ) {
@@ -3859,7 +3855,7 @@ impl Deck {
         let sentence_spur = self
             .context
             .language_pack
-            .string_rodeo
+            .sentence_rodeo
             .get(&cleaned_sentence)?;
         let sentence_literals = self
             .context
@@ -3918,7 +3914,7 @@ impl Deck {
         let sentence_spur = self
             .context
             .language_pack
-            .string_rodeo
+            .sentence_rodeo
             .get(&cleaned_sentence)?;
         let sentence_literals = self
             .context
@@ -4187,15 +4183,16 @@ impl Deck {
     fn pick_comprehensible_sentence(
         &self,
         required_gram: Option<&TaggedGram<SpurGram>>,
-        comprehensible_grams: impl GramMembership,
-        sentences_reviewed: &BTreeMap<Spur, u32>,
+        comprehensible_grams: WrittenGrams<'_>,
+        sentences_reviewed: &BTreeMap<SentenceSpur, u32>,
         language_pack: &LanguagePack,
-    ) -> Option<Spur> {
+    ) -> Option<SentenceSpur> {
         let language = self.context.course.target_language;
+        let known = comprehensible_grams.rank_bitset();
         let mut possible_sentences = language_pack
-            .comprehensible_sentences(required_gram, |gram| comprehensible_grams.contains(gram));
+            .comprehensible_sentences_by_rank(required_gram, |rank| known.contains(rank));
         possible_sentences.sort_by_key(|sentence| {
-            let text = language_pack.string_rodeo.resolve(sentence);
+            let text = language_pack.sentence_rodeo.resolve(sentence);
             (
                 !clips::sentence_has_clip(language, text),
                 *sentences_reviewed.get(sentence).unwrap_or(&0),
@@ -4207,8 +4204,8 @@ impl Deck {
     fn get_comprehensible_sentence_containing(
         &self,
         required_gram: Option<&TaggedGram<SpurGram>>,
-        comprehensible_grams: impl GramMembership,
-        sentences_reviewed: &BTreeMap<Spur, u32>,
+        comprehensible_grams: WrittenGrams<'_>,
+        sentences_reviewed: &BTreeMap<SentenceSpur, u32>,
         language_pack: &LanguagePack,
     ) -> Option<ComprehensibleSentence> {
         let sentence = self.pick_comprehensible_sentence(
@@ -4222,7 +4219,7 @@ impl Deck {
 
     /// Pick the least-reviewed comprehensible sentence containing `gram`, if
     /// any exists — the same selection the app's translation challenges use.
-    pub fn pick_translation_sentence(&self, gram: &TaggedGram<SpurGram>) -> Option<Spur> {
+    pub fn pick_translation_sentence(&self, gram: &TaggedGram<SpurGram>) -> Option<SentenceSpur> {
         self.pick_comprehensible_sentence(
             Some(gram),
             self.get_comprehensible_written_grams(false),
@@ -4423,7 +4420,11 @@ impl Context {
     }
 
     #[allow(unused)] // for the future "know the difference" cards
-    fn get_homophone_practice(&self, word1: Spur, word2: Spur) -> Option<&HomophonePractice<Spur>> {
+    fn get_homophone_practice(
+        &self,
+        word1: Spur,
+        word2: Spur,
+    ) -> Option<&HomophonePractice<SentenceSpur>> {
         self.language_pack
             .homophone_practice
             .get(&HomophoneWordPair { word1, word2 })
@@ -7084,7 +7085,7 @@ mod tests {
         // The sentence from v1 events (without proper French punctuation spacing)
         let raw_sentence = "Qu'est-ce que tu veux savoir?";
 
-        let raw_in_rodeo = language_pack.string_rodeo.get(raw_sentence).is_some();
+        let raw_in_rodeo = language_pack.sentence_rodeo.get(raw_sentence).is_some();
         assert!(
             !raw_in_rodeo,
             "Raw sentence should NOT be in language pack (it lacks proper French spacing)"
@@ -7095,21 +7096,24 @@ mod tests {
             Language::French,
         );
 
-        let cleaned_in_rodeo = language_pack.string_rodeo.get(&cleaned_sentence).is_some();
-        let cleaned_in_encoded = language_pack
-            .string_rodeo
+        let cleaned_in_rodeo = language_pack
+            .sentence_rodeo
             .get(&cleaned_sentence)
-            .and_then(|spur| language_pack.encoded_sentences.get(&spur))
+            .is_some();
+        let cleaned_in_encoded = language_pack
+            .sentence_rodeo
+            .get(&cleaned_sentence)
+            .and_then(|spur| language_pack.sentence_grams(spur))
             .is_some();
         let cleaned_has_literals = language_pack
-            .string_rodeo
+            .sentence_rodeo
             .get(&cleaned_sentence)
             .and_then(|spur| language_pack.sentence_to_literals(&spur, Language::French))
             .is_some();
 
         assert!(
             cleaned_in_rodeo,
-            "Cleaned sentence should be in string_rodeo"
+            "Cleaned sentence should be in sentence_rodeo"
         );
         assert!(
             cleaned_in_encoded,
@@ -7129,13 +7133,13 @@ mod tests {
         ))
         .expect("Failed to load French pack - run `cargo run --bin generate-data -- fra` first");
         let mut seen = std::collections::BTreeSet::new();
-        for sentence in pack.encoded_sentences.keys() {
-            let text = pack.string_rodeo.resolve(sentence);
+        for sentence in pack.encoded_sentences.iter().map(|(text, _)| text) {
+            let text = pack.sentence_rodeo.resolve(&sentence);
             if !text.contains([';', ':', '«', '»', '!', '?']) {
                 continue;
             }
             let literals = pack
-                .sentence_to_literals(sentence, Language::French)
+                .sentence_to_literals(&sentence, Language::French)
                 .unwrap();
             let reconstructed = language_utils::literals_to_text(&literals);
             assert_eq!(reconstructed, text);
@@ -7144,7 +7148,7 @@ mod tests {
             // the lookup copy, which must still identify this encoded sentence.
             let old = text.replace(['\u{202F}', '\u{00A0}'], " ");
             let cleaned = cleanup_sentence(old, Language::French);
-            assert_eq!(pack.string_rodeo.get(&cleaned), Some(*sentence));
+            assert_eq!(pack.sentence_rodeo.get(&cleaned), Some(sentence));
             seen.extend(
                 text.chars()
                     .filter(|c| [';', ':', '«', '»', '!', '?'].contains(c)),
@@ -7532,8 +7536,9 @@ mod tests {
         if let Ok(needle) = std::env::var("INSPECT_SENTENCE") {
             let lp = &deck.context.language_pack;
             println!("\n=== Sentence inspection: {needle:?} ===");
-            for (sentence_spur, sentence_grams) in lp.encoded_sentences.iter() {
-                let sentence_text = lp.string_rodeo.resolve(sentence_spur);
+            for (sentence_spur, _) in lp.encoded_sentences.iter() {
+                let sentence_grams = lp.sentence_grams(sentence_spur).unwrap();
+                let sentence_text = lp.sentence_rodeo.resolve(&sentence_spur);
                 if !sentence_text.contains(&needle) {
                     continue;
                 }

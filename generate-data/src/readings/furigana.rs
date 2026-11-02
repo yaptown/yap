@@ -111,7 +111,8 @@ pub fn pairs(pack: &LanguagePack) -> BTreeSet<(String, String)> {
             pairs.insert((text.clone(), pack.string_rodeo.resolve(reading).into()));
         }
     }
-    for sentence in pack.encoded_sentences.values() {
+    for (text, _) in pack.encoded_sentences.iter() {
+        let sentence = pack.sentence_grams(text).unwrap();
         let literals = sentence.clone().without_readings().to_literals(
             &pack.string_rodeo,
             &pack.gram_rodeo,

@@ -1,8 +1,8 @@
 //! Display readings shared by challenges, dictionary entries, and Anki.
+use language_utils::SentenceSpur;
 use language_utils::{
     Language, Literal, SentenceGram, language_pack::LanguagePack, readings::RubySegment,
 };
-use lasso::Spur;
 
 pub(crate) fn word_ruby(
     text: &str,
@@ -36,11 +36,12 @@ pub(crate) struct SentenceRubyGroup<'a> {
 pub(crate) fn sentence_ruby_groups<'a>(
     pack: &LanguagePack,
     language: Language,
-    sentence: Spur,
+    sentence: SentenceSpur,
     literals: &'a [Literal<String>],
     indices: &[usize],
 ) -> Vec<SentenceRubyGroup<'a>> {
-    let grams = &pack.encoded_sentences[&sentence].grams;
+    let sentence = pack.sentence_grams(sentence).unwrap();
+    let grams = &sentence.grams;
     let mut start = 0;
     indices
         .chunk_by(|a, b| a == b)
@@ -72,7 +73,7 @@ pub(crate) fn sentence_ruby_groups<'a>(
 pub(crate) fn sentence_ruby(
     pack: &LanguagePack,
     language: Language,
-    sentence: Spur,
+    sentence: SentenceSpur,
     literals: &[Literal<String>],
     indices: &[usize],
 ) -> Vec<Vec<RubySegment>> {

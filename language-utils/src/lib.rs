@@ -8,12 +8,13 @@ pub mod word_prefix;
 pub use word_prefix::{compute_word_prefix, prefixed_text};
 pub mod indexmap;
 pub mod language_pack;
-pub use language_pack::PACKS_ORIGIN;
+pub use language_pack::{PACKS_ORIGIN, SentenceSpur, SentenceText};
 pub mod minimal_pairs;
 pub mod morphology_label;
 pub mod profile;
 pub mod pronunciation_pattern;
 pub mod readings;
+mod sentence_codec;
 pub mod strokes;
 pub use readings::{ReadingTaggedGram, RubySegment};
 pub mod text_cleanup;
@@ -2755,14 +2756,8 @@ impl ConsolidatedLanguageData {
         let _ = rodeo.get_or_intern("");
         let _ = rodeo.get_or_intern(" ");
 
-        // Intern sentences
-        for sentence in &self.target_language_sentences {
-            rodeo.get_or_intern(sentence);
-        }
-
-        // Intern translations
-        for (french, englishes) in &self.translations {
-            rodeo.get_or_intern(french);
+        // Intern native translations; target sentence texts have a separate rodeo.
+        for (_, englishes) in &self.translations {
             for english in englishes {
                 rodeo.get_or_intern(english);
             }
@@ -2841,9 +2836,8 @@ impl ConsolidatedLanguageData {
         }
 
         // intern homophone practice data
-        for (word_pair, practice) in &self.homophone_practice {
+        for word_pair in self.homophone_practice.keys() {
             word_pair.get_or_intern(rodeo);
-            practice.get_or_intern(rodeo);
         }
 
         // intern movie data
@@ -2852,9 +2846,8 @@ impl ConsolidatedLanguageData {
             rodeo.get_or_intern(&movie.title);
         }
 
-        // intern sentence sources (sentences already interned, just need movie_ids)
-        for (sentence, source) in &self.sentence_sources {
-            rodeo.get_or_intern(sentence);
+        // Intern source metadata, not sentence text keys.
+        for (_, source) in &self.sentence_sources {
             for movie_id in &source.movie_ids {
                 rodeo.get_or_intern(movie_id);
             }
@@ -2901,9 +2894,8 @@ impl ConsolidatedLanguageData {
             }
         }
 
-        // intern encoded sentence keys, atoms, and multiword term grams
-        for (sentence, encoded) in &self.encoded_sentences {
-            rodeo.get_or_intern(sentence);
+        // Intern encoded atoms and readings, not sentence text keys.
+        for (_, encoded) in &self.encoded_sentences {
             for entry in encoded.all_grams() {
                 if let Some(reading) = &entry.reading {
                     rodeo.get_or_intern(reading);
@@ -5104,15 +5096,18 @@ where
 impl HomophoneSentencePair<String> {
     pub fn get_interned(
         &self,
-        rodeo: &lasso::RodeoReader,
-    ) -> Option<HomophoneSentencePair<lasso::Spur>> {
+        rodeo: &lasso::RodeoReader<String, SentenceSpur>,
+    ) -> Option<HomophoneSentencePair<SentenceSpur>> {
         Some(HomophoneSentencePair {
             sentence1: rodeo.get(&self.sentence1)?,
             sentence2: rodeo.get(&self.sentence2)?,
         })
     }
 
-    fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> HomophoneSentencePair<lasso::Spur> {
+    fn get_or_intern(
+        &self,
+        rodeo: &mut lasso::Rodeo<String, SentenceSpur>,
+    ) -> HomophoneSentencePair<SentenceSpur> {
         HomophoneSentencePair {
             sentence1: rodeo.get_or_intern(&self.sentence1),
             sentence2: rodeo.get_or_intern(&self.sentence2),
@@ -5120,8 +5115,11 @@ impl HomophoneSentencePair<String> {
     }
 }
 
-impl HomophoneSentencePair<lasso::Spur> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> HomophoneSentencePair<String> {
+impl HomophoneSentencePair<SentenceSpur> {
+    pub fn resolve(
+        &self,
+        rodeo: &lasso::RodeoReader<String, SentenceSpur>,
+    ) -> HomophoneSentencePair<String> {
         HomophoneSentencePair {
             sentence1: rodeo.resolve(&self.sentence1).to_string(),
             sentence2: rodeo.resolve(&self.sentence2).to_string(),
@@ -5154,8 +5152,8 @@ where
 impl HomophonePractice<String> {
     pub fn get_interned(
         &self,
-        rodeo: &lasso::RodeoReader,
-    ) -> Option<HomophonePractice<lasso::Spur>> {
+        rodeo: &lasso::RodeoReader<String, SentenceSpur>,
+    ) -> Option<HomophonePractice<SentenceSpur>> {
         Some(HomophonePractice {
             sentence_pairs: self
                 .sentence_pairs
@@ -5165,7 +5163,10 @@ impl HomophonePractice<String> {
         })
     }
 
-    fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> HomophonePractice<lasso::Spur> {
+    fn get_or_intern(
+        &self,
+        rodeo: &mut lasso::Rodeo<String, SentenceSpur>,
+    ) -> HomophonePractice<SentenceSpur> {
         HomophonePractice {
             sentence_pairs: self
                 .sentence_pairs
@@ -5176,8 +5177,11 @@ impl HomophonePractice<String> {
     }
 }
 
-impl HomophonePractice<lasso::Spur> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> HomophonePractice<String> {
+impl HomophonePractice<SentenceSpur> {
+    pub fn resolve(
+        &self,
+        rodeo: &lasso::RodeoReader<String, SentenceSpur>,
+    ) -> HomophonePractice<String> {
         HomophonePractice {
             sentence_pairs: self
                 .sentence_pairs

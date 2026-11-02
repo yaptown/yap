@@ -229,13 +229,13 @@ impl DeckEvent {
                                 context.course.target_language,
                             );
                             let encoded = pack
-                                .string_rodeo
+                                .sentence_rodeo
                                 .get(&cleaned)
-                                .and_then(|sentence| pack.encoded_sentences.get(&sentence));
+                                .and_then(|sentence| pack.sentence_grams(sentence));
                             let phrases = phrases
                                 .into_iter()
                                 .filter_map(|(text, remembered)| {
-                                    let encoded = encoded?;
+                                    let encoded = encoded.as_ref()?;
                                     let entry = encoded
                                         .multiword_terms
                                         .iter()

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use yap_frontend_reducers::{DefinitionView, definition_view};
 
+use language_utils::SentenceSpur;
 use language_utils::{
     Atom, Gram, GramDefinition, Heteronym, Literal, PatternPosition, SentenceGram, SpurGram,
     TaggedGram, TtsProvider, TtsRequest, WordType, atoms_to_literals, language_pack::LanguagePack,
@@ -377,7 +378,7 @@ impl Deck {
     pub fn transcription_challenge_for_sentence(
         &self,
         gram: SpurGram,
-        sentence: Spur,
+        sentence: SentenceSpur,
     ) -> Option<TranscribeComprehensibleSentence> {
         let language_pack = &self.context.language_pack;
         let sentence = crate::comprehensible_sentence_from_spur(language_pack, sentence)?;
@@ -507,7 +508,7 @@ impl Deck {
         Some(TranscribeComprehensibleSentence {
             literal_ruby,
             target_language: language_pack
-                .string_rodeo
+                .sentence_rodeo
                 .resolve(&sentence.target_language)
                 .to_string(),
             native_language: language_pack
@@ -521,7 +522,7 @@ impl Deck {
             audio: AudioRequest {
                 request: TtsRequest {
                     text: language_pack
-                        .string_rodeo
+                        .sentence_rodeo
                         .resolve(&sentence.target_language)
                         .to_string(),
                     language: self.context.course.target_language,
@@ -553,7 +554,7 @@ impl Deck {
     pub fn translation_challenge_for_sentence(
         &self,
         gram: TaggedGram<SpurGram>,
-        sentence: Spur,
+        sentence: SentenceSpur,
     ) -> Option<TranslateComprehensibleSentence> {
         let language_pack: &Arc<LanguagePack> = &self.context.language_pack;
         if !language_pack
@@ -606,7 +607,7 @@ impl Deck {
 
         // Phrase matches already carry occurrence positions, including gaps in
         // discontinuous phrases. Do not reconstruct those from surface text.
-        let encoded = language_pack.encoded_sentences.get(&sentence)?;
+        let encoded = language_pack.sentence_grams(sentence)?;
         primary_literal_indices.extend(
             encoded
                 .multiword_terms
@@ -672,7 +673,7 @@ impl Deck {
         Some(TranslateComprehensibleSentence {
             literal_ruby,
             target_language: language_pack
-                .string_rodeo
+                .sentence_rodeo
                 .resolve(&target_language)
                 .to_string(),
             target_language_literals,
@@ -701,7 +702,7 @@ impl Deck {
             audio: AudioRequest {
                 request: TtsRequest {
                     text: language_pack
-                        .string_rodeo
+                        .sentence_rodeo
                         .resolve(&target_language)
                         .to_string(),
                     language: self.context.course.target_language,
