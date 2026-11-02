@@ -22,13 +22,13 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
+use language_utils::SentenceSpur;
 use language_utils::{
     Course, Gram, Language, SpurGram, TaggedGram, TtsProvider, TtsRequest, autograde,
     dictionary_entry_slug,
     language_pack::LanguagePack,
     text_cleanup::{cleanup_sentence, find_closest_match},
 };
-use lasso::Spur;
 use weapon::data_model::{EventStore, EventType};
 use yap_frontend_rs::{
     CardContext, CardIndicator, CardSummary, Challenge, Context, Deck, DeckEvent, LanguageEvent,
@@ -433,7 +433,7 @@ impl YapState {
         &mut self,
         card: &Card,
         sentence: Option<&str>,
-    ) -> Result<(Spur, TranslateComprehensibleSentence), String> {
+    ) -> Result<(SentenceSpur, TranslateComprehensibleSentence), String> {
         let CardIndicator::WrittenGram { gram } = card else {
             return Err(
                 "translation challenges quiz written gram cards — present listening and \
@@ -449,7 +449,7 @@ impl YapState {
             Some(text) => {
                 let text = cleanup_sentence(text.to_string(), self.context.course.target_language);
                 let pack = self.pack();
-                let Some(spur) = pack.string_rodeo.get(&text) else {
+                let Some(spur) = pack.sentence_rodeo.get(&text) else {
                     return Err(
                         "that sentence isn't in yap's corpus — pass one exactly as returned by \
                          get_sentences, or omit it to let the server pick"
@@ -488,7 +488,7 @@ impl YapState {
     }
 
     /// Human-readable provenance for a sentence.
-    fn sentence_sources(&self, sentence: &lasso::Spur) -> Vec<String> {
+    fn sentence_sources(&self, sentence: &SentenceSpur) -> Vec<String> {
         let pack = self.pack();
         let Some(source) = pack.sentence_sources.get(sentence) else {
             return Vec::new();
@@ -525,14 +525,16 @@ impl YapState {
     ) -> SampledSentences {
         let comprehensible_pool = {
             let deck = self.deck();
-            let comprehensible = deck.comprehensible_written_grams(false);
+            let comprehensible = deck.comprehensible_written_grams(false).rank_bitset();
             deck.context()
                 .language_pack
-                .comprehensible_sentences(Some(&interned), |g| comprehensible.contains(g))
+                .comprehensible_sentences_by_rank(Some(&interned), |rank| {
+                    comprehensible.contains(rank)
+                })
         };
 
         use rand::seq::IndexedRandom as _;
-        let chosen_comprehensible: Vec<Spur> = comprehensible_pool
+        let chosen_comprehensible: Vec<SentenceSpur> = comprehensible_pool
             .choose_multiple(&mut rand::rng(), count)
             .copied()
             .collect();
@@ -543,18 +545,18 @@ impl YapState {
             .get(&interned)
             .cloned()
             .unwrap_or_default();
-        let other_pool: Vec<Spur> = all_containing
+        let other_pool: Vec<SentenceSpur> = all_containing
             .iter()
             .copied()
             .filter(|sentence| !chosen_comprehensible.contains(sentence))
             .collect();
-        let chosen_other: Vec<Spur> = other_pool
+        let chosen_other: Vec<SentenceSpur> = other_pool
             .choose_multiple(&mut rand::rng(), count)
             .copied()
             .collect();
 
-        let render = |sentence: &Spur| SentenceOut {
-            text: pack.string_rodeo.resolve(sentence).to_string(),
+        let render = |sentence: &SentenceSpur| SentenceOut {
+            text: pack.sentence_rodeo.resolve(sentence).to_string(),
             translations: pack
                 .translations
                 .get(sentence)

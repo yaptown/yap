@@ -115,7 +115,10 @@ fn convert_sentence_review(
             );
 
             // Look up the sentence in the language pack to get its literals
-            let sentence_spur = context.language_pack.string_rodeo.get(&cleaned_sentence)?;
+            let sentence_spur = context
+                .language_pack
+                .sentence_rodeo
+                .get(&cleaned_sentence)?;
             let sentence_literals = context
                 .language_pack
                 .sentence_to_literals(&sentence_spur, context.course.target_language)?;
@@ -178,8 +181,7 @@ fn convert_sentence_review(
                     // Get all phrases from the sentence and check their status
                     let phrases: Vec<_> = context
                         .language_pack
-                        .encoded_sentences
-                        .get(&sentence_spur)
+                        .sentence_grams(sentence_spur)
                         .map(|encoded| {
                             encoded
                                 .multiword_terms

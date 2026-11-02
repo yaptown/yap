@@ -799,7 +799,7 @@ mod translation_sense_tests {
                 &deck
                     .context
                     .language_pack
-                    .string_rodeo
+                    .sentence_rodeo
                     .get(sentence)
                     .unwrap(),
                 Language::English,
@@ -1132,7 +1132,7 @@ mod translation_sense_tests {
             let challenge = deck
                 .translation_challenge_for_sentence(
                     pack.resolve_entry(&gram(text, sense)).unwrap(),
-                    pack.string_rodeo.get(sentence).unwrap(),
+                    pack.sentence_rodeo.get(sentence).unwrap(),
                 )
                 .unwrap();
             assert_eq!(challenge.primary_literal_indices, indices);

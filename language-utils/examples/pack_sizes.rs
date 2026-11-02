@@ -1,15 +1,12 @@
 //! Measure how a language pack's bytes are distributed across its fields.
 //!
 //! Serializes each field of `LanguagePack` on its own and reports the byte
-//! count, so we can see how much of an archive is sentence-side data. Also
-//! splits the string interner into the strings only sentence-side maps key on
-//! versus everything else, since that decides whether the interner can be cut
-//! in two.
+//! count, so we can see how much of an archive is sentence-side data. Reports
+//! sentence texts separately from the ordinary word/reading string interner.
 //!
 //!   cargo run --release --example pack_sizes -- out/fra_for_eng
 
 use language_utils::language_pack::LanguagePack;
-use std::collections::HashSet;
 
 fn size_of<T>(value: &T) -> usize
 where
@@ -46,6 +43,11 @@ fn main() {
     let mut rows: Vec<(&str, bool, usize)> = vec![
         ("translations", true, size_of(&pack.translations)),
         ("encoded_sentences", true, size_of(&pack.encoded_sentences)),
+        (
+            "sentence_symbol_table",
+            true,
+            size_of(&pack.sentence_symbol_table),
+        ),
         (
             "sentences_containing_gram_index",
             true,
@@ -117,32 +119,11 @@ fn main() {
         ("morphemes", false, size_of(&pack.morphemes)),
     ];
 
-    // Split the string interner: which Spurs are reachable only from the
-    // sentence-side maps (sentence text and its translations)?
-    let mut sentence_spurs: HashSet<lasso::Spur> = HashSet::new();
-    for (sentence, translations) in &pack.translations {
-        sentence_spurs.insert(*sentence);
-        sentence_spurs.extend(translations.iter().copied());
-    }
-    sentence_spurs.extend(pack.encoded_sentences.keys().copied());
-    sentence_spurs.extend(pack.sentence_sources.keys().copied());
-    for sentences in pack.sentences_containing_gram_index.values() {
-        sentence_spurs.extend(sentences.iter().copied());
-    }
-
-    let mut sentence_string_bytes = 0usize;
-    let mut other_string_bytes = 0usize;
-    let mut sentence_string_count = 0usize;
-    let mut other_string_count = 0usize;
-    for (spur, s) in pack.string_rodeo.iter() {
-        if sentence_spurs.contains(&spur) {
-            sentence_string_bytes += s.len();
-            sentence_string_count += 1;
-        } else {
-            other_string_bytes += s.len();
-            other_string_count += 1;
-        }
-    }
+    let sentence_string_count = pack.sentence_rodeo.len();
+    let sentence_string_bytes: usize = pack.sentence_rodeo.iter().map(|(_, s)| s.len()).sum();
+    let other_string_count = pack.string_rodeo.len();
+    let other_string_bytes: usize = pack.string_rodeo.iter().map(|(_, s)| s.len()).sum();
+    rows.push(("sentence_rodeo", true, size_of(&pack.sentence_rodeo)));
 
     let gram_rodeo_bytes = size_of(&lasso::RodeoArchive::from_reader(pack.gram_rodeo));
     let string_rodeo_bytes = size_of(&lasso::RodeoArchive::<String, lasso::Spur>::from_reader(
@@ -169,13 +150,13 @@ fn main() {
         total as f64 / 1e6
     );
     println!(
-        "{:>10.1} MB  sentence-side fields, excluding the interner ({:.0}%)",
+        "{:>10.1} MB  sentence-side fields, including sentence_rodeo ({:.0}%)",
         sentence_sum as f64 / 1e6,
         sentence_sum as f64 / sum as f64 * 100.0
     );
-    println!("\nstring_rodeo split:");
+    println!("\ntext interner contents:");
     println!(
-        "{:>10.1} MB  {sentence_string_count} sentence-only strings",
+        "{:>10.1} MB  {sentence_string_count} sentence texts",
         sentence_string_bytes as f64 / 1e6
     );
     println!(
