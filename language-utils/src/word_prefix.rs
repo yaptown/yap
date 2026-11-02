@@ -166,25 +166,28 @@ mod tests {
         );
         let a = pack.resolve_entry(&est).unwrap();
         let b = pack.resolve_entry(&phrase).unwrap();
-        assert_eq!(pack.prefixed_text[&a.gram], pack.prefixed_text[&b.gram]);
         assert_eq!(
-            pack.grams_with_prefixed_text[&pack.prefixed_text[&a.gram]],
+            pack.sentences.prefixed_text[&a.gram],
+            pack.sentences.prefixed_text[&b.gram]
+        );
+        assert_eq!(
+            pack.sentences.grams_with_prefixed_text[&pack.sentences.prefixed_text[&a.gram]],
             vec![a, b]
         );
         assert!(pack.is_visible(a, Language::French));
         assert!(pack.is_visible(b, Language::French));
         assert!(pack.is_visible(pack.resolve_entry(&noun).unwrap(), Language::French));
         assert!(!pack.is_visible(pack.resolve_entry(&particle).unwrap(), Language::French));
-        let (core, sentences) = pack.split();
+        let LanguagePack { core, sentences } = pack;
         assert!(core.string_rodeo.get("il est").is_some());
         let core = LanguagePack::from_parts(core, None);
-        assert!(core.prefixed_text.is_empty());
+        assert!(core.sentences.prefixed_text.is_empty());
         let full = core.with_sentences(sentences);
         let a = full.resolve_entry(&est).unwrap();
         let b = full.resolve_entry(&phrase).unwrap();
-        let text = full.prefixed_text[&a.gram];
+        let text = full.sentences.prefixed_text[&a.gram];
         assert_eq!(full.string_rodeo.resolve(&text), "il est");
-        assert_eq!(full.grams_with_prefixed_text[&text], vec![a, b]);
+        assert_eq!(full.sentences.grams_with_prefixed_text[&text], vec![a, b]);
         assert_eq!(full.redundant_with(a), vec![a, b]);
     }
 

@@ -133,6 +133,7 @@ impl Deck {
         let available = self
             .context
             .language_pack
+            .sentences
             .source_gram_frequencies
             .get(&source)
             .is_some_and(|f| !f.entries.is_empty() && f.total_count > 0);

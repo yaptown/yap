@@ -230,7 +230,7 @@ pub(crate) fn clip_for_sentence_where(
         preferred_clip(
             language,
             rows.iter().filter(|row| allowed(row)),
-            pack.as_ref().map(|pack| &pack.movies),
+            pack.as_ref().map(|pack| &pack.sentences.movies),
         )
         .cloned()
     })
@@ -311,7 +311,11 @@ pub(crate) fn films_by_clip_count(language: Language) -> Vec<String> {
         };
         let mut counts: HashMap<&str, usize> = HashMap::new();
         for row in rows.values().filter_map(|rows| {
-            preferred_clip(language, rows, pack.as_ref().map(|pack| &pack.movies))
+            preferred_clip(
+                language,
+                rows,
+                pack.as_ref().map(|pack| &pack.sentences.movies),
+            )
         }) {
             *counts.entry(clip_film(&row.clip_id)).or_default() += 1;
         }

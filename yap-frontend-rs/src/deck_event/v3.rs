@@ -228,10 +228,13 @@ impl DeckEvent {
                                 challenge.clone(),
                                 context.course.target_language,
                             );
-                            let encoded = pack
-                                .sentence_rodeo
-                                .get(&cleaned)
-                                .and_then(|sentence| pack.encoded_sentences.get(&sentence));
+                            let encoded =
+                                pack.sentences
+                                    .sentence_rodeo
+                                    .get(&cleaned)
+                                    .and_then(|sentence| {
+                                        pack.sentences.encoded_sentences.get(&sentence)
+                                    });
                             let phrases = phrases
                                 .into_iter()
                                 .filter_map(|(text, remembered)| {

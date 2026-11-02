@@ -335,6 +335,7 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
         let sentence_spurs: Vec<language_utils::SentenceSpur> = {
             let mut seen_sentences = std::collections::HashSet::new();
             let all_sentences: Vec<language_utils::SentenceSpur> = language_pack
+                .sentences
                 .sentences_containing_gram_index
                 .get(spur_gram)
                 .into_iter()
@@ -346,7 +347,11 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
             let mut direct = Vec::new();
             let mut multiword = Vec::new();
             for sentence_spur in all_sentences {
-                if let Some(sg) = language_pack.encoded_sentences.get(&sentence_spur) {
+                if let Some(sg) = language_pack
+                    .sentences
+                    .encoded_sentences
+                    .get(&sentence_spur)
+                {
                     let is_direct = sg.grams.iter().any(|g| {
                         let s = match g {
                             SentenceGram::Learnable(s) | SentenceGram::Obvious(s) => s,
@@ -714,7 +719,10 @@ fn resolve_sentence(
     language: language_utils::Language,
     gram_to_info: &FxHashMap<language_utils::TaggedGram<language_utils::SpurGram>, GramInfo>,
 ) -> Option<ExampleSentence> {
-    let sentence_grams = language_pack.encoded_sentences.get(sentence_spur)?;
+    let sentence_grams = language_pack
+        .sentences
+        .encoded_sentences
+        .get(sentence_spur)?;
     let string_rodeo = &language_pack.string_rodeo;
     let gram_rodeo = &language_pack.gram_rodeo;
 
@@ -771,19 +779,27 @@ fn resolve_sentence(
     }
 
     let translation = language_pack
+        .sentences
         .translations
         .get(sentence_spur)
         .and_then(|ts| ts.first())
-        .map(|t| language_pack.translation_rodeo.resolve(t).to_string());
+        .map(|t| {
+            language_pack
+                .sentences
+                .translation_rodeo
+                .resolve(t)
+                .to_string()
+        });
 
     // Look up sentence source for attribution
     let source = language_pack
+        .sentences
         .sentence_sources
         .get(sentence_spur)
         .and_then(|ss| {
             ss.movie_ids
                 .iter()
-                .find_map(|id| language_pack.movies.get(id))
+                .find_map(|id| language_pack.sentences.movies.get(id))
         })
         .map(|movie| {
             if let Some(year) = movie.year {

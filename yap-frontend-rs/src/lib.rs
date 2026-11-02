@@ -1474,6 +1474,7 @@ fn comprehensible_sentence_from_spur(
     sentence: SentenceSpur,
 ) -> Option<ComprehensibleSentence> {
     let sentence_grams = language_pack
+        .sentences
         .encoded_sentences
         .get(&sentence)?
         .clone()
@@ -1497,7 +1498,7 @@ fn comprehensible_sentence_from_spur(
         unique_phrases
     };
 
-    let native_languages = language_pack.translations.get(&sentence)?.clone();
+    let native_languages = language_pack.sentences.translations.get(&sentence)?.clone();
 
     Some(ComprehensibleSentence {
         target_language: sentence,
@@ -1780,10 +1781,16 @@ impl weapon::AppState for Deck {
                     context.course.target_language,
                 );
 
-                if let Some(sentence_spur) =
-                    context.language_pack.sentence_rodeo.get(&cleaned_sentence)
-                    && let Some(encoded_sentence) =
-                        context.language_pack.encoded_sentences.get(&sentence_spur)
+                if let Some(sentence_spur) = context
+                    .language_pack
+                    .sentences
+                    .sentence_rodeo
+                    .get(&cleaned_sentence)
+                    && let Some(encoded_sentence) = context
+                        .language_pack
+                        .sentences
+                        .encoded_sentences
+                        .get(&sentence_spur)
                 {
                     *deck
                         .stats
@@ -2090,13 +2097,19 @@ impl weapon::AppState for Deck {
                     context.course.target_language,
                 );
 
-                if let Some(sentence_spur) =
-                    context.language_pack.sentence_rodeo.get(&cleaned_sentence)
+                if let Some(sentence_spur) = context
+                    .language_pack
+                    .sentences
+                    .sentence_rodeo
+                    .get(&cleaned_sentence)
                 {
                     let mut any_again = false;
 
-                    let encoded_sentence =
-                        context.language_pack.encoded_sentences.get(&sentence_spur);
+                    let encoded_sentence = context
+                        .language_pack
+                        .sentences
+                        .encoded_sentences
+                        .get(&sentence_spur);
                     if let Some(encoded_sentence) = encoded_sentence {
                         // Collect grams by rating (worse ratings take precedence)
                         let mut again_grams = BTreeSet::new();
@@ -2797,6 +2810,7 @@ impl Deck {
                 };
                 self.context
                     .language_pack
+                    .sentences
                     .source_gram_frequencies
                     .get(&source_id)
                     .map(|fl| Self::percent_known_in(fl, known_written, known_listening))
@@ -3341,9 +3355,12 @@ impl Deck {
         let comprehensible_written = self.get_comprehensible_written_grams(true);
         let comprehensible_listening = self.get_comprehensible_listening_grams(true);
 
-        for movie_id in language_pack.movies.keys() {
+        for movie_id in language_pack.sentences.movies.keys() {
             let source_id = language_utils::FrequencySourceId::Movie(movie_id.clone());
-            let Some(movie_frequencies) = language_pack.source_gram_frequencies.get(&source_id)
+            let Some(movie_frequencies) = language_pack
+                .sentences
+                .source_gram_frequencies
+                .get(&source_id)
             else {
                 continue;
             };
@@ -3439,7 +3456,7 @@ impl Deck {
         let comprehensible_written = self.get_comprehensible_written_grams(true);
         let comprehensible_listening = self.get_comprehensible_listening_grams(true);
 
-        for (source_id, freq_list) in &language_pack.source_gram_frequencies {
+        for (source_id, freq_list) in &language_pack.sentences.source_gram_frequencies {
             let language_utils::FrequencySourceId::PimsleurLesson(lesson) = source_id else {
                 continue;
             };
@@ -3473,6 +3490,7 @@ impl Deck {
         let target_iso = self.context.course.target_language.iso_639_1();
         self.context
             .language_pack
+            .sentences
             .movies
             .iter()
             .filter(|(_, meta)| {
@@ -3484,6 +3502,7 @@ impl Deck {
             .filter(|(id, _)| {
                 self.context
                     .language_pack
+                    .sentences
                     .source_gram_frequencies
                     .get(&language_utils::FrequencySourceId::Movie((*id).clone()))
                     .is_some_and(|frequencies| {
@@ -3518,7 +3537,7 @@ impl Deck {
         let mut movies = Vec::new();
 
         for movie_id in movie_ids {
-            if let Some(movie_metadata) = language_pack.movies.get(&movie_id) {
+            if let Some(movie_metadata) = language_pack.sentences.movies.get(&movie_id) {
                 movies.push(MovieMetadataBasic {
                     id: movie_metadata.id.clone(),
                     title: movie_metadata.title.clone(),
@@ -3558,6 +3577,7 @@ impl Deck {
     pub fn get_movie_poster(&self, movie_id: String) -> Option<Vec<u8>> {
         self.context
             .language_pack
+            .sentences
             .movies
             .get(&movie_id)
             .and_then(|m| m.poster_bytes.clone())
@@ -3568,7 +3588,7 @@ impl Deck {
         let language_pack = &self.context.language_pack;
         book_ids
             .into_iter()
-            .filter_map(|book_id| language_pack.books.get(&book_id).cloned())
+            .filter_map(|book_id| language_pack.sentences.books.get(&book_id).cloned())
             .collect()
     }
 
@@ -3859,6 +3879,7 @@ impl Deck {
         let sentence_spur = self
             .context
             .language_pack
+            .sentences
             .sentence_rodeo
             .get(&cleaned_sentence)?;
         let sentence_literals = self
@@ -3918,6 +3939,7 @@ impl Deck {
         let sentence_spur = self
             .context
             .language_pack
+            .sentences
             .sentence_rodeo
             .get(&cleaned_sentence)?;
         let sentence_literals = self
@@ -4195,7 +4217,7 @@ impl Deck {
         let mut possible_sentences = language_pack
             .comprehensible_sentences(required_gram, |gram| comprehensible_grams.contains(gram));
         possible_sentences.sort_by_key(|sentence| {
-            let text = language_pack.sentence_rodeo.resolve(sentence);
+            let text = language_pack.sentences.sentence_rodeo.resolve(sentence);
             (
                 !clips::sentence_has_clip(language, text),
                 *sentences_reviewed.get(sentence).unwrap_or(&0),
@@ -4429,10 +4451,12 @@ impl Context {
         word2: Spur,
     ) -> Option<&HomophonePractice<SentenceSpur>> {
         self.language_pack
+            .sentences
             .homophone_practice
             .get(&HomophoneWordPair { word1, word2 })
             .or_else(|| {
                 self.language_pack
+                    .sentences
                     .homophone_practice
                     .get(&HomophoneWordPair {
                         word1: word2,
@@ -5721,6 +5745,7 @@ mod tests {
         let mut deck = daily_review_target_deck(None);
         let movies = &mut Arc::get_mut(&mut deck.context.language_pack)
             .unwrap()
+            .sentences
             .movies;
         for id in ["first", "clip", "last"] {
             movies.insert(
@@ -5757,8 +5782,8 @@ mod tests {
         let mut deck = Deck::default();
         let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
         let (&gram, &frequency) = pack.gram_frequencies.entries.get_index(0).unwrap();
-        pack.movies.clear();
-        pack.source_gram_frequencies.clear();
+        pack.sentences.movies.clear();
+        pack.sentences.source_gram_frequencies.clear();
         for (id, language, rating, total, populated) in [
             ("french-a", Some("fr"), Some(90), 100, true),
             ("french-b", Some("fra"), Some(90), 100, true),
@@ -5768,7 +5793,7 @@ mod tests {
             ("zero", Some("fr"), Some(100), 0, true),
             ("empty", Some("fr"), Some(100), 100, false),
         ] {
-            pack.movies.insert(
+            pack.sentences.movies.insert(
                 id.into(),
                 language_utils::MovieMetadata {
                     id: id.into(),
@@ -5780,7 +5805,7 @@ mod tests {
                     poster_bytes: None,
                 },
             );
-            pack.source_gram_frequencies.insert(
+            pack.sentences.source_gram_frequencies.insert(
                 FrequencySourceId::Movie(id.into()),
                 FrequencyList {
                     entries: if populated {
@@ -5797,6 +5822,7 @@ mod tests {
         let expected = deck
             .context
             .language_pack
+            .sentences
             .movies
             .iter()
             .filter(|(id, meta)| {
@@ -5847,6 +5873,7 @@ mod tests {
         // With no eligible original-language movie, preserve highest-comprehension fallback.
         for meta in Arc::get_mut(&mut deck.context.language_pack)
             .unwrap()
+            .sentences
             .movies
             .values_mut()
         {
@@ -7088,7 +7115,11 @@ mod tests {
         // The sentence from v1 events (without proper French punctuation spacing)
         let raw_sentence = "Qu'est-ce que tu veux savoir?";
 
-        let raw_in_rodeo = language_pack.sentence_rodeo.get(raw_sentence).is_some();
+        let raw_in_rodeo = language_pack
+            .sentences
+            .sentence_rodeo
+            .get(raw_sentence)
+            .is_some();
         assert!(
             !raw_in_rodeo,
             "Raw sentence should NOT be in language pack (it lacks proper French spacing)"
@@ -7100,15 +7131,18 @@ mod tests {
         );
 
         let cleaned_in_rodeo = language_pack
+            .sentences
             .sentence_rodeo
             .get(&cleaned_sentence)
             .is_some();
         let cleaned_in_encoded = language_pack
+            .sentences
             .sentence_rodeo
             .get(&cleaned_sentence)
-            .and_then(|spur| language_pack.encoded_sentences.get(&spur))
+            .and_then(|spur| language_pack.sentences.encoded_sentences.get(&spur))
             .is_some();
         let cleaned_has_literals = language_pack
+            .sentences
             .sentence_rodeo
             .get(&cleaned_sentence)
             .and_then(|spur| language_pack.sentence_to_literals(&spur, Language::French))
@@ -7136,8 +7170,8 @@ mod tests {
         ))
         .expect("Failed to load French pack - run `cargo run --bin generate-data -- fra` first");
         let mut seen = std::collections::BTreeSet::new();
-        for sentence in pack.encoded_sentences.keys() {
-            let text = pack.sentence_rodeo.resolve(sentence);
+        for sentence in pack.sentences.encoded_sentences.keys() {
+            let text = pack.sentences.sentence_rodeo.resolve(sentence);
             if !text.contains([';', ':', '«', '»', '!', '?']) {
                 continue;
             }
@@ -7151,7 +7185,7 @@ mod tests {
             // the lookup copy, which must still identify this encoded sentence.
             let old = text.replace(['\u{202F}', '\u{00A0}'], " ");
             let cleaned = cleanup_sentence(old, Language::French);
-            assert_eq!(pack.sentence_rodeo.get(&cleaned), Some(*sentence));
+            assert_eq!(pack.sentences.sentence_rodeo.get(&cleaned), Some(*sentence));
             seen.extend(
                 text.chars()
                     .filter(|c| [';', ':', '«', '»', '!', '?'].contains(c)),
@@ -7539,8 +7573,8 @@ mod tests {
         if let Ok(needle) = std::env::var("INSPECT_SENTENCE") {
             let lp = &deck.context.language_pack;
             println!("\n=== Sentence inspection: {needle:?} ===");
-            for (sentence_spur, sentence_grams) in lp.encoded_sentences.iter() {
-                let sentence_text = lp.sentence_rodeo.resolve(sentence_spur);
+            for (sentence_spur, sentence_grams) in lp.sentences.encoded_sentences.iter() {
+                let sentence_text = lp.sentences.sentence_rodeo.resolve(sentence_spur);
                 if !sentence_text.contains(&needle) {
                     continue;
                 }

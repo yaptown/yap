@@ -43,7 +43,8 @@ pub fn has_clip(language: Language, text: &str) -> bool {
     let Some(pack) = registry.packs.get(&language).and_then(Weak::upgrade) else {
         return false;
     };
-    pack.human_audio
+    pack.sentences
+        .human_audio
         .values()
         .any(|clips| clips.contains_key(text))
 }
@@ -78,6 +79,7 @@ pub fn lookup(language: Language, text: &str) -> Option<HumanAudio> {
         let pack = registry.packs.get(&language)?.upgrade()?;
 
         let mut actors: Vec<&language_utils::VoiceActor> = pack
+            .sentences
             .human_audio
             .iter()
             .filter_map(|(actor, clips)| clips.contains_key(text).then_some(actor))
@@ -93,7 +95,13 @@ pub fn lookup(language: Language, text: &str) -> Option<HumanAudio> {
         *counter = counter.wrapping_add(1);
 
         let actor = actors[index];
-        let bytes = pack.human_audio.get(actor)?.get(text)?.bytes.clone();
+        let bytes = pack
+            .sentences
+            .human_audio
+            .get(actor)?
+            .get(text)?
+            .bytes
+            .clone();
         Some(HumanAudio {
             bytes,
             actor_name: actor.name.clone(),

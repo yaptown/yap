@@ -488,7 +488,7 @@ mod tests {
             "gram_frequencies",
             lp.gram_frequencies.entries.iter(),
         );
-        for (source_id, freq_list) in &lp.source_gram_frequencies {
+        for (source_id, freq_list) in &lp.sentences.source_gram_frequencies {
             let list_name = format!("source_gram_frequencies[{source_id:?}]");
             assert_frequency_list_sorted(lp, lang, &label, &list_name, freq_list.entries.iter());
         }
@@ -507,13 +507,13 @@ mod tests {
             );
         }
 
-        for (sentence_spur, sentence_grams) in &lp.encoded_sentences {
+        for (sentence_spur, sentence_grams) in &lp.sentences.encoded_sentences {
             // Every sentence should have at least one translation
-            let translations = lp.translations.get(sentence_spur);
+            let translations = lp.sentences.translations.get(sentence_spur);
             assert!(
                 translations.is_some_and(|t| !t.is_empty()),
                 "[{label}] Sentence {:?} has no translations",
-                lp.sentence_rodeo.resolve(sentence_spur)
+                lp.sentences.sentence_rodeo.resolve(sentence_spur)
             );
 
             // Every sentence should render to a non-empty sequence of literals
@@ -521,7 +521,7 @@ mod tests {
             assert!(
                 literals.as_ref().is_some_and(|l| !l.is_empty()),
                 "[{label}] Sentence {:?} produced no literals",
-                lp.sentence_rodeo.resolve(sentence_spur)
+                lp.sentences.sentence_rodeo.resolve(sentence_spur)
             );
 
             // Every learnable gram in a sentence should have a definition
@@ -532,7 +532,7 @@ mod tests {
                         lp.gram_definitions.contains_key(gram_spur),
                         "[{label}] Learnable gram {:?} in sentence {:?} has no definition",
                         lp.gram_rodeo.resolve(&gram_spur.gram),
-                        lp.sentence_rodeo.resolve(sentence_spur)
+                        lp.sentences.sentence_rodeo.resolve(sentence_spur)
                     );
                 }
             }
@@ -655,7 +655,13 @@ mod tests {
         let deck = load_test_data_deck(language_pack);
 
         let mut sentence_lists = vec![None];
-        for source_id in deck.context.language_pack.source_gram_frequencies.keys() {
+        for source_id in deck
+            .context
+            .language_pack
+            .sentences
+            .source_gram_frequencies
+            .keys()
+        {
             let selection = match source_id {
                 language_utils::FrequencySourceId::Movie(id) => {
                     SentenceListSelection::Movie { id: id.clone() }

@@ -202,7 +202,7 @@ fn check_skill_levels_at(language: Language, levels: &[usize]) {
                     ..
                 } => Some(serde_json::json!({
                     "sentence": sentence, "target": target_word,
-                    "words": word_count(&pack, pack.sentence_rodeo.get(sentence).unwrap(), language),
+                    "words": word_count(&pack, pack.sentences.sentence_rodeo.get(sentence).unwrap(), language),
                 })),
                 _ => None,
             })

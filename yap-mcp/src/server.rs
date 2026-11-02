@@ -449,7 +449,7 @@ impl YapState {
             Some(text) => {
                 let text = cleanup_sentence(text.to_string(), self.context.course.target_language);
                 let pack = self.pack();
-                let Some(spur) = pack.sentence_rodeo.get(&text) else {
+                let Some(spur) = pack.sentences.sentence_rodeo.get(&text) else {
                     return Err(
                         "that sentence isn't in yap's corpus — pass one exactly as returned by \
                          get_sentences, or omit it to let the server pick"
@@ -457,6 +457,7 @@ impl YapState {
                     );
                 };
                 let contains = pack
+                    .sentences
                     .sentences_containing_gram_index
                     .get(&interned)
                     .is_some_and(|sentences| sentences.contains(&spur));
@@ -490,7 +491,7 @@ impl YapState {
     /// Human-readable provenance for a sentence.
     fn sentence_sources(&self, sentence: &SentenceSpur) -> Vec<String> {
         let pack = self.pack();
-        let Some(source) = pack.sentence_sources.get(sentence) else {
+        let Some(source) = pack.sentences.sentence_sources.get(sentence) else {
             return Vec::new();
         };
         let mut out = Vec::new();
@@ -506,7 +507,11 @@ impl YapState {
         if source.from_song {
             out.push("song lyrics".to_string());
         }
-        for movie in source.movie_ids.iter().filter_map(|id| pack.movies.get(id)) {
+        for movie in source
+            .movie_ids
+            .iter()
+            .filter_map(|id| pack.sentences.movies.get(id))
+        {
             match movie.year {
                 Some(year) => out.push(format!("movie: {} ({year})", movie.title)),
                 None => out.push(format!("movie: {}", movie.title)),
@@ -539,6 +544,7 @@ impl YapState {
 
         let pack = self.pack();
         let all_containing = pack
+            .sentences
             .sentences_containing_gram_index
             .get(&interned)
             .cloned()
@@ -554,13 +560,14 @@ impl YapState {
             .collect();
 
         let render = |sentence: &SentenceSpur| SentenceOut {
-            text: pack.sentence_rodeo.resolve(sentence).to_string(),
+            text: pack.sentences.sentence_rodeo.resolve(sentence).to_string(),
             translations: pack
+                .sentences
                 .translations
                 .get(sentence)
                 .map(|ts| {
                     ts.iter()
-                        .map(|t| pack.translation_rodeo.resolve(t).to_string())
+                        .map(|t| pack.sentences.translation_rodeo.resolve(t).to_string())
                         .collect()
                 })
                 .unwrap_or_default(),

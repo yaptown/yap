@@ -332,6 +332,7 @@ fn word_note(
         .map(|def| crate::definition_view(def.clone()).senses)
         .unwrap_or_default();
     let audio = if pack
+        .sentences
         .human_audio
         .values()
         .any(|clips| clips.contains_key(word))
@@ -518,7 +519,8 @@ fn sentence_glosses(
 /// ruby and `{{kanji:…}}` strips the readings. Both filters consume the space
 /// before a base, which stops the base from swallowing the text before it.
 fn furigana(text: &str, reading: Option<&str>, language: Language, pack: &LanguagePack) -> String {
-    let segments = crate::ruby::word_ruby(text, reading, language, &pack.ruby_segmentations);
+    let segments =
+        crate::ruby::word_ruby(text, reading, language, &pack.sentences.ruby_segmentations);
     ruby_furigana(text, &segments)
 }
 
@@ -600,7 +602,7 @@ fn clip_presentation(
         },
     });
     let imdb = clips::clip_film(&clip.clip_id).to_owned();
-    let movie = pack.movies.get(&imdb);
+    let movie = pack.sentences.movies.get(&imdb);
     let poster = movie
         .and_then(|m| m.poster_bytes.as_ref())
         .map(|_| poster_filename(&imdb));
@@ -717,6 +719,7 @@ impl AnkiExport {
                 }
                 !self.options.word_cards
                     || pack
+                        .sentences
                         .sentence_rodeo
                         .get(text)
                         .and_then(|s| bare_gram(pack, s))
@@ -769,6 +772,7 @@ impl AnkiExport {
 
 fn bare_gram(pack: &LanguagePack, sentence: SentenceSpur) -> Option<TaggedGram<SpurGram>> {
     let mut grams = pack
+        .sentences
         .encoded_sentences
         .get(&sentence)?
         .grams
@@ -829,7 +833,7 @@ impl Deck {
         let too_advanced = !pack.gram_frequencies.entries.is_empty() && known.all_available_learned;
         // Walk the clip manifest, not every translated sentence in the pack.
         let clip_sentence_count = clips::map_clip_sentences(language, |text| {
-            let sentence = pack.sentence_rodeo.get(text)?;
+            let sentence = pack.sentences.sentence_rodeo.get(text)?;
             pack.sentence_is_comprehensible(sentence, None, &|_| true)
                 .then_some(())
         })
@@ -1068,7 +1072,7 @@ impl AnkiDeckPlanner {
         let unindexed = clips::map_clip_sentences_where(
             language,
             |row| options.allows_clip(row),
-            |text| pack.sentence_rodeo.get(text),
+            |text| pack.sentences.sentence_rodeo.get(text),
         );
         Ok(Self {
             state: RefCell::new(PlannerState {
@@ -1176,13 +1180,14 @@ impl PlannerState {
                 break;
             };
             if pack
+                .sentences
                 .translations
                 .get(&sentence)
                 .is_none_or(|t| t.is_empty())
             {
                 continue;
             }
-            let Some(encoded) = pack.encoded_sentences.get(&sentence) else {
+            let Some(encoded) = pack.sentences.encoded_sentences.get(&sentence) else {
                 continue;
             };
             let learnable = encoded.grams.iter().filter_map(|g| match g {
@@ -1241,13 +1246,13 @@ impl PlannerState {
         self.base_word_clip_sentences = base.word_clip_sentences.as_ref().map(|sentences| {
             sentences
                 .iter()
-                .filter_map(|s| pack.sentence_rodeo.get(s))
+                .filter_map(|s| pack.sentences.sentence_rodeo.get(s))
                 .collect()
         });
         self.base_sentences = base
             .sentences
             .iter()
-            .filter_map(|s| pack.sentence_rodeo.get(s))
+            .filter_map(|s| pack.sentences.sentence_rodeo.get(s))
             .collect();
         let mut sentences: Vec<_> = self
             .base_sentences
@@ -1267,7 +1272,9 @@ impl PlannerState {
             })
             .collect();
         // Reconstruct easy-to-hard order; the event deliberately did not retain order.
-        sentences.sort_by_key(|(s, _, rank)| (*rank, pack.sentence_rodeo.resolve(s).to_owned()));
+        sentences.sort_by_key(|(s, _, rank)| {
+            (*rank, pack.sentences.sentence_rodeo.resolve(s).to_owned())
+        });
         for (sentence, gram, _) in sentences {
             if !self.word_clip_sentences.contains(&sentence)
                 && let Some(challenge) =
@@ -1397,8 +1404,8 @@ impl PlannerState {
             (
                 deck.stats.sentences_reviewed.get(s).copied().unwrap_or(0),
                 self.clip_sentence_names[s],
-                pack.sentence_rodeo.resolve(s).chars().count(),
-                pack.sentence_rodeo.resolve(s),
+                pack.sentences.sentence_rodeo.resolve(s).chars().count(),
+                pack.sentences.sentence_rodeo.resolve(s),
             )
         });
         let Some((sentence, challenge)) = candidates.into_iter().find_map(|s| {
@@ -1453,7 +1460,7 @@ impl PlannerState {
         // word note per spelling; a later sense of the same spelling
         // still gets its sentence, whose own gloss carries that sense.
         let mut prerequisites = vec![gram];
-        if let Some(encoded) = pack.encoded_sentences.get(&sentence) {
+        if let Some(encoded) = pack.sentences.encoded_sentences.get(&sentence) {
             let learnable = encoded.grams.iter().filter_map(|g| match g {
                 SentenceGram::Learnable(g) => Some(g.sense),
                 SentenceGram::Obvious(_) => None,
@@ -1514,7 +1521,7 @@ impl PlannerState {
                     };
                     let row = clips::clip_for_sentence_where(
                         language,
-                        pack.sentence_rodeo.resolve(&bare),
+                        pack.sentences.sentence_rodeo.resolve(&bare),
                         |row| options.allows_clip(row),
                     )
                     .unwrap();
@@ -1663,12 +1670,12 @@ impl PlannerState {
             sentences: self
                 .used_sentences
                 .union(&self.word_clip_sentences)
-                .map(|s| pack.sentence_rodeo.resolve(s).to_owned())
+                .map(|s| pack.sentences.sentence_rodeo.resolve(s).to_owned())
                 .collect(),
             word_clip_sentences: self
                 .word_clip_sentences
                 .iter()
-                .map(|s| pack.sentence_rodeo.resolve(s).to_owned())
+                .map(|s| pack.sentences.sentence_rodeo.resolve(s).to_owned())
                 .collect(),
             course_code: course.code(),
             deck_name: if course.native_language == Language::English {
@@ -1888,10 +1895,11 @@ mod tests {
             violence_weapons: ContentRatingLevel::None,
         };
         let rows: Vec<_> = pack
+            .sentences
             .encoded_sentences
             .keys()
             .flat_map(|sentence| {
-                let text = pack.sentence_rodeo.resolve(sentence).to_owned();
+                let text = pack.sentences.sentence_rodeo.resolve(sentence).to_owned();
                 let make = |prefix, content_ratings| {
                     let mut row = row(text.clone(), format!("{prefix}-{text}"));
                     row.content_ratings = content_ratings;
@@ -1922,7 +1930,7 @@ mod tests {
         let planner = AnkiDeckPlanner::new(&deck, options(), 3, 1_700_000_000_000.0).unwrap();
         assert_eq!(
             planner.state.borrow().unindexed.len(),
-            pack.encoded_sentences.len()
+            pack.sentences.encoded_sentences.len()
         );
         // A safe alternate must win before preference selection, for every media path.
         clips::publish_manifest(language, rows);
@@ -2118,11 +2126,13 @@ mod tests {
         let language = course.target_language;
         clips::publish_manifest(
             language,
-            pack.encoded_sentences
+            pack.sentences
+                .encoded_sentences
                 .keys()
                 .map(|s| {
-                    let text = pack.sentence_rodeo.resolve(s).to_owned();
+                    let text = pack.sentences.sentence_rodeo.resolve(s).to_owned();
                     let imdb = pack
+                        .sentences
                         .sentence_sources
                         .get(s)
                         .and_then(|source| source.movie_ids.first())
@@ -2433,7 +2443,11 @@ mod tests {
         frequency.count = 70;
         for n in [1, 2] {
             sense.sense = std::num::NonZeroU32::new(n);
-            pack.gram_frequencies.entries.insert(sense, frequency);
+            Arc::get_mut(&mut pack.core)
+                .unwrap()
+                .gram_frequencies
+                .entries
+                .insert(sense, frequency);
         }
         let ranks = spelling_frequency_ranks(pack, Language::English);
         assert_eq!(ranks.len(), 64);
@@ -2527,8 +2541,8 @@ mod tests {
             }
             let pack = &deck.context.language_pack;
             let target = *pack.gram_frequencies.entries.get_index(0).unwrap().0;
-            let clip = pack.sentence_rodeo.get(text).unwrap();
-            let other = pack.sentence_rodeo.get("word00").unwrap();
+            let clip = pack.sentences.sentence_rodeo.get(text).unwrap();
+            let other = pack.sentences.sentence_rodeo.get("word00").unwrap();
             // The chosen sentence wins even when another matching clip is first
             // in the index. That distinct clip may still become a sentence note.
             state.clip_sentences_of.insert(target, vec![other, clip]);
@@ -2570,7 +2584,7 @@ mod tests {
             // The word clip sorts AFTER its bare sentence note on rebuild. A
             // heuristic would steal the sentence note's clip for the word.
             for text in ["word00", "Word00"] {
-                let sentence = pack.sentence_rodeo.get(text).unwrap();
+                let sentence = pack.sentences.sentence_rodeo.get(text).unwrap();
                 let challenge = deck
                     .translation_challenge_for_sentence(target, sentence)
                     .unwrap();
@@ -2643,6 +2657,7 @@ mod tests {
             }
             let target = *pack.gram_frequencies.entries.get_index(1).unwrap().0;
             let sentence = pack
+                .sentences
                 .sentence_rodeo
                 .get(format!("{prerequisite_word} word01"))
                 .unwrap();
@@ -2833,11 +2848,12 @@ mod tests {
         let pack = &deck.context.language_pack;
         clips::publish_manifest(
             Language::English,
-            pack.encoded_sentences
+            pack.sentences
+                .encoded_sentences
                 .keys()
                 .take(20)
                 .map(|s| {
-                    let text = pack.sentence_rodeo.resolve(s).to_owned();
+                    let text = pack.sentences.sentence_rodeo.resolve(s).to_owned();
                     row(text, format!("tt0000001-{}-0", s.into_inner()))
                 })
                 .collect(),
@@ -2897,7 +2913,7 @@ mod tests {
     #[test]
     fn anki_missing_movie_keeps_sentence_without_credit_or_film_tag() {
         let deck = fixture();
-        assert!(deck.context.language_pack.movies.is_empty());
+        assert!(deck.context.language_pack.sentences.movies.is_empty());
         publish(&deck.context.language_pack, deck.context.course);
         let plan = deck
             .plan_anki_deck(options(), 3, 1_700_000_000_000.0)
@@ -2927,7 +2943,7 @@ mod tests {
     async fn anki_bundled_human_audio_and_poster() {
         let mut deck = fixture();
         let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
-        pack.human_audio.insert(
+        pack.sentences.human_audio.insert(
             language_utils::VoiceActor {
                 name: "Fixture actor".into(),
                 compensation: language_utils::Compensation::Volunteer,
@@ -2941,7 +2957,7 @@ mod tests {
             .into_iter()
             .collect(),
         );
-        pack.movies.insert(
+        pack.sentences.movies.insert(
             "tt0000001".into(),
             language_utils::MovieMetadata {
                 id: "tt0000001".into(),
@@ -3006,7 +3022,7 @@ mod tests {
         }
         deck = Deck::finalize(state, &deck.context);
         // The corpus denominator includes grams outside this pack's teachable inventory.
-        Arc::get_mut(&mut deck.context.language_pack)
+        Arc::get_mut(&mut Arc::get_mut(&mut deck.context.language_pack).unwrap().core)
             .unwrap()
             .gram_frequencies
             .total_count = 1_000_000;
@@ -3270,39 +3286,27 @@ mod tests {
 
     #[test]
     fn comprehensible_views_match_synthetic_anki_pack() {
-        let mut deck = fixture();
-        // Add senses with different eases and an equal-ease tie. Build the runtime
-        // indices through the same from_parts path used by real pack loading.
-        let pack = Arc::try_unwrap(deck.context.language_pack).unwrap();
-        let (mut core, sentences) = pack.split();
-        // Give the tiny fixture a broad ease range so its fitted regressions
-        // predict both known and unknown unadded entries after smoothing.
-        for i in 0..core.gram_frequencies.entries.len() {
-            let (_, frequency) = core.gram_frequencies.entries.get_index_mut(i).unwrap();
-            frequency.ease = frequency.count as f32 / 5.0;
-        }
-        let (first, frequency) = core.gram_frequencies.entries.get_index(0).unwrap();
-        let mut frequency = *frequency;
-        let mut sense = *first;
-        sense.sense = std::num::NonZeroU32::new(1);
-        frequency.count = 1;
-        frequency.direct_count = 1;
-        frequency.ease += 2.0;
-        core.gram_frequencies.entries.insert(sense, frequency);
-        sense.sense = std::num::NonZeroU32::new(2);
-        core.gram_frequencies.entries.insert(sense, frequency);
-        let pack = LanguagePack::from_parts(core, Some(sentences));
-        assert_eq!(
-            pack.gram_frequency_total(sense.gram).unwrap().ease,
-            frequency.ease
-        );
-        assert_eq!(
-            pack.listening_ease_order
-                .ease_at(pack.listening_ease_order.rank(&sense.gram).unwrap()),
-            Some(frequency.ease)
-        );
-        deck.context.language_pack = Arc::new(pack);
-        deck = Deck::finalize(crate::DeckState::new(), &deck.context);
+        // Build the broad ease range and tied senses through the generator,
+        // which now stores the indices instead of rebuilding them on load.
+        let deck = fixture_with_data(false, "word00", |data| {
+            for entry in &mut data.gram_frequencies.entries {
+                entry.count = (entry.count as f32 / 10.0).exp() as u32;
+                entry.direct_count = entry.count;
+            }
+            let mut entry = data.gram_frequencies.entries[0].clone();
+            entry.count *= 2;
+            entry.direct_count = entry.count;
+            for sense in [1, 2] {
+                entry.gram.sense = std::num::NonZeroU32::new(sense);
+                data.gram_frequencies.entries.push(entry.clone());
+            }
+            data.gram_frequencies.total_count = data
+                .gram_frequencies
+                .entries
+                .iter()
+                .map(|entry| u64::from(entry.count))
+                .sum();
+        });
         exercise_comprehensibility(deck);
     }
 

@@ -89,7 +89,7 @@ impl Segmenter {
     }
 
     pub fn populate(&self, pack: &mut LanguagePack) {
-        pack.ruby_segmentations = pairs(pack)
+        pack.sentences.ruby_segmentations = pairs(pack)
             .into_iter()
             .filter_map(|(text, reading)| {
                 let segments = self.segment(&text, &reading)?;
@@ -103,7 +103,7 @@ impl Segmenter {
 /// Exact word/card forms and exact occurrence forms, including internal whitespace.
 pub fn pairs(pack: &LanguagePack) -> BTreeSet<(String, String)> {
     let mut pairs = BTreeSet::new();
-    for (gram, readings) in &pack.gram_readings {
+    for (gram, readings) in &pack.sentences.gram_readings {
         let text = pack
             .resolve_gram(&gram.gram)
             .to_display_string(Language::Japanese);
@@ -111,7 +111,7 @@ pub fn pairs(pack: &LanguagePack) -> BTreeSet<(String, String)> {
             pairs.insert((text.clone(), pack.string_rodeo.resolve(reading).into()));
         }
     }
-    for sentence in pack.encoded_sentences.values() {
+    for sentence in pack.sentences.encoded_sentences.values() {
         let literals = sentence.clone().without_readings().to_literals(
             &pack.string_rodeo,
             &pack.gram_rodeo,

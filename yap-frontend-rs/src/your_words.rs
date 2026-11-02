@@ -105,7 +105,7 @@ impl Deck {
                 &display_text,
                 pack.readings_for_sense(*sense).next(),
                 language,
-                &pack.ruby_segmentations,
+                &pack.sentences.ruby_segmentations,
             ),
             prefix: pack.word_prefix(sense.gram, language),
             gloss: definition

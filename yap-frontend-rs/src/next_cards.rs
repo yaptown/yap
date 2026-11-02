@@ -104,6 +104,7 @@ impl NextCardsIterator {
             };
             context
                 .language_pack
+                .sentences
                 .source_gram_frequencies
                 .get(&source_id)
         });

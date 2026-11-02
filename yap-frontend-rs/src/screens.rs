@@ -686,18 +686,20 @@ impl Deck {
         let available = |frequencies: &language_utils::language_pack::FrequencyList| {
             !frequencies.entries.is_empty() && frequencies.total_count > 0
         };
-        let has_movies = pack.movies.keys().any(|id| {
-            pack.source_gram_frequencies
+        let has_movies = pack.sentences.movies.keys().any(|id| {
+            pack.sentences
+                .source_gram_frequencies
                 .get(&language_utils::FrequencySourceId::Movie(id.clone()))
                 .is_some_and(available)
         });
-        let has_pimsleur = pack
-            .source_gram_frequencies
-            .iter()
-            .any(|(source, frequencies)| {
-                matches!(source, language_utils::FrequencySourceId::PimsleurLesson(_))
-                    && available(frequencies)
-            });
+        let has_pimsleur =
+            pack.sentences
+                .source_gram_frequencies
+                .iter()
+                .any(|(source, frequencies)| {
+                    matches!(source, language_utils::FrequencySourceId::PimsleurLesson(_))
+                        && available(frequencies)
+                });
         get_sentence_list_navigation(sentence_list, has_movies, has_pimsleur)
     }
 

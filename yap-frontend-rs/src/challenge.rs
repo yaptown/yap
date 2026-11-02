@@ -39,8 +39,8 @@ impl CardContext {
         let is_new = if let CardIndicator::WrittenGram { gram } = indicator {
             let pack = &deck.context.language_pack;
             pack.gram_definitions.get(&gram)?;
-            if let Some(text) = pack.prefixed_text.get(&gram.gram)
-                && let Some(members) = pack.grams_with_prefixed_text.get(text)
+            if let Some(text) = pack.sentences.prefixed_text.get(&gram.gram)
+                && let Some(members) = pack.sentences.grams_with_prefixed_text.get(text)
             {
                 members.iter().all(|gram| {
                     deck.cards
@@ -262,9 +262,10 @@ impl ReviewInfo {
 
         let prefix = language_pack.word_prefix(gram.gram, deck.context.course.target_language);
         let mut eligible: Vec<_> = language_pack
+            .sentences
             .prefixed_text
             .get(&gram.gram)
-            .and_then(|text| language_pack.grams_with_prefixed_text.get(text))
+            .and_then(|text| language_pack.sentences.grams_with_prefixed_text.get(text))
             .into_iter()
             .flatten()
             .copied()
@@ -330,7 +331,7 @@ impl ReviewInfo {
                     .trim(),
                 language_pack.readings_for_sense(gram).next(),
                 deck.context.course.target_language,
-                &language_pack.ruby_segmentations,
+                &language_pack.sentences.ruby_segmentations,
             ),
             gram: literals,
             prefix,
@@ -442,6 +443,7 @@ impl Deck {
         }
 
         let movie_titles = language_pack
+            .sentences
             .sentence_sources
             .get(&sentence.target_language)
             .map(|source| {
@@ -450,6 +452,7 @@ impl Deck {
                     .iter()
                     .filter_map(|movie_id| {
                         language_pack
+                            .sentences
                             .movies
                             .get(movie_id)
                             .map(|metadata| (movie_id.clone(), metadata.title.clone()))
@@ -507,10 +510,12 @@ impl Deck {
         Some(TranscribeComprehensibleSentence {
             literal_ruby,
             target_language: language_pack
+                .sentences
                 .sentence_rodeo
                 .resolve(&sentence.target_language)
                 .to_string(),
             native_language: language_pack
+                .sentences
                 .translation_rodeo
                 .resolve(sentence.native_languages.first()?)
                 .to_string(),
@@ -521,6 +526,7 @@ impl Deck {
             audio: AudioRequest {
                 request: TtsRequest {
                     text: language_pack
+                        .sentences
                         .sentence_rodeo
                         .resolve(&sentence.target_language)
                         .to_string(),
@@ -557,6 +563,7 @@ impl Deck {
     ) -> Option<TranslateComprehensibleSentence> {
         let language_pack: &Arc<LanguagePack> = &self.context.language_pack;
         if !language_pack
+            .sentences
             .sentences_containing_gram_index
             .get(&gram)
             .is_some_and(|sentences| sentences.contains(&sentence))
@@ -606,7 +613,7 @@ impl Deck {
 
         // Phrase matches already carry occurrence positions, including gaps in
         // discontinuous phrases. Do not reconstruct those from surface text.
-        let encoded = language_pack.encoded_sentences.get(&sentence)?;
+        let encoded = language_pack.sentences.encoded_sentences.get(&sentence)?;
         primary_literal_indices.extend(
             encoded
                 .multiword_terms
@@ -623,6 +630,7 @@ impl Deck {
         primary_literal_indices.dedup();
 
         let movie_titles = language_pack
+            .sentences
             .sentence_sources
             .get(&target_language)
             .map(|source| {
@@ -631,6 +639,7 @@ impl Deck {
                     .iter()
                     .filter_map(|movie_id| {
                         language_pack
+                            .sentences
                             .movies
                             .get(movie_id)
                             .map(|metadata| (movie_id.clone(), metadata.title.clone()))
@@ -672,6 +681,7 @@ impl Deck {
         Some(TranslateComprehensibleSentence {
             literal_ruby,
             target_language: language_pack
+                .sentences
                 .sentence_rodeo
                 .resolve(&target_language)
                 .to_string(),
@@ -696,11 +706,18 @@ impl Deck {
                 .collect(),
             native_translations: native_languages
                 .iter()
-                .map(|n| language_pack.translation_rodeo.resolve(n).to_string())
+                .map(|n| {
+                    language_pack
+                        .sentences
+                        .translation_rodeo
+                        .resolve(n)
+                        .to_string()
+                })
                 .collect(),
             audio: AudioRequest {
                 request: TtsRequest {
                     text: language_pack
+                        .sentences
                         .sentence_rodeo
                         .resolve(&target_language)
                         .to_string(),

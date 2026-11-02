@@ -40,17 +40,25 @@ fn main() {
 
     // "sentence-side" = the fields that only exist to serve corpus sentences.
     let mut rows: Vec<(&str, bool, usize)> = vec![
-        ("translations", true, size_of(&pack.translations)),
-        ("encoded_sentences", true, size_of(&pack.encoded_sentences)),
+        ("translations", true, size_of(&pack.sentences.translations)),
+        (
+            "encoded_sentences",
+            true,
+            size_of(&pack.sentences.encoded_sentences),
+        ),
         (
             "sentences_containing_gram_index",
             true,
-            size_of(&pack.sentences_containing_gram_index),
+            size_of(&pack.sentences.sentences_containing_gram_index),
         ),
-        ("sentence_sources", true, size_of(&pack.sentence_sources)),
-        ("movies", true, size_of(&pack.movies)),
-        ("books", true, size_of(&pack.books)),
-        ("human_audio", true, size_of(&pack.human_audio)),
+        (
+            "sentence_sources",
+            true,
+            size_of(&pack.sentences.sentence_sources),
+        ),
+        ("movies", true, size_of(&pack.sentences.movies)),
+        ("books", true, size_of(&pack.sentences.books)),
+        ("human_audio", true, size_of(&pack.sentences.human_audio)),
         (
             "pronunciation_audio",
             false,
@@ -64,7 +72,7 @@ fn main() {
         (
             "source_gram_frequencies",
             false,
-            size_of(&pack.source_gram_frequencies),
+            size_of(&pack.sentences.source_gram_frequencies),
         ),
         (
             "word_to_pronunciation",
@@ -90,7 +98,7 @@ fn main() {
         (
             "homophone_practice",
             false,
-            size_of(&pack.homophone_practice),
+            size_of(&pack.sentences.homophone_practice),
         ),
         (
             "pronunciation_max_freq_cache",
@@ -113,10 +121,18 @@ fn main() {
         ("morphemes", false, size_of(&pack.morphemes)),
     ];
 
-    rows.push(("gram_rodeo", false, size_of(&*pack.gram_rodeo)));
-    rows.push(("string_rodeo", false, size_of(&*pack.string_rodeo)));
-    rows.push(("sentence_rodeo", true, size_of(&pack.sentence_rodeo)));
-    rows.push(("translation_rodeo", true, size_of(&pack.translation_rodeo)));
+    rows.push(("gram_rodeo", false, size_of(&pack.gram_rodeo)));
+    rows.push(("string_rodeo", false, size_of(&pack.string_rodeo)));
+    rows.push((
+        "sentence_rodeo",
+        true,
+        size_of(&pack.sentences.sentence_rodeo),
+    ));
+    rows.push((
+        "translation_rodeo",
+        true,
+        size_of(&pack.sentences.translation_rodeo),
+    ));
     rows.sort_by_key(|&(_, _, n)| std::cmp::Reverse(n));
 
     let sum: usize = rows.iter().map(|&(_, _, n)| n).sum();

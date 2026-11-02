@@ -148,7 +148,7 @@ impl Deck {
             &display_text,
             language_pack.readings_for_sense(primary_gram).next(),
             target_language,
-            &language_pack.ruby_segmentations,
+            &language_pack.sentences.ruby_segmentations,
         );
         Some(DictionaryWord {
             ruby,
@@ -498,8 +498,8 @@ mod tests {
         let mut deck = deck();
         let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
         let bare = pack.gram_frequencies.entries.get_index(1).unwrap().0.gram;
-        pack.redundant_senses.insert(
-            pack.prefixed_text[&bare],
+        pack.sentences.redundant_senses.insert(
+            pack.sentences.prefixed_text[&bare],
             vec![
                 pack.senses_of(bare)
                     .iter()
@@ -799,6 +799,7 @@ mod translation_sense_tests {
                 &deck
                     .context
                     .language_pack
+                    .sentences
                     .sentence_rodeo
                     .get(sentence)
                     .unwrap(),
@@ -982,8 +983,10 @@ mod translation_sense_tests {
         let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
         let one = pack.resolve_entry(&gram("bank", 1)).unwrap();
         let two = pack.resolve_entry(&gram("bank", 2)).unwrap();
-        pack.redundant_senses
-            .insert(pack.prefixed_text[&one.gram], vec![vec![two, one]]);
+        pack.sentences.redundant_senses.insert(
+            pack.sentences.prefixed_text[&one.gram],
+            vec![vec![two, one]],
+        );
         let flash = deck
             .get_review_info(vec![], 0.0)
             .written_gram_flashcard(&deck, trigger);
@@ -1012,11 +1015,13 @@ mod translation_sense_tests {
         let second = pack.resolve_entry(&verb).unwrap();
         assert_ne!(first.gram, second.gram);
         assert_eq!(
-            pack.prefixed_text[&first.gram],
-            pack.prefixed_text[&second.gram]
+            pack.sentences.prefixed_text[&first.gram],
+            pack.sentences.prefixed_text[&second.gram]
         );
-        pack.redundant_senses
-            .insert(pack.prefixed_text[&first.gram], vec![vec![second, first]]);
+        pack.sentences.redundant_senses.insert(
+            pack.sentences.prefixed_text[&first.gram],
+            vec![vec![second, first]],
+        );
         let event = deck.add_gram_by_frequency_index(0).unwrap();
         deck = replay(deck, event);
         // The unadded trigger joins the eligible Added member before collapsing.
@@ -1132,7 +1137,7 @@ mod translation_sense_tests {
             let challenge = deck
                 .translation_challenge_for_sentence(
                     pack.resolve_entry(&gram(text, sense)).unwrap(),
-                    pack.sentence_rodeo.get(sentence).unwrap(),
+                    pack.sentences.sentence_rodeo.get(sentence).unwrap(),
                 )
                 .unwrap();
             assert_eq!(challenge.primary_literal_indices, indices);
