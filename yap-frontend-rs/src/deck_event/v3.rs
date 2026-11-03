@@ -341,6 +341,7 @@ mod tests {
             native_language: Language::French,
         };
         let data = ConsolidatedLanguageData {
+            translations: vec![("bank".into(), vec!["banque".into()])],
             gram_vocabulary: vec![GramVocabEntry {
                 atoms: gram.clone(),
                 frequency: 30,

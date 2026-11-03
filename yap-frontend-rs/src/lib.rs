@@ -4233,13 +4233,14 @@ impl Deck {
     fn pick_comprehensible_sentence(
         &self,
         required_gram: Option<&TaggedGram<SpurGram>>,
-        comprehensible_grams: impl GramMembership,
+        comprehensible_grams: WrittenGrams<'_>,
         sentences_reviewed: &BTreeMap<SentenceSpur, u32>,
         language_pack: &LanguagePack,
     ) -> Option<SentenceSpur> {
         let language = self.context.course.target_language;
-        let mut possible_sentences = language_pack
-            .comprehensible_sentences(required_gram, |gram| comprehensible_grams.contains(gram));
+        let known = comprehensible_grams.rank_bitset();
+        let mut possible_sentences =
+            language_pack.comprehensible_sentences(required_gram, |rank| known.contains(rank));
         possible_sentences.sort_by_key(|sentence| {
             let text = language_pack.sentences.sentence_rodeo.resolve(sentence);
             (
@@ -4253,7 +4254,7 @@ impl Deck {
     fn get_comprehensible_sentence_containing(
         &self,
         required_gram: Option<&TaggedGram<SpurGram>>,
-        comprehensible_grams: impl GramMembership,
+        comprehensible_grams: WrittenGrams<'_>,
         sentences_reviewed: &BTreeMap<SentenceSpur, u32>,
         language_pack: &LanguagePack,
     ) -> Option<ComprehensibleSentence> {

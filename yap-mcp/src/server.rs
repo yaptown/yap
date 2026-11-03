@@ -530,10 +530,10 @@ impl YapState {
     ) -> SampledSentences {
         let comprehensible_pool = {
             let deck = self.deck();
-            let comprehensible = deck.comprehensible_written_grams(false);
+            let comprehensible = deck.comprehensible_written_grams(false).rank_bitset();
             deck.context()
                 .language_pack
-                .comprehensible_sentences(Some(&interned), |g| comprehensible.contains(g))
+                .comprehensible_sentences(Some(&interned), |rank| comprehensible.contains(rank))
         };
 
         use rand::seq::IndexedRandom as _;

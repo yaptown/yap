@@ -358,23 +358,21 @@ impl LanguagePack {
         self.gram_rodeo.resolve(gram).resolve(&self.string_rodeo)
     }
 
-    /// Sentences that contain `required_gram` (when given) and are otherwise fully
-    /// comprehensible: every learnable gram and multiword term must satisfy
-    /// `is_comprehensible` (the required gram itself always counts), and the
-    /// sentence must have at least one translation.
+    /// Sentences containing the required sense (if any) whose other learnable
+    /// symbols pass the caller's rank-bitset test. Translations are a build invariant.
     pub fn comprehensible_sentences(
         &self,
         required_gram: Option<&TaggedGram<SpurGram>>,
-        is_comprehensible: impl Fn(&SpurReadingGram) -> bool,
+        known_rank: impl Fn(u32) -> bool,
     ) -> Vec<SentenceSpur> {
-        // Search through all sentences - if we have a required gram, only look at sentences containing it
+        let required_keys = required_gram.map_or(&[][..], |gram| self.reading_keys(gram));
+        // Preserve candidate order, including tie-breaking in sentence selection.
         let candidate_sentences: &[SentenceSpur] = if let Some(required) = required_gram {
             match self.sentences.sentences_containing_gram_index.get(required) {
                 Some(sentences) => sentences,
                 None => return Vec::new(),
             }
         } else {
-            // If no required gram/phrase, consider all sentences
             &self
                 .sentences
                 .translations
@@ -386,43 +384,27 @@ impl LanguagePack {
             .iter()
             .copied()
             .filter(|&sentence| {
-                self.sentence_is_comprehensible(sentence, required_gram, &is_comprehensible)
+                self.sentence_is_comprehensible(sentence, required_keys, &known_rank)
             })
             .collect()
     }
 
-    /// Whether one sentence is fully comprehensible: every learnable gram and
-    /// multiword term satisfies `is_comprehensible` (the required gram itself
-    /// always counts) and the sentence has a translation. This is the hot
-    /// check behind [`Self::comprehensible_sentences`]; callers that already
-    /// know their candidates use it directly.
+    /// Decode lazily, stopping at the first unknown learnable symbol. The symbol
+    /// itself carries its rank: no gram resolution, hashing, or grammar allocation.
     pub fn sentence_is_comprehensible(
         &self,
         sentence: SentenceSpur,
-        required_gram: Option<&TaggedGram<SpurGram>>,
-        is_comprehensible: &impl Fn(&SpurReadingGram) -> bool,
+        required_keys: &[GramKey],
+        known_rank: &impl Fn(u32) -> bool,
     ) -> bool {
-        let is_comprehensible = |gram: &SpurReadingGram| {
-            is_comprehensible(gram) || required_gram.is_some_and(|req| req == &gram.sense)
-        };
-        let Some(sentence_grams) = self.sentence_grams(sentence) else {
+        let Some(mut symbols) = self.sentences.encoded_sentences.try_resolve(&sentence) else {
             return false;
         };
-        let learnable = sentence_grams.grams.iter().filter_map(|g| match g {
-            SentenceGram::Learnable(gram) => Some(gram),
-            SentenceGram::Obvious(_) => None,
-        });
-        let multiword = sentence_grams
-            .multiword_terms
-            .iter()
-            .chain(&sentence_grams.low_confidence_multiword_terms)
-            .map(|term| &term.gram);
-        learnable.chain(multiword).all(is_comprehensible)
-            && self
-                .sentences
-                .translations
-                .get(&sentence)
-                .is_some_and(|t| !t.is_empty())
+        symbols.all(|symbol| {
+            !symbol.is_learnable()
+                || known_rank(symbol.key().index())
+                || required_keys.contains(&symbol.key())
+        })
     }
 
     /// Get all lexemes for words that share a pronunciation
@@ -708,7 +690,7 @@ impl LanguagePack {
         for text in translation_texts {
             translation_rodeo.get_or_intern(text);
         }
-        let translations = language_data
+        let translations: FxHashMap<SentenceSpur, Vec<TranslationSpur>> = language_data
             .translations
             .iter()
             .map(|(s, ts)| {
@@ -721,6 +703,17 @@ impl LanguagePack {
             })
             .collect();
         let translation_rodeo = translation_rodeo.into_reader();
+        for sentence in encoded_sentences.keys() {
+            assert!(
+                translations
+                    .get(sentence)
+                    .is_some_and(|translations| translations
+                        .iter()
+                        .any(|translation| !translation_rodeo.resolve(translation).is_empty())),
+                "encoded sentence {:?} must have a nonempty translation",
+                sentence_rodeo.resolve(sentence),
+            );
+        }
 
         let words_to_heteronyms: FxHashMap<Spur, Vec<Heteronym<Spur>>> = {
             let mut map: FxHashMap<Spur, Vec<(Heteronym<Spur>, u32)>> = FxHashMap::default();

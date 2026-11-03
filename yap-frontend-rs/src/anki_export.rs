@@ -835,7 +835,7 @@ impl Deck {
         // Walk the clip manifest, not every translated sentence in the pack.
         let clip_sentence_count = clips::map_clip_sentences(language, |text| {
             let sentence = pack.sentences.sentence_rodeo.get(text)?;
-            pack.sentence_is_comprehensible(sentence, None, &|_| true)
+            pack.sentence_is_comprehensible(sentence, &[], &|_| true)
                 .then_some(())
         })
         .len() as u32;
@@ -3338,6 +3338,12 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "must have a nonempty translation")]
+    fn shipped_sentence_requires_translation() {
+        fixture_with_data(false, "word00", |data| data.translations.clear());
+    }
+
+    #[test]
     #[should_panic(expected = "Encoded gram has no written-ease rank")]
     fn shipped_sentence_requires_exact_reading_frequency() {
         fixture_with_data(false, "word00", |data| {
@@ -3467,11 +3473,21 @@ mod tests {
                 );
             }
             assert_eq!(
-                pack.sentence_is_comprehensible(sentence, None, &|r| written.contains(r)),
+                pack.sentence_is_comprehensible(sentence, &[], &|rank| bits.contains(rank)),
                 common_known && rare_known
             );
         };
         check(&cards, false, true, false);
+        assert!(pack.sentence_is_comprehensible(
+            sentence,
+            pack.reading_keys(&common.sense),
+            &|_| false
+        ));
+        assert!(!pack.sentence_is_comprehensible(
+            sentence,
+            pack.reading_keys(&sibling.sense),
+            &|_| false
+        ));
         let source = language_utils::language_pack::FrequencyList {
             entries: [common, rare]
                 .into_iter()
