@@ -316,6 +316,7 @@ pub(super) fn finish(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use language_utils::TaggedGram;
     fn s(index: u32, readings: &[&str]) -> SenseReadings {
         SenseReadings {
             index,
@@ -416,28 +417,36 @@ mod tests {
             data.rejected_sentences,
             BTreeSet::from(["sentence 7".into(), "sentence 8".into()])
         );
+        use lasso::Key;
         let inputs: Vec<_> = (0..10)
             .map(|i| {
                 let text = format!("sentence {i}");
-                let sentence = SentenceGrams {
-                    grams: vec![language_utils::SentenceGram::Learnable(TaggedGram {
-                        gram: Gram(vec![]),
+                let sentence = language_utils::EncodedSentence {
+                    tokens: vec![TaggedGram {
+                        gram: language_utils::SpurGram::try_from_usize(0).unwrap(),
                         sense: data.sense(&text, 0),
-                    })],
+                    }],
                     capitalize_first: false,
-                    multiword_terms: vec![],
-                    low_confidence_multiword_terms: vec![],
                 };
                 (text, sentence)
             })
+            .filter(|(text, _)| data.includes_sentence(text))
             .collect();
-        let packed = data.pack(inputs, Language::Japanese);
+        let vocabulary = vec![language_utils::GramVocabEntry {
+            atoms: Gram(vec![]),
+            frequency: 10,
+        }];
+        let packed = crate::pipeline::sentence_grams(
+            &inputs,
+            &BTreeMap::new(),
+            &vocabulary,
+            &data,
+            &BTreeMap::new(),
+        );
         assert_eq!(packed.len(), 8);
         for (text, sentence) in packed {
             assert!(data.includes_sentence(&text));
-            let language_utils::SentenceGram::Learnable(entry) = &sentence.grams[0] else {
-                panic!()
-            };
+            let entry = sentence.all_grams().next().unwrap();
             assert_eq!(
                 entry.reading.as_deref(),
                 raw.get(&(text, 0))

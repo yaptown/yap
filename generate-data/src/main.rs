@@ -3,7 +3,7 @@ use itertools::Itertools;
 use language_utils::TaggedGram;
 use language_utils::{
     Atom, COURSES, Course, EncodedSentence, Gram, GramFrequencyEntry, GramVocabEntry,
-    HomophonePractice, SentenceGram, SentenceGrams,
+    HomophonePractice, SentenceGram,
 };
 use rustc_hash::FxHashMap;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -345,21 +345,30 @@ async fn main() -> anyhow::Result<()> {
             )
             .collect();
 
+        let canonical_phrases = readings.canonical_phrases(&nlp_sentences);
         // Shared with cache measurement so both paths build identical prompts.
         let convert_to_grams =
             |sentences: &[(String, EncodedSentence)],
              nlp: &BTreeMap<String, language_utils::SentenceInfo>| {
-                generate_data::pipeline::sentence_grams(sentences, nlp, &gram_vocabulary)
+                generate_data::pipeline::sentence_grams(
+                    sentences,
+                    nlp,
+                    &gram_vocabulary,
+                    &readings,
+                    &canonical_phrases,
+                )
             };
 
         // Convert app-only encoded sentences to grams
-        let encoded_sentences_with_grams: Vec<(String, SentenceGrams<TaggedGram<Gram<String>>>)> =
-            convert_to_grams(&encoded_sentences, &nlp_sentences);
+        let encoded_sentences_with_grams: Vec<(
+            String,
+            language_utils::ReadingSentence<Gram<String>, String>,
+        )> = convert_to_grams(&encoded_sentences, &nlp_sentences);
 
         // Convert ALL encoded sentences (including restricted) to grams for per-source frequencies
         let all_encoded_sentences_with_grams: Vec<(
             String,
-            SentenceGrams<TaggedGram<Gram<String>>>,
+            language_utils::ReadingSentence<Gram<String>, String>,
         )> = convert_to_grams(&all_encoded_sentences, &nlp_sentences);
 
         // Filter initial gram frequencies to only include those with count > 3 (like regular dictionary)
@@ -384,7 +393,7 @@ async fn main() -> anyhow::Result<()> {
         let encoded_sentences_count_before = encoded_sentences_with_grams.len();
         let mut encoded_sentences_with_grams: Vec<(
             String,
-            SentenceGrams<TaggedGram<Gram<String>>>,
+            language_utils::ReadingSentence<Gram<String>, String>,
         )> = encoded_sentences_with_grams
             .into_iter()
             .filter(|(_, sentence_grams)| {
@@ -392,7 +401,9 @@ async fn main() -> anyhow::Result<()> {
                 sentence_grams.grams.iter().all(|sg| {
                     match sg {
                         // Learnable grams must be in the filtered set
-                        SentenceGram::Learnable(gram) => filtered_gram_set.contains(&gram.gram),
+                        SentenceGram::Learnable(gram) => {
+                            filtered_gram_set.contains(&gram.sense.gram)
+                        }
                         // Obvious (non-learnable) grams are always OK
                         SentenceGram::Obvious(_) => true,
                     }
@@ -958,9 +969,9 @@ async fn main() -> anyhow::Result<()> {
                 let before_high = sg.multiword_terms.len();
                 let before_low = sg.low_confidence_multiword_terms.len();
                 sg.multiword_terms
-                    .retain(|term| vocab_gram_set.contains(&term.gram.gram));
+                    .retain(|term| vocab_gram_set.contains(&term.gram.sense.gram));
                 sg.low_confidence_multiword_terms
-                    .retain(|term| vocab_gram_set.contains(&term.gram.gram));
+                    .retain(|term| vocab_gram_set.contains(&term.gram.sense.gram));
                 removed_high += before_high - sg.multiword_terms.len();
                 removed_low += before_low - sg.low_confidence_multiword_terms.len();
             }
@@ -1334,11 +1345,13 @@ async fn main() -> anyhow::Result<()> {
         // Filter sentences that contain grams not in the defined set
         let (nlp_sentences, _removed_sentences): (Vec<_>, Vec<_>) = {
             // Build a map from sentence text to its encoded grams for lookup
-            let sentence_to_grams: FxHashMap<&str, &SentenceGrams<TaggedGram<Gram<String>>>> =
-                encoded_sentences_with_grams
-                    .iter()
-                    .map(|(text, grams)| (text.as_str(), grams))
-                    .collect();
+            let sentence_to_grams: FxHashMap<
+                &str,
+                &language_utils::ReadingSentence<Gram<String>, String>,
+            > = encoded_sentences_with_grams
+                .iter()
+                .map(|(text, grams)| (text.as_str(), grams))
+                .collect();
 
             nlp_sentences.into_iter().partition(|(sentence, _)| {
                 // Check if all learnable grams in the encoded sentence are in the defined set
@@ -1346,7 +1359,7 @@ async fn main() -> anyhow::Result<()> {
                     .get(sentence.as_str())
                     .map(|sg| {
                         sg.grams.iter().all(|g| match g {
-                            SentenceGram::Learnable(gram) => defined_gram_set.contains(gram),
+                            SentenceGram::Learnable(gram) => defined_gram_set.contains(&gram.sense),
                             SentenceGram::Obvious(_) => true,
                         })
                     })
@@ -1386,9 +1399,10 @@ async fn main() -> anyhow::Result<()> {
                 {
                     for gram in &sg.grams {
                         if let SentenceGram::Learnable(g) = gram
-                            && !defined_gram_set.contains(g)
+                            && !defined_gram_set.contains(&g.sense)
                         {
-                            missing_grams.push(g.gram.to_display_string(course.target_language));
+                            missing_grams
+                                .push(g.sense.gram.to_display_string(course.target_language));
                         }
                     }
                 }
@@ -1783,9 +1797,6 @@ async fn main() -> anyhow::Result<()> {
             course.target_language.code(),
             strokes.len()
         );
-
-        let encoded_sentences_with_grams =
-            readings.pack(encoded_sentences_with_grams, course.target_language);
 
         // Create consolidated data structure
         let consolidated_data = language_utils::ConsolidatedLanguageData {

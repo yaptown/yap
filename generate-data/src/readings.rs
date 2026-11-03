@@ -7,14 +7,14 @@ use std::num::NonZeroU32;
 use anyhow::{Result, ensure};
 use language_utils::readings::{is_ruby_base, supports_readings};
 use language_utils::{
-    Atom, Gram, GramInterners, Language, Literal, ReadingTaggedGram, SentenceGrams, SentenceInfo,
-    TaggedGram, WordType,
+    Atom, Gram, GramInterners, Language, Literal, ReadingTaggedGram, SentenceInfo, WordType,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use tysm::chat_completions::{ChatClient, IndividualChatError};
 
 use crate::usage_discovery::{UsageAnchor, UsageEntry, UsageInventory, UsageKind};
+mod alignment;
 mod canonical;
 mod corrections;
 mod coverings;
@@ -24,7 +24,6 @@ mod inflections;
 mod inventory;
 mod kanjidic;
 mod occurrence;
-mod phrases;
 mod prompts;
 mod repair_samples;
 mod review;
@@ -179,6 +178,7 @@ enum OccurrenceDecision {
 pub struct CorpusReadings {
     pub(crate) inventories: Option<Vec<UsageInventory>>,
     dictionary: Dictionary,
+    headwords: BTreeMap<Gram<String>, String>,
     pub hierarchies: BTreeMap<Gram<String>, Vec<SenseReadings>>,
     candidates: BTreeMap<Gram<String>, Candidates>,
     /// Deliberate correction removals are not failed inference or fallback inputs.
@@ -294,7 +294,7 @@ fn learner_lemma_form(atoms: &[AtomHint], reading: &str) -> Option<String> {
             options
         })
         .collect();
-    phrases::align_atoms(reading, &options)
+    alignment::align_atoms(reading, &options)
 }
 
 fn hiragana(text: &str) -> String {
@@ -642,6 +642,38 @@ fn needs_hierarchy(gram: &Gram<String>, candidates: &Candidates, occurrences: us
         || (senses == 0 && occurrences >= 2 * inventory::MIN_ATTESTATIONS)
 }
 
+/// Each canonical phrase is itself an occurrence, with the same tokenized
+/// atoms as its matcher key. Keep these groups separate from sentence labels:
+/// a headword can also be a sentence whose first token is only part of it.
+fn phrase_groups(language: Language, sentences: &BTreeMap<String, SentenceInfo>) -> Groups {
+    sentences
+        .values()
+        .flat_map(|info| {
+            info.multiword_terms
+                .high_confidence
+                .iter()
+                .chain(&info.multiword_terms.low_confidence)
+        })
+        .map(|term| term.gram.gram.clone())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .enumerate()
+        .map(|(gram_index, gram)| {
+            let text = gram.to_display_string(language);
+            let bytes = (0, text.len());
+            (
+                gram,
+                vec![Occurrence {
+                    text,
+                    gram_index,
+                    bytes,
+                    spans: Vec::new(),
+                }],
+            )
+        })
+        .collect()
+}
+
 /// B/C depend only on encoded tokens and their text, never matching overlays.
 fn corpus_groups(
     language: Language,
@@ -907,8 +939,70 @@ impl CorpusReadings {
             ..Default::default()
         };
         let groups = corpus_groups(language, app, restricted, interners);
-        data.annotate(language, &groups, store).await?;
+        data.annotate(language, &groups, store, true).await?;
+        if data.sample.is_none() {
+            let headwords = phrase_groups(language, app);
+            data.headwords = Self::read_headwords(
+                language,
+                &headwords,
+                std::mem::take(&mut data.dictionary),
+                store,
+            )
+            .await?;
+        }
         Ok(data)
+    }
+
+    async fn read_headwords(
+        language: Language,
+        headwords: &Groups,
+        dictionary: Dictionary,
+        store: &osmo::Store,
+    ) -> Result<BTreeMap<Gram<String>, String>> {
+        let mut canonical = Self {
+            dictionary,
+            ..Default::default()
+        };
+        canonical
+            .annotate(language, headwords, store, false)
+            .await?;
+        Ok(headwords
+            .iter()
+            .filter_map(|(gram, occurrences)| {
+                let occurrence = &occurrences[0];
+                canonical
+                    .reading(&occurrence.text, occurrence.gram_index)
+                    .map(|reading| (gram.clone(), reading.to_owned()))
+            })
+            .collect())
+    }
+
+    /// Freeze the phrase identity once, after sense assignment. Matching a
+    /// different inflection changes its positions, never its reading or sense.
+    pub fn canonical_phrases(
+        &self,
+        sentences: &BTreeMap<String, SentenceInfo>,
+    ) -> BTreeMap<Gram<String>, ReadingTaggedGram<Gram<String>, String>> {
+        let mut phrases = BTreeMap::new();
+        for term in sentences.values().flat_map(|info| {
+            info.multiword_terms
+                .high_confidence
+                .iter()
+                .chain(&info.multiword_terms.low_confidence)
+        }) {
+            let canonical =
+                phrases
+                    .entry(term.gram.gram.clone())
+                    .or_insert_with(|| ReadingTaggedGram {
+                        sense: term.gram.clone(),
+                        reading: self.headwords.get(&term.gram.gram).cloned(),
+                    });
+            assert_eq!(
+                canonical.sense, term.gram,
+                "phrase matches share their default sense"
+            );
+        }
+        phrases
     }
 
     async fn annotate(
@@ -916,37 +1010,21 @@ impl CorpusReadings {
         language: Language,
         groups: &Groups,
         store: &osmo::Store,
+        persist: bool,
     ) -> Result<()> {
-        let mut examples = if self.sample.is_none() {
+        let mut examples = if persist && self.sample.is_none() {
             Some(sample::Cache::load(
                 format!("out/{}/reading_examples.jsonl", language.corpus_code()).into(),
             )?)
         } else {
             None
         };
-        let mut repair_examples = if self.sample.is_none() {
+        let mut repair_examples = if persist && self.sample.is_none() {
             Some(repair_samples::Samples::load(language)?)
         } else {
             None
         };
         let mut corrections = corrections::Corrections::load(language)?;
-        let path = format!(
-            "generate-data/data/{}/usage_inventories.jsonl",
-            language.corpus_code()
-        );
-        let contents = match std::fs::read_to_string(&path) {
-            Ok(s) => s,
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
-            Err(e) => return Err(e.into()),
-        };
-        // The inventory is only the persistent slot ledger here: dictionary
-        // senses replace meaning discovery for reading languages, so its old
-        // usages are never shown to B (see inventory::materialize).
-        let mut rows: Vec<UsageInventory> = contents
-            .lines()
-            .map(serde_json::from_str)
-            .collect::<Result<_, _>>()?;
-        assert!(rows.iter().all(|r| r.usages.len() >= 2));
         let kanji = if language == Language::Japanese {
             let characters =
                 serde_json::from_reader(std::fs::File::open(".cache/readings/jpn-kanjidic.json")?)?;
@@ -1199,6 +1277,25 @@ impl CorpusReadings {
         if let Some(sample) = &self.sample {
             return sample.write(self, occurrence_groups, language);
         }
+        if !persist {
+            return Ok(());
+        }
+        // Only corpus annotations materialize senses. Headword inference never
+        // reads or rewrites the corpus's persistent sense-slot ledger.
+        let path = format!(
+            "generate-data/data/{}/usage_inventories.jsonl",
+            language.corpus_code()
+        );
+        let contents = match std::fs::read_to_string(&path) {
+            Ok(s) => s,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
+            Err(e) => return Err(e.into()),
+        };
+        let mut rows: Vec<UsageInventory> = contents
+            .lines()
+            .map(serde_json::from_str)
+            .collect::<Result<_, _>>()?;
+        assert!(rows.iter().all(|r| r.usages.len() >= 2));
         inventory::finish(self, &mut rows, groups, language)?;
         self.inventories = Some(rows);
         if !tysm::measurement::enabled() {
@@ -1246,62 +1343,10 @@ impl CorpusReadings {
         restricted.retain(|s, _| self.includes_sentence(s));
     }
 
-    fn reading(&self, text: &str, gram_index: usize) -> Option<&str> {
+    pub fn reading(&self, text: &str, gram_index: usize) -> Option<&str> {
         // Use only this occurrence's checked reading, including a guarded escape;
         // a missing reading never borrows another occurrence's pronunciation.
         self.labels.get(&(text.to_owned(), gram_index))?.reading()
-    }
-
-    pub fn pack(
-        &self,
-        sentences: Vec<(String, SentenceGrams<TaggedGram<Gram<String>>>)>,
-        language: Language,
-    ) -> Vec<(
-        String,
-        language_utils::ReadingSentence<Gram<String>, String>,
-    )> {
-        let mut sentences: Vec<_> = sentences
-            .into_iter()
-            .filter(|(text, _)| self.includes_sentence(text))
-            .map(|(text, sentence)| {
-                let grams = sentence
-                    .grams
-                    .into_iter()
-                    .enumerate()
-                    .map(|(index, g)| {
-                        g.map(|sense| {
-                            let reading = self.reading(&text, index).map(str::to_owned);
-                            ReadingTaggedGram { sense, reading }
-                        })
-                    })
-                    .collect();
-                (
-                    text,
-                    SentenceGrams {
-                        grams,
-                        capitalize_first: sentence.capitalize_first,
-                        multiword_terms: sentence
-                            .multiword_terms
-                            .into_iter()
-                            .map(|m| m.map(|g| ReadingTaggedGram::without_reading(g.clone())))
-                            .collect(),
-                        low_confidence_multiword_terms: sentence
-                            .low_confidence_multiword_terms
-                            .into_iter()
-                            .map(|m| m.map(|g| ReadingTaggedGram::without_reading(g.clone())))
-                            .collect(),
-                    },
-                )
-            })
-            .collect();
-        let stats = phrases::annotate(&mut sentences, language, &self.dictionary);
-        println!(
-            "readings[{}]: phrase grams={}, without reading={}",
-            language.code(),
-            stats.grams,
-            stats.without_reading
-        );
-        sentences
     }
 }
 
@@ -1325,7 +1370,90 @@ fn write_inventories<T: Serialize>(path: &str, rows: &[T]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use language_utils::{Heteronym, PartOfSpeech, Word};
+    use language_utils::{Heteronym, PartOfSpeech, TaggedGram, Word};
+
+    #[test]
+    fn phrase_identity_uses_its_headword_while_tokens_keep_occurrence_readings() {
+        use language_utils::{EncodedSentence, GramVocabEntry, MultiwordTermMatch, MultiwordTerms};
+        use lasso::Key;
+        let phrase = gram(&["仕方", "が", "ない"]);
+        let mut data = CorpusReadings::default();
+        data.headwords.insert(phrase.clone(), "しかたがない".into());
+        let mut nlp = BTreeMap::new();
+        let mut vocabulary = Vec::new();
+        for (i, (text, reading)) in [
+            ("仕方なかった", "しかたなかった"),
+            ("仕方ありません", "しかたありません"),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            vocabulary.push(GramVocabEntry {
+                atoms: gram(&[text]),
+                frequency: 1,
+            });
+            data.labels.insert(
+                (text.into(), 0),
+                occurrence::Label::Ranked {
+                    choices: vec![Choice {
+                        sense: 0,
+                        reading: reading.into(),
+                    }],
+                },
+            );
+            let term = MultiwordTermMatch {
+                gram: TaggedGram {
+                    gram: phrase.clone(),
+                    sense: NonZeroU32::new(1),
+                },
+                matched_word_indices: vec![0],
+            };
+            nlp.insert(
+                text.into(),
+                SentenceInfo {
+                    sentence: EncodedSentence {
+                        tokens: vec![TaggedGram {
+                            gram: language_utils::SpurGram::try_from_usize(i).unwrap(),
+                            sense: None,
+                        }],
+                        capitalize_first: false,
+                    },
+                    multiword_terms: MultiwordTerms {
+                        high_confidence: if i == 0 { vec![term.clone()] } else { vec![] },
+                        low_confidence: if i == 1 { vec![term] } else { vec![] },
+                    },
+                },
+            );
+        }
+        let groups = phrase_groups(Language::Japanese, &nlp);
+        assert_eq!(groups.len(), 1);
+        assert_eq!(groups[&phrase][0].text, "仕方がない");
+        let inputs: Vec<_> = nlp
+            .iter()
+            .map(|(text, info)| (text.clone(), info.sentence.clone()))
+            .collect();
+        for expected in [Some("しかたがない"), None] {
+            let phrases = data.canonical_phrases(&nlp);
+            let sentences =
+                crate::pipeline::sentence_grams(&inputs, &nlp, &vocabulary, &data, &phrases);
+            for (text, sentence) in sentences {
+                assert_eq!(
+                    sentence.all_grams().next().unwrap().reading.as_deref(),
+                    data.reading(&text, 0)
+                );
+                let term = sentence
+                    .multiword_terms
+                    .iter()
+                    .chain(&sentence.low_confidence_multiword_terms)
+                    .next()
+                    .unwrap();
+                assert_eq!(term.gram, phrases[&phrase]);
+                assert_eq!(term.gram.reading.as_deref(), expected);
+                assert_eq!(term.matched_word_indices, [0]);
+            }
+            data.headwords.clear();
+        }
+    }
 
     #[test]
     fn b_and_c_groups_ignore_unknown_slot_overlays() {
@@ -1512,7 +1640,7 @@ mod tests {
             Some("ゆった")
         );
         assert!(
-            phrases::align_atoms(
+            alignment::align_atoms(
                 "いう",
                 &[
                     vec![("い".into(), "い".into()), ("いう".into(), "ゆう".into())],

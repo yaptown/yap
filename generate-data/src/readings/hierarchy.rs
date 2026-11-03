@@ -430,7 +430,7 @@ pub(super) fn expand_variants(data: &mut CorpusReadings, verifier: &kanjidic::Ve
                 let aligned = if words.len() == 1 {
                     Some(vec![reading.clone()])
                 } else if options.len() == words.len() {
-                    phrases::aligned_atom_readings(reading, &options)
+                    alignment::aligned_atom_readings(reading, &options)
                 } else {
                     None
                 };
@@ -1050,7 +1050,7 @@ mod tests {
             ["みちこと"]
         );
         assert!(
-            phrases::aligned_atom_readings(
+            alignment::aligned_atom_readings(
                 "あああ",
                 &[
                     vec!["あ".into(), "ああ".into()],

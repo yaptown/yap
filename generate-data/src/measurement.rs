@@ -384,11 +384,13 @@ async fn later_stages(
         &encoded,
         &segmented.nlp_sentences,
         &segmented.gram_vocabulary,
+        readings,
+        &readings.canonical_phrases(&segmented.nlp_sentences),
     )
     .into_iter()
     .filter(|(_, sentence)| {
         sentence.grams.iter().all(|gram| match gram {
-            SentenceGram::Learnable(gram) => allowed.contains(&gram.gram),
+            SentenceGram::Learnable(gram) => allowed.contains(&gram.sense.gram),
             SentenceGram::Obvious(_) => true,
         })
     })

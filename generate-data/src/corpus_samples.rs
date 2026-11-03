@@ -1,7 +1,7 @@
 //! Corpus sentences that ground the dictionary, phrasebook and sense prompts.
 
 use anyhow::Context;
-use language_utils::{Gram, SentenceGram, SentenceGrams, TaggedGram};
+use language_utils::{Gram, SentenceGram};
 use rustc_hash::{FxHashMap, FxHashSet};
 use sentence_sampler::sample_to_target;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
@@ -21,12 +21,17 @@ pub struct CorpusIndex<'a> {
 }
 
 impl<'a> CorpusIndex<'a> {
-    pub fn new(encoded_sentences: &'a [(String, SentenceGrams<TaggedGram<Gram<String>>>)]) -> Self {
+    pub fn new(
+        encoded_sentences: &'a [(
+            String,
+            language_utils::ReadingSentence<Gram<String>, String>,
+        )],
+    ) -> Self {
         let mut by_gram: FxHashMap<&'a Gram<String>, Vec<&'a str>> = FxHashMap::default();
         for (sentence, grams) in encoded_sentences {
             for gram in &grams.grams {
                 let (SentenceGram::Learnable(gram) | SentenceGram::Obvious(gram)) = gram;
-                by_gram.entry(&gram.gram).or_default().push(sentence);
+                by_gram.entry(&gram.sense.gram).or_default().push(sentence);
             }
             // A high-confidence match witnesses its gram as well as the encoded
             // stream does — and for a citation gram, whose matches are variant
@@ -35,7 +40,10 @@ impl<'a> CorpusIndex<'a> {
             // literally, so without these its definition would be generated with
             // no example sentences at all.
             for term in &grams.multiword_terms {
-                by_gram.entry(&term.gram.gram).or_default().push(sentence);
+                by_gram
+                    .entry(&term.gram.sense.gram)
+                    .or_default()
+                    .push(sentence);
             }
         }
         // A sentence can witness the same gram twice (encoded + match, or two
@@ -200,7 +208,10 @@ mod tests {
 
     #[test]
     fn witnesses_deduplicate_repeated_grams_and_ignore_low_confidence_overlays() {
-        use language_utils::{Atom, Heteronym, MultiwordTermMatch, PartOfSpeech, Word, WordType};
+        use language_utils::{
+            Atom, Heteronym, MultiwordTermMatch, PartOfSpeech, SentenceGrams, TaggedGram, Word,
+            WordType,
+        };
         let gram = Gram(vec![Atom::Tok(Word {
             text: "word".into(),
             word_type: WordType::Heteronym(Heteronym {
@@ -258,6 +269,15 @@ mod tests {
                 },
             ),
         ];
+        let corpus: Vec<_> = corpus
+            .into_iter()
+            .map(|(text, sentence)| {
+                (
+                    text,
+                    sentence.map(language_utils::ReadingTaggedGram::without_reading),
+                )
+            })
+            .collect();
         let index = CorpusIndex::new(&corpus);
         assert_eq!(index.witnesses(&first.gram), ["twice", "other sense"]);
     }

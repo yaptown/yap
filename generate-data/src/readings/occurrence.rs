@@ -714,7 +714,7 @@ pub(super) fn write_remaining(language: Language, escapes: &Escapes) -> Result<(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use language_utils::{Heteronym, PartOfSpeech, Word};
+    use language_utils::{Heteronym, PartOfSpeech, TaggedGram, Word};
     fn gram(text: &str) -> Gram<String> {
         Gram(vec![Atom::Tok(Word {
             text: text.into(),
@@ -1279,16 +1279,25 @@ mod tests {
             assert_eq!(exported["reading"], serde_json::json!(checked));
             assert_eq!(exported["proposed_reading"], proposed);
             assert!(exported.get("choices").is_none());
-            let sentence = SentenceGrams {
-                grams: vec![language_utils::SentenceGram::Learnable(TaggedGram {
-                    gram: g.clone(),
+            use lasso::Key;
+            let sentence = language_utils::EncodedSentence {
+                tokens: vec![TaggedGram {
+                    gram: language_utils::SpurGram::try_from_usize(0).unwrap(),
                     sense: data.sense(text, 0),
-                })],
+                }],
                 capitalize_first: false,
-                multiword_terms: vec![],
-                low_confidence_multiword_terms: vec![],
             };
-            let packed = data.pack(vec![(text.into(), sentence)], language);
+            let vocabulary = vec![language_utils::GramVocabEntry {
+                atoms: g.clone(),
+                frequency: 1,
+            }];
+            let packed = crate::pipeline::sentence_grams(
+                &[(text.into(), sentence)],
+                &BTreeMap::new(),
+                &vocabulary,
+                &data,
+                &BTreeMap::new(),
+            );
             let entry = packed[0].1.all_grams().next().unwrap();
             assert_eq!(entry.reading.as_deref(), checked);
             assert_eq!(entry.sense.sense, None);

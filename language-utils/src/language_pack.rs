@@ -1146,7 +1146,7 @@ impl LanguagePack {
             })
             .collect();
 
-        let gram_readings = derive_readings(&encoded_sentences, &rodeo, &gram_rodeo);
+        let gram_readings = derive_readings(&encoded_sentences, &rodeo);
         let fingerprint = spur_space_fingerprint(&rodeo, &gram_rodeo);
         Self {
             core: Arc::new(LanguagePackCore {
@@ -1286,7 +1286,8 @@ pub struct LanguagePackCore {
 /// See [`LanguagePackCore`] for the spur-space contract between the halves.
 #[derive(Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct LanguagePackSentences {
-    /// Observed readings, frequency-first with lexical ties; computed at build time.
+    /// Canonical phrase reading first, then unique token readings ordered by
+    /// observed frequency (lexical ties); computed at build time.
     pub gram_readings: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>>,
     /// Exact displayed text + reading; only segmentations differing from the fallback.
     pub ruby_segmentations: BTreeMap<(String, String), Vec<crate::readings::RubySegment>>,
@@ -1369,50 +1370,24 @@ fn spur_space_fingerprint(
 fn derive_readings(
     sentences: &FxHashMap<SentenceSpur, SentenceGrams<crate::ReadingTaggedGram<SpurGram, Spur>>>,
     strings: &lasso::RodeoReader,
-    grams: &lasso::RodeoReader<Gram<Spur>>,
 ) -> FxHashMap<TaggedGram<SpurGram>, Vec<Spur>> {
     let mut counts: FxHashMap<_, FxHashMap<Spur, usize>> = FxHashMap::default();
+    let mut phrases = FxHashMap::default();
     for sentence in sentences.values() {
-        let words: Vec<_> = sentence
-            .grams
-            .iter()
-            .flat_map(|g| {
-                let (SentenceGram::Learnable(g) | SentenceGram::Obvious(g)) = g;
-                grams.resolve(&g.sense.gram).iter().filter_map(|a| match a {
-                    crate::Atom::Tok(w) => Some(w.text),
-                    _ => None,
-                })
-            })
-            .collect();
-        let phrases = sentence
+        for term in sentence
             .multiword_terms
             .iter()
             .chain(&sentence.low_confidence_multiword_terms)
-            .filter(|term| {
-                // Phrase keys are lemma sequences. Their occurrence reading is
-                // a headword reading only when the selected surface is identical.
-                let canonical =
-                    grams
-                        .resolve(&term.gram.sense.gram)
-                        .iter()
-                        .filter_map(|a| match a {
-                            crate::Atom::Tok(w) => Some(w.text),
-                            _ => None,
-                        });
-                canonical.map(Some).eq(term
-                    .matched_word_indices
-                    .iter()
-                    .map(|&i| words.get(usize::from(i)).copied()))
-            })
-            .map(|term| &term.gram);
-        for token in sentence
-            .grams
-            .iter()
-            .map(|g| match g {
-                SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => g,
-            })
-            .chain(phrases)
         {
+            let canonical = phrases.entry(term.gram.sense).or_insert(term.gram.reading);
+            assert_eq!(
+                *canonical, term.gram.reading,
+                "phrase readings are canonical"
+            );
+        }
+        for token in sentence.grams.iter().map(|g| match g {
+            SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => g,
+        }) {
             if let Some(reading) = token.reading {
                 *counts
                     .entry(token.sense)
@@ -1422,7 +1397,7 @@ fn derive_readings(
             }
         }
     }
-    counts
+    let mut readings: FxHashMap<_, Vec<_>> = counts
         .into_iter()
         .map(|(sense, counts)| {
             let mut readings: Vec<_> = counts.into_iter().collect();
@@ -1435,7 +1410,15 @@ fn derive_readings(
                 readings.into_iter().map(|(reading, _)| reading).collect(),
             )
         })
-        .collect()
+        .collect();
+    for (sense, reading) in phrases {
+        if let Some(reading) = reading {
+            let observed = readings.entry(sense).or_default();
+            observed.retain(|&value| value != reading);
+            observed.insert(0, reading);
+        }
+    }
+    readings
 }
 
 impl LanguagePack {
@@ -2366,32 +2349,58 @@ mod sense_tests {
     }
 
     #[test]
-    fn inflected_phrase_readings_are_not_canonical_headword_readings() {
-        let pack = pack_with_surface(&[(0, 30), (1, 20), (2, 10)], "banked");
-        assert_eq!(pack.sentences.gram_readings.len(), 1);
+    fn phrase_readings_are_canonical_even_when_the_surface_is_inflected() {
+        let mut pack = pack_with_surface(&[(0, 30), (1, 20), (2, 10)], "banked");
+        assert_eq!(pack.sentences.gram_readings.len(), 3);
         let sentence = pack.sentences.encoded_sentences.values().next().unwrap();
-        assert!(sentence.multiword_terms[0].gram.reading.is_some());
-        assert!(
-            sentence.low_confidence_multiword_terms[0]
-                .gram
-                .reading
-                .is_some()
+        for term in sentence
+            .multiword_terms
+            .iter()
+            .chain(&sentence.low_confidence_multiword_terms)
+        {
+            assert_eq!(
+                pack.sentences.gram_readings[&term.gram.sense],
+                [term.gram.reading.unwrap()]
+            );
+        }
+        let sentence = pack
+            .sentences
+            .encoded_sentences
+            .values_mut()
+            .next()
+            .unwrap();
+        let phrase = sentence.multiword_terms[0].gram;
+        let token_reading = sentence.all_grams().next().unwrap().reading.unwrap();
+        let token = crate::ReadingTaggedGram {
+            sense: phrase.sense,
+            reading: Some(token_reading),
+        };
+        sentence.grams.extend([
+            SentenceGram::Learnable(token),
+            SentenceGram::Learnable(token),
+            SentenceGram::Learnable(phrase),
+        ]);
+        let readings = derive_readings(&pack.sentences.encoded_sentences, &pack.string_rodeo);
+        assert_eq!(
+            readings[&phrase.sense],
+            [phrase.reading.unwrap(), token_reading]
         );
-        assert!(
-            !pack
-                .sentences
-                .gram_readings
-                .contains_key(&sentence.multiword_terms[0].gram.sense)
-        );
-        assert!(
-            !pack
-                .sentences
-                .gram_readings
-                .contains_key(&sentence.low_confidence_multiword_terms[0].gram.sense)
+        pack.sentences
+            .encoded_sentences
+            .values_mut()
+            .next()
+            .unwrap()
+            .multiword_terms[0]
+            .gram
+            .reading = None;
+        let readings = derive_readings(&pack.sentences.encoded_sentences, &pack.string_rodeo);
+        assert_eq!(
+            readings[&phrase.sense],
+            [token_reading, phrase.reading.unwrap()]
         );
     }
     #[test]
-    fn reading_frequency_includes_phrases_and_breaks_ties_lexically() {
+    fn token_reading_frequency_breaks_ties_lexically() {
         let mut pack = pack();
         let sentence = pack
             .sentences
@@ -2402,16 +2411,22 @@ mod sense_tests {
         let SentenceGram::Learnable(entry) = sentence.grams[0] else {
             panic!()
         };
-        sentence.multiword_terms[0].gram.sense = entry.sense;
-        sentence.low_confidence_multiword_terms[0].gram.sense = entry.sense;
-        sentence
+        for term in sentence
             .multiword_terms
-            .push(sentence.multiword_terms[0].clone());
-        let readings = derive_readings(
-            &pack.sentences.encoded_sentences,
-            &pack.string_rodeo,
-            &pack.gram_rodeo,
-        );
+            .iter()
+            .chain(&sentence.low_confidence_multiword_terms)
+        {
+            sentence
+                .grams
+                .push(SentenceGram::Learnable(crate::ReadingTaggedGram {
+                    sense: entry.sense,
+                    reading: term.gram.reading,
+                }));
+        }
+        sentence.grams.push(sentence.grams[1].clone());
+        sentence.multiword_terms.clear();
+        sentence.low_confidence_multiword_terms.clear();
+        let readings = derive_readings(&pack.sentences.encoded_sentences, &pack.string_rodeo);
         assert_eq!(
             readings[&entry.sense]
                 .iter()

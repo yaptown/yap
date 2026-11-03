@@ -222,11 +222,13 @@ pub fn sentence_grams(
     sentences: &[(String, language_utils::EncodedSentence)],
     nlp: &BTreeMap<String, SentenceInfo>,
     vocabulary: &[GramVocabEntry<String>],
+    readings: &crate::readings::CorpusReadings,
+    phrases: &BTreeMap<Gram<String>, language_utils::ReadingTaggedGram<Gram<String>, String>>,
 ) -> Vec<(
     String,
-    language_utils::SentenceGrams<language_utils::TaggedGram<Gram<String>>>,
+    language_utils::ReadingSentence<Gram<String>, String>,
 )> {
-    use language_utils::{SentenceGram, SentenceGrams, TaggedGram};
+    use language_utils::{ReadingTaggedGram, SentenceGram, SentenceGrams, TaggedGram};
     use lasso::Key;
     sentences
         .iter()
@@ -234,19 +236,22 @@ pub fn sentence_grams(
             let grams: Vec<_> = encoded
                 .tokens
                 .iter()
-                .filter_map(|&token| {
-                    vocabulary.get(token.gram.into_usize()).map(|entry| {
-                        SentenceGram::from(entry.atoms.clone()).map(|gram| TaggedGram {
+                .enumerate()
+                .map(|(index, &token)| {
+                    let entry = &vocabulary[token.gram.into_usize()];
+                    SentenceGram::from(entry.atoms.clone()).map(|gram| ReadingTaggedGram {
+                        sense: TaggedGram {
                             gram,
                             sense: token.sense,
-                        })
+                        },
+                        reading: readings.reading(text, index).map(str::to_owned),
                     })
                 })
                 .collect();
             let gram_set: HashSet<_> = grams
                 .iter()
                 .map(|gram| match gram {
-                    SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => &g.gram,
+                    SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => &g.sense.gram,
                 })
                 .collect();
             let (multiword_terms, low_confidence_multiword_terms) = nlp
@@ -257,13 +262,13 @@ pub fn sentence_grams(
                             .high_confidence
                             .iter()
                             .filter(|m| !gram_set.contains(&m.gram.gram))
-                            .cloned()
+                            .map(|m| m.map(|g| phrases[&g.gram].clone()))
                             .collect(),
                         info.multiword_terms
                             .low_confidence
                             .iter()
                             .filter(|m| !gram_set.contains(&m.gram.gram))
-                            .cloned()
+                            .map(|m| m.map(|g| phrases[&g.gram].clone()))
                             .collect(),
                     )
                 })
@@ -1223,7 +1228,7 @@ mod tests {
                 frequency: 4,
             })
             .collect::<Vec<_>>();
-        let mut sentences = (0..4)
+        let sentences = (0..4)
             .map(|i| {
                 (
                     format!("sentence {i}"),
@@ -1245,6 +1250,15 @@ mod tests {
                 )
             })
             .collect::<Vec<_>>();
+        let mut sentences: Vec<_> = sentences
+            .into_iter()
+            .map(|(text, sentence)| {
+                (
+                    text,
+                    sentence.map(language_utils::ReadingTaggedGram::without_reading),
+                )
+            })
+            .collect();
         let words = |sentences: &[_]| {
             crate::frequencies::compute_gram_frequencies(sentences, &vocabulary)
                 .into_iter()
@@ -1255,10 +1269,10 @@ mod tests {
         let before = words(&sentences);
         for (_, sentence) in &mut sentences {
             sentence.multiword_terms.push(MultiwordTermMatch {
-                gram: TaggedGram {
+                gram: language_utils::ReadingTaggedGram::without_reading(TaggedGram {
                     gram: phrase.clone(),
                     sense: None,
-                },
+                }),
                 matched_word_indices: vec![0, 1],
             });
         }
