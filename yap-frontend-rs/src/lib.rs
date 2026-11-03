@@ -3399,17 +3399,15 @@ impl Deck {
 
                 if words_needed > 0 {
                     // Collect unknown grams with their frequencies.
-                    let mut unknown_words: Vec<(TaggedGram<SpurGram>, u64)> = movie_frequencies
-                        .entries
-                        .iter()
-                        .filter_map(|(gram, frequency)| {
-                            if comprehensible_written.contains(gram) {
-                                None
-                            } else {
-                                Some((*gram, frequency.count as u64))
-                            }
-                        })
-                        .collect();
+                    let mut unknown_by_sense: FxHashMap<TaggedGram<SpurGram>, u64> =
+                        FxHashMap::default();
+                    for (reading, frequency) in movie_frequencies.entries.iter() {
+                        if !comprehensible_written.contains(reading) {
+                            *unknown_by_sense.entry(reading.sense).or_default() +=
+                                frequency.count as u64;
+                        }
+                    }
+                    let mut unknown_words: Vec<_> = unknown_by_sense.into_iter().collect();
 
                     // Sort by frequency descending (most common first).
                     unknown_words.sort_by_key(|b| std::cmp::Reverse(b.1));
@@ -3672,10 +3670,28 @@ impl Deck {
         for card in &smart_add_cards {
             match card {
                 CardIndicator::WrittenGram { gram } => {
-                    projected_written.insert(*gram);
+                    projected_written.extend(
+                        self.context
+                            .language_pack
+                            .reading_ranks(gram)
+                            .iter()
+                            .map(|(reading, _)| *reading),
+                    );
                 }
                 CardIndicator::ListeningGram { gram } => {
-                    projected_listening.extend(self.context.language_pack.senses_of(*gram));
+                    projected_listening.extend(
+                        self.context
+                            .language_pack
+                            .senses_of(*gram)
+                            .iter()
+                            .flat_map(|sense| {
+                                self.context
+                                    .language_pack
+                                    .reading_ranks(sense)
+                                    .iter()
+                                    .map(|(reading, _)| *reading)
+                            }),
+                    );
                 }
                 CardIndicator::LetterPronunciation { .. } => {}
             }
@@ -4107,7 +4123,7 @@ impl Deck {
 
         // Collect example words by ease proximity (for tooltip display).
         // For each target frequency, find grams whose ease is close to ln(target_freq).
-        let entries = &self.context.language_pack.gram_frequencies.entries;
+        let entries = &self.context.language_pack.sense_frequencies;
         let mut chart_data = Vec::new();
         for &target_freq in &target_frequencies {
             let target_ease = (target_freq as f32).ln();
@@ -4419,12 +4435,9 @@ impl Context {
     fn get_card_frequency(&self, card: &CardIndicator<SpurGram, Spur>) -> Option<Frequency> {
         match card {
             CardIndicator::ListeningGram { gram } => self.language_pack.gram_frequency_total(*gram),
-            CardIndicator::WrittenGram { gram } => self
-                .language_pack
-                .gram_frequencies
-                .entries
-                .get(gram)
-                .copied(),
+            CardIndicator::WrittenGram { gram } => {
+                self.language_pack.sense_frequencies.get(gram).copied()
+            }
             CardIndicator::LetterPronunciation { pattern, position } => {
                 // Look up the actual frequency of this pattern from our calculated data
                 let count = self
@@ -4478,7 +4491,7 @@ impl Context {
                 if let Some(grams) = self.language_pack.heteronym_to_grams.get(heteronym)
                     && let Some(gram) = grams.first()
                     && let Some(gram) = self.language_pack.senses_of(*gram).first()
-                    && let Some(freq) = self.language_pack.gram_frequencies.entries.get(gram)
+                    && let Some(freq) = self.language_pack.sense_frequencies.get(gram)
                 {
                     return Some((*heteronym, *freq));
                 }
@@ -5849,8 +5862,10 @@ mod tests {
         }
         let mut known = deck.clone();
         for indicator in [
-            CardIndicator::WrittenGram { gram },
-            CardIndicator::ListeningGram { gram: gram.gram },
+            CardIndicator::WrittenGram { gram: gram.sense },
+            CardIndicator::ListeningGram {
+                gram: gram.sense.gram,
+            },
         ] {
             known.cards.insert(
                 &known.context,
@@ -5959,8 +5974,7 @@ mod tests {
         let cards: Vec<_> = deck
             .context
             .language_pack
-            .gram_frequencies
-            .entries
+            .sense_frequencies
             .keys()
             .map(|gram| CardIndicator::WrittenGram { gram: *gram })
             .filter(|card| deck.context.is_card_valid(card))
@@ -6687,7 +6701,7 @@ mod tests {
             return;
         }
 
-        let freq_entries = &deck.context.language_pack.gram_frequencies.entries;
+        let freq_entries = &deck.context.language_pack.sense_frequencies;
         let available_easy_single_word_grams = freq_entries
             .iter()
             .filter_map(|(gram, frequency)| {
@@ -7511,7 +7525,7 @@ mod tests {
         );
         println!("  Preview of next cards to add:");
         {
-            let freq_entries = &deck.context.language_pack.gram_frequencies.entries;
+            let freq_entries = &deck.context.language_pack.sense_frequencies;
             let smart_add_cards: Vec<_> = deck
                 .next_unknown_cards(
                     AllowedCards::BannedRequirements(BTreeSet::new()),
@@ -7593,11 +7607,12 @@ mod tests {
                         .resolve(&gram.gram)
                         .resolve(&lp.string_rodeo)
                         .to_display_string(deck.context.course.target_language);
-                    let in_freq = lp.gram_frequencies.entries.contains_key(gram);
+                    let in_freq = lp.sense_frequencies.contains_key(gram);
                     // Listening side
-                    let l_now = deck
-                        .get_comprehensible_listening_grams(false)
-                        .contains(gram);
+                    let l_now = lp.reading_ranks(gram).iter().all(|(reading, _)| {
+                        deck.get_comprehensible_listening_grams(false)
+                            .contains(reading)
+                    });
                     let l_card = deck
                         .cards
                         .get(&CardIndicator::ListeningGram { gram: gram.gram })
@@ -7610,7 +7625,9 @@ mod tests {
                         )
                         .map(|(p, f)| format!("{p:.3} (count={})", f.count));
                     // Written/reading side (this is what translation challenges use)
-                    let w_now = deck.get_comprehensible_written_grams(false).contains(gram);
+                    let w_now = deck
+                        .get_comprehensible_written_grams(false)
+                        .contains_sense(gram);
                     let w_card = deck
                         .cards
                         .get(&CardIndicator::WrittenGram { gram: *gram })

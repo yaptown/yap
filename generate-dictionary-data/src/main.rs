@@ -267,9 +267,7 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
         language_utils::TaggedGram<language_utils::SpurGram>,
     > = FxHashMap::default();
 
-    for (frequency_index, (spur_gram, freq)) in
-        language_pack.gram_frequencies.entries.iter().enumerate()
-    {
+    for (frequency_index, (spur_gram, freq)) in language_pack.sense_frequencies.iter().enumerate() {
         if !language_pack.is_visible(*spur_gram, course.target_language) {
             continue;
         }
@@ -580,7 +578,7 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
         language_utils::TaggedGram<language_utils::SpurGram>,
         GramInfo,
     > = FxHashMap::default();
-    for (spur_gram, _freq) in language_pack.gram_frequencies.entries.iter() {
+    for (spur_gram, _freq) in language_pack.sense_frequencies.iter() {
         let gram = gram_rodeo.resolve(&spur_gram.gram);
         let resolved = gram.resolve(string_rodeo);
         let dt = resolved.to_display_string(target_language);

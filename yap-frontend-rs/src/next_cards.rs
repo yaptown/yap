@@ -26,6 +26,52 @@ fn partial_sort_desc<T: Ord>(values: &mut [(NotNan<f32>, T)], n: usize) {
     }
 }
 
+/// Best reading score per sense, with a unique-sense top-N stopping bound.
+struct RankedSenses {
+    values: FxHashMap<TaggedGram<SpurGram>, NotNan<f32>>,
+    top: BTreeSet<(NotNan<f32>, TaggedGram<SpurGram>)>,
+    limit: usize,
+}
+
+impl RankedSenses {
+    fn new(limit: usize) -> Self {
+        Self {
+            values: FxHashMap::default(),
+            top: BTreeSet::new(),
+            limit,
+        }
+    }
+
+    fn saturated(&self, upper_bound: NotNan<f32>) -> bool {
+        self.top.len() == self.limit
+            && self
+                .top
+                .first()
+                .is_some_and(|(score, _)| upper_bound < *score)
+    }
+
+    fn offer(&mut self, sense: TaggedGram<SpurGram>, score: NotNan<f32>) {
+        if let Some(&previous) = self.values.get(&sense) {
+            if previous >= score {
+                return;
+            }
+            self.top.remove(&(previous, sense));
+        }
+        self.values.insert(sense, score);
+        self.top.insert((score, sense));
+        if self.top.len() > self.limit {
+            self.top.pop_first();
+        }
+    }
+
+    fn into_values(self) -> Vec<(NotNan<f32>, TaggedGram<SpurGram>)> {
+        self.values
+            .into_iter()
+            .map(|(sense, score)| (score, sense))
+            .collect()
+    }
+}
+
 /// Returns the single word from a gram if it has exactly one Tok atom.
 /// Returns None for multi-word grams or empty grams.
 fn gram_single_word(gram: &grm<Spur>) -> Option<&Word<Spur>> {
@@ -80,7 +126,7 @@ impl NextCardsIterator {
     ) -> Self {
         // Buffer beyond the requested limit to account for cards split across types
         // (text vs listening vs pronunciation) and the iterator's balancing logic.
-        let early_term_n = (limit * 3).max(100);
+        let sorted_prefix_len = (limit * 3).max(100);
 
         let comprehensible_written = deck.get_comprehensible_written_grams(true);
         let cards = (*deck.cards).clone();
@@ -130,111 +176,69 @@ impl NextCardsIterator {
                 .and_modify(|count| *count += 1);
         }
 
-        // Single fused pass over gram_source.entries that fills three top-N
-        // value rankings of unadded WrittenGrams:
-        //   - text_values:                no constraint (post-onboarding pool)
-        //   - single_word_values:         single-word grams        (cards 5..20)
-        //   - easy_single_word_values:    easy single-word grams   (cards 0..5)
-        //
-        // Per-iteration we compute the regression-based value once, then update
-        // each enabled heap. The single-word predicate is computed once per gram
-        // when either of its dependent heaps is still active.
-        //
-        // gram_source.entries is sorted by count descending, so freq_score is also
-        // descending. Since value = (1 - probability) * freq_score ≤ freq_score,
-        // once freq_score drops below a heap's smallest top-N value, no future gram
-        // can enter that heap. The loop terminates only when *every* enabled heap
-        // is in that state.
+        // Score each reading before collapsing to the sense-keyed card. A known
+        // easy reading must not hide an unknown harder reading of the same sense.
+        // Deduplicate before top-N selection so readings cannot crowd out cards.
         let need_single_word = added_count < 20;
         let need_easy_single_word = added_count < 5 && !context.course.teaches_new_writing_system();
-
-        let mut text_values: Vec<(NotNan<f32>, TaggedGram<SpurGram>)> = Vec::new();
-        let mut text_top_n: std::collections::BinaryHeap<std::cmp::Reverse<NotNan<f32>>> =
-            std::collections::BinaryHeap::new();
-        let mut single_word_values: Vec<(NotNan<f32>, TaggedGram<SpurGram>)> = Vec::new();
-        let mut single_top_n: std::collections::BinaryHeap<std::cmp::Reverse<NotNan<f32>>> =
-            std::collections::BinaryHeap::new();
-        let mut easy_single_word_values: Vec<(NotNan<f32>, TaggedGram<SpurGram>)> = Vec::new();
-        let mut easy_top_n: std::collections::BinaryHeap<std::cmp::Reverse<NotNan<f32>>> =
-            std::collections::BinaryHeap::new();
-
-        // Inline helper to push a candidate into a (Vec, top-N heap) pair, maintaining
-        // the heap as a min-heap of size at most early_term_n.
-        let push_top_n =
-            |values: &mut Vec<(NotNan<f32>, TaggedGram<SpurGram>)>,
-             top_n: &mut std::collections::BinaryHeap<std::cmp::Reverse<NotNan<f32>>>,
-             gram: TaggedGram<SpurGram>,
-             value: NotNan<f32>| {
-                values.push((value, gram));
-                if top_n.len() < early_term_n {
-                    top_n.push(std::cmp::Reverse(value));
-                } else if top_n.peek().is_some_and(|t| value > t.0) {
-                    top_n.pop();
-                    top_n.push(std::cmp::Reverse(value));
-                }
-            };
-
-        for (gram, frequency) in gram_source.entries.iter() {
-            let freq_score = NotNan::new(frequency.frequency_score()).unwrap_or_default();
-
-            // A heap is "saturated" when no future gram can enter it.
-            // Disabled heaps are vacuously saturated.
-            let text_saturated = text_top_n.len() >= early_term_n
-                && text_top_n.peek().is_some_and(|t| freq_score < t.0);
-            let single_saturated = !need_single_word
-                || (single_top_n.len() >= early_term_n
-                    && single_top_n.peek().is_some_and(|t| freq_score < t.0));
-            let easy_saturated = !need_easy_single_word
-                || (easy_top_n.len() >= early_term_n
-                    && easy_top_n.peek().is_some_and(|t| freq_score < t.0));
-
-            if text_saturated && single_saturated && easy_saturated {
+        let mut text = RankedSenses::new(sorted_prefix_len);
+        let mut single = RankedSenses::new(sorted_prefix_len);
+        let mut easy = RankedSenses::new(sorted_prefix_len);
+        for (reading, frequency) in gram_source.entries.iter() {
+            // Lists descend by count. A reading's value cannot exceed ln(count),
+            // so stop only after every active pool has enough UNIQUE senses above
+            // every remaining reading's upper bound.
+            let upper_bound = NotNan::new(frequency.frequency_score()).unwrap_or_default();
+            let text_done = text.saturated(upper_bound);
+            let single_done = !need_single_word || single.saturated(upper_bound);
+            let easy_done = !need_easy_single_word || easy.saturated(upper_bound);
+            if text_done && single_done && easy_done {
                 break;
             }
-
-            let card = CardIndicator::WrittenGram { gram: *gram };
+            let card = CardIndicator::WrittenGram {
+                gram: reading.sense,
+            };
             if matches!(cards.get(&card), Some(CardData::Added { .. })) {
                 continue;
             }
-
             let Some(value) =
                 context.card_value_with_frequency(&card, cards.get(&card), regressions, *frequency)
             else {
                 continue;
             };
-
-            if !text_saturated {
-                push_top_n(&mut text_values, &mut text_top_n, *gram, value);
+            if !text_done {
+                text.offer(reading.sense, value);
             }
-
-            // Compute the single-word predicate at most once per gram, and only
-            // when at least one constraint heap still cares.
-            let single_active = need_single_word && !single_saturated;
-            let easy_active = need_easy_single_word && !easy_saturated;
-            if single_active || easy_active {
-                let is_single_word =
-                    gram_single_word(context.language_pack.gram_rodeo.resolve(&gram.gram))
-                        .is_some();
-                if is_single_word {
-                    if single_active {
-                        push_top_n(&mut single_word_values, &mut single_top_n, *gram, value);
-                    }
-                    if easy_active && frequency.easy {
-                        push_top_n(&mut easy_single_word_values, &mut easy_top_n, *gram, value);
-                    }
+            if (!single_done || !easy_done)
+                && gram_single_word(
+                    context
+                        .language_pack
+                        .gram_rodeo
+                        .resolve(&reading.sense.gram),
+                )
+                .is_some()
+            {
+                if !single_done {
+                    single.offer(reading.sense, value);
+                }
+                if !easy_done && frequency.easy {
+                    easy.offer(reading.sense, value);
                 }
             }
         }
+        let mut text_values = text.into_values();
+        let mut single_word_values = single.into_values();
+        let mut easy_single_word_values = easy.into_values();
 
-        partial_sort_desc(&mut text_values, early_term_n);
+        partial_sort_desc(&mut text_values, sorted_prefix_len);
         let single_word_grams = if need_single_word {
-            partial_sort_desc(&mut single_word_values, early_term_n);
+            partial_sort_desc(&mut single_word_values, sorted_prefix_len);
             Some(single_word_values)
         } else {
             None
         };
         let easy_single_word_grams = if need_easy_single_word {
-            partial_sort_desc(&mut easy_single_word_values, early_term_n);
+            partial_sort_desc(&mut easy_single_word_values, sorted_prefix_len);
             Some(easy_single_word_values)
         } else {
             None
@@ -250,10 +254,13 @@ impl NextCardsIterator {
             .entries
             .iter()
             .filter_map(|(gram, _)| {
-                if !comprehensible_written.contains(gram) || !listening_seen.insert(gram.gram) {
+                if !comprehensible_written.contains(gram) || !listening_seen.insert(gram.sense.gram)
+                {
                     return None;
                 }
-                let card = CardIndicator::ListeningGram { gram: gram.gram };
+                let card = CardIndicator::ListeningGram {
+                    gram: gram.sense.gram,
+                };
                 if matches!(cards.get(&card), Some(CardData::Added { .. })) {
                     return None;
                 }
@@ -261,12 +268,14 @@ impl NextCardsIterator {
                     &card,
                     cards.get(&card),
                     regressions,
-                    context.language_pack.gram_frequency_total(gram.gram)?,
+                    context
+                        .language_pack
+                        .gram_frequency_total(gram.sense.gram)?,
                 )?;
-                Some((value, gram.gram))
+                Some((value, gram.sense.gram))
             })
             .collect();
-        partial_sort_desc(&mut listening_values, early_term_n);
+        partial_sort_desc(&mut listening_values, sorted_prefix_len);
 
         // Precompute pronunciation card values
         let mut pronunciation_values: Vec<(NotNan<f32>, CardIndicator<SpurGram, Spur>)> = context
@@ -482,6 +491,57 @@ impl Iterator for NextCardsIterator {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn unique_sense_bound_matches_full_scan_after_reading_improvements() {
+        use super::{RankedSenses, partial_sort_desc};
+        use language_utils::{SpurGram, TaggedGram};
+        use lasso::Key;
+        use ordered_float::NotNan;
+        let candidates = [
+            (0, 100., 1.),
+            (0, 99., 90.),
+            (0, 98., 2.),
+            (0, 97., 89.),
+            (1, 96., 80.),
+            (0, 95., 94.),
+            (2, 94., 70.),
+            (3, 93., 90.),
+            (1, 92., 91.),
+            (4, 89., 85.),
+            (5, 88., 88.),
+            (6, 80., 80.),
+        ];
+        let mut bounded = RankedSenses::new(3);
+        let mut full = RankedSenses::new(3);
+        let mut stopped = false;
+        for (index, (id, upper, score)) in candidates.into_iter().enumerate() {
+            let sense = TaggedGram {
+                gram: SpurGram::try_from_usize(id).unwrap(),
+                sense: None,
+            };
+            let score = NotNan::new(score).unwrap();
+            full.offer(sense, score);
+            if !stopped {
+                stopped = bounded.saturated(NotNan::new(upper).unwrap());
+                if !stopped {
+                    bounded.offer(sense, score);
+                }
+            }
+            if index == 3 {
+                assert!(
+                    !bounded.saturated(NotNan::new(0.).unwrap()),
+                    "four readings are still only one sense"
+                );
+            }
+        }
+        assert!(stopped, "exercise the early-stop path");
+        let mut bounded = bounded.into_values();
+        let mut full = full.into_values();
+        assert!(bounded.len() < full.len());
+        partial_sort_desc(&mut bounded, 3);
+        partial_sort_desc(&mut full, 3);
+        assert_eq!(&bounded[..3], &full[..3]);
+    }
     use std::collections::BTreeSet;
 
     use super::{AllowedCards, NextCardsIterator, gram_single_word};

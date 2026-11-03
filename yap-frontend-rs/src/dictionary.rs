@@ -38,8 +38,7 @@ impl Deck {
 
         // Preserve the primary index even when only a later sense matches.
         let mut words = FxHashMap::default();
-        for (frequency_index, (spur_gram, _)) in
-            language_pack.gram_frequencies.entries.iter().enumerate()
+        for (frequency_index, (spur_gram, _)) in language_pack.sense_frequencies.iter().enumerate()
         {
             let Some(gram_def) = language_pack.gram_definitions.get(spur_gram) else {
                 continue;
@@ -107,20 +106,14 @@ impl Deck {
     pub fn gram_dictionary_entry(&self, frequency_index: usize) -> Option<DictionaryWord> {
         let language_pack = &self.context.language_pack;
         let target_language = self.context.course.target_language;
-        let (spur_gram, _) = language_pack
-            .gram_frequencies
-            .entries
-            .get_index(frequency_index)?;
+        let (spur_gram, _) = language_pack.sense_frequencies.get_index(frequency_index)?;
         let mut senses: Vec<_> = language_pack
             .visible_senses(spur_gram.gram, target_language)
             .iter()
             .filter_map(|sense_gram| {
                 let definition =
                     definition_view(language_pack.gram_definitions.get(sense_gram)?.clone());
-                let frequency_index = language_pack
-                    .gram_frequencies
-                    .entries
-                    .get_index_of(sense_gram)?;
+                let frequency_index = language_pack.sense_frequencies.get_index_of(sense_gram)?;
                 Some(DictionarySense {
                     frequency_index,
                     is_in_deck: self.sense_in_deck(*sense_gram),
@@ -140,8 +133,7 @@ impl Deck {
         let resolved_gram = language_pack.resolve_gram(&spur_gram.gram);
         let display_text = resolved_gram.to_display_string(target_language);
         let primary_gram = *language_pack
-            .gram_frequencies
-            .entries
+            .sense_frequencies
             .get_index(primary.frequency_index)?
             .0;
         let ruby = crate::ruby::word_ruby(
@@ -165,8 +157,7 @@ impl Deck {
     pub fn get_gram_dictionary_count(&self) -> usize {
         let language_pack = &self.context.language_pack;
         language_pack
-            .gram_frequencies
-            .entries
+            .sense_frequencies
             .iter()
             .filter(|(spur_gram, _)| {
                 language_pack.gram_definitions.contains_key(spur_gram)
@@ -180,10 +171,7 @@ impl Deck {
     /// Create a DeckEvent for adding a gram/phrase by its frequency index
     pub fn add_gram_by_frequency_index(&self, frequency_index: usize) -> Option<DeckEvent> {
         let language_pack = &self.context.language_pack;
-        let (spur_gram, _freq) = language_pack
-            .gram_frequencies
-            .entries
-            .get_index(frequency_index)?;
+        let (spur_gram, _freq) = language_pack.sense_frequencies.get_index(frequency_index)?;
 
         let card = CardIndicator::WrittenGram { gram: *spur_gram };
         let resolved_card = card.resolve(&language_pack.string_rodeo, &language_pack.gram_rodeo);
@@ -316,9 +304,10 @@ mod tests {
     use crate::{Context, DeckState};
     use language_utils::{Atom, Gram, WordType};
     use language_utils::{
-        ConsolidatedLanguageData, Course, DictionaryEntry, GramFrequencyEntry, GramFrequencyList,
-        GramVocabEntry, Heteronym, PartOfSpeech, PronunciationData, TaggedGram, TargetToNativeWord,
-        Word, language_pack::LanguagePack,
+        ConsolidatedLanguageData, Course, DictionaryEntry, GramFrequencyList, GramVocabEntry,
+        Heteronym, PartOfSpeech, PronunciationData,
+        ReadingGramFrequencyEntry as GramFrequencyEntry, TaggedGram, TargetToNativeWord, Word,
+        language_pack::LanguagePack,
     };
     use std::{collections::BTreeMap, num::NonZeroU32, sync::Arc};
 
@@ -387,7 +376,9 @@ mod tests {
                             count: 10,
                             direct_count: 10,
                             disambiguation_key: 0,
-                            gram: tagged(word, *sense),
+                            gram: language_utils::ReadingTaggedGram::without_reading(tagged(
+                                word, *sense,
+                            )),
                         })
                         .collect(),
                     total_count: 70,
@@ -497,7 +488,7 @@ mod tests {
     fn redundancy_filters_search_and_credits_hidden_cards() {
         let mut deck = deck();
         let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
-        let bare = pack.gram_frequencies.entries.get_index(1).unwrap().0.gram;
+        let bare = pack.sense_frequencies.get_index(1).unwrap().0.gram;
         pack.sentences.redundant_senses.insert(
             pack.sentences.prefixed_text[&bare],
             vec![
@@ -530,8 +521,8 @@ mod tests {
         let word = deck.gram_dictionary_entry(1).unwrap();
         assert!(word.senses[0].is_in_deck);
         let pack = &deck.context.language_pack;
-        let shown = *pack.gram_frequencies.entries.get_index(1).unwrap().0;
-        let hidden = *pack.gram_frequencies.entries.get_index(3).unwrap().0;
+        let shown = *pack.sense_frequencies.get_index(1).unwrap().0;
+        let hidden = *pack.sense_frequencies.get_index(3).unwrap().0;
         assert!(!matches!(
             deck.cards.get(&CardIndicator::WrittenGram { gram: shown }),
             Some(CardData::Added { .. })
@@ -568,9 +559,10 @@ mod translation_sense_tests {
     use crate::{CardData, Context, DeckEvent, DeckState};
     use language_utils::{Atom, Gram, WordType};
     use language_utils::{
-        ConsolidatedLanguageData, Course, DictionaryEntry, GramFrequencyEntry, GramFrequencyList,
-        GramVocabEntry, Heteronym, MultiwordTermMatch, OtherWord, OtherWordType, PartOfSpeech,
-        SentenceGram, SentenceGrams, TaggedGram, TargetToNativeWord, Word,
+        ConsolidatedLanguageData, Course, DictionaryEntry, GramFrequencyList, GramVocabEntry,
+        Heteronym, MultiwordTermMatch, OtherWord, OtherWordType, PartOfSpeech,
+        ReadingGramFrequencyEntry as GramFrequencyEntry, SentenceGram, SentenceGrams, TaggedGram,
+        TargetToNativeWord, Word,
         autograde::{LiteralGrades, Remembered},
         language_pack::LanguagePack,
     };
@@ -708,7 +700,7 @@ mod translation_sense_tests {
                 entries: entries
                     .iter()
                     .map(|g| GramFrequencyEntry {
-                        gram: g.clone(),
+                        gram: language_utils::ReadingTaggedGram::without_reading(g.clone()),
                         count: if *g == gram("bank", 1) { 30 } else { 10 },
                         direct_count: if *g == gram("bank", 1) { 30 } else { 10 },
                         disambiguation_key: 0,
@@ -783,8 +775,7 @@ mod translation_sense_tests {
         let index = deck
             .context
             .language_pack
-            .gram_frequencies
-            .entries
+            .sense_frequencies
             .get_index_of(&entry)
             .unwrap();
         let event = deck.add_gram_by_frequency_index(index).unwrap();

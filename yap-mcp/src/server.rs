@@ -611,8 +611,7 @@ const DICTIONARY_BASE_URL: &str = "https://yap.town/d";
 
 fn dictionary_sense_gram(pack: &LanguagePack, index: usize) -> TaggedGram<Gram<String>> {
     let (spur, _) = pack
-        .gram_frequencies
-        .entries
+        .sense_frequencies
         .get_index(index)
         .expect("dictionary senses come from this pack's frequency index");
     spur.map(|gram| pack.resolve_gram(&gram))
@@ -2083,8 +2082,7 @@ impl YapMcp {
 
         let interned: TaggedGram<SpurGram> = *state
             .pack()
-            .gram_frequencies
-            .entries
+            .sense_frequencies
             .get_index(entry.frequency_index())
             .expect("index valid: entry was just built from it")
             .0;

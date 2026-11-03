@@ -153,10 +153,10 @@ mod tests {
             entries: (0..250)
                 .map(|i| {
                     (
-                        TaggedGram {
+                        language_utils::ReadingTaggedGram::without_reading(TaggedGram {
                             gram: SpurGram::try_from_usize(i).unwrap(),
                             sense: None,
-                        },
+                        }),
                         Frequency {
                             count: 1,
                             direct_count: 1,

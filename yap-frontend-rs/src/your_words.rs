@@ -68,20 +68,23 @@ impl Deck {
     pub(crate) fn assumed_known_senses(&self) -> Vec<usize> {
         let pack = &self.context.language_pack;
         let language = self.context.course.target_language;
-        let mut senses: Vec<usize> = self
-            .get_comprehensible_written_grams(false)
-            .iter()
+        let known = self.get_comprehensible_written_grams(false);
+        let mut senses: Vec<usize> = pack
+            .sense_frequencies
+            .keys()
+            .copied()
             .filter(|sense| {
-                pack.gram_definitions.contains_key(sense)
+                known.contains_sense(sense)
+                    && pack.gram_definitions.contains_key(sense)
                     && pack.is_visible(*sense, language)
                     && !self.sense_in_deck(*sense)
             })
-            .filter_map(|sense| pack.gram_frequencies.entries.get_index_of(&sense))
+            .filter_map(|sense| pack.sense_frequencies.get_index_of(&sense))
             .collect();
         senses.sort_unstable();
         let mut spellings = rustc_hash::FxHashSet::default();
         senses.retain(|&index| {
-            let (sense, _) = pack.gram_frequencies.entries.get_index(index).unwrap();
+            let (sense, _) = pack.sense_frequencies.get_index(index).unwrap();
             spellings.insert(pack.resolve_gram(&sense.gram).to_display_string(language))
         });
         senses
@@ -90,7 +93,7 @@ impl Deck {
     fn assumed_known_word(&self, frequency_index: usize) -> Option<AssumedKnownWord> {
         let pack = &self.context.language_pack;
         let language = self.context.course.target_language;
-        let (sense, _) = pack.gram_frequencies.entries.get_index(frequency_index)?;
+        let (sense, _) = pack.sense_frequencies.get_index(frequency_index)?;
         let definition = definition_view(pack.gram_definitions.get(sense)?.clone());
         let display_text = pack.resolve_gram(&sense.gram).to_display_string(language);
         let rank = yap_i18n::format_count(frequency_index as u32 + 1);

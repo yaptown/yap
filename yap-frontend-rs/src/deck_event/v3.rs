@@ -319,9 +319,9 @@ mod tests {
     use super::*;
     use language_utils::language_pack::LanguagePack;
     use language_utils::{
-        Atom, ConsolidatedLanguageData, Course, GramFrequencyEntry, GramFrequencyList,
-        GramVocabEntry, Heteronym, PartOfSpeech, SentenceGram, SentenceGrams, TaggedGram, Word,
-        WordType,
+        Atom, ConsolidatedLanguageData, Course, GramFrequencyList, GramVocabEntry, Heteronym,
+        PartOfSpeech, ReadingGramFrequencyEntry as GramFrequencyEntry, SentenceGram, SentenceGrams,
+        TaggedGram, Word, WordType,
     };
     use std::{num::NonZeroU32, sync::Arc};
 
@@ -353,13 +353,13 @@ mod tests {
                         count: 20,
                         direct_count: 20,
                         disambiguation_key: 0,
-                        gram: tagged(2),
+                        gram: language_utils::ReadingTaggedGram::without_reading(tagged(2)),
                     },
                     GramFrequencyEntry {
                         count: 10,
                         direct_count: 10,
                         disambiguation_key: 0,
-                        gram: tagged(1),
+                        gram: language_utils::ReadingTaggedGram::without_reading(tagged(1)),
                     },
                 ],
                 total_count: 30,

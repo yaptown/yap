@@ -4,7 +4,7 @@ use std::{collections::BTreeSet, hash::Hash};
 
 use isotonic::SmoothRegression;
 use language_utils::{
-    SpurGram, TaggedGram,
+    SpurGram, SpurReadingGram, TaggedGram,
     language_pack::{EaseOrder, LanguagePack},
 };
 use rustc_hash::FxHashMap;
@@ -112,7 +112,7 @@ impl CachedComprehensibleGrams {
                 threshold_rank: self.written,
                 cards: cards.written_knowledge(),
             },
-            order: &pack.written_ease_order,
+            pack,
             planned,
         }
     }
@@ -138,23 +138,62 @@ impl CachedComprehensibleGrams {
 #[derive(Clone, Copy)]
 pub struct WrittenGrams<'a> {
     cache: ComprehensibleGrams<'a, TaggedGram<SpurGram>>,
-    order: &'a EaseOrder<TaggedGram<SpurGram>>,
+    pack: &'a LanguagePack,
     planned: bool,
 }
 
 impl WrittenGrams<'_> {
-    pub fn contains(&self, gram: &TaggedGram<SpurGram>) -> bool {
-        self.cache.contains(self.order, gram, self.planned)
+    pub fn contains(&self, gram: &SpurReadingGram) -> bool {
+        let Some(rank) = self.pack.written_ease_order.rank(gram) else {
+            return false;
+        };
+        self.cache.cards.get(&gram.sense).map_or_else(
+            || {
+                self.cache
+                    .threshold_rank
+                    .is_some_and(|threshold| rank < threshold)
+            },
+            |knowledge| knowledge.contains(self.planned),
+        )
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = TaggedGram<SpurGram>> + '_ {
-        self.cache.iter(self.order, self.planned)
+    /// Sense-only displays use the easiest reading; sentence knowledge stays exact.
+    pub fn contains_sense(&self, sense: &TaggedGram<SpurGram>) -> bool {
+        self.pack
+            .reading_ranks(sense)
+            .first()
+            .is_some_and(|(reading, _)| self.contains(reading))
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = SpurReadingGram> + '_ {
+        self.cache
+            .threshold_rank
+            .into_iter()
+            .flat_map(|rank| {
+                self.pack
+                    .written_ease_order
+                    .iter_from(0)
+                    .take(rank as usize)
+            })
+            .filter(|reading| !self.cache.cards.contains_key(&reading.sense))
+            .chain(
+                self.cache
+                    .cards
+                    .iter()
+                    .filter(|(_, knowledge)| knowledge.contains(self.planned))
+                    .flat_map(|(sense, _)| {
+                        self.pack
+                            .reading_ranks(sense)
+                            .iter()
+                            .map(|(reading, _)| *reading)
+                    }),
+            )
     }
 
     /// The same membership as a bitset over ease ranks, for loops that test
     /// many grams against one snapshot: a bit test instead of two hash lookups.
     pub fn rank_bitset(&self) -> RankBitset {
-        let mut bits = vec![0u64; self.order.len().div_ceil(64)];
+        let mut bits = vec![0u64; self.pack.written_ease_order.len().div_ceil(64)];
         let mut set = |rank: u32, known: bool| {
             let (word, bit) = (rank as usize / 64, rank % 64);
             if known {
@@ -169,7 +208,7 @@ impl WrittenGrams<'_> {
             }
         }
         for (key, knowledge) in self.cache.cards {
-            if let Some(rank) = self.order.rank(key) {
+            for &(_, rank) in self.pack.reading_ranks(key) {
                 set(rank, knowledge.contains(self.planned));
             }
         }
@@ -195,37 +234,45 @@ pub(crate) struct ListeningGrams<'a> {
 }
 
 impl ListeningGrams<'_> {
-    pub(crate) fn contains(&self, gram: &TaggedGram<SpurGram>) -> bool {
+    pub(crate) fn contains(&self, gram: &SpurReadingGram) -> bool {
         self.pack.written_ease_order.rank(gram).is_some()
-            && self
-                .cache
-                .contains(&self.pack.listening_ease_order, &gram.gram, self.planned)
+            && self.cache.contains(
+                &self.pack.listening_ease_order,
+                &gram.sense.gram,
+                self.planned,
+            )
     }
 
-    pub(crate) fn iter(&self) -> impl Iterator<Item = TaggedGram<SpurGram>> + '_ {
+    pub(crate) fn iter(&self) -> impl Iterator<Item = SpurReadingGram> + '_ {
         self.cache
             .iter(&self.pack.listening_ease_order, self.planned)
-            .flat_map(|gram| self.pack.senses_of(gram).iter().copied())
+            .flat_map(|gram| self.pack.senses_of(gram))
+            .flat_map(|sense| {
+                self.pack
+                    .reading_ranks(sense)
+                    .iter()
+                    .map(|(reading, _)| *reading)
+            })
     }
 }
 
 /// Membership-only consumers work with borrowed views or owned projections.
 pub(crate) trait GramMembership: Copy {
-    fn contains(self, gram: &TaggedGram<SpurGram>) -> bool;
+    fn contains(self, gram: &SpurReadingGram) -> bool;
 }
 
 impl GramMembership for WrittenGrams<'_> {
-    fn contains(self, gram: &TaggedGram<SpurGram>) -> bool {
+    fn contains(self, gram: &SpurReadingGram) -> bool {
         WrittenGrams::contains(&self, gram)
     }
 }
 impl GramMembership for ListeningGrams<'_> {
-    fn contains(self, gram: &TaggedGram<SpurGram>) -> bool {
+    fn contains(self, gram: &SpurReadingGram) -> bool {
         ListeningGrams::contains(&self, gram)
     }
 }
-impl GramMembership for &BTreeSet<TaggedGram<SpurGram>> {
-    fn contains(self, gram: &TaggedGram<SpurGram>) -> bool {
+impl GramMembership for &BTreeSet<SpurReadingGram> {
+    fn contains(self, gram: &SpurReadingGram) -> bool {
         BTreeSet::contains(self, gram)
     }
 }

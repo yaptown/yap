@@ -71,9 +71,7 @@ impl Cards {
         let knowledge = card.map(CardKnowledge::from);
         let pack = &context.language_pack;
         match indicator {
-            CardIndicator::WrittenGram { gram }
-                if pack.written_ease_order.rank(&gram).is_some() =>
-            {
+            CardIndicator::WrittenGram { gram } if !pack.reading_ranks(&gram).is_empty() => {
                 if let Some(knowledge) = knowledge {
                     self.written_knowledge.insert(gram, knowledge);
                 } else {
@@ -156,9 +154,7 @@ mod tests {
                 CardKnowledge::Excluded
             };
             match indicator {
-                CardIndicator::WrittenGram { gram }
-                    if pack.written_ease_order.rank(&gram).is_some() =>
-                {
+                CardIndicator::WrittenGram { gram } if !pack.reading_ranks(&gram).is_empty() => {
                     written_knowledge.insert(gram, knowledge);
                 }
                 CardIndicator::ListeningGram { gram }
@@ -262,16 +258,20 @@ mod tests {
                 );
                 match indicator {
                     CardIndicator::WrittenGram { gram } => {
-                        assert_eq!(written.contains(&gram), expected);
-                        if let Some(rank) = pack.written_ease_order.rank(&gram) {
+                        for &(reading, rank) in pack.reading_ranks(&gram) {
+                            assert_eq!(written.contains(&reading), expected);
                             assert_eq!(bits.contains(rank), expected);
                         }
                     }
                     CardIndicator::ListeningGram { gram } => {
-                        for sense in pack.senses_of(gram) {
+                        for (reading, _) in pack
+                            .senses_of(gram)
+                            .iter()
+                            .flat_map(|sense| pack.reading_ranks(sense))
+                        {
                             assert_eq!(
                                 deck.get_comprehensible_listening_grams(planned)
-                                    .contains(sense),
+                                    .contains(reading),
                                 expected
                             );
                         }
@@ -327,8 +327,7 @@ mod tests {
         let grams: Vec<_> = deck
             .context
             .language_pack
-            .gram_frequencies
-            .entries
+            .sense_frequencies
             .iter()
             .filter(|(_, f)| !f.exclude_from_regression())
             .map(|(gram, _)| *gram)

@@ -369,8 +369,7 @@ impl CardIndicator<String> {
                 // multi-word grams. Threshold of 100 filters these out.
                 let freq = context
                     .language_pack
-                    .gram_frequencies
-                    .entries
+                    .sense_frequencies
                     .get(context.language_pack.senses_of(*gram_spur).first()?)?;
                 if freq.count < 100 {
                     return None;

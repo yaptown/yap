@@ -5,7 +5,8 @@ use crate::{
     GramDefinition, Heteronym, HomophonePractice, HomophoneWordPair, Lexeme, Literal, MorphemeInfo,
     MorphemeSegment, MovieMetadata, MultiwordTermMatch, PartOfSpeech, PatternPosition,
     PronunciationClip, PronunciationData, PronunciationGuide, ProperNounDefinition, SentenceGram,
-    SentenceGrams, SentenceSource, SpurGram, TaggedGram, VoiceActor, WordType, grm,
+    SentenceGrams, SentenceSource, SpurGram, SpurReadingGram, TaggedGram, VoiceActor, WordType,
+    grm,
 };
 use lasso::Spur;
 use rustc_hash::FxHashMap;
@@ -69,9 +70,7 @@ impl<K: Copy + Eq + Hash + Ord> EaseOrder<K> {
     }
 }
 
-fn ease_orders(
-    frequencies: &FrequencyList,
-) -> (EaseOrder<TaggedGram<SpurGram>>, EaseOrder<SpurGram>) {
+fn ease_orders(frequencies: &FrequencyList) -> (EaseOrder<SpurReadingGram>, EaseOrder<SpurGram>) {
     let written = EaseOrder::new(
         frequencies
             .entries
@@ -81,7 +80,7 @@ fn ease_orders(
     let mut listening: FxHashMap<SpurGram, f32> = FxHashMap::default();
     for (key, frequency) in frequencies.entries.iter() {
         listening
-            .entry(key.gram)
+            .entry(key.sense.gram)
             .and_modify(|ease| *ease = ease.max(frequency.ease))
             .or_insert(frequency.ease);
     }
@@ -91,9 +90,43 @@ fn ease_orders(
 /// A frequency list with its total count (interned version for the language pack).
 #[derive(Clone, Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct FrequencyList {
-    pub entries: IndexMap<TaggedGram<SpurGram>, Frequency>,
+    pub entries: IndexMap<SpurReadingGram, Frequency>,
     /// Total gram count from unfiltered data (for accurate percentage calculations)
     pub total_count: u64,
+}
+
+impl FrequencyList {
+    fn new(entries: IndexMap<SpurReadingGram, Frequency>, total_count: u64) -> Self {
+        Self {
+            entries,
+            total_count,
+        }
+    }
+
+    fn sense_entries(&self) -> IndexMap<TaggedGram<SpurGram>, Frequency> {
+        let mut senses: IndexMap<TaggedGram<SpurGram>, Frequency> = IndexMap::new();
+        for (key, frequency) in self.entries.iter() {
+            senses
+                .entry(key.sense)
+                .and_modify(|total| {
+                    total.count += frequency.count;
+                    total.direct_count += frequency.direct_count;
+                    total.ease = total.ease.max(frequency.ease);
+                })
+                .or_insert(*frequency);
+        }
+        let mut senses: Vec<_> = senses
+            .iter()
+            .map(|(key, frequency)| (*key, *frequency))
+            .collect();
+        // Keep the canonical list's order for ties, including dictionary indices.
+        senses.sort_by_key(|(_, frequency)| std::cmp::Reverse(frequency.count));
+        let mut sense_entries = IndexMap::new();
+        for (key, frequency) in senses {
+            sense_entries.insert(key, frequency);
+        }
+        sense_entries
+    }
 }
 
 /// The assembled runtime pack. Never serialized itself — the on-disk/wire
@@ -120,7 +153,7 @@ impl LanguagePack {
         let mut frequencies = self
             .senses_of(gram)
             .iter()
-            .filter_map(|entry| self.gram_frequencies.entries.get(entry));
+            .filter_map(|entry| self.sense_frequencies.get(entry));
         let mut total = *frequencies.next()?;
         for frequency in frequencies {
             total.count += frequency.count;
@@ -138,8 +171,7 @@ impl LanguagePack {
             gram,
             sense: entry.sense,
         };
-        self.gram_frequencies
-            .entries
+        self.sense_frequencies
             .contains_key(&requested)
             .then_some(requested)
             .or_else(|| self.senses_of(gram).first().copied())
@@ -153,6 +185,13 @@ impl LanguagePack {
     ) -> Option<crate::features::WordPrefix> {
         let definition = self.gram_definitions.get(self.senses_of(gram).first()?)?;
         crate::compute_word_prefix(&self.resolve_gram(&gram), definition, language)
+    }
+
+    pub fn reading_ranks(&self, sense: &TaggedGram<SpurGram>) -> &[(SpurReadingGram, u32)] {
+        self.reading_ranks
+            .get(sense)
+            .map(Vec::as_slice)
+            .unwrap_or_default()
     }
 
     pub fn senses_of(&self, gram: SpurGram) -> &[TaggedGram<SpurGram>] {
@@ -188,7 +227,7 @@ impl LanguagePack {
         // A redundancy set may span pages (est and il est); never hide a page.
         set.into_iter()
             .filter(|member| self.resolve_gram(&member.gram).to_display_string(language) == display)
-            .min_by_key(|member| self.gram_frequencies.entries.get_index_of(member))
+            .min_by_key(|member| self.sense_frequencies.get_index_of(member))
             == Some(sense)
     }
 
@@ -230,7 +269,7 @@ impl LanguagePack {
     /// grams than the course actually teaches; the master frequency list is
     /// the canonical set.
     pub fn is_course_gram(&self, gram: &TaggedGram<SpurGram>) -> bool {
-        self.gram_frequencies.entries.contains_key(gram)
+        self.sense_frequencies.contains_key(gram)
     }
 
     /// Resolve an interned gram back to its owned string form.
@@ -245,7 +284,7 @@ impl LanguagePack {
     pub fn comprehensible_sentences(
         &self,
         required_gram: Option<&TaggedGram<SpurGram>>,
-        is_comprehensible: impl Fn(&TaggedGram<SpurGram>) -> bool,
+        is_comprehensible: impl Fn(&SpurReadingGram) -> bool,
     ) -> Vec<SentenceSpur> {
         // Search through all sentences - if we have a required gram, only look at sentences containing it
         let candidate_sentences: &[SentenceSpur] = if let Some(required) = required_gram {
@@ -280,23 +319,23 @@ impl LanguagePack {
         &self,
         sentence: SentenceSpur,
         required_gram: Option<&TaggedGram<SpurGram>>,
-        is_comprehensible: &impl Fn(&TaggedGram<SpurGram>) -> bool,
+        is_comprehensible: &impl Fn(&SpurReadingGram) -> bool,
     ) -> bool {
-        let is_comprehensible = |gram: &TaggedGram<SpurGram>| {
-            is_comprehensible(gram) || required_gram.is_some_and(|req| req == gram)
+        let is_comprehensible = |gram: &SpurReadingGram| {
+            is_comprehensible(gram) || required_gram.is_some_and(|req| req == &gram.sense)
         };
         let Some(sentence_grams) = self.sentences.encoded_sentences.get(&sentence) else {
             return false;
         };
         let learnable = sentence_grams.grams.iter().filter_map(|g| match g {
-            SentenceGram::Learnable(gram) => Some(&gram.sense),
+            SentenceGram::Learnable(gram) => Some(gram),
             SentenceGram::Obvious(_) => None,
         });
         let multiword = sentence_grams
             .multiword_terms
             .iter()
             .chain(&sentence_grams.low_confidence_multiword_terms)
-            .map(|term| &term.gram.sense);
+            .map(|term| &term.gram);
         learnable.chain(multiword).all(is_comprehensible)
             && self
                 .sentences
@@ -505,8 +544,10 @@ impl LanguagePack {
     /// Build a pack from generated corpus data. Runtime loaders use `from_parts`.
     pub fn new(language_data: ConsolidatedLanguageData, course: Course) -> Self {
         let target_language = course.target_language;
+        let sense_frequencies =
+            crate::aggregate_sense_frequencies(&language_data.gram_frequencies.entries);
         let texts = crate::word_prefix::prefixed_texts(
-            &language_data.gram_frequencies.entries,
+            &sense_frequencies,
             &language_data.gram_dictionary,
             &language_data.phrasebook,
             target_language,
@@ -574,7 +615,7 @@ impl LanguagePack {
         let words_to_heteronyms: FxHashMap<Spur, Vec<Heteronym<Spur>>> = {
             let mut map: FxHashMap<Spur, Vec<(Heteronym<Spur>, u32)>> = FxHashMap::default();
 
-            for entry in &language_data.gram_frequencies.entries {
+            for entry in &sense_frequencies {
                 if let Some(heteronym) = entry.gram.gram.heteronym() {
                     let word_spur = rodeo.get(&heteronym.word).unwrap();
                     let interned_het = Heteronym {
@@ -698,73 +739,69 @@ impl LanguagePack {
             gram_rodeo.into_reader()
         };
 
-        let encoded_sentences: FxHashMap<
-            SentenceSpur,
-            SentenceGrams<crate::ReadingTaggedGram<SpurGram, Spur>>,
-        > = language_data
-            .encoded_sentences
-            .iter()
-            .filter_map(|(sentence, encoded)| {
-                let interned_grams: Option<
-                    Vec<SentenceGram<crate::ReadingTaggedGram<SpurGram, Spur>>>,
-                > = encoded
-                    .grams
-                    .iter()
-                    .map(|g| {
-                        g.clone().try_map(|entry| {
-                            entry
+        let encoded_sentences: FxHashMap<SentenceSpur, SentenceGrams<SpurReadingGram>> =
+            language_data
+                .encoded_sentences
+                .iter()
+                .filter_map(|(sentence, encoded)| {
+                    let interned_grams: Option<Vec<SentenceGram<SpurReadingGram>>> = encoded
+                        .grams
+                        .iter()
+                        .map(|g| {
+                            g.clone().try_map(|entry| {
+                                entry
+                                    .get_interned(&rodeo)
+                                    .expect("encoded sentence strings must be interned")
+                                    .get_interned(&gram_rodeo)
+                            })
+                        })
+                        .collect();
+                    let interned_multiword_terms: Option<Vec<MultiwordTermMatch<SpurReadingGram>>> =
+                        encoded
+                            .multiword_terms
+                            .iter()
+                            .map(|term| {
+                                let interned = term
+                                    .gram
+                                    .get_interned(&rodeo)
+                                    .expect("encoded phrase strings must be interned");
+                                Some(MultiwordTermMatch {
+                                    gram: interned.get_interned(&gram_rodeo)?,
+                                    matched_word_indices: term.matched_word_indices.clone(),
+                                })
+                            })
+                            .collect();
+                    let interned_low_confidence_multiword_terms: Option<
+                        Vec<MultiwordTermMatch<SpurReadingGram>>,
+                    > = encoded
+                        .low_confidence_multiword_terms
+                        .iter()
+                        .map(|term| {
+                            let interned = term
+                                .gram
                                 .get_interned(&rodeo)
-                                .expect("encoded sentence strings must be interned")
-                                .get_interned(&gram_rodeo)
+                                .expect("encoded phrase strings must be interned");
+                            Some(MultiwordTermMatch {
+                                gram: interned.get_interned(&gram_rodeo)?,
+                                matched_word_indices: term.matched_word_indices.clone(),
+                            })
                         })
-                    })
-                    .collect();
-                let interned_multiword_terms: Option<
-                    Vec<MultiwordTermMatch<crate::ReadingTaggedGram<SpurGram, Spur>>>,
-                > = encoded
-                    .multiword_terms
-                    .iter()
-                    .map(|term| {
-                        let interned = term
-                            .gram
-                            .get_interned(&rodeo)
-                            .expect("encoded phrase strings must be interned");
-                        Some(MultiwordTermMatch {
-                            gram: interned.get_interned(&gram_rodeo)?,
-                            matched_word_indices: term.matched_word_indices.clone(),
-                        })
-                    })
-                    .collect();
-                let interned_low_confidence_multiword_terms: Option<
-                    Vec<MultiwordTermMatch<crate::ReadingTaggedGram<SpurGram, Spur>>>,
-                > = encoded
-                    .low_confidence_multiword_terms
-                    .iter()
-                    .map(|term| {
-                        let interned = term
-                            .gram
-                            .get_interned(&rodeo)
-                            .expect("encoded phrase strings must be interned");
-                        Some(MultiwordTermMatch {
-                            gram: interned.get_interned(&gram_rodeo)?,
-                            matched_word_indices: term.matched_word_indices.clone(),
-                        })
-                    })
-                    .collect();
-                Some((
-                    sentence_rodeo.get(sentence)?,
-                    SentenceGrams::<crate::ReadingTaggedGram<SpurGram, Spur>> {
-                        grams: interned_grams?,
-                        capitalize_first: encoded.capitalize_first,
-                        multiword_terms: interned_multiword_terms?,
-                        low_confidence_multiword_terms: interned_low_confidence_multiword_terms?,
-                    },
-                ))
-            })
-            .collect();
+                        .collect();
+                    Some((
+                        sentence_rodeo.get(sentence)?,
+                        SentenceGrams::<SpurReadingGram> {
+                            grams: interned_grams?,
+                            capitalize_first: encoded.capitalize_first,
+                            multiword_terms: interned_multiword_terms?,
+                            low_confidence_multiword_terms:
+                                interned_low_confidence_multiword_terms?,
+                        },
+                    ))
+                })
+                .collect();
 
         // Build as counts first; we'll compute the `easy` flag after gram_definitions is available.
-        let gram_counts: IndexMap<TaggedGram<SpurGram>, (u32, u32)> = {
+        let gram_counts: IndexMap<SpurReadingGram, (u32, u32)> = {
             let mut map = IndexMap::new();
             for entry in &language_data.gram_frequencies.entries {
                 let interned_gram = entry.gram.get_interned(&rodeo);
@@ -821,20 +858,20 @@ impl LanguagePack {
             map
         };
 
-        let gram_frequencies_map: IndexMap<TaggedGram<SpurGram>, Frequency> = {
+        let gram_frequencies_map: IndexMap<SpurReadingGram, Frequency> = {
             const COGNATE_BONUS: f32 = 2.0;
 
             // First pass: compute base ease for single-atom grams so we can reference them
             // when computing multi-atom gram ease.
             let mut single_atom_ease: FxHashMap<Atom<Spur>, f32> = FxHashMap::default();
             for (gram_spur, (count, _direct_count)) in gram_counts.iter() {
-                let gram = gram_rodeo.resolve(&gram_spur.gram);
+                let gram = gram_rodeo.resolve(&gram_spur.sense.gram);
                 if gram.len() == 1
                     && let Some(atom) = gram.iter().next()
                 {
                     let base_ease = (*count as f32).ln();
                     let has_cognate = !course.teaches_new_writing_system()
-                        && has_cognate_definition(gram_definitions.get(gram_spur));
+                        && has_cognate_definition(gram_definitions.get(&gram_spur.sense));
                     let ease = if has_cognate {
                         base_ease + COGNATE_BONUS
                     } else {
@@ -849,13 +886,13 @@ impl LanguagePack {
 
             let mut map = IndexMap::new();
             for (gram_spur, (count, direct_count)) in gram_counts.iter() {
-                let gram = gram_rodeo.resolve(&gram_spur.gram);
+                let gram = gram_rodeo.resolve(&gram_spur.sense.gram);
                 let easy = !course.teaches_new_writing_system()
-                    && is_gram_easy(gram, gram_definitions.get(gram_spur));
+                    && is_gram_easy(gram, gram_definitions.get(&gram_spur.sense));
 
                 let ln_count = (*count as f32).ln();
 
-                let definition = gram_definitions.get(gram_spur);
+                let definition = gram_definitions.get(&gram_spur.sense);
                 let (is_compositional, is_literally_translatable, is_cognate) = match definition {
                     Some(GramDefinition::Phrasebook(entry)) => (
                         entry.compositional,
@@ -935,13 +972,21 @@ impl LanguagePack {
             map
         };
 
-        let gram_frequencies = FrequencyList {
-            total_count: language_data.gram_frequencies.total_count,
-            entries: gram_frequencies_map,
-        };
+        let gram_frequencies = FrequencyList::new(
+            gram_frequencies_map,
+            language_data.gram_frequencies.total_count,
+        );
 
-        let senses = sense_index(&gram_frequencies);
+        let sense_frequencies = gram_frequencies.sense_entries();
+        let senses = sense_index(&sense_frequencies);
         let (written_ease_order, listening_ease_order) = ease_orders(&gram_frequencies);
+        let mut reading_ranks: FxHashMap<_, Vec<_>> = FxHashMap::default();
+        for (rank, reading) in written_ease_order.iter_from(0).enumerate() {
+            reading_ranks
+                .entry(reading.sense)
+                .or_default()
+                .push((reading, rank as u32));
+        }
         for sentence in encoded_sentences.values() {
             let learnable = sentence.grams.iter().filter_map(SentenceGram::learnable);
             let phrases = sentence
@@ -951,16 +996,16 @@ impl LanguagePack {
                 .map(|term| &term.gram);
             for gram in learnable.chain(phrases) {
                 assert!(
-                    written_ease_order.rank(&gram.sense).is_some(),
+                    written_ease_order.rank(gram).is_some(),
                     "Encoded gram has no written-ease rank: {:?}",
-                    gram.sense.resolve(&gram_rodeo).resolve(&rodeo)
+                    gram.resolve(&gram_rodeo).resolve(&rodeo)
                 );
             }
         }
         let heteronym_to_grams: FxHashMap<Heteronym<Spur>, Vec<SpurGram>> = {
             let mut map: FxHashMap<Heteronym<Spur>, Vec<(SpurGram, Frequency)>> =
                 FxHashMap::default();
-            for (gram_spur, freq) in gram_frequencies.entries.iter() {
+            for (gram_spur, freq) in sense_frequencies.iter() {
                 let gram = gram_rodeo.resolve(&gram_spur.gram);
                 if gram.len() == 1
                     && let Some(Atom::Tok(word)) = gram.iter().next()
@@ -999,7 +1044,7 @@ impl LanguagePack {
             source_gram_frequencies_data
                 .iter()
                 .map(|(source_id, freq_list)| {
-                    let mut map: IndexMap<TaggedGram<SpurGram>, Frequency> = IndexMap::new();
+                    let mut map: IndexMap<SpurReadingGram, Frequency> = IndexMap::new();
                     for entry in &freq_list.entries {
                         let interned_gram = entry.gram.get_interned(&rodeo);
                         if let Some(interned_gram) = interned_gram
@@ -1023,10 +1068,7 @@ impl LanguagePack {
                     }
                     (
                         source_id.clone(),
-                        FrequencyList {
-                            entries: map,
-                            total_count: freq_list.total_count,
-                        },
+                        FrequencyList::new(map, freq_list.total_count),
                     )
                 })
                 .filter(|(_, list)| !list.entries.is_empty())
@@ -1049,8 +1091,7 @@ impl LanguagePack {
                             .get(heteronym)?
                             .iter()
                             .filter_map(|gram_spur| {
-                                gram_frequencies
-                                    .entries
+                                sense_frequencies
                                     .get(senses.get(gram_spur)?.first()?)
                                     .copied()
                             })
@@ -1070,8 +1111,7 @@ impl LanguagePack {
                     .iter()
                     .filter_map(|het| {
                         let top_gram = heteronym_to_grams.get(het)?.first()?;
-                        gram_frequencies
-                            .entries
+                        sense_frequencies
                             .get(senses.get(top_gram)?.first()?)
                             .map(|f| f.count)
                     })
@@ -1088,7 +1128,7 @@ impl LanguagePack {
 
         let string_to_grams: FxHashMap<String, Vec<TaggedGram<SpurGram>>> = {
             let mut map: FxHashMap<String, Vec<TaggedGram<SpurGram>>> = FxHashMap::default();
-            for (&gram_spur, _) in gram_frequencies.entries.iter() {
+            for (&gram_spur, _) in sense_frequencies.iter() {
                 let resolved = gram_rodeo.resolve(&gram_spur.gram).resolve(&rodeo);
                 let display = resolved.to_display_string(target_language);
                 map.entry(display).or_default().push(gram_spur);
@@ -1137,7 +1177,7 @@ impl LanguagePack {
             })
             .collect();
         let mut grams_with_prefixed_text: FxHashMap<_, Vec<_>> = FxHashMap::default();
-        for (&gram, _) in gram_frequencies.entries.iter() {
+        for (&gram, _) in sense_frequencies.iter() {
             if let Some(&text) = prefixed_text.get(&gram.gram) {
                 grams_with_prefixed_text.entry(text).or_default().push(gram);
             }
@@ -1169,6 +1209,7 @@ impl LanguagePack {
                 string_rodeo: rodeo,
                 gram_rodeo,
                 senses,
+                reading_ranks,
                 written_ease_order,
                 listening_ease_order,
                 words_to_heteronyms,
@@ -1179,6 +1220,7 @@ impl LanguagePack {
                 pattern_frequency_map,
                 pronunciation_max_freq_cache,
                 proper_noun_definitions,
+                sense_frequencies,
                 gram_frequencies,
                 gram_definitions,
                 heteronym_to_grams,
@@ -1277,8 +1319,9 @@ pub struct LanguagePackCore {
     pub spur_space_fingerprint: u64,
     pub string_rodeo: lasso::RodeoReader,
     pub gram_rodeo: lasso::RodeoReader<Gram<Spur>>,
-    pub written_ease_order: EaseOrder<TaggedGram<SpurGram>>,
+    pub written_ease_order: EaseOrder<SpurReadingGram>,
     pub listening_ease_order: EaseOrder<SpurGram>,
+    reading_ranks: FxHashMap<TaggedGram<SpurGram>, Vec<(SpurReadingGram, u32)>>,
     senses: FxHashMap<SpurGram, Vec<TaggedGram<SpurGram>>>,
     pub words_to_heteronyms: FxHashMap<Spur, Vec<Heteronym<Spur>>>,
     pub word_to_pronunciation: FxHashMap<Spur, Spur>,
@@ -1289,6 +1332,7 @@ pub struct LanguagePackCore {
     pub pattern_frequency_map: FxHashMap<(Spur, PatternPosition), u32>,
     pub pronunciation_max_freq_cache: FxHashMap<Spur, Frequency>,
     pub proper_noun_definitions: BTreeMap<Spur, ProperNounDefinition>,
+    pub sense_frequencies: IndexMap<TaggedGram<SpurGram>, Frequency>,
     pub gram_frequencies: FrequencyList,
     pub gram_definitions: FxHashMap<TaggedGram<SpurGram>, GramDefinition>,
     pub heteronym_to_grams: FxHashMap<Heteronym<Spur>, Vec<SpurGram>>,
@@ -1322,8 +1366,7 @@ pub struct LanguagePackSentences {
     pub movies: FxHashMap<String, MovieMetadata>,
     pub books: FxHashMap<String, BookMetadata>,
     pub sentence_sources: FxHashMap<SentenceSpur, SentenceSource>,
-    pub encoded_sentences:
-        FxHashMap<SentenceSpur, SentenceGrams<crate::ReadingTaggedGram<SpurGram, Spur>>>,
+    pub encoded_sentences: FxHashMap<SentenceSpur, SentenceGrams<SpurReadingGram>>,
     pub sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<SentenceSpur>>,
     pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
 }
@@ -1383,7 +1426,7 @@ fn spur_space_fingerprint(
 }
 
 fn derive_readings(
-    sentences: &FxHashMap<SentenceSpur, SentenceGrams<crate::ReadingTaggedGram<SpurGram, Spur>>>,
+    sentences: &FxHashMap<SentenceSpur, SentenceGrams<SpurReadingGram>>,
     strings: &lasso::RodeoReader,
 ) -> FxHashMap<TaggedGram<SpurGram>, Vec<Spur>> {
     let mut counts: FxHashMap<_, FxHashMap<Spur, usize>> = FxHashMap::default();
@@ -1680,9 +1723,11 @@ fn visible_movies(
     movies
 }
 
-fn sense_index(frequencies: &FrequencyList) -> FxHashMap<SpurGram, Vec<TaggedGram<SpurGram>>> {
+fn sense_index(
+    frequencies: &IndexMap<TaggedGram<SpurGram>, Frequency>,
+) -> FxHashMap<SpurGram, Vec<TaggedGram<SpurGram>>> {
     let mut index: FxHashMap<SpurGram, Vec<TaggedGram<SpurGram>>> = FxHashMap::default();
-    for (entry, _) in frequencies.entries.iter() {
+    for (entry, _) in frequencies.iter() {
         index.entry(entry.gram).or_default().push(*entry);
     }
     index
@@ -1768,7 +1813,7 @@ mod sense_tests {
         for pack in [&pack, &loaded] {
             let bare = pack.intern_gram(&gram("bank")).unwrap();
             let (written, listening) = ease_orders(&pack.gram_frequencies);
-            assert_eq!(pack.senses, sense_index(&pack.gram_frequencies));
+            assert_eq!(pack.senses, sense_index(&pack.sense_frequencies));
             assert_eq!(pack.written_ease_order.entries, written.entries);
             assert_eq!(pack.written_ease_order.ranks, written.ranks);
             assert_eq!(pack.listening_ease_order.entries, listening.entries);
@@ -1786,8 +1831,7 @@ mod sense_tests {
         let entry = pack.senses_of(bare)[1];
         Arc::get_mut(&mut pack.core)
             .unwrap()
-            .gram_frequencies
-            .entries
+            .sense_frequencies
             .get_mut(&entry)
             .unwrap()
             .direct_count = 7;
@@ -1796,8 +1840,7 @@ mod sense_tests {
         assert_eq!(total.direct_count, 27);
         assert_eq!(
             total.ease,
-            pack.gram_frequencies
-                .entries
+            pack.sense_frequencies
                 .get(&pack.senses_of(bare)[0])
                 .unwrap()
                 .ease
@@ -1806,7 +1849,8 @@ mod sense_tests {
 
     use super::*;
     use crate::{
-        GramFrequencyEntry, GramFrequencyList, GramVocabEntry, Language, PronunciationData, Word,
+        GramFrequencyList, GramVocabEntry, Language, PronunciationData,
+        ReadingGramFrequencyEntry as GramFrequencyEntry, Word,
     };
     use std::num::NonZeroU32;
 
@@ -1880,7 +1924,10 @@ mod sense_tests {
             sense: None,
         };
         let frequency = |text: &str| GramFrequencyEntry {
-            gram: tagged(text),
+            gram: crate::ReadingTaggedGram {
+                sense: tagged(text),
+                reading: Some("reading-only".into()),
+            },
             count: 10,
             direct_count: 10,
             disambiguation_key: 0,
@@ -2171,14 +2218,41 @@ mod sense_tests {
                 gram_frequencies: GramFrequencyList {
                     entries: senses
                         .iter()
-                        .map(|&(sense, count)| GramFrequencyEntry {
-                            count,
-                            direct_count: count,
-                            disambiguation_key: 0,
-                            gram: TaggedGram {
-                                gram: gram(if sense == 1 { surface } else { "bank" }),
-                                sense: NonZeroU32::new(sense),
-                            },
+                        .flat_map(|&(sense, count)| {
+                            let direct_sense = senses
+                                .iter()
+                                .find(|&&(sense, _)| sense == 1)
+                                .unwrap_or(&senses[0])
+                                .0;
+                            let mut readings = Vec::new();
+                            if sense == direct_sense {
+                                readings.push(Some("ばんく".to_owned()));
+                            }
+                            if sense == 0 {
+                                readings.push(Some("ぎんこう".to_owned()));
+                            }
+                            if sense == 2 {
+                                readings.push(Some("ていぼう".to_owned()));
+                            }
+                            if readings.is_empty() {
+                                readings.push(None);
+                            }
+                            let extra = readings.len() as u32 - 1;
+                            readings.into_iter().enumerate().map(move |(i, reading)| {
+                                let count = if i == 0 { count - extra } else { 1 };
+                                GramFrequencyEntry {
+                                    count,
+                                    direct_count: count,
+                                    disambiguation_key: 0,
+                                    gram: crate::ReadingTaggedGram {
+                                        sense: TaggedGram {
+                                            gram: gram(if sense == 1 { surface } else { "bank" }),
+                                            sense: NonZeroU32::new(sense),
+                                        },
+                                        reading,
+                                    },
+                                }
+                            })
                         })
                         .collect(),
                     total_count: senses.iter().map(|&(_, count)| u64::from(count)).sum(),

@@ -81,8 +81,9 @@ mod tests {
     #[test]
     fn cross_gram_pages_and_prefixed_text_survive_split() {
         use crate::{
-            ConsolidatedLanguageData, Course, GramFrequencyEntry, GramFrequencyList,
-            GramVocabEntry, TaggedGram, language_pack::LanguagePack,
+            ConsolidatedLanguageData, Course, GramFrequencyList, GramVocabEntry,
+            ReadingGramFrequencyEntry as GramFrequencyEntry, TaggedGram,
+            language_pack::LanguagePack,
         };
         let member = |text: &str, pos| TaggedGram {
             gram: Gram(
@@ -140,7 +141,7 @@ mod tests {
                     .iter()
                     .enumerate()
                     .map(|(index, entry)| GramFrequencyEntry {
-                        gram: entry.clone(),
+                        gram: crate::ReadingTaggedGram::without_reading(entry.clone()),
                         count: 40 - index as u32,
                         direct_count: 40 - index as u32,
                         disambiguation_key: index as u32,

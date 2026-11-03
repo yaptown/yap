@@ -409,8 +409,12 @@ async fn later_stages(
         })
     })
     .collect();
-    let frequencies =
-        crate::frequencies::compute_gram_frequencies(&sentences, &segmented.gram_vocabulary);
+    let frequencies = language_utils::aggregate_sense_frequencies(
+        &crate::frequencies::compute_reading_gram_frequencies(
+            &sentences,
+            &segmented.gram_vocabulary,
+        ),
+    );
     let filtered: Vec<_> = frequencies
         .iter()
         .filter(|entry| entry.count > 3 && (overlays_complete || entry.gram.gram.len() == 1))

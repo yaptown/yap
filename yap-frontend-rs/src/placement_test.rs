@@ -92,8 +92,9 @@ impl Deck {
         &self,
         target_ease: f32,
         excluded_lemmas: &std::collections::HashSet<Spur>,
+        excluded_words: &std::collections::HashSet<String>,
     ) -> Option<(Heteronym<Spur>, language_utils::Frequency)> {
-        let frequencies = &self.context.language_pack.gram_frequencies.entries;
+        let frequencies = &self.context.language_pack.sense_frequencies;
         let gram_rodeo = &self.context.language_pack.gram_rodeo;
         let string_rodeo = &self.context.language_pack.string_rodeo;
 
@@ -109,6 +110,9 @@ impl Deck {
                 }
                 // Use the same heteronym and ease that scoring resolves from the surface form.
                 let word = string_rodeo.resolve(&heteronym.word);
+                if excluded_words.contains(word) {
+                    return None;
+                }
                 let (resolved, resolved_freq) = self.context.lookup_word(word)?;
                 if resolved != heteronym {
                     return None;
@@ -148,8 +152,7 @@ impl Deck {
         let (_most_common_heteronym, most_common_freq) = match self
             .context
             .language_pack
-            .gram_frequencies
-            .entries
+            .sense_frequencies
             .iter()
             .filter_map(|(gop, freq)| extract_heteronym(gop, gram_rodeo).map(|h| (h, freq)))
             .next()
@@ -161,8 +164,7 @@ impl Deck {
         let (_least_common_heteronym, least_common_freq) = match self
             .context
             .language_pack
-            .gram_frequencies
-            .entries
+            .sense_frequencies
             .iter()
             .rev()
             .filter_map(|(gop, freq)| extract_heteronym(gop, gram_rodeo).map(|h| (h, freq)))
@@ -178,7 +180,7 @@ impl Deck {
         // - All input lexemes (known and unknown)
         let mut excluded_lemmas = std::collections::HashSet::new();
 
-        for (gop, freq) in self.context.language_pack.gram_frequencies.entries.iter() {
+        for (gop, freq) in self.context.language_pack.sense_frequencies.iter() {
             if freq.count >= most_common_freq.count {
                 if let Some(heteronym) = extract_heteronym(gop, gram_rodeo) {
                     excluded_lemmas.insert(heteronym.lemma);
@@ -188,14 +190,7 @@ impl Deck {
             }
         }
 
-        for (gop, freq) in self
-            .context
-            .language_pack
-            .gram_frequencies
-            .entries
-            .iter()
-            .rev()
-        {
+        for (gop, freq) in self.context.language_pack.sense_frequencies.iter().rev() {
             if freq.count <= least_common_freq.count {
                 if let Some(heteronym) = extract_heteronym(gop, gram_rodeo) {
                     excluded_lemmas.insert(heteronym.lemma);
@@ -212,19 +207,10 @@ impl Deck {
             excluded_lemmas.insert(lexeme.lemma);
         }
 
-        // Build a set of excluded word strings (just the words, not full lexemes)
-        // to filter results at the end
-        let excluded_word_strings: std::collections::HashSet<String> = known
-            .iter()
-            .chain(unknown.iter())
-            .map(|heteronym| {
-                self.context
-                    .language_pack
-                    .string_rodeo
-                    .resolve(&heteronym.word)
-                    .to_string()
-            })
-            .collect();
+        // Exclude display text before selection, including previously offered words.
+        // Different senses, readings, or lemmas must not repeat the same prompt.
+        let mut excluded_word_strings: std::collections::HashSet<String> =
+            known_words.into_iter().chain(unknown_words).collect();
 
         let mut points: Vec<Point<f32, f32, UnitWeight>> = Vec::new();
 
@@ -248,12 +234,7 @@ impl Deck {
                 .get(&heteronym)
                 && let Some(gram) = grams.first()
                 && let Some(gram) = self.context.language_pack.senses_of(*gram).first()
-                && let Some(freq) = self
-                    .context
-                    .language_pack
-                    .gram_frequencies
-                    .entries
-                    .get(gram)
+                && let Some(freq) = self.context.language_pack.sense_frequencies.get(gram)
             {
                 points.push(Point::new_with_weight(freq.ease, 1.0, UnitWeight));
             }
@@ -267,12 +248,7 @@ impl Deck {
                 .get(&heteronym)
                 && let Some(gram) = grams.first()
                 && let Some(gram) = self.context.language_pack.senses_of(*gram).first()
-                && let Some(freq) = self
-                    .context
-                    .language_pack
-                    .gram_frequencies
-                    .entries
-                    .get(gram)
+                && let Some(freq) = self.context.language_pack.sense_frequencies.get(gram)
             {
                 points.push(Point::new_with_weight(freq.ease, 0.0, UnitWeight));
             }
@@ -300,6 +276,7 @@ impl Deck {
                     .find_heteronym_near_frequency_score_for_placement_test(
                         target_ease,
                         &excluded_lemmas,
+                        &excluded_word_strings,
                     )
             {
                 excluded_lemmas.insert(heteronym.lemma);
@@ -309,6 +286,7 @@ impl Deck {
                     .language_pack
                     .string_rodeo
                     .resolve(&heteronym.word);
+                excluded_word_strings.insert(word_str.to_owned());
                 let definition = self
                     .context
                     .get_first_definition(&heteronym)
@@ -321,9 +299,6 @@ impl Deck {
         }
 
         result_words
-            .into_iter()
-            .filter(|pw| !excluded_word_strings.contains(&pw.word))
-            .collect()
     }
 }
 
@@ -335,7 +310,7 @@ mod tests {
         use crate::Deck;
 
         let deck = Deck::default();
-        let entries = &deck.context.language_pack.gram_frequencies.entries;
+        let entries = &deck.context.language_pack.sense_frequencies;
         if entries.is_empty() {
             return;
         }
@@ -347,6 +322,15 @@ mod tests {
             .expect("corpus should contain at least one single-word gram");
 
         let words = deck.get_placement_test(vec![], vec![]);
+        let displays: std::collections::HashSet<_> = words.iter().map(|word| &word.word).collect();
+        assert_eq!(
+            displays.len(),
+            words.len(),
+            "placement prompts must have unique display text"
+        );
+        let next =
+            deck.get_placement_test(words.iter().map(|word| word.word.clone()).collect(), vec![]);
+        assert!(next.iter().all(|word| !displays.contains(&word.word)));
         assert!(
             words.len() >= 6,
             "expected a usable number of placement words, got {}",
@@ -379,7 +363,7 @@ mod tests {
         use crate::Deck;
 
         let deck = Deck::default();
-        let entries = &deck.context.language_pack.gram_frequencies.entries;
+        let entries = &deck.context.language_pack.sense_frequencies;
         if entries.is_empty() {
             return;
         }
@@ -388,7 +372,11 @@ mod tests {
 
         for target in [9.0f32, 8.0, 6.5, 5.0, 3.5, 2.0, 0.5] {
             let (chosen, chosen_freq) = deck
-                .find_heteronym_near_frequency_score_for_placement_test(target, &excluded)
+                .find_heteronym_near_frequency_score_for_placement_test(
+                    target,
+                    &excluded,
+                    &Default::default(),
+                )
                 .expect("corpus should always offer some eligible word");
             let chosen_distance = (chosen_freq.ease - target).abs();
 

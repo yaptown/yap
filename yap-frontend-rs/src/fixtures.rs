@@ -84,6 +84,8 @@ impl Deck {
     pub fn any_translation_challenge(&self) -> Option<Challenge<Gram<String>>> {
         self.get_comprehensible_written_grams(false)
             .iter()
+            .map(|reading| reading.sense)
+            .unique()
             .sorted()
             .find_map(|gram| {
                 let sentence = self.pick_translation_sentence(&gram)?;

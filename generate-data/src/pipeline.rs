@@ -1260,11 +1260,13 @@ mod tests {
             })
             .collect();
         let words = |sentences: &[_]| {
-            crate::frequencies::compute_gram_frequencies(sentences, &vocabulary)
-                .into_iter()
-                .filter(|entry| entry.gram.gram.len() == 1)
-                .map(|entry| (entry.gram, entry.count))
-                .collect::<Vec<_>>()
+            language_utils::aggregate_sense_frequencies(
+                &crate::frequencies::compute_reading_gram_frequencies(sentences, &vocabulary),
+            )
+            .into_iter()
+            .filter(|entry| entry.gram.gram.len() == 1)
+            .map(|entry| (entry.gram, entry.count))
+            .collect::<Vec<_>>()
         };
         let before = words(&sentences);
         for (_, sentence) in &mut sentences {

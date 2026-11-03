@@ -8,12 +8,12 @@ use crate::{
 };
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use bridgerton::Error;
-use language_utils::SentenceSpur;
 use language_utils::{
     Atom, Course, GramDefinition, Language, Literal, MovieMetadataBasic, OtherWord, OtherWordType,
     SentenceGram, SpurGram, TaggedGram, TtsProvider, TtsRequest, Word, WordType, clip_url,
     dictionary_entry_slug, language_pack::LanguagePack, tts_cache_filename, tts_cache_url,
 };
+use language_utils::{SentenceSpur, SpurReadingGram};
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
 use rustc_hash::{FxHashMap, FxHashSet};
 use serde::{Deserialize, Serialize};
@@ -291,7 +291,9 @@ fn guid(course: Course, kind: &str, text: &str) -> String {
 fn spelling_frequency_ranks(pack: &LanguagePack, language: Language) -> FxHashMap<String, usize> {
     let mut counts: FxHashMap<String, u64> = FxHashMap::default();
     for (gram, frequency) in pack.gram_frequencies.entries.iter() {
-        let word = pack.resolve_gram(&gram.gram).to_display_string(language);
+        let word = pack
+            .resolve_gram(&gram.sense.gram)
+            .to_display_string(language);
         *counts.entry(word).or_default() += u64::from(frequency.count);
     }
     let mut counts: Vec<_> = counts.into_iter().collect();
@@ -1166,8 +1168,8 @@ struct KnownOrTaught<'a, M> {
     taught: &'a FxHashSet<TaggedGram<SpurGram>>,
 }
 impl<M: GramMembership> GramMembership for KnownOrTaught<'_, M> {
-    fn contains(self, gram: &TaggedGram<SpurGram>) -> bool {
-        self.taught.contains(gram) || self.known.contains(gram)
+    fn contains(self, gram: &SpurReadingGram) -> bool {
+        self.taught.contains(&gram.sense) || self.known.contains(gram)
     }
 }
 
@@ -1191,15 +1193,15 @@ impl PlannerState {
                 continue;
             };
             let learnable = encoded.grams.iter().filter_map(|g| match g {
-                SentenceGram::Learnable(g) => Some(&g.sense),
+                SentenceGram::Learnable(g) => Some(g),
                 SentenceGram::Obvious(_) => None,
             });
             let multiword = encoded
                 .multiword_terms
                 .iter()
                 .chain(&encoded.low_confidence_multiword_terms)
-                .map(|m| &m.gram.sense);
-            let grams: Vec<&TaggedGram<SpurGram>> = learnable.chain(multiword).collect();
+                .map(|m| &m.gram);
+            let grams: Vec<&SpurReadingGram> = learnable.chain(multiword).collect();
             let Some(ranks) = grams
                 .iter()
                 .map(|g| order.rank(g))
@@ -1209,7 +1211,7 @@ impl PlannerState {
             };
             for gram in grams {
                 self.clip_sentences_of
-                    .entry(*gram)
+                    .entry(gram.sense)
                     .or_default()
                     .push(sentence);
             }
@@ -1262,12 +1264,14 @@ impl PlannerState {
                 let gram = self
                     .base_taught
                     .iter()
-                    .filter(|g| {
-                        pack.written_ease_order
-                            .rank(g)
-                            .is_some_and(|r| ranks.contains(&r))
-                    })
-                    .max_by_key(|g| pack.written_ease_order.rank(g))?;
+                    .filter(|g| pack.reading_ranks(g).iter().any(|(_, r)| ranks.contains(r)))
+                    .max_by_key(|g| {
+                        pack.reading_ranks(g)
+                            .iter()
+                            .filter(|(_, r)| ranks.contains(r))
+                            .map(|(_, r)| *r)
+                            .max()
+                    })?;
                 Some((*s, *gram, ranks.iter().max().copied().unwrap_or(0)))
             })
             .collect();
@@ -1285,7 +1289,7 @@ impl PlannerState {
         }
         let pack = &self.seed.context.language_pack;
         let mut remaining: Vec<_> = self.base_taught.iter().copied().collect();
-        remaining.sort_by_key(|g| pack.written_ease_order.rank(g));
+        remaining.sort_by_key(|g| pack.reading_ranks(g).first().map(|(_, rank)| *rank));
         for gram in remaining {
             let word = gram
                 .resolve(&pack.gram_rodeo)
@@ -1305,7 +1309,7 @@ impl PlannerState {
         self.base_ranks = self
             .base_taught
             .iter()
-            .filter_map(|g| pack.written_ease_order.rank(g))
+            .flat_map(|g| pack.reading_ranks(g).iter().map(|(_, rank)| *rank))
             .collect();
         self.taught.extend(&self.base_taught);
         self.base_sentence_count = self.used_sentences.len();
@@ -1378,9 +1382,10 @@ impl PlannerState {
         let pack = &self.seed.context.language_pack;
         let deck = self.simulation.as_ref().unwrap().deck();
         let known_now = self.known_now.as_ref().unwrap();
-        let Some(gram_rank) = pack.written_ease_order.rank(&gram) else {
+        let gram_ranks = pack.reading_ranks(&gram);
+        if gram_ranks.is_empty() {
             return;
-        };
+        }
         // A candidate is a clip sentence containing the gram whose
         // every other gram the learner already knows.
         let mut candidates: Vec<SentenceSpur> = self
@@ -1396,7 +1401,9 @@ impl PlannerState {
             })
             .filter(|s| {
                 self.clip_sentence_ranks[s].iter().all(|&r| {
-                    r == gram_rank || known_now.contains(r) || self.base_ranks.contains(&r)
+                    gram_ranks.iter().any(|(_, rank)| *rank == r)
+                        || known_now.contains(r)
+                        || self.base_ranks.contains(&r)
                 })
             })
             .collect();
@@ -1462,18 +1469,21 @@ impl PlannerState {
         let mut prerequisites = vec![gram];
         if let Some(encoded) = pack.sentences.encoded_sentences.get(&sentence) {
             let learnable = encoded.grams.iter().filter_map(|g| match g {
-                SentenceGram::Learnable(g) => Some(g.sense),
+                SentenceGram::Learnable(g) => Some(*g),
                 SentenceGram::Obvious(_) => None,
             });
             let multiword = encoded
                 .multiword_terms
                 .iter()
                 .chain(&encoded.low_confidence_multiword_terms)
-                .map(|m| m.gram.sense);
+                .map(|m| m.gram);
             prerequisites.extend(
                 learnable
                     .chain(multiword)
-                    .filter(|g| *g != gram && (!known.contains(g) || base_taught.contains(g))),
+                    .filter(|g| {
+                        g.sense != gram && (!known.contains(g) || base_taught.contains(&g.sense))
+                    })
+                    .map(|g| g.sense),
             );
         }
         for prerequisite in prerequisites {
@@ -1708,9 +1718,10 @@ mod tests {
     use super::*;
     use crate::CardIndicator;
     use language_utils::{
-        Atom, ConsolidatedLanguageData, Course, DictionaryEntry, Gram, GramFrequencyEntry,
-        GramFrequencyList, GramVocabEntry, Heteronym, PartOfSpeech, SentenceGram, SentenceGrams,
-        TaggedGram, TargetToNativeWord, Word, WordType, language_pack::LanguagePack,
+        Atom, ConsolidatedLanguageData, Course, DictionaryEntry, Gram, GramFrequencyList,
+        GramVocabEntry, Heteronym, PartOfSpeech, ReadingGramFrequencyEntry as GramFrequencyEntry,
+        SentenceGram, SentenceGrams, TaggedGram, TargetToNativeWord, Word, WordType,
+        language_pack::LanguagePack,
     };
     use std::sync::Arc;
     use weapon::AppState;
@@ -2081,7 +2092,7 @@ mod tests {
                     .iter()
                     .enumerate()
                     .map(|(i, g)| GramFrequencyEntry {
-                        gram: g.clone(),
+                        gram: language_utils::ReadingTaggedGram::without_reading(g.clone()),
                         count: 100 - i as u32,
                         direct_count: 100 - i as u32,
                         disambiguation_key: 0,
@@ -2442,7 +2453,7 @@ mod tests {
         // Each sense is rarer than word00; together this spelling is commonest.
         frequency.count = 70;
         for n in [1, 2] {
-            sense.sense = std::num::NonZeroU32::new(n);
+            sense.sense.sense = std::num::NonZeroU32::new(n);
             Arc::get_mut(&mut pack.core)
                 .unwrap()
                 .gram_frequencies
@@ -2458,7 +2469,7 @@ mod tests {
         let note = word_note(
             pack,
             deck.context.course,
-            sense,
+            sense.sense,
             "word63",
             ranks.get("word63").copied(),
             &mut vec![],
@@ -2545,12 +2556,14 @@ mod tests {
             let other = pack.sentences.sentence_rodeo.get("word00").unwrap();
             // The chosen sentence wins even when another matching clip is first
             // in the index. That distinct clip may still become a sentence note.
-            state.clip_sentences_of.insert(target, vec![other, clip]);
-            state.choose_sentence(target);
+            state
+                .clip_sentences_of
+                .insert(target.sense, vec![other, clip]);
+            state.choose_sentence(target.sense);
             assert!(state.used_sentences.is_empty());
             assert!(state.word_clip_sentences.contains(&clip));
-            assert!(state.still_pending.contains(&target));
-            state.choose_sentence(target);
+            assert!(state.still_pending.contains(&target.sense));
+            state.choose_sentence(target.sense);
             assert_eq!(state.used_sentences.len(), 1);
             assert!(state.used_sentences.contains(&other));
             assert!(!state.used_sentences.contains(&clip));
@@ -2586,9 +2599,9 @@ mod tests {
             for text in ["word00", "Word00"] {
                 let sentence = pack.sentences.sentence_rodeo.get(text).unwrap();
                 let challenge = deck
-                    .translation_challenge_for_sentence(target, sentence)
+                    .translation_challenge_for_sentence(target.sense, sentence)
                     .unwrap();
-                state.emit_sentence(target, sentence, challenge, false);
+                state.emit_sentence(target.sense, sentence, challenge, false);
             }
             state.done = true;
         }
@@ -2646,7 +2659,7 @@ mod tests {
         let pack = &deck.context.language_pack;
         let prerequisite = pack.gram_frequencies.entries.get_index(0).unwrap().0;
         let prerequisite_word = pack
-            .resolve_gram(&prerequisite.gram)
+            .resolve_gram(&prerequisite.sense.gram)
             .to_display_string(Language::English);
         publish(pack, deck.context.course);
         let planner = AnkiDeckPlanner::new(&deck, options(), 1, 1_700_000_000_000.0).unwrap();
@@ -2667,8 +2680,8 @@ mod tests {
             state
                 .clip_sentence_ranks
                 .insert(sentence, vec![target_rank]);
-            state.clip_sentences_of.insert(target, vec![sentence]);
-            state.choose_sentence(target);
+            state.clip_sentences_of.insert(target.sense, vec![sentence]);
+            state.choose_sentence(target.sense);
             assert_eq!(state.used_sentences.len(), 1, "{clip_text}");
             assert_eq!(
                 state.word_clip_sentences.len(),
@@ -3008,8 +3021,10 @@ mod tests {
         let mut state = crate::DeckState::new();
         for gram in deck.context.language_pack.gram_frequencies.entries.keys() {
             for indicator in [
-                CardIndicator::WrittenGram { gram: *gram },
-                CardIndicator::ListeningGram { gram: gram.gram },
+                CardIndicator::WrittenGram { gram: gram.sense },
+                CardIndicator::ListeningGram {
+                    gram: gram.sense.gram,
+                },
             ] {
                 state.cards.insert(
                     &deck.context,
@@ -3046,12 +3061,14 @@ mod tests {
                 );
                 for (indicator, expected, actual) in [
                     (
-                        crate::CardIndicator::WrittenGram { gram: *gram },
+                        crate::CardIndicator::WrittenGram { gram: gram.sense },
                         &mut expected_written,
                         written.contains(gram),
                     ),
                     (
-                        crate::CardIndicator::ListeningGram { gram: gram.gram },
+                        crate::CardIndicator::ListeningGram {
+                            gram: gram.sense.gram,
+                        },
                         &mut expected_listening,
                         listening.contains(gram),
                     ),
@@ -3108,7 +3125,7 @@ mod tests {
         };
         for (i, gram) in order.iter().enumerate().step_by((order.len() / 100).max(1)) {
             let text = pack
-                .resolve_gram(&gram.gram)
+                .resolve_gram(&gram.sense.gram)
                 .to_display_string(deck.context.course.target_language);
             if i < order.len() / 2 {
                 placement.known_words.push(text);
@@ -3125,12 +3142,14 @@ mod tests {
             let card = CardData::Added { fsrs_card };
             state.cards.insert(
                 &deck.context,
-                CardIndicator::WrittenGram { gram: *gram },
+                CardIndicator::WrittenGram { gram: gram.sense },
                 card.clone(),
             );
             state.cards.insert(
                 &deck.context,
-                CardIndicator::ListeningGram { gram: gram.gram },
+                CardIndicator::ListeningGram {
+                    gram: gram.sense.gram,
+                },
                 card,
             );
         }
@@ -3143,16 +3162,18 @@ mod tests {
                 .iter()
                 .any(|gram| !predicted
                     .cards
-                    .contains_key(&CardIndicator::WrittenGram { gram })),
+                    .contains_key(&CardIndicator::WrittenGram { gram: gram.sense })),
             "exercise a nonempty prediction prefix"
         );
         assert!(
             predicted
                 .get_comprehensible_listening_grams(false)
                 .iter()
-                .any(|gram| !predicted
-                    .cards
-                    .contains_key(&CardIndicator::ListeningGram { gram: gram.gram }))
+                .any(
+                    |gram| !predicted.cards.contains_key(&CardIndicator::ListeningGram {
+                        gram: gram.sense.gram
+                    })
+                )
         );
         let regression = predicted
             .regressions
@@ -3198,12 +3219,14 @@ mod tests {
             };
             state.cards.insert(
                 &deck.context,
-                CardIndicator::WrittenGram { gram: *gram },
+                CardIndicator::WrittenGram { gram: gram.sense },
                 card.clone(),
             );
             state.cards.insert(
                 &deck.context,
-                CardIndicator::ListeningGram { gram: gram.gram },
+                CardIndicator::ListeningGram {
+                    gram: gram.sense.gram,
+                },
                 card,
             );
         }
@@ -3212,7 +3235,7 @@ mod tests {
             sense: None,
         };
         let stale_sense = TaggedGram {
-            gram: order[0].gram,
+            gram: order[0].sense.gram,
             sense: std::num::NonZeroU32::new(u32::MAX),
         };
         for indicator in [
@@ -3239,12 +3262,12 @@ mod tests {
                 assert!(
                     !deck
                         .get_comprehensible_written_grams(planned)
-                        .contains(&absent)
+                        .contains(&language_utils::ReadingTaggedGram::without_reading(absent))
                 );
                 assert!(
                     !deck
                         .get_comprehensible_listening_grams(planned)
-                        .contains(&absent)
+                        .contains(&language_utils::ReadingTaggedGram::without_reading(absent))
                 );
             }
         }
@@ -3302,7 +3325,7 @@ mod tests {
             entry.count *= 2;
             entry.direct_count = entry.count;
             for sense in [1, 2] {
-                entry.gram.sense = std::num::NonZeroU32::new(sense);
+                entry.gram.sense.sense = std::num::NonZeroU32::new(sense);
                 data.gram_frequencies.entries.push(entry.clone());
             }
             data.gram_frequencies.total_count = data
@@ -3313,6 +3336,209 @@ mod tests {
                 .sum();
         });
         exercise_comprehensibility(deck);
+    }
+
+    #[test]
+    #[should_panic(expected = "Encoded gram has no written-ease rank")]
+    fn shipped_sentence_requires_exact_reading_frequency() {
+        fixture_with_data(false, "word00", |data| {
+            if let SentenceGram::Learnable(gram) = &mut data.encoded_sentences[0].1.grams[0] {
+                gram.reading = Some("unlisted reading".into());
+            }
+        });
+    }
+
+    #[test]
+    fn reading_predictions_and_sense_overrides_agree_everywhere() {
+        use crate::comprehensible::CachedComprehensibleGrams;
+        use isotonic::{Direction, Point, SmoothRegression};
+        let deck = fixture_with_data(false, "word00", |data| {
+            let sense = data.gram_frequencies.entries[0].gram.sense.clone();
+            data.gram_frequencies.entries[0].gram.reading = Some("common".into());
+            let mut rare = data.gram_frequencies.entries[0].clone();
+            rare.gram.reading = Some("rare".into());
+            rare.count = 10;
+            rare.direct_count = 10;
+            data.gram_frequencies.entries.push(rare);
+            let mut sibling = data.gram_frequencies.entries[0].clone();
+            sibling.gram.sense.sense = std::num::NonZeroU32::new(2);
+            data.gram_frequencies.entries.push(sibling);
+            for (text, sentence) in &mut data.encoded_sentences {
+                for (index, gram) in sentence.grams.iter_mut().enumerate() {
+                    if let SentenceGram::Learnable(gram) = gram
+                        && gram.sense == sense
+                    {
+                        gram.reading = Some(
+                            if text == "word00 word00" && index == 1 {
+                                "rare"
+                            } else {
+                                "common"
+                            }
+                            .into(),
+                        );
+                    }
+                }
+            }
+            data.gram_frequencies
+                .entries
+                .sort_by_key(|entry| std::cmp::Reverse(entry.clone()));
+            data.gram_frequencies.total_count = data
+                .gram_frequencies
+                .entries
+                .iter()
+                .map(|e| u64::from(e.count))
+                .sum();
+        });
+        let pack = &deck.context.language_pack;
+        let common = *pack
+            .gram_frequencies
+            .entries
+            .keys()
+            .find(|r| {
+                r.sense.sense.is_none()
+                    && r.reading
+                        .is_some_and(|s| pack.string_rodeo.resolve(&s) == "common")
+            })
+            .unwrap();
+        let rare = *pack
+            .gram_frequencies
+            .entries
+            .keys()
+            .find(|r| {
+                r.reading
+                    .is_some_and(|s| pack.string_rodeo.resolve(&s) == "rare")
+            })
+            .unwrap();
+        let sibling = *pack
+            .gram_frequencies
+            .entries
+            .keys()
+            .find(|r| r.sense.sense == std::num::NonZeroU32::new(2))
+            .unwrap();
+        assert_eq!(pack.reading_ranks(&common.sense).len(), 2);
+        assert_eq!(
+            pack.gram_frequencies.entries.get(&rare).unwrap().ease,
+            10_f32.ln()
+        );
+        assert_eq!(
+            pack.gram_frequencies.entries.get(&common).unwrap().ease,
+            100_f32.ln()
+        );
+        assert_eq!(
+            pack.sense_frequencies.get(&common.sense).unwrap().count,
+            110
+        );
+        let regressions = crate::Regressions {
+            target_language_regression: Some(SmoothRegression::new(
+                &[Point::new(0.0, 0.0), Point::new(100_f32.ln(), 1.0)],
+                Direction::Ascending,
+                0.01,
+            )),
+            listening_regression: None,
+        };
+        let cache = CachedComprehensibleGrams::new(pack, &regressions);
+        let mut cards = crate::Cards::default();
+        let sentence = pack.sentences.sentence_rodeo.get("word00 word00").unwrap();
+        let check = |cards: &crate::Cards, planned, common_known, rare_known| {
+            let written = cache.written(pack, cards, planned);
+            assert_eq!(written.contains(&common), common_known);
+            assert_eq!(written.contains(&rare), rare_known);
+            assert_eq!(written.contains_sense(&common.sense), common_known);
+            assert!(
+                written.contains(&sibling),
+                "a different sense sharing the reading is independent"
+            );
+            let items: Vec<_> = written.iter().collect();
+            let unique: BTreeSet<_> = items.iter().copied().collect();
+            assert_eq!(items.len(), unique.len());
+            let bits = written.rank_bitset();
+            for reading in pack.gram_frequencies.entries.keys() {
+                assert_eq!(unique.contains(reading), written.contains(reading));
+                assert_eq!(
+                    bits.contains(pack.written_ease_order.rank(reading).unwrap()),
+                    written.contains(reading)
+                );
+            }
+            assert_eq!(
+                pack.sentence_is_comprehensible(sentence, None, &|r| written.contains(r)),
+                common_known && rare_known
+            );
+        };
+        check(&cards, false, true, false);
+        let source = language_utils::language_pack::FrequencyList {
+            entries: [common, rare]
+                .into_iter()
+                .map(|r| (r, *pack.gram_frequencies.entries.get(&r).unwrap()))
+                .collect(),
+            total_count: 110,
+        };
+        let score = Deck::percent_known_in(
+            &source,
+            cache.written(pack, &cards, false),
+            cache.listening(pack, &cards, false),
+        );
+        assert!((score.percent_known - 50.0 * 100.0 / 110.0).abs() < 1e-9);
+        assert!(!score.all_available_learned);
+        let indicator = CardIndicator::WrittenGram { gram: common.sense };
+        for ghost in [false, true] {
+            for state in [
+                rs_fsrs::State::New,
+                rs_fsrs::State::Learning,
+                rs_fsrs::State::Review,
+            ] {
+                let mut fsrs_card = rs_fsrs::Card::new(chrono::Utc::now());
+                fsrs_card.state = state;
+                let card = if ghost {
+                    crate::CardData::Ghost { fsrs_card }
+                } else {
+                    crate::CardData::Added { fsrs_card }
+                };
+                cards.insert(&deck.context, indicator, card);
+                for planned in [false, true] {
+                    let known = state == rs_fsrs::State::Review || planned && !ghost;
+                    check(&cards, planned, known, known);
+                }
+            }
+        }
+        cards.modify(&deck.context, indicator, |entry| {
+            if let std::collections::hash_map::Entry::Occupied(entry) = entry {
+                entry.remove();
+            }
+        });
+        check(&cards, false, true, false);
+        let mut predicted = deck.clone();
+        predicted.regressions = regressions;
+        predicted.comprehensible = cache;
+        assert!(
+            predicted
+                .get_comprehensible_written_grams(false)
+                .contains(&common)
+        );
+        assert!(
+            !predicted
+                .get_comprehensible_written_grams(false)
+                .contains(&rare)
+        );
+        let offered: Vec<_> = crate::next_cards::NextCardsIterator::new(
+            &predicted,
+            crate::next_cards::AllowedCards::Type(crate::CardType::TargetLanguage),
+            &None,
+            100,
+        )
+        .collect();
+        let unique: BTreeSet<_> = offered.iter().copied().collect();
+        assert_eq!(offered.len(), unique.len());
+        assert_eq!(
+            offered.first(),
+            Some(&indicator),
+            "unknown harder reading must drive the sense's score"
+        );
+        let placement = predicted.get_placement_test(vec![], vec![]);
+        assert!(!placement.is_empty());
+        let displays: BTreeSet<_> = placement.iter().map(|word| word.word.clone()).collect();
+        assert_eq!(displays.len(), placement.len());
+        let next = predicted.get_placement_test(displays.iter().cloned().collect(), vec![]);
+        assert!(next.iter().all(|word| !displays.contains(&word.word)));
     }
 
     #[test]

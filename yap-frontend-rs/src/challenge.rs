@@ -174,7 +174,7 @@ impl ReviewInfo {
                 is_target: candidate_gram == gram,
                 frequency: senses
                     .iter()
-                    .filter_map(|sense| language_pack.gram_frequencies.entries.get(sense))
+                    .filter_map(|sense| language_pack.sense_frequencies.get(sense))
                     .map(|frequency| u64::from(frequency.count))
                     .sum(),
                 literals: atoms_to_literals(resolved.as_ref(), target_language),
@@ -281,7 +281,7 @@ impl ReviewInfo {
         if !eligible.contains(&gram) {
             eligible.push(gram);
         }
-        eligible.sort_by_key(|member| language_pack.gram_frequencies.entries.get_index_of(member));
+        eligible.sort_by_key(|member| language_pack.sense_frequencies.get_index_of(member));
         let mut consumed = std::collections::BTreeSet::new();
         let mut meanings = Vec::new();
         for representative in &eligible {

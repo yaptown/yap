@@ -1,5 +1,5 @@
-use language_utils::TaggedGram;
-use language_utils::{FrequencySourceId, Gram, GramFrequencyEntry, GramVocabEntry, SentenceGram};
+use language_utils::{FrequencySourceId, Gram, GramVocabEntry, SentenceGram};
+use language_utils::{ReadingGramFrequencyEntry, ReadingTaggedGram};
 use rustc_hash::FxHashMap;
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, HashSet};
@@ -7,7 +7,7 @@ use std::fs::File;
 use std::io::Write;
 
 pub fn write_gram_frequencies_file(
-    frequencies: &[GramFrequencyEntry<String>],
+    frequencies: &[ReadingGramFrequencyEntry<String>],
     output_path: &std::path::Path,
 ) -> anyhow::Result<()> {
     let mut frequencies = frequencies.to_vec();
@@ -26,20 +26,14 @@ pub fn write_gram_frequencies_file(
 /// Compute per-source gram frequencies.
 ///
 /// `sentence_to_sources` maps each sentence text to the set of source IDs it belongs to.
-pub fn compute_per_source_gram_frequencies(
+pub fn compute_per_source_reading_gram_frequencies(
     encoded_sentences: &[(
         String,
         language_utils::ReadingSentence<Gram<String>, String>,
     )],
     sentence_to_sources: &FxHashMap<String, Vec<FrequencySourceId>>,
     gram_vocabulary: &[GramVocabEntry<String>],
-) -> FxHashMap<FrequencySourceId, Vec<GramFrequencyEntry<String>>> {
-    // Build a map from gram to its vocab entry for frequency lookup
-    let gram_to_vocab: FxHashMap<&Gram<String>, &GramVocabEntry<String>> = gram_vocabulary
-        .iter()
-        .map(|entry| (&entry.atoms, entry))
-        .collect();
-
+) -> FxHashMap<FrequencySourceId, Vec<ReadingGramFrequencyEntry<String>>> {
     // Collect all unique source IDs
     let all_source_ids: HashSet<&FrequencySourceId> = sentence_to_sources
         .values()
@@ -54,72 +48,15 @@ pub fn compute_per_source_gram_frequencies(
     let mut result = FxHashMap::default();
 
     for source_id in all_source_ids {
-        let mut gram_counts: BTreeMap<TaggedGram<Gram<String>>, f32> = BTreeMap::new();
-        let mut gram_actual_counts: BTreeMap<TaggedGram<Gram<String>>, u32> = BTreeMap::new();
-
-        for (sentence, sentence_grams) in encoded_sentences {
-            // Check if this sentence belongs to this source
-            let belongs = sentence_to_sources
-                .get(sentence)
-                .map(|ids| ids.contains(source_id))
-                .unwrap_or(false);
-            if !belongs {
-                continue;
-            }
-
-            // Collect the set of learnable grams in the encoded sentence
-            let encoded_grams: HashSet<&TaggedGram<Gram<String>>> = sentence_grams
-                .grams
-                .iter()
-                .filter_map(|g| match g {
-                    SentenceGram::Learnable(g) => Some(&g.sense),
-                    _ => None,
-                })
-                .collect();
-
-            // Count learnable grams from the encoded sentence (weight 1.0)
-            for gram in &encoded_grams {
-                *gram_counts.entry((*gram).clone()).or_insert(0.0) += 1.0;
-                *gram_actual_counts.entry((*gram).clone()).or_insert(0) += 1;
-            }
-
-            // Count high-confidence multiword term grams (weight 0.7),
-            // skipping grams already in the encoded sentence
-            for term in &sentence_grams.multiword_terms {
-                if !encoded_grams.contains(&term.gram.sense) {
-                    *gram_counts.entry(term.gram.sense.clone()).or_insert(0.0) += 0.7;
-                }
-            }
-
-            // Count low-confidence multiword term grams (weight 0.3),
-            // skipping grams already in the encoded sentence
-            for term in &sentence_grams.low_confidence_multiword_terms {
-                if !encoded_grams.contains(&term.gram.sense) {
-                    *gram_counts.entry(term.gram.sense.clone()).or_insert(0.0) += 0.3;
-                }
-            }
-        }
-
-        let mut freq_entries: Vec<GramFrequencyEntry<String>> = Vec::new();
-
-        // Add gram frequencies, rounding up to integers
-        for (gram, count) in gram_counts {
-            let count = count.ceil() as u32;
-            let direct_count = gram_actual_counts.get(&gram).copied().unwrap_or(0);
-            // Only include grams that are in the vocabulary and are learnable
-            if let Some(vocab_entry) = gram_to_vocab.get(&gram.gram)
-                && vocab_entry.atoms.is_learnable()
-            {
-                freq_entries.push(GramFrequencyEntry {
-                    count,
-                    direct_count,
-                    disambiguation_key: gram.gram.disambiguation_key(),
-                    gram,
-                });
-            }
-        }
-
-        freq_entries.sort_by_key(|entry| Reverse(entry.clone()));
+        let freq_entries = count_reading_grams(
+            encoded_sentences.iter().filter_map(|(text, sentence)| {
+                sentence_to_sources
+                    .get(text)
+                    .is_some_and(|sources| sources.contains(source_id))
+                    .then_some(sentence)
+            }),
+            gram_vocabulary,
+        );
 
         if !freq_entries.is_empty() {
             result.insert(source_id.clone(), freq_entries);
@@ -134,13 +71,23 @@ pub fn compute_per_source_gram_frequencies(
 /// Weighting: 1.0 × encoded_sentence + 0.7 × high_confidence + 0.3 × low_confidence.
 /// Multiword term grams that already appear in the encoded sentence are excluded
 /// from the multiword counts to avoid double-counting.
-pub fn compute_gram_frequencies(
+pub fn compute_reading_gram_frequencies(
     encoded_sentences: &[(
         String,
         language_utils::ReadingSentence<Gram<String>, String>,
     )],
     gram_vocabulary: &[GramVocabEntry<String>],
-) -> Vec<GramFrequencyEntry<String>> {
+) -> Vec<ReadingGramFrequencyEntry<String>> {
+    count_reading_grams(
+        encoded_sentences.iter().map(|(_, sentence)| sentence),
+        gram_vocabulary,
+    )
+}
+
+fn count_reading_grams<'a>(
+    sentences: impl Iterator<Item = &'a language_utils::ReadingSentence<Gram<String>, String>>,
+    gram_vocabulary: &[GramVocabEntry<String>],
+) -> Vec<ReadingGramFrequencyEntry<String>> {
     // Build a map from gram to its vocab entry for frequency lookup
     let gram_to_vocab: FxHashMap<&Gram<String>, &GramVocabEntry<String>> = gram_vocabulary
         .iter()
@@ -148,16 +95,17 @@ pub fn compute_gram_frequencies(
         .collect();
 
     // Count grams with weighted contributions, and actual sentence counts separately
-    let mut gram_counts: BTreeMap<TaggedGram<Gram<String>>, f32> = BTreeMap::new();
-    let mut gram_actual_counts: BTreeMap<TaggedGram<Gram<String>>, u32> = BTreeMap::new();
+    let mut gram_counts: BTreeMap<ReadingTaggedGram<Gram<String>, String>, f32> = BTreeMap::new();
+    let mut gram_actual_counts: BTreeMap<ReadingTaggedGram<Gram<String>, String>, u32> =
+        BTreeMap::new();
 
-    for (_sentence, sentence_grams) in encoded_sentences {
+    for sentence_grams in sentences {
         // Collect the set of learnable grams in the encoded sentence
-        let encoded_grams: HashSet<&TaggedGram<Gram<String>>> = sentence_grams
+        let encoded_grams: HashSet<&ReadingTaggedGram<Gram<String>, String>> = sentence_grams
             .grams
             .iter()
             .filter_map(|g| match g {
-                SentenceGram::Learnable(g) => Some(&g.sense),
+                SentenceGram::Learnable(g) => Some(g),
                 _ => None,
             })
             .collect();
@@ -171,34 +119,34 @@ pub fn compute_gram_frequencies(
         // Count high-confidence multiword term grams (weight 0.7),
         // skipping grams already in the encoded sentence
         for term in &sentence_grams.multiword_terms {
-            if !encoded_grams.contains(&term.gram.sense) {
-                *gram_counts.entry(term.gram.sense.clone()).or_insert(0.0) += 0.7;
+            if !encoded_grams.contains(&term.gram) {
+                *gram_counts.entry(term.gram.clone()).or_insert(0.0) += 0.7;
             }
         }
 
         // Count low-confidence multiword term grams (weight 0.3),
         // skipping grams already in the encoded sentence
         for term in &sentence_grams.low_confidence_multiword_terms {
-            if !encoded_grams.contains(&term.gram.sense) {
-                *gram_counts.entry(term.gram.sense.clone()).or_insert(0.0) += 0.3;
+            if !encoded_grams.contains(&term.gram) {
+                *gram_counts.entry(term.gram.clone()).or_insert(0.0) += 0.3;
             }
         }
     }
 
-    let mut freq_entries: Vec<GramFrequencyEntry<String>> = Vec::new();
+    let mut freq_entries: Vec<ReadingGramFrequencyEntry<String>> = Vec::new();
 
     // Add gram frequencies, rounding up to integers
     for (gram, count) in gram_counts {
         let count = count.ceil() as u32;
         let direct_count = gram_actual_counts.get(&gram).copied().unwrap_or(0);
         // Only include grams that are in the vocabulary and are learnable
-        if let Some(vocab_entry) = gram_to_vocab.get(&gram.gram)
+        if let Some(vocab_entry) = gram_to_vocab.get(&gram.sense.gram)
             && vocab_entry.atoms.is_learnable()
         {
-            freq_entries.push(GramFrequencyEntry {
+            freq_entries.push(ReadingGramFrequencyEntry {
                 count,
                 direct_count,
-                disambiguation_key: gram.gram.disambiguation_key(),
+                disambiguation_key: gram.sense.gram.disambiguation_key(),
                 gram,
             });
         }
@@ -212,6 +160,77 @@ pub fn compute_gram_frequencies(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn readings_keep_their_own_direct_and_overlay_counts() {
+        let sense = gram("生");
+        let first = ReadingTaggedGram {
+            sense: sense.clone(),
+            reading: Some("せい".into()),
+        };
+        let second = ReadingTaggedGram {
+            sense: sense.clone(),
+            reading: Some("なま".into()),
+        };
+        let third = ReadingTaggedGram {
+            sense: sense.clone(),
+            reading: Some("しょう".into()),
+        };
+        let sentences: Vec<_> = (0..4)
+            .map(|i| {
+                (
+                    format!("sentence {i}"),
+                    SentenceGrams {
+                        grams: vec![
+                            SentenceGram::Learnable(first.clone()),
+                            SentenceGram::Learnable(first.clone()),
+                        ],
+                        capitalize_first: false,
+                        multiword_terms: vec![
+                            language_utils::MultiwordTermMatch {
+                                gram: first.clone(),
+                                matched_word_indices: vec![0],
+                            },
+                            language_utils::MultiwordTermMatch {
+                                gram: second.clone(),
+                                matched_word_indices: vec![0],
+                            },
+                        ],
+                        low_confidence_multiword_terms: vec![language_utils::MultiwordTermMatch {
+                            gram: third.clone(),
+                            matched_word_indices: vec![0],
+                        }],
+                    },
+                )
+            })
+            .collect();
+        let vocabulary = vec![GramVocabEntry {
+            atoms: sense.gram,
+            frequency: 4,
+        }];
+        let frequencies = compute_reading_gram_frequencies(&sentences, &vocabulary);
+        let counts: BTreeMap<_, _> = frequencies
+            .iter()
+            .map(|entry| (entry.gram.clone(), (entry.count, entry.direct_count)))
+            .collect();
+        assert_eq!(
+            counts,
+            BTreeMap::from([(first, (4, 4)), (second, (3, 0)), (third, (2, 0)),])
+        );
+        let source = FrequencySourceId::PimsleurLesson(PimsleurLesson {
+            level: 1,
+            lesson: 1,
+        });
+        let sources = sentences
+            .iter()
+            .map(|(text, _)| (text.clone(), vec![source.clone()]))
+            .collect();
+        let per_source =
+            compute_per_source_reading_gram_frequencies(&sentences, &sources, &vocabulary);
+        assert_eq!(per_source[&source], frequencies);
+        let aggregated = language_utils::aggregate_sense_frequencies(&frequencies);
+        assert_eq!(aggregated.len(), 1);
+        assert_eq!((aggregated[0].count, aggregated[0].direct_count), (9, 4));
+    }
     #[test]
     fn overlay_weights_accrue_to_tagged_senses() {
         let mut first = gram("bank");
@@ -262,16 +281,16 @@ mod tests {
                 )
             })
             .collect();
-        let result = compute_gram_frequencies(&sentences, &vocabulary);
+        let result = compute_reading_gram_frequencies(&sentences, &vocabulary);
         assert_eq!(result.len(), 2);
         assert!(result.iter().all(|entry| entry.count == 2
             && entry.direct_count == 1
-            && entry.gram.sense.is_some()));
+            && entry.gram.sense.sense.is_some()));
         let source = FrequencySourceId::PimsleurLesson(PimsleurLesson {
             level: 1,
             lesson: 1,
         });
-        let per_source = compute_per_source_gram_frequencies(
+        let per_source = compute_per_source_reading_gram_frequencies(
             &sentences,
             &FxHashMap::from_iter([
                 ("bank bank".into(), vec![source.clone()]),
@@ -283,7 +302,9 @@ mod tests {
     }
 
     use super::*;
-    use language_utils::{Atom, FrequencySourceId, PimsleurLesson, SentenceGrams, Word, WordType};
+    use language_utils::{
+        Atom, FrequencySourceId, PimsleurLesson, SentenceGrams, TaggedGram, Word, WordType,
+    };
 
     fn gram(text: &str) -> TaggedGram<Gram<String>> {
         TaggedGram {
@@ -371,7 +392,7 @@ mod tests {
                 )
             })
             .collect();
-        let result = compute_per_source_gram_frequencies(
+        let result = compute_per_source_reading_gram_frequencies(
             &encoded_sentences,
             &sentence_to_sources,
             &gram_vocabulary,

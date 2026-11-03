@@ -442,12 +442,7 @@ mod tests {
             lang: language_utils::Language,
             label: &str,
             list_name: &str,
-            entries: impl Iterator<
-                Item = (
-                    &'a language_utils::TaggedGram<language_utils::SpurGram>,
-                    &'a crate::Frequency,
-                ),
-            >,
+            entries: impl Iterator<Item = (&'a language_utils::SpurReadingGram, &'a crate::Frequency)>,
         ) {
             let mut prev_count = u32::MAX;
             for (gram_spur, freq) in entries {
@@ -455,7 +450,7 @@ mod tests {
                     freq.count <= prev_count,
                     "[{label}] {list_name} not sorted by count descending: gram '{}' has count {} after count {}",
                     lp.gram_rodeo
-                        .resolve(&gram_spur.gram)
+                        .resolve(&gram_spur.sense.gram)
                         .resolve(&lp.string_rodeo)
                         .to_display_string(lang),
                     freq.count,
@@ -469,18 +464,17 @@ mod tests {
         for gram_spur in lp.gram_frequencies.entries.keys() {
             let resolved = lp
                 .gram_rodeo
-                .resolve(&gram_spur.gram)
+                .resolve(&gram_spur.sense.gram)
                 .resolve(&lp.string_rodeo);
             assert!(
-                lp.gram_definitions.contains_key(gram_spur),
+                lp.gram_definitions.contains_key(&gram_spur.sense),
                 "[{label}] Gram '{}' ({:?}) is in gram_frequencies but has no definition",
                 resolved.to_display_string(lang),
                 resolved
             );
         }
 
-        // gram_frequencies should be sorted by count descending
-        // (NextCardsIterator relies on this for early termination)
+        // Frequency tiers rely on count-descending reading entries.
         assert_frequency_list_sorted(
             lp,
             lang,
@@ -497,13 +491,13 @@ mod tests {
         for gram_spur in lp.gram_frequencies.entries.keys() {
             let resolved = lp
                 .gram_rodeo
-                .resolve(&gram_spur.gram)
+                .resolve(&gram_spur.sense.gram)
                 .resolve(&lp.string_rodeo);
             let display = resolved.to_display_string(lang);
             assert!(
                 !display.is_empty(),
                 "[{label}] Gram {:?} produced an empty display string",
-                lp.gram_rodeo.resolve(&gram_spur.gram)
+                lp.gram_rodeo.resolve(&gram_spur.sense.gram)
             );
         }
 
@@ -527,11 +521,12 @@ mod tests {
             // Every learnable gram in a sentence should have a definition
             for gram in &sentence_grams.grams {
                 if let SentenceGram::Learnable(gram_spur) = gram {
-                    let gram_spur = &gram_spur.sense;
+                    assert!(lp.gram_frequencies.entries.contains_key(gram_spur));
+                    assert!(lp.written_ease_order.rank(gram_spur).is_some());
                     assert!(
-                        lp.gram_definitions.contains_key(gram_spur),
+                        lp.gram_definitions.contains_key(&gram_spur.sense),
                         "[{label}] Learnable gram {:?} in sentence {:?} has no definition",
-                        lp.gram_rodeo.resolve(&gram_spur.gram),
+                        lp.gram_rodeo.resolve(&gram_spur.sense.gram),
                         lp.sentences.sentence_rodeo.resolve(sentence_spur)
                     );
                 }

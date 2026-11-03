@@ -428,10 +428,11 @@ async fn main() -> anyhow::Result<()> {
         );
 
         // Compute final gram/phrase frequencies from filtered encoded sentences
-        let gram_frequencies = generate_data::frequencies::compute_gram_frequencies(
+        let reading_frequencies = generate_data::frequencies::compute_reading_gram_frequencies(
             &encoded_sentences_with_grams,
             &gram_vocabulary,
         );
+        let gram_frequencies = language_utils::aggregate_sense_frequencies(&reading_frequencies);
         let master_total_count: u64 = gram_frequencies.iter().map(|e| e.count as u64).sum();
 
         // Filter to only include those with count > 3
@@ -988,16 +989,21 @@ async fn main() -> anyhow::Result<()> {
             }
         }
 
+        let reading_frequencies: Vec<_> = reading_frequencies
+            .into_iter()
+            .filter(|entry| defined_gram_set.contains(&entry.gram.sense))
+            .collect();
+
         // Write gram frequencies to file
         let gram_frequencies_file = target_language_dir.join("gram_frequencies.jsonl");
         generate_data::frequencies::write_gram_frequencies_file(
-            &gram_frequencies,
+            &reading_frequencies,
             &gram_frequencies_file,
         )
         .context("Failed to write gram frequencies file")?;
         println!(
             "Wrote {} gram frequency entries to {:?}",
-            gram_frequencies.len(),
+            reading_frequencies.len(),
             gram_frequencies_file
         );
 
@@ -1582,7 +1588,7 @@ async fn main() -> anyhow::Result<()> {
         }
 
         // Build sentence_to_sources map for per-source frequency computation
-        let master_gram_set: std::collections::HashSet<TaggedGram<Gram<String>>> = gram_frequencies
+        let master_gram_set: std::collections::HashSet<_> = reading_frequencies
             .iter()
             .map(|entry| entry.gram.clone())
             .collect();
@@ -1618,7 +1624,7 @@ async fn main() -> anyhow::Result<()> {
         // Compute per-source frequencies from UNFILTERED sentences (for accurate totals).
         // We need all_encoded_sentences here because restricted sentences are only in that set.
         let unfiltered_source_freqs =
-            generate_data::frequencies::compute_per_source_gram_frequencies(
+            generate_data::frequencies::compute_per_source_reading_gram_frequencies(
                 &unfiltered_encoded_sentences,
                 &sentence_to_sources,
                 &gram_vocabulary,
@@ -1632,7 +1638,7 @@ async fn main() -> anyhow::Result<()> {
             .into_iter()
             .map(|(source_id, freqs)| {
                 let total_count: u64 = freqs.iter().map(|e| e.count as u64).sum();
-                let filtered_entries: Vec<GramFrequencyEntry<String>> = freqs
+                let filtered_entries: Vec<_> = freqs
                     .into_iter()
                     .filter(|entry| master_gram_set.contains(&entry.gram))
                     .collect();
@@ -1822,7 +1828,7 @@ async fn main() -> anyhow::Result<()> {
             sentence_sources,
             gram_vocabulary,
             gram_frequencies: language_utils::GramFrequencyList {
-                entries: gram_frequencies,
+                entries: reading_frequencies,
                 total_count: master_total_count,
             },
             encoded_sentences: encoded_sentences_with_grams,

@@ -18,6 +18,7 @@ pub mod pronunciation_pattern;
 pub mod readings;
 pub mod strokes;
 pub use readings::{ReadingTaggedGram, RubySegment};
+pub type SpurReadingGram = ReadingTaggedGram<SpurGram, lasso::Spur>;
 pub mod text_cleanup;
 pub use strokes::{Stroke, StrokeGlyph, StrokeStandard, StrokeTable};
 
@@ -1552,13 +1553,45 @@ pub struct GramFrequencyEntry<S> {
     pub gram: TaggedGram<Gram<S>>,
 }
 
+/// Frequencies of an exact sense and pronunciation, before interning.
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize)]
+pub struct ReadingGramFrequencyEntry<S> {
+    pub count: u32,
+    pub direct_count: u32,
+    pub disambiguation_key: u32,
+    pub gram: ReadingTaggedGram<Gram<S>, S>,
+}
+
 /// A frequency list with its total count (for percentage calculations).
 /// Used in ConsolidatedLanguageData (pre-interning).
 #[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub struct GramFrequencyList {
-    pub entries: Vec<GramFrequencyEntry<String>>,
+    pub entries: Vec<ReadingGramFrequencyEntry<String>>,
     /// Total gram count from unfiltered data (for accurate percentage calculations)
     pub total_count: u64,
+}
+
+/// Derived sense view for dictionary and morphology consumers.
+pub fn aggregate_sense_frequencies(
+    entries: &[ReadingGramFrequencyEntry<String>],
+) -> Vec<GramFrequencyEntry<String>> {
+    let mut senses: BTreeMap<TaggedGram<Gram<String>>, GramFrequencyEntry<String>> =
+        BTreeMap::new();
+    for entry in entries {
+        let total = senses
+            .entry(entry.gram.sense.clone())
+            .or_insert(GramFrequencyEntry {
+                gram: entry.gram.sense.clone(),
+                count: 0,
+                direct_count: 0,
+                disambiguation_key: entry.disambiguation_key,
+            });
+        total.count += entry.count;
+        total.direct_count += entry.direct_count;
+    }
+    let mut entries: Vec<_> = senses.into_values().collect();
+    entries.sort_by_key(|entry| std::cmp::Reverse(entry.clone()));
+    entries
 }
 
 #[derive(
@@ -2903,7 +2936,10 @@ impl ConsolidatedLanguageData {
         // intern source gram frequencies
         for freq_list in self.source_gram_frequencies.values() {
             for entry in &freq_list.entries {
-                for atom in &entry.gram.gram {
+                if let Some(reading) = &entry.gram.reading {
+                    rodeo.get_or_intern(reading);
+                }
+                for atom in &entry.gram.sense.gram {
                     if let Atom::<String>::Tok(word) = atom {
                         rodeo.get_or_intern(&word.text);
                         if let WordType::Heteronym(h) = &word.word_type {
@@ -2917,7 +2953,10 @@ impl ConsolidatedLanguageData {
 
         // intern master gram frequencies
         for entry in &self.gram_frequencies.entries {
-            for atom in &entry.gram.gram {
+            if let Some(reading) = &entry.gram.reading {
+                rodeo.get_or_intern(reading);
+            }
+            for atom in &entry.gram.sense.gram {
                 if let Atom::<String>::Tok(word) = atom {
                     rodeo.get_or_intern(&word.text);
                     if let WordType::Heteronym(h) = &word.word_type {
