@@ -71,7 +71,7 @@ impl Cards {
         let knowledge = card.map(CardKnowledge::from);
         let pack = &context.language_pack;
         match indicator {
-            CardIndicator::WrittenGram { gram } if !pack.reading_ranks(&gram).is_empty() => {
+            CardIndicator::WrittenGram { gram } if !pack.reading_keys(&gram).is_empty() => {
                 if let Some(knowledge) = knowledge {
                     self.written_knowledge.insert(gram, knowledge);
                 } else {
@@ -154,7 +154,7 @@ mod tests {
                 CardKnowledge::Excluded
             };
             match indicator {
-                CardIndicator::WrittenGram { gram } if !pack.reading_ranks(&gram).is_empty() => {
+                CardIndicator::WrittenGram { gram } if !pack.reading_keys(&gram).is_empty() => {
                     written_knowledge.insert(gram, knowledge);
                 }
                 CardIndicator::ListeningGram { gram }
@@ -258,7 +258,7 @@ mod tests {
                 );
                 match indicator {
                     CardIndicator::WrittenGram { gram } => {
-                        for &(reading, rank) in pack.reading_ranks(&gram) {
+                        for (reading, rank) in pack.reading_ranks(&gram) {
                             assert_eq!(written.contains(&reading), expected);
                             assert_eq!(bits.contains(rank), expected);
                         }
@@ -271,7 +271,7 @@ mod tests {
                         {
                             assert_eq!(
                                 deck.get_comprehensible_listening_grams(planned)
-                                    .contains(reading),
+                                    .contains(&reading),
                                 expected
                             );
                         }

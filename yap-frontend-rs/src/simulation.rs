@@ -461,7 +461,7 @@ mod tests {
         }
 
         // Every gram in gram_frequencies should have a definition
-        for gram_spur in lp.gram_frequencies.entries.keys() {
+        for gram_spur in lp.gram_frequencies.resolved(lp).map(|(gram, _)| gram) {
             let resolved = lp
                 .gram_rodeo
                 .resolve(&gram_spur.sense.gram)
@@ -480,15 +480,15 @@ mod tests {
             lang,
             &label,
             "gram_frequencies",
-            lp.gram_frequencies.entries.iter(),
+            lp.gram_frequencies.resolved(lp),
         );
         for (source_id, freq_list) in &lp.sentences.source_gram_frequencies {
             let list_name = format!("source_gram_frequencies[{source_id:?}]");
-            assert_frequency_list_sorted(lp, lang, &label, &list_name, freq_list.entries.iter());
+            assert_frequency_list_sorted(lp, lang, &label, &list_name, freq_list.resolved(lp));
         }
 
         // Every gram should produce a non-empty display string
-        for gram_spur in lp.gram_frequencies.entries.keys() {
+        for gram_spur in lp.gram_frequencies.resolved(lp).map(|(gram, _)| gram) {
             let resolved = lp
                 .gram_rodeo
                 .resolve(&gram_spur.sense.gram)
@@ -501,7 +501,8 @@ mod tests {
             );
         }
 
-        for (sentence_spur, sentence_grams) in &lp.sentences.encoded_sentences {
+        for (sentence_spur, sentence_grams) in lp.decoded_sentences() {
+            let sentence_spur = &sentence_spur;
             // Every sentence should have at least one translation
             let translations = lp.sentences.translations.get(sentence_spur);
             assert!(
@@ -521,7 +522,11 @@ mod tests {
             // Every learnable gram in a sentence should have a definition
             for gram in &sentence_grams.grams {
                 if let SentenceGram::Learnable(gram_spur) = gram {
-                    assert!(lp.gram_frequencies.entries.contains_key(gram_spur));
+                    assert!(
+                        lp.gram_frequencies
+                            .entries
+                            .contains_key(&lp.written_ease_order.grams.get(gram_spur).unwrap())
+                    );
                     assert!(lp.written_ease_order.rank(gram_spur).is_some());
                     assert!(
                         lp.gram_definitions.contains_key(&gram_spur.sense),

@@ -345,11 +345,7 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
             let mut direct = Vec::new();
             let mut multiword = Vec::new();
             for sentence_spur in all_sentences {
-                if let Some(sg) = language_pack
-                    .sentences
-                    .encoded_sentences
-                    .get(&sentence_spur)
-                {
+                if let Some(sg) = language_pack.sentence_grams(sentence_spur) {
                     let is_direct = sg.grams.iter().any(|g| {
                         let s = match g {
                             SentenceGram::Learnable(s) | SentenceGram::Obvious(s) => s,
@@ -717,10 +713,7 @@ fn resolve_sentence(
     language: language_utils::Language,
     gram_to_info: &FxHashMap<language_utils::TaggedGram<language_utils::SpurGram>, GramInfo>,
 ) -> Option<ExampleSentence> {
-    let sentence_grams = language_pack
-        .sentences
-        .encoded_sentences
-        .get(sentence_spur)?;
+    let sentence_grams = language_pack.sentence_grams(*sentence_spur)?;
     let string_rodeo = &language_pack.string_rodeo;
     let gram_rodeo = &language_pack.gram_rodeo;
 

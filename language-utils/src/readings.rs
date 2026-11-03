@@ -43,6 +43,22 @@ pub struct ReadingTaggedGram<G, S> {
     pub reading: Option<S>,
 }
 
+impl AsRef<Self> for crate::SpurReadingGram {
+    fn as_ref(&self) -> &Self {
+        self
+    }
+}
+
+impl lasso::InternableValue for crate::SpurReadingGram {}
+
+impl lasso::ArchivedInternedRef for rkyv::Archived<crate::SpurReadingGram> {
+    type Ref = Self;
+
+    fn as_archived_ref(&self) -> &Self {
+        self
+    }
+}
+
 impl<G, S> ReadingTaggedGram<G, S> {
     pub fn without_reading(sense: crate::TaggedGram<G>) -> Self {
         Self {

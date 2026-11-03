@@ -8,6 +8,7 @@ pub mod word_prefix;
 pub use word_prefix::{compute_word_prefix, prefixed_text};
 pub mod indexmap;
 pub mod language_pack;
+pub mod sentence_codec;
 pub use language_pack::{
     PACKS_ORIGIN, SentenceSpur, SentenceText, TranslationSpur, TranslationText,
 };
@@ -697,6 +698,33 @@ pub struct SentenceGrams<G> {
 }
 
 impl<G> SentenceGrams<G> {
+    pub fn try_map<H>(self, mut f: impl FnMut(G) -> Option<H>) -> Option<SentenceGrams<H>> {
+        let grams = self
+            .grams
+            .into_iter()
+            .map(|gram| gram.try_map(&mut f))
+            .collect::<Option<Vec<_>>>()?;
+        let mut terms = |terms: Vec<MultiwordTermMatch<G>>| {
+            terms
+                .into_iter()
+                .map(|term| {
+                    Some(MultiwordTermMatch {
+                        gram: f(term.gram)?,
+                        matched_word_indices: term.matched_word_indices,
+                    })
+                })
+                .collect::<Option<Vec<_>>>()
+        };
+        let multiword_terms = terms(self.multiword_terms)?;
+        let low_confidence_multiword_terms = terms(self.low_confidence_multiword_terms)?;
+        Some(SentenceGrams {
+            grams,
+            capitalize_first: self.capitalize_first,
+            multiword_terms,
+            low_confidence_multiword_terms,
+        })
+    }
+
     /// Every occurrence: segmentation followed by both phrase-match lists.
     pub fn all_grams(&self) -> impl Iterator<Item = &G> {
         self.grams
@@ -2531,7 +2559,7 @@ impl<S: Copy + Eq + std::hash::Hash + 'static> lasso::InternableRef for grm<S> {
     fn is_empty(&self) -> bool {
         self.atoms.is_empty()
     }
-    fn as_bytes(&self) -> &[u8] {
+    fn as_bytes(&self) -> &[std::mem::MaybeUninit<u8>] {
         self.atoms.as_bytes()
     }
     fn len(&self) -> usize {

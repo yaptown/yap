@@ -40,7 +40,7 @@ pub(crate) fn sentence_ruby_groups<'a>(
     literals: &'a [Literal<String>],
     indices: &[usize],
 ) -> Vec<SentenceRubyGroup<'a>> {
-    let grams = &pack.sentences.encoded_sentences[&sentence].grams;
+    let grams = pack.sentence_grams(sentence).unwrap().grams;
     let mut start = 0;
     indices
         .chunk_by(|a, b| a == b)

@@ -90,10 +90,14 @@ fn threshold<K: Copy + Eq + Hash + Ord>(
 impl CachedComprehensibleGrams {
     pub(crate) fn new(pack: &LanguagePack, regressions: &Regressions) -> Self {
         Self {
-            written: threshold(
-                &pack.written_ease_order,
-                regressions.target_language_regression.as_ref(),
-            ),
+            written: regressions
+                .target_language_regression
+                .as_ref()
+                .map(|regression| {
+                    pack.written_ease_order.partition_point(|ease| {
+                        regression.interpolate(ease).is_some_and(|p| p >= 0.80)
+                    })
+                }),
             listening: threshold(
                 &pack.listening_ease_order,
                 regressions.listening_regression.as_ref(),
@@ -161,8 +165,8 @@ impl WrittenGrams<'_> {
     pub fn contains_sense(&self, sense: &TaggedGram<SpurGram>) -> bool {
         self.pack
             .reading_ranks(sense)
-            .first()
-            .is_some_and(|(reading, _)| self.contains(reading))
+            .next()
+            .is_some_and(|(reading, _)| self.contains(&reading))
     }
 
     pub fn iter(&self) -> impl Iterator<Item = SpurReadingGram> + '_ {
@@ -182,10 +186,7 @@ impl WrittenGrams<'_> {
                     .iter()
                     .filter(|(_, knowledge)| knowledge.contains(self.planned))
                     .flat_map(|(sense, _)| {
-                        self.pack
-                            .reading_ranks(sense)
-                            .iter()
-                            .map(|(reading, _)| *reading)
+                        self.pack.reading_ranks(sense).map(|(reading, _)| reading)
                     }),
             )
     }
@@ -208,8 +209,8 @@ impl WrittenGrams<'_> {
             }
         }
         for (key, knowledge) in self.cache.cards {
-            for &(_, rank) in self.pack.reading_ranks(key) {
-                set(rank, knowledge.contains(self.planned));
+            for key in self.pack.reading_keys(key) {
+                set(key.index(), knowledge.contains(self.planned));
             }
         }
         RankBitset(bits)
@@ -247,12 +248,7 @@ impl ListeningGrams<'_> {
         self.cache
             .iter(&self.pack.listening_ease_order, self.planned)
             .flat_map(|gram| self.pack.senses_of(gram))
-            .flat_map(|sense| {
-                self.pack
-                    .reading_ranks(sense)
-                    .iter()
-                    .map(|(reading, _)| *reading)
-            })
+            .flat_map(|sense| self.pack.reading_ranks(sense).map(|(reading, _)| reading))
     }
 }
 

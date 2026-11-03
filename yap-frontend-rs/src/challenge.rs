@@ -613,7 +613,7 @@ impl Deck {
 
         // Phrase matches already carry occurrence positions, including gaps in
         // discontinuous phrases. Do not reconstruct those from surface text.
-        let encoded = language_pack.sentences.encoded_sentences.get(&sentence)?;
+        let encoded = language_pack.sentence_grams(sentence)?;
         primary_literal_indices.extend(
             encoded
                 .multiword_terms

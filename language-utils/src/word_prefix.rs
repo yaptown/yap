@@ -179,7 +179,9 @@ mod tests {
         assert!(pack.is_visible(b, Language::French));
         assert!(pack.is_visible(pack.resolve_entry(&noun).unwrap(), Language::French));
         assert!(!pack.is_visible(pack.resolve_entry(&particle).unwrap(), Language::French));
-        let LanguagePack { core, sentences } = pack;
+        let LanguagePack {
+            core, sentences, ..
+        } = pack;
         assert!(core.string_rodeo.get("il est").is_some());
         let core = LanguagePack::from_parts(core, None);
         assert!(core.sentences.prefixed_text.is_empty());

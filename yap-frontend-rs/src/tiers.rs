@@ -147,16 +147,13 @@ mod tests {
 
     #[test]
     fn position_preserves_slices_and_the_corpus_denominator() {
-        use language_utils::{Frequency, SpurGram, TaggedGram};
+        use language_utils::Frequency;
         use lasso::Key;
         let frequencies = FrequencyList {
             entries: (0..250)
                 .map(|i| {
                     (
-                        language_utils::ReadingTaggedGram::without_reading(TaggedGram {
-                            gram: SpurGram::try_from_usize(i).unwrap(),
-                            sense: None,
-                        }),
+                        language_utils::sentence_codec::GramKey::try_from_usize(i).unwrap(),
                         Frequency {
                             count: 1,
                             direct_count: 1,

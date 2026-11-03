@@ -1473,12 +1473,7 @@ fn comprehensible_sentence_from_spur(
     language_pack: &LanguagePack,
     sentence: SentenceSpur,
 ) -> Option<ComprehensibleSentence> {
-    let sentence_grams = language_pack
-        .sentences
-        .encoded_sentences
-        .get(&sentence)?
-        .clone()
-        .without_readings();
+    let sentence_grams = language_pack.sentence_grams(sentence)?.without_readings();
 
     // Collect unique phrases (high and low confidence multiword terms)
     let unique_target_language_phrases = {
@@ -1786,11 +1781,8 @@ impl weapon::AppState for Deck {
                     .sentences
                     .sentence_rodeo
                     .get(&cleaned_sentence)
-                    && let Some(encoded_sentence) = context
-                        .language_pack
-                        .sentences
-                        .encoded_sentences
-                        .get(&sentence_spur)
+                    && let Some(encoded_sentence) =
+                        context.language_pack.sentence_grams(sentence_spur)
                 {
                     *deck
                         .stats
@@ -1805,7 +1797,7 @@ impl weapon::AppState for Deck {
 
                     // Match grams to literals and log reviews for multi-word grams
                     for (gram, matched) in utils::match_grams_to_literals(
-                        encoded_sentence,
+                        &encoded_sentence,
                         &literals,
                         &context.language_pack,
                     ) {
@@ -2105,11 +2097,7 @@ impl weapon::AppState for Deck {
                 {
                     let mut any_again = false;
 
-                    let encoded_sentence = context
-                        .language_pack
-                        .sentences
-                        .encoded_sentences
-                        .get(&sentence_spur);
+                    let encoded_sentence = context.language_pack.sentence_grams(sentence_spur);
                     if let Some(encoded_sentence) = encoded_sentence {
                         // Collect grams by rating (worse ratings take precedence)
                         let mut again_grams = BTreeSet::new();
@@ -2118,7 +2106,7 @@ impl weapon::AppState for Deck {
 
                         // Match grams to literals and categorize by rating
                         for (gram, matched) in utils::match_grams_to_literals(
-                            encoded_sentence,
+                            &encoded_sentence,
                             &literals,
                             &context.language_pack,
                         ) {
@@ -2725,6 +2713,7 @@ impl Deck {
     /// Each gram contributes its full frequency count if known in both written and listening,
     /// or half if known in only one. 100% = all grams known in both modalities.
     fn percent_known_in(
+        pack: &language_utils::language_pack::LanguagePack,
         frequency_list: &language_utils::language_pack::FrequencyList,
         known_written: impl GramMembership,
         known_listening: impl GramMembership,
@@ -2739,8 +2728,7 @@ impl Deck {
 
         let mut all_available_learned = true;
         let known: f64 = frequency_list
-            .entries
-            .iter()
+            .resolved(pack)
             .map(|(gram, freq)| {
                 let written = known_written.contains(gram);
                 let listening = known_listening.contains(gram);
@@ -2767,11 +2755,12 @@ impl Deck {
 
     /// Locate Essential progress on the same coverage curve used by stats.
     fn essential_position_with(
+        pack: &language_utils::language_pack::LanguagePack,
         frequency_list: &language_utils::language_pack::FrequencyList,
         known_written: impl GramMembership,
         known_listening: impl GramMembership,
     ) -> tiers::EssentialPosition {
-        let coverage = Self::percent_known_in(frequency_list, known_written, known_listening);
+        let coverage = Self::percent_known_in(pack, frequency_list, known_written, known_listening);
         tiers::position(frequency_list, coverage.percent_known)
     }
 
@@ -2813,7 +2802,14 @@ impl Deck {
                     .sentences
                     .source_gram_frequencies
                     .get(&source_id)
-                    .map(|fl| Self::percent_known_in(fl, known_written, known_listening))
+                    .map(|fl| {
+                        Self::percent_known_in(
+                            &self.context.language_pack,
+                            fl,
+                            known_written,
+                            known_listening,
+                        )
+                    })
                     .unwrap_or(ComprehensionScore {
                         percent_known: 0.0,
                         all_available_learned: true,
@@ -2821,6 +2817,7 @@ impl Deck {
             }
             None => {
                 let percent_known = Self::essential_position_with(
+                    &self.context.language_pack,
                     &self.context.language_pack.gram_frequencies,
                     known_written,
                     known_listening,
@@ -3224,6 +3221,7 @@ impl Deck {
         let written = self.get_comprehensible_written_grams(true);
         let listening = self.get_comprehensible_listening_grams(true);
         Self::percent_known_in(
+            &self.context.language_pack,
             &self.context.language_pack.gram_frequencies,
             written,
             listening,
@@ -3264,6 +3262,7 @@ impl Deck {
     #[bridgerton::stable]
     pub fn get_current_tier(&self) -> TierInfo {
         Self::essential_position_with(
+            &self.context.language_pack,
             &self.context.language_pack.gram_frequencies,
             self.get_comprehensible_written_grams(true),
             self.get_comprehensible_listening_grams(true),
@@ -3376,6 +3375,7 @@ impl Deck {
             }
 
             let score = Self::percent_known_in(
+                language_pack,
                 movie_frequencies,
                 comprehensible_written,
                 comprehensible_listening,
@@ -3384,8 +3384,7 @@ impl Deck {
             // For milestone calculation, use written comprehension as the card count basis
             let cards_to_next_milestone = if include_milestones && !score.all_available_learned {
                 let comprehensible_word_count: u64 = movie_frequencies
-                    .entries
-                    .iter()
+                    .resolved(language_pack)
                     .filter_map(|(gram, freq)| {
                         comprehensible_written
                             .contains(gram)
@@ -3401,7 +3400,7 @@ impl Deck {
                     // Collect unknown grams with their frequencies.
                     let mut unknown_by_sense: FxHashMap<TaggedGram<SpurGram>, u64> =
                         FxHashMap::default();
-                    for (reading, frequency) in movie_frequencies.entries.iter() {
+                    for (reading, frequency) in movie_frequencies.resolved(language_pack) {
                         if !comprehensible_written.contains(reading) {
                             *unknown_by_sense.entry(reading.sense).or_default() +=
                                 frequency.count as u64;
@@ -3463,8 +3462,12 @@ impl Deck {
                 continue;
             }
 
-            let score =
-                Self::percent_known_in(freq_list, comprehensible_written, comprehensible_listening);
+            let score = Self::percent_known_in(
+                language_pack,
+                freq_list,
+                comprehensible_written,
+                comprehensible_listening,
+            );
 
             stats.push(PimsleurStats {
                 level: lesson.level,
@@ -3506,9 +3509,10 @@ impl Deck {
                     .is_some_and(|frequencies| {
                         frequencies.total_count > 0
                             && frequencies
-                                .entries
-                                .keys()
-                                .any(|gram| !written.contains(gram) || !listening.contains(gram))
+                                .resolved(&self.context.language_pack)
+                                .any(|(gram, _)| {
+                                    !written.contains(gram) || !listening.contains(gram)
+                                })
                     })
             })
             .max_by_key(|(_, score)| *score)
@@ -3674,8 +3678,7 @@ impl Deck {
                         self.context
                             .language_pack
                             .reading_ranks(gram)
-                            .iter()
-                            .map(|(reading, _)| *reading),
+                            .map(|(reading, _)| reading),
                     );
                 }
                 CardIndicator::ListeningGram { gram } => {
@@ -3688,8 +3691,7 @@ impl Deck {
                                 self.context
                                     .language_pack
                                     .reading_ranks(sense)
-                                    .iter()
-                                    .map(|(reading, _)| *reading)
+                                    .map(|(reading, _)| reading)
                             }),
                     );
                 }
@@ -3700,6 +3702,7 @@ impl Deck {
         // Select the tier once for both the current label and projected progress.
         let freq_list = &self.context.language_pack.gram_frequencies;
         let position = Self::essential_position_with(
+            &self.context.language_pack,
             freq_list,
             self.get_comprehensible_written_grams(true),
             self.get_comprehensible_listening_grams(true),
@@ -3715,8 +3718,13 @@ impl Deck {
             }
             None => position.projected_percent(
                 freq_list,
-                Self::percent_known_in(freq_list, &projected_written, &projected_listening)
-                    .percent_known,
+                Self::percent_known_in(
+                    &self.context.language_pack,
+                    freq_list,
+                    &projected_written,
+                    &projected_listening,
+                )
+                .percent_known,
             ),
         };
 
@@ -5860,6 +5868,7 @@ mod tests {
             );
             assert!(light.cards_to_next_milestone.is_none());
         }
+        let gram = *deck.context.language_pack.reading_gram(gram);
         let mut known = deck.clone();
         for indicator in [
             CardIndicator::WrittenGram { gram: gram.sense },
@@ -7153,7 +7162,7 @@ mod tests {
             .sentences
             .sentence_rodeo
             .get(&cleaned_sentence)
-            .and_then(|spur| language_pack.sentences.encoded_sentences.get(&spur))
+            .and_then(|spur| language_pack.sentence_grams(spur))
             .is_some();
         let cleaned_has_literals = language_pack
             .sentences
@@ -7184,13 +7193,13 @@ mod tests {
         ))
         .expect("Failed to load French pack - run `cargo run --bin generate-data -- fra` first");
         let mut seen = std::collections::BTreeSet::new();
-        for sentence in pack.sentences.encoded_sentences.keys() {
-            let text = pack.sentences.sentence_rodeo.resolve(sentence);
+        for sentence in pack.sentence_keys() {
+            let text = pack.sentences.sentence_rodeo.resolve(&sentence);
             if !text.contains([';', ':', '«', '»', '!', '?']) {
                 continue;
             }
             let literals = pack
-                .sentence_to_literals(sentence, Language::French)
+                .sentence_to_literals(&sentence, Language::French)
                 .unwrap();
             let reconstructed = language_utils::literals_to_text(&literals);
             assert_eq!(reconstructed, text);
@@ -7199,7 +7208,7 @@ mod tests {
             // the lookup copy, which must still identify this encoded sentence.
             let old = text.replace(['\u{202F}', '\u{00A0}'], " ");
             let cleaned = cleanup_sentence(old, Language::French);
-            assert_eq!(pack.sentences.sentence_rodeo.get(&cleaned), Some(*sentence));
+            assert_eq!(pack.sentences.sentence_rodeo.get(&cleaned), Some(sentence));
             seen.extend(
                 text.chars()
                     .filter(|c| [';', ':', '«', '»', '!', '?'].contains(c)),
@@ -7587,8 +7596,8 @@ mod tests {
         if let Ok(needle) = std::env::var("INSPECT_SENTENCE") {
             let lp = &deck.context.language_pack;
             println!("\n=== Sentence inspection: {needle:?} ===");
-            for (sentence_spur, sentence_grams) in lp.sentences.encoded_sentences.iter() {
-                let sentence_text = lp.sentences.sentence_rodeo.resolve(sentence_spur);
+            for (sentence_spur, sentence_grams) in lp.decoded_sentences() {
+                let sentence_text = lp.sentences.sentence_rodeo.resolve(&sentence_spur);
                 if !sentence_text.contains(&needle) {
                     continue;
                 }
@@ -7609,9 +7618,9 @@ mod tests {
                         .to_display_string(deck.context.course.target_language);
                     let in_freq = lp.sense_frequencies.contains_key(gram);
                     // Listening side
-                    let l_now = lp.reading_ranks(gram).iter().all(|(reading, _)| {
+                    let l_now = lp.reading_ranks(gram).all(|(reading, _)| {
                         deck.get_comprehensible_listening_grams(false)
-                            .contains(reading)
+                            .contains(&reading)
                     });
                     let l_card = deck
                         .cards

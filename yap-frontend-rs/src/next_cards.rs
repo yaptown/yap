@@ -184,7 +184,7 @@ impl NextCardsIterator {
         let mut text = RankedSenses::new(sorted_prefix_len);
         let mut single = RankedSenses::new(sorted_prefix_len);
         let mut easy = RankedSenses::new(sorted_prefix_len);
-        for (reading, frequency) in gram_source.entries.iter() {
+        for (reading, frequency) in gram_source.resolved(&context.language_pack) {
             // Lists descend by count. A reading's value cannot exceed ln(count),
             // so stop only after every active pool has enough UNIQUE senses above
             // every remaining reading's upper bound.
@@ -251,8 +251,7 @@ impl NextCardsIterator {
         // can skip past the sorted portion).
         let mut listening_seen = std::collections::HashSet::new();
         let mut listening_values: Vec<(NotNan<f32>, SpurGram)> = gram_source
-            .entries
-            .iter()
+            .resolved(&context.language_pack)
             .filter_map(|(gram, _)| {
                 if !comprehensible_written.contains(gram) || !listening_seen.insert(gram.sense.gram)
                 {

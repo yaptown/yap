@@ -182,9 +182,7 @@ fn convert_sentence_review(
                     // Get all phrases from the sentence and check their status
                     let phrases: Vec<_> = context
                         .language_pack
-                        .sentences
-                        .encoded_sentences
-                        .get(&sentence_spur)
+                        .sentence_grams(sentence_spur)
                         .map(|encoded| {
                             encoded
                                 .multiword_terms

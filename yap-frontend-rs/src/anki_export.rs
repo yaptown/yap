@@ -290,7 +290,7 @@ fn guid(course: Course, kind: &str, text: &str) -> String {
 /// (and parts of speech) of that spelling. Ties use spelling for stable ranks.
 fn spelling_frequency_ranks(pack: &LanguagePack, language: Language) -> FxHashMap<String, usize> {
     let mut counts: FxHashMap<String, u64> = FxHashMap::default();
-    for (gram, frequency) in pack.gram_frequencies.entries.iter() {
+    for (gram, frequency) in pack.gram_frequencies.resolved(pack) {
         let word = pack
             .resolve_gram(&gram.sense.gram)
             .to_display_string(language);
@@ -773,10 +773,8 @@ impl AnkiExport {
 }
 
 fn bare_gram(pack: &LanguagePack, sentence: SentenceSpur) -> Option<TaggedGram<SpurGram>> {
-    let mut grams = pack
-        .sentences
-        .encoded_sentences
-        .get(&sentence)?
+    let sentence = pack.sentence_grams(sentence)?;
+    let mut grams = sentence
         .grams
         .iter()
         .map(|g| {
@@ -828,6 +826,7 @@ impl Deck {
         let pack = &self.context.language_pack;
         let language = self.context.course.target_language;
         let known = Self::percent_known_in(
+            pack,
             &pack.gram_frequencies,
             self.get_comprehensible_written_grams(true),
             self.get_comprehensible_listening_grams(true),
@@ -1189,7 +1188,7 @@ impl PlannerState {
             {
                 continue;
             }
-            let Some(encoded) = pack.sentences.encoded_sentences.get(&sentence) else {
+            let Some(encoded) = pack.sentence_grams(sentence) else {
                 continue;
             };
             let learnable = encoded.grams.iter().filter_map(|g| match g {
@@ -1264,12 +1263,11 @@ impl PlannerState {
                 let gram = self
                     .base_taught
                     .iter()
-                    .filter(|g| pack.reading_ranks(g).iter().any(|(_, r)| ranks.contains(r)))
+                    .filter(|g| pack.reading_ranks(g).any(|(_, r)| ranks.contains(&r)))
                     .max_by_key(|g| {
                         pack.reading_ranks(g)
-                            .iter()
                             .filter(|(_, r)| ranks.contains(r))
-                            .map(|(_, r)| *r)
+                            .map(|(_, r)| r)
                             .max()
                     })?;
                 Some((*s, *gram, ranks.iter().max().copied().unwrap_or(0)))
@@ -1289,7 +1287,7 @@ impl PlannerState {
         }
         let pack = &self.seed.context.language_pack;
         let mut remaining: Vec<_> = self.base_taught.iter().copied().collect();
-        remaining.sort_by_key(|g| pack.reading_ranks(g).first().map(|(_, rank)| *rank));
+        remaining.sort_by_key(|g| pack.reading_ranks(g).next().map(|(_, rank)| rank));
         for gram in remaining {
             let word = gram
                 .resolve(&pack.gram_rodeo)
@@ -1309,7 +1307,7 @@ impl PlannerState {
         self.base_ranks = self
             .base_taught
             .iter()
-            .flat_map(|g| pack.reading_ranks(g).iter().map(|(_, rank)| *rank))
+            .flat_map(|g| pack.reading_ranks(g).map(|(_, rank)| rank))
             .collect();
         self.taught.extend(&self.base_taught);
         self.base_sentence_count = self.used_sentences.len();
@@ -1382,7 +1380,7 @@ impl PlannerState {
         let pack = &self.seed.context.language_pack;
         let deck = self.simulation.as_ref().unwrap().deck();
         let known_now = self.known_now.as_ref().unwrap();
-        let gram_ranks = pack.reading_ranks(&gram);
+        let gram_ranks = pack.reading_keys(&gram);
         if gram_ranks.is_empty() {
             return;
         }
@@ -1401,7 +1399,7 @@ impl PlannerState {
             })
             .filter(|s| {
                 self.clip_sentence_ranks[s].iter().all(|&r| {
-                    gram_ranks.iter().any(|(_, rank)| *rank == r)
+                    gram_ranks.iter().any(|key| key.index() == r)
                         || known_now.contains(r)
                         || self.base_ranks.contains(&r)
                 })
@@ -1467,7 +1465,7 @@ impl PlannerState {
         // word note per spelling; a later sense of the same spelling
         // still gets its sentence, whose own gloss carries that sense.
         let mut prerequisites = vec![gram];
-        if let Some(encoded) = pack.sentences.encoded_sentences.get(&sentence) {
+        if let Some(encoded) = pack.sentence_grams(sentence) {
             let learnable = encoded.grams.iter().filter_map(|g| match g {
                 SentenceGram::Learnable(g) => Some(*g),
                 SentenceGram::Obvious(_) => None,
@@ -1652,7 +1650,7 @@ impl PlannerState {
                 known: self.seed.get_comprehensible_listening_grams(true),
                 taught,
             };
-            Deck::percent_known_in(&pack.gram_frequencies, written, listening)
+            Deck::percent_known_in(pack, &pack.gram_frequencies, written, listening)
                 .percent_known
                 .round()
         };
@@ -1906,11 +1904,9 @@ mod tests {
             violence_weapons: ContentRatingLevel::None,
         };
         let rows: Vec<_> = pack
-            .sentences
-            .encoded_sentences
-            .keys()
+            .sentence_keys()
             .flat_map(|sentence| {
-                let text = pack.sentences.sentence_rodeo.resolve(sentence).to_owned();
+                let text = pack.sentences.sentence_rodeo.resolve(&sentence).to_owned();
                 let make = |prefix, content_ratings| {
                     let mut row = row(text.clone(), format!("{prefix}-{text}"));
                     row.content_ratings = content_ratings;
@@ -2137,15 +2133,13 @@ mod tests {
         let language = course.target_language;
         clips::publish_manifest(
             language,
-            pack.sentences
-                .encoded_sentences
-                .keys()
+            pack.sentence_keys()
                 .map(|s| {
-                    let text = pack.sentences.sentence_rodeo.resolve(s).to_owned();
+                    let text = pack.sentences.sentence_rodeo.resolve(&s).to_owned();
                     let imdb = pack
                         .sentences
                         .sentence_sources
-                        .get(s)
+                        .get(&s)
                         .and_then(|source| source.movie_ids.first())
                         .map(String::as_str)
                         .unwrap_or("tt0000001");
@@ -2445,21 +2439,21 @@ mod tests {
     }
     #[test]
     fn anki_spelling_frequency_combines_senses() {
-        let mut deck = fixture();
-        let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
-        let (gram, frequency) = pack.gram_frequencies.entries.get_index(63).unwrap();
-        let mut sense = *gram;
-        let mut frequency = *frequency;
-        // Each sense is rarer than word00; together this spelling is commonest.
-        frequency.count = 70;
-        for n in [1, 2] {
-            sense.sense.sense = std::num::NonZeroU32::new(n);
-            Arc::get_mut(&mut pack.core)
-                .unwrap()
-                .gram_frequencies
-                .entries
-                .insert(sense, frequency);
-        }
+        let deck = fixture_with_data(false, "word00", |data| {
+            let mut entry = data.gram_frequencies.entries[63].clone();
+            entry.count = 70;
+            for n in [1, 2] {
+                entry.gram.sense.sense = std::num::NonZeroU32::new(n);
+                data.gram_frequencies.entries.push(entry.clone());
+            }
+        });
+        let pack = &deck.context.language_pack;
+        let sense = pack
+            .gram_frequencies
+            .resolved(pack)
+            .map(|(gram, _)| *gram)
+            .find(|gram| gram.sense.sense == std::num::NonZeroU32::new(2))
+            .unwrap();
         let ranks = spelling_frequency_ranks(pack, Language::English);
         assert_eq!(ranks.len(), 64);
         assert_eq!(ranks["word63"], 0);
@@ -2551,7 +2545,7 @@ mod tests {
                 state.advance();
             }
             let pack = &deck.context.language_pack;
-            let target = *pack.gram_frequencies.entries.get_index(0).unwrap().0;
+            let target = *pack.reading_gram(*pack.gram_frequencies.entries.get_index(0).unwrap().0);
             let clip = pack.sentences.sentence_rodeo.get(text).unwrap();
             let other = pack.sentences.sentence_rodeo.get("word00").unwrap();
             // The chosen sentence wins even when another matching clip is first
@@ -2593,7 +2587,7 @@ mod tests {
                 state.index_sentences();
             }
             let pack = &deck.context.language_pack;
-            let target = *pack.gram_frequencies.entries.get_index(0).unwrap().0;
+            let target = *pack.reading_gram(*pack.gram_frequencies.entries.get_index(0).unwrap().0);
             // The word clip sorts AFTER its bare sentence note on rebuild. A
             // heuristic would steal the sentence note's clip for the word.
             for text in ["word00", "Word00"] {
@@ -2657,7 +2651,8 @@ mod tests {
 
     fn assert_prerequisite_clip(deck: Deck, clip_text: &str, expected: bool) {
         let pack = &deck.context.language_pack;
-        let prerequisite = pack.gram_frequencies.entries.get_index(0).unwrap().0;
+        let prerequisite =
+            pack.reading_gram(*pack.gram_frequencies.entries.get_index(0).unwrap().0);
         let prerequisite_word = pack
             .resolve_gram(&prerequisite.sense.gram)
             .to_display_string(Language::English);
@@ -2668,7 +2663,7 @@ mod tests {
             while !state.unindexed.is_empty() || state.simulation.is_none() {
                 state.advance();
             }
-            let target = *pack.gram_frequencies.entries.get_index(1).unwrap().0;
+            let target = *pack.reading_gram(*pack.gram_frequencies.entries.get_index(1).unwrap().0);
             let sentence = pack
                 .sentences
                 .sentence_rodeo
@@ -2861,12 +2856,10 @@ mod tests {
         let pack = &deck.context.language_pack;
         clips::publish_manifest(
             Language::English,
-            pack.sentences
-                .encoded_sentences
-                .keys()
+            pack.sentence_keys()
                 .take(20)
                 .map(|s| {
-                    let text = pack.sentences.sentence_rodeo.resolve(s).to_owned();
+                    let text = pack.sentences.sentence_rodeo.resolve(&s).to_owned();
                     row(text, format!("tt0000001-{}-0", s.into_inner()))
                 })
                 .collect(),
@@ -3019,7 +3012,13 @@ mod tests {
     fn anki_advanced_means_all_available_not_all_unfiltered_words() {
         let mut deck = fixture();
         let mut state = crate::DeckState::new();
-        for gram in deck.context.language_pack.gram_frequencies.entries.keys() {
+        for gram in deck
+            .context
+            .language_pack
+            .gram_frequencies
+            .resolved(&deck.context.language_pack)
+            .map(|(gram, _)| gram)
+        {
             for indicator in [
                 CardIndicator::WrittenGram { gram: gram.sense },
                 CardIndicator::ListeningGram {
@@ -3054,7 +3053,7 @@ mod tests {
             let bits = written.rank_bitset();
             let mut expected_written = BTreeSet::new();
             let mut expected_listening = BTreeSet::new();
-            for gram in pack.gram_frequencies.entries.keys() {
+            for gram in pack.gram_frequencies.resolved(pack).map(|(gram, _)| gram) {
                 assert_eq!(
                     bits.contains(pack.written_ease_order.rank(gram).unwrap()),
                     written.contains(gram)
@@ -3392,8 +3391,8 @@ mod tests {
         let pack = &deck.context.language_pack;
         let common = *pack
             .gram_frequencies
-            .entries
-            .keys()
+            .resolved(pack)
+            .map(|(gram, _)| gram)
             .find(|r| {
                 r.sense.sense.is_none()
                     && r.reading
@@ -3402,8 +3401,8 @@ mod tests {
             .unwrap();
         let rare = *pack
             .gram_frequencies
-            .entries
-            .keys()
+            .resolved(pack)
+            .map(|(gram, _)| gram)
             .find(|r| {
                 r.reading
                     .is_some_and(|s| pack.string_rodeo.resolve(&s) == "rare")
@@ -3411,17 +3410,25 @@ mod tests {
             .unwrap();
         let sibling = *pack
             .gram_frequencies
-            .entries
-            .keys()
+            .resolved(pack)
+            .map(|(gram, _)| gram)
             .find(|r| r.sense.sense == std::num::NonZeroU32::new(2))
             .unwrap();
         assert_eq!(pack.reading_ranks(&common.sense).len(), 2);
         assert_eq!(
-            pack.gram_frequencies.entries.get(&rare).unwrap().ease,
+            pack.gram_frequencies
+                .entries
+                .get(&pack.written_ease_order.grams.get(rare).unwrap())
+                .unwrap()
+                .ease,
             10_f32.ln()
         );
         assert_eq!(
-            pack.gram_frequencies.entries.get(&common).unwrap().ease,
+            pack.gram_frequencies
+                .entries
+                .get(&pack.written_ease_order.grams.get(common).unwrap())
+                .unwrap()
+                .ease,
             100_f32.ln()
         );
         assert_eq!(
@@ -3452,7 +3459,7 @@ mod tests {
             let unique: BTreeSet<_> = items.iter().copied().collect();
             assert_eq!(items.len(), unique.len());
             let bits = written.rank_bitset();
-            for reading in pack.gram_frequencies.entries.keys() {
+            for reading in pack.gram_frequencies.resolved(pack).map(|(gram, _)| gram) {
                 assert_eq!(unique.contains(reading), written.contains(reading));
                 assert_eq!(
                     bits.contains(pack.written_ease_order.rank(reading).unwrap()),
@@ -3468,11 +3475,15 @@ mod tests {
         let source = language_utils::language_pack::FrequencyList {
             entries: [common, rare]
                 .into_iter()
-                .map(|r| (r, *pack.gram_frequencies.entries.get(&r).unwrap()))
+                .map(|r| {
+                    let key = pack.written_ease_order.grams.get(r).unwrap();
+                    (key, *pack.gram_frequencies.entries.get(&key).unwrap())
+                })
                 .collect(),
             total_count: 110,
         };
         let score = Deck::percent_known_in(
+            pack,
             &source,
             cache.written(pack, &cards, false),
             cache.listening(pack, &cards, false),
