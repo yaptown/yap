@@ -672,7 +672,6 @@ loading-hash-mismatch = El hash de los datos del idioma descargados no coincide.
 loading-lock-error = No se pudo bloquear el paquete de idioma: { $error }
 loading-no-response = el servidor de datos del idioma no respondió en { $milliseconds } ms
 loading-pack-download-error = Error al descargar el paquete de { $url }: { $source }
-loading-preparing-language-data = Preparando los datos del idioma
 loading-range-ignored = el servidor ignoró el rango de bytes del paquete
 loading-range-oversized = la respuesta del rango del paquete era demasiado grande
 loading-sentences = Descargando frases en { $language }

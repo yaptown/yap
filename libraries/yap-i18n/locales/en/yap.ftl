@@ -669,7 +669,6 @@ loading-hash-mismatch = Downloaded language data hash mismatch. Expected { $expe
 loading-lock-error = Failed to acquire language pack lock: { $error }
 loading-no-response = no response from the language data server after { $milliseconds }ms
 loading-pack-download-error = Pack download error for { $url }: { $source }
-loading-preparing-language-data = Preparing language data
 loading-range-ignored = server ignored pack byte range
 loading-range-oversized = pack range response was oversized
 loading-sentences = Downloading { $language } sentences

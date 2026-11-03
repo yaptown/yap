@@ -655,7 +655,6 @@ loading-hash-mismatch = 下载的语言数据哈希值不匹配。预期 { $expe
 loading-lock-error = 无法获取语言包锁：{ $error }
 loading-no-response = 语言数据服务器 { $milliseconds } 毫秒内无响应
 loading-pack-download-error = 语言包下载出错（{ $url }）：{ $source }
-loading-preparing-language-data = 正在准备语言数据
 loading-range-ignored = 服务器忽略了语言包的字节范围请求
 loading-range-oversized = 语言包范围响应过大
 loading-sentences = 正在下载{ $language }句子

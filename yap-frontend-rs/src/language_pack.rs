@@ -351,11 +351,7 @@ pub(crate) async fn load_language_pack(
     )
     .await?;
 
-    set_loading_state(&yap_i18n::tr!("loading-preparing-language-data"), 100.0);
-    let assemble_timer = bridgerton::platform::PerfTimer::new("Assembling language pack");
-    let pack = core.with_sentences(sentences);
-    drop(assemble_timer);
-    Ok(pack)
+    Ok(core.with_sentences(sentences))
 }
 
 async fn course_data_directory(
