@@ -966,27 +966,24 @@ async fn main() -> anyhow::Result<()> {
             }
         }
 
-        // Clean up multiword terms referencing grams that were removed from the vocabulary.
-        // Omnigram-discovered multi-atom grams may have been used for NLP detection but then
-        // filtered out because they lacked definitions or had too few occurrences.
+        // Phrase matches must have a frequency entry for their exact sense, not merely
+        // an atom sequence retained in the vocabulary (which also includes obvious grams).
         {
-            let vocab_gram_set: std::collections::HashSet<&Gram<String>> =
-                gram_vocabulary.iter().map(|entry| &entry.atoms).collect();
             let mut removed_high = 0usize;
             let mut removed_low = 0usize;
             for (_text, sg) in &mut encoded_sentences_with_grams {
                 let before_high = sg.multiword_terms.len();
                 let before_low = sg.low_confidence_multiword_terms.len();
                 sg.multiword_terms
-                    .retain(|term| vocab_gram_set.contains(&term.gram.sense.gram));
+                    .retain(|term| defined_gram_set.contains(&term.gram.sense));
                 sg.low_confidence_multiword_terms
-                    .retain(|term| vocab_gram_set.contains(&term.gram.sense.gram));
+                    .retain(|term| defined_gram_set.contains(&term.gram.sense));
                 removed_high += before_high - sg.multiword_terms.len();
                 removed_low += before_low - sg.low_confidence_multiword_terms.len();
             }
             if removed_high > 0 || removed_low > 0 {
                 println!(
-                    "Cleaned multiword terms: removed {removed_high} high-confidence and {removed_low} low-confidence terms referencing undefined grams"
+                    "Cleaned multiword terms: removed {removed_high} high-confidence and {removed_low} low-confidence terms without frequency entries"
                 );
             }
         }
@@ -1344,15 +1341,8 @@ async fn main() -> anyhow::Result<()> {
                 .collect::<Vec<_>>()
         };
 
-        // Build set of grams that have definitions (gram_frequencies was already filtered above)
-        let defined_gram_set: std::collections::HashSet<TaggedGram<Gram<String>>> =
-            gram_frequencies
-                .iter()
-                .map(|entry| entry.gram.clone())
-                .collect();
-
-        // Filter sentences that contain grams not in the defined set
-        let (nlp_sentences, _removed_sentences): (Vec<_>, Vec<_>) = {
+        // Filter sentences against the same final frequency set as phrase matches.
+        let (nlp_sentences, removed_sentences): (Vec<_>, Vec<_>) = {
             // Build a map from sentence text to its encoded grams for lookup
             let sentence_to_grams: FxHashMap<
                 &str,
@@ -1375,6 +1365,11 @@ async fn main() -> anyhow::Result<()> {
                     .unwrap_or(false)
             })
         };
+
+        println!(
+            "Filtered {} sentences missing encoded grams or containing learnable grams without frequency entries",
+            removed_sentences.len()
+        );
 
         // Update target_language_sentences and translations to match filtered nlp_sentences
         let kept_sentences: std::collections::HashSet<String> = nlp_sentences

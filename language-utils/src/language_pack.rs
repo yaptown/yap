@@ -942,6 +942,21 @@ impl LanguagePack {
 
         let senses = sense_index(&gram_frequencies);
         let (written_ease_order, listening_ease_order) = ease_orders(&gram_frequencies);
+        for sentence in encoded_sentences.values() {
+            let learnable = sentence.grams.iter().filter_map(SentenceGram::learnable);
+            let phrases = sentence
+                .multiword_terms
+                .iter()
+                .chain(&sentence.low_confidence_multiword_terms)
+                .map(|term| &term.gram);
+            for gram in learnable.chain(phrases) {
+                assert!(
+                    written_ease_order.rank(&gram.sense).is_some(),
+                    "Encoded gram has no written-ease rank: {:?}",
+                    gram.sense.resolve(&gram_rodeo).resolve(&rodeo)
+                );
+            }
+        }
         let heteronym_to_grams: FxHashMap<Heteronym<Spur>, Vec<SpurGram>> = {
             let mut map: FxHashMap<Heteronym<Spur>, Vec<(SpurGram, Frequency)>> =
                 FxHashMap::default();
@@ -2160,7 +2175,10 @@ mod sense_tests {
                             count,
                             direct_count: count,
                             disambiguation_key: 0,
-                            gram: tagged(sense),
+                            gram: TaggedGram {
+                                gram: gram(if sense == 1 { surface } else { "bank" }),
+                                sense: NonZeroU32::new(sense),
+                            },
                         })
                         .collect(),
                     total_count: senses.iter().map(|&(_, count)| u64::from(count)).sum(),
@@ -2171,7 +2189,13 @@ mod sense_tests {
                         grams: vec![SentenceGram::Learnable(crate::ReadingTaggedGram {
                             sense: TaggedGram {
                                 gram: gram(surface),
-                                sense: NonZeroU32::new(1),
+                                sense: NonZeroU32::new(
+                                    senses
+                                        .iter()
+                                        .find(|&&(sense, _)| sense == 1)
+                                        .unwrap_or(&senses[0])
+                                        .0,
+                                ),
                             },
                             reading: Some("ばんく".into()),
                         })],
@@ -2182,14 +2206,28 @@ mod sense_tests {
                                 reading: Some("ぎんこう".into()),
                             },
                             matched_word_indices: vec![0],
-                        }],
+                        }]
+                        .into_iter()
+                        .filter(|term| {
+                            senses
+                                .iter()
+                                .any(|&(sense, _)| NonZeroU32::new(sense) == term.gram.sense.sense)
+                        })
+                        .collect(),
                         low_confidence_multiword_terms: vec![crate::MultiwordTermMatch {
                             gram: crate::ReadingTaggedGram {
                                 sense: tagged(2),
                                 reading: Some("ていぼう".into()),
                             },
                             matched_word_indices: vec![0],
-                        }],
+                        }]
+                        .into_iter()
+                        .filter(|term| {
+                            senses
+                                .iter()
+                                .any(|&(sense, _)| NonZeroU32::new(sense) == term.gram.sense.sense)
+                        })
+                        .collect(),
                     },
                 )],
                 gram_dictionary: BTreeMap::new(),
@@ -2286,7 +2324,7 @@ mod sense_tests {
 
     #[test]
     fn phrase_readings_are_interned_and_the_index_survives_serialization() {
-        let pack = pack();
+        let pack = pack_with_senses(&[(0, 30), (1, 20), (2, 10)]);
         assert_eq!(pack.sentences.encoded_sentences.len(), 1);
         let resolved = |pack: &LanguagePack| {
             pack.sentences
@@ -2401,7 +2439,7 @@ mod sense_tests {
     }
     #[test]
     fn token_reading_frequency_breaks_ties_lexically() {
-        let mut pack = pack();
+        let mut pack = pack_with_senses(&[(0, 30), (1, 20), (2, 10)]);
         let sentence = pack
             .sentences
             .encoded_sentences

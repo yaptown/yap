@@ -663,6 +663,21 @@ mod translation_sense_tests {
                 ),
             ),
         ];
+        // Like the generator, ship only sentences and phrase matches whose senses are ranked.
+        let sentences: Vec<_> = sentences
+            .into_iter()
+            .filter(|(_, s)| {
+                s.grams
+                    .iter()
+                    .filter_map(SentenceGram::learnable)
+                    .all(|g| entries.contains(g))
+            })
+            .map(|(text, mut s)| {
+                s.multiword_terms
+                    .retain(|term| entries.contains(&term.gram));
+                (text, s)
+            })
+            .collect();
         let course = Course {
             target_language: Language::English,
             native_language: Language::French,
