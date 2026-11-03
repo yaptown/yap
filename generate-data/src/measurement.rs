@@ -304,7 +304,7 @@ pub async fn run(
             None,
         )
         .await;
-        let Some(readings) = result(&mut stages, &stage, readings, before)? else {
+        let Some(mut readings) = result(&mut stages, &stage, readings, before)? else {
             report(
                 &mut stages,
                 lang.code(),
@@ -317,7 +317,7 @@ pub async fn run(
             &mut segmented.nlp_sentences,
             &mut segmented.restricted_nlp_sentences,
         );
-        later_stages(*course, segmented, &readings, &mut stages).await?;
+        later_stages(*course, segmented, &mut readings, &mut stages).await?;
     }
     Ok(())
 }
@@ -325,7 +325,7 @@ pub async fn run(
 async fn later_stages(
     course: language_utils::Course,
     mut segmented: crate::pipeline::SegmentedCorpus,
-    readings: &crate::readings::CorpusReadings,
+    readings: &mut crate::readings::CorpusReadings,
     stages: &mut std::fs::File,
 ) -> Result<()> {
     use language_utils::{Atom, Gram, SentenceGram};
@@ -369,6 +369,20 @@ async fn later_stages(
         )?;
         return Ok(());
     };
+    if measure!(
+        "phrase-readings",
+        readings.read_phrases(
+            lang,
+            &segmented.nlp_sentences,
+            &segmented.restricted_nlp_sentences,
+            &segmented.interners,
+            &inventories,
+        )
+    )
+    .is_none()
+    {
+        return Ok(());
+    }
     let initial = crate::pipeline::initial_gram_frequencies(&segmented.gram_vocabulary);
     let allowed: HashSet<_> = initial
         .iter()

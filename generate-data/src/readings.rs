@@ -24,6 +24,7 @@ mod inflections;
 mod inventory;
 mod kanjidic;
 mod occurrence;
+mod phrases;
 mod prompts;
 mod repair_samples;
 mod review;
@@ -642,38 +643,6 @@ fn needs_hierarchy(gram: &Gram<String>, candidates: &Candidates, occurrences: us
         || (senses == 0 && occurrences >= 2 * inventory::MIN_ATTESTATIONS)
 }
 
-/// Each canonical phrase is itself an occurrence, with the same tokenized
-/// atoms as its matcher key. Keep these groups separate from sentence labels:
-/// a headword can also be a sentence whose first token is only part of it.
-fn phrase_groups(language: Language, sentences: &BTreeMap<String, SentenceInfo>) -> Groups {
-    sentences
-        .values()
-        .flat_map(|info| {
-            info.multiword_terms
-                .high_confidence
-                .iter()
-                .chain(&info.multiword_terms.low_confidence)
-        })
-        .map(|term| term.gram.gram.clone())
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .enumerate()
-        .map(|(gram_index, gram)| {
-            let text = gram.to_display_string(language);
-            let bytes = (0, text.len());
-            (
-                gram,
-                vec![Occurrence {
-                    text,
-                    gram_index,
-                    bytes,
-                    spans: Vec::new(),
-                }],
-            )
-        })
-        .collect()
-}
-
 /// B/C depend only on encoded tokens and their text, never matching overlays.
 fn corpus_groups(
     language: Language,
@@ -939,42 +908,8 @@ impl CorpusReadings {
             ..Default::default()
         };
         let groups = corpus_groups(language, app, restricted, interners);
-        data.annotate(language, &groups, store, true).await?;
-        if data.sample.is_none() {
-            let headwords = phrase_groups(language, app);
-            data.headwords = Self::read_headwords(
-                language,
-                &headwords,
-                std::mem::take(&mut data.dictionary),
-                store,
-            )
-            .await?;
-        }
+        data.annotate(language, &groups, store).await?;
         Ok(data)
-    }
-
-    async fn read_headwords(
-        language: Language,
-        headwords: &Groups,
-        dictionary: Dictionary,
-        store: &osmo::Store,
-    ) -> Result<BTreeMap<Gram<String>, String>> {
-        let mut canonical = Self {
-            dictionary,
-            ..Default::default()
-        };
-        canonical
-            .annotate(language, headwords, store, false)
-            .await?;
-        Ok(headwords
-            .iter()
-            .filter_map(|(gram, occurrences)| {
-                let occurrence = &occurrences[0];
-                canonical
-                    .reading(&occurrence.text, occurrence.gram_index)
-                    .map(|reading| (gram.clone(), reading.to_owned()))
-            })
-            .collect())
     }
 
     /// Freeze the phrase identity once, after sense assignment. Matching a
@@ -1010,16 +945,15 @@ impl CorpusReadings {
         language: Language,
         groups: &Groups,
         store: &osmo::Store,
-        persist: bool,
     ) -> Result<()> {
-        let mut examples = if persist && self.sample.is_none() {
+        let mut examples = if self.sample.is_none() {
             Some(sample::Cache::load(
                 format!("out/{}/reading_examples.jsonl", language.corpus_code()).into(),
             )?)
         } else {
             None
         };
-        let mut repair_examples = if persist && self.sample.is_none() {
+        let mut repair_examples = if self.sample.is_none() {
             Some(repair_samples::Samples::load(language)?)
         } else {
             None
@@ -1277,11 +1211,6 @@ impl CorpusReadings {
         if let Some(sample) = &self.sample {
             return sample.write(self, occurrence_groups, language);
         }
-        if !persist {
-            return Ok(());
-        }
-        // Only corpus annotations materialize senses. Headword inference never
-        // reads or rewrites the corpus's persistent sense-slot ledger.
         let path = format!(
             "generate-data/data/{}/usage_inventories.jsonl",
             language.corpus_code()
@@ -1379,7 +1308,7 @@ mod tests {
         let phrase = gram(&["仕方", "が", "ない"]);
         let mut data = CorpusReadings::default();
         data.headwords.insert(phrase.clone(), "しかたがない".into());
-        let mut nlp = BTreeMap::new();
+        let mut nlp: BTreeMap<String, SentenceInfo> = BTreeMap::new();
         let mut vocabulary = Vec::new();
         for (i, (text, reading)) in [
             ("仕方なかった", "しかたなかった"),
@@ -1425,9 +1354,6 @@ mod tests {
                 },
             );
         }
-        let groups = phrase_groups(Language::Japanese, &nlp);
-        assert_eq!(groups.len(), 1);
-        assert_eq!(groups[&phrase][0].text, "仕方がない");
         let inputs: Vec<_> = nlp
             .iter()
             .map(|(text, info)| (text.clone(), info.sentence.clone()))

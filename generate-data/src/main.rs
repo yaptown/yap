@@ -259,7 +259,7 @@ async fn main() -> anyhow::Result<()> {
         )
         .await
         .context("Failed to ensure token embeddings")?;
-        let readings = generate_data::readings::CorpusReadings::generate(
+        let mut readings = generate_data::readings::CorpusReadings::generate(
             course.target_language,
             &nlp_sentences,
             &restricted_nlp_sentences,
@@ -313,6 +313,15 @@ async fn main() -> anyhow::Result<()> {
                 .context("Failed to translate sentences")
             }),
         )?;
+        readings
+            .read_phrases(
+                course.target_language,
+                &nlp_sentences,
+                &restricted_nlp_sentences,
+                &interners,
+                &inventories,
+            )
+            .await?;
         let generate_data::pipeline::CourseDirs {
             corpus_dir,
             target_language_dir,
