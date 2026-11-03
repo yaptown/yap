@@ -1,5 +1,5 @@
-//! A monotone prediction is a suffix of the pack's ease order. Only cards in
-//! the deck need overrides; finalizing never materializes the predicted suffix.
+//! A monotone prediction is a prefix of the pack's ease order. Only cards in
+//! the deck need overrides; finalizing never materializes the predicted prefix.
 use std::{collections::BTreeSet, hash::Hash};
 
 use isotonic::SmoothRegression;
@@ -52,7 +52,7 @@ impl<K: Copy + Eq + Hash + Ord> ComprehensibleGrams<'_, K> {
         self.cards.get(key).map_or_else(
             || {
                 self.threshold_rank
-                    .is_some_and(|threshold| rank >= threshold)
+                    .is_some_and(|threshold| rank < threshold)
             },
             |knowledge| knowledge.contains(planned),
         )
@@ -61,7 +61,7 @@ impl<K: Copy + Eq + Hash + Ord> ComprehensibleGrams<'_, K> {
     fn iter<'a>(&'a self, order: &'a EaseOrder<K>, planned: bool) -> impl Iterator<Item = K> + 'a {
         self.threshold_rank
             .into_iter()
-            .flat_map(|rank| order.iter_from(rank))
+            .flat_map(|rank| order.iter_from(0).take(rank as usize))
             .filter(|key| !self.cards.contains_key(key))
             .chain(
                 self.cards.iter().filter_map(move |(key, knowledge)| {
@@ -83,7 +83,7 @@ fn threshold<K: Copy + Eq + Hash + Ord>(
 ) -> Option<u32> {
     // Isotonic regression and box smoothing preserve monotonicity.
     regression.map(|regression| {
-        order.partition_point(|ease| !regression.interpolate(ease).is_some_and(|p| p >= 0.80))
+        order.partition_point(|ease| regression.interpolate(ease).is_some_and(|p| p >= 0.80))
     })
 }
 
@@ -164,7 +164,7 @@ impl WrittenGrams<'_> {
             }
         };
         if let Some(threshold) = self.cache.threshold_rank {
-            for rank in threshold..self.order.len() as u32 {
+            for rank in 0..threshold {
                 set(rank, true);
             }
         }

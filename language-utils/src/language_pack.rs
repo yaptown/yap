@@ -24,7 +24,8 @@ pub type SentenceSpur = Spur<SentenceText>;
 pub enum TranslationText {}
 pub type TranslationSpur = Spur<TranslationText>;
 
-/// Build-time index, independent of the pack's frequency ordering.
+/// Build-time index, easiest first (descending ease, then ascending key),
+/// independent of the pack's frequency ordering.
 #[derive(Clone, Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct EaseOrder<K: Eq + Hash> {
     entries: Vec<(K, f32)>,
@@ -34,7 +35,7 @@ pub struct EaseOrder<K: Eq + Hash> {
 impl<K: Copy + Eq + Hash + Ord> EaseOrder<K> {
     fn new(entries: impl Iterator<Item = (K, f32)>) -> Self {
         let mut entries: Vec<_> = entries.collect();
-        entries.sort_unstable_by(|(a, x), (b, y)| x.total_cmp(y).then_with(|| a.cmp(b)));
+        entries.sort_unstable_by(|(a, x), (b, y)| y.total_cmp(x).then_with(|| a.cmp(b)));
         let ranks = entries
             .iter()
             .enumerate()
@@ -1742,18 +1743,18 @@ mod sense_tests {
         let entries = [(3, 4.0), (2, 1.0), (1, 4.0)];
         let a = EaseOrder::new(entries.into_iter());
         let b = EaseOrder::new(entries.into_iter().rev());
-        assert_eq!(a.iter_from(0).collect::<Vec<_>>(), vec![2, 1, 3]);
+        assert_eq!(a.iter_from(0).collect::<Vec<_>>(), vec![1, 3, 2]);
         assert_eq!(
             a.iter_from(0).collect::<Vec<_>>(),
             b.iter_from(0).collect::<Vec<_>>()
         );
-        assert_eq!(a.rank(&1), Some(1));
+        assert_eq!(a.rank(&1), Some(0));
         assert_eq!(a.rank(&4), None);
         assert_eq!(a.ease_at(1), Some(4.0));
         assert_eq!(a.ease_at(3), None);
-        assert_eq!(a.partition_point(|ease| ease < 4.0), 1);
-        assert_eq!(a.partition_point(|ease| ease < 0.0), 0);
-        assert_eq!(a.partition_point(|ease| ease < 5.0), 3);
+        assert_eq!(a.partition_point(|ease| ease >= 4.0), 2);
+        assert_eq!(a.partition_point(|ease| ease >= 5.0), 0);
+        assert_eq!(a.partition_point(|ease| ease >= 0.0), 3);
         assert_eq!(a.iter_from(3).count(), 0);
         let empty = EaseOrder::<u32>::new(std::iter::empty());
         assert_eq!(empty.partition_point(|_| true), 0);
@@ -1776,7 +1777,7 @@ mod sense_tests {
             assert_eq!(pack.listening_ease_order.ranks, listening.ranks);
             assert_eq!(pack.gram_frequency_total(bare).unwrap().count, 30);
             assert_eq!(pack.listening_ease_order.ease_at(0), Some(20_f32.ln()));
-            assert_eq!(pack.written_ease_order.ease_at(0), Some(10_f32.ln()));
+            assert_eq!(pack.written_ease_order.ease_at(0), Some(20_f32.ln()));
         }
     }
 

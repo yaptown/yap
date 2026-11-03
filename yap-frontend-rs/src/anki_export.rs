@@ -3036,9 +3036,14 @@ mod tests {
         for planned in [false, true] {
             let written = deck.get_comprehensible_written_grams(planned);
             let listening = deck.get_comprehensible_listening_grams(planned);
+            let bits = written.rank_bitset();
             let mut expected_written = BTreeSet::new();
             let mut expected_listening = BTreeSet::new();
             for gram in pack.gram_frequencies.entries.keys() {
+                assert_eq!(
+                    bits.contains(pack.written_ease_order.rank(gram).unwrap()),
+                    written.contains(gram)
+                );
                 for (indicator, expected, actual) in [
                     (
                         crate::CardIndicator::WrittenGram { gram: *gram },
@@ -3090,7 +3095,7 @@ mod tests {
         use crate::{CardData, CardIndicator, DeckState, PlacementTest};
         use lasso::Key;
 
-        // No regression means no predictions, not an all-known suffix.
+        // No regression means no predictions, not an all-known prefix.
         assert!(deck.regressions.target_language_regression.is_none());
         assert!(deck.regressions.listening_regression.is_none());
         assert_comprehensible_matches_brute_force(&deck);
@@ -3106,9 +3111,9 @@ mod tests {
                 .resolve_gram(&gram.gram)
                 .to_display_string(deck.context.course.target_language);
             if i < order.len() / 2 {
-                placement.unknown_words.push(text);
-            } else {
                 placement.known_words.push(text);
+            } else {
+                placement.unknown_words.push(text);
             }
         }
         // The synthetic Anki fixture has no NLP word lookup. Reviewed cards
@@ -3116,7 +3121,7 @@ mod tests {
         for (i, gram) in order.iter().enumerate().step_by(3) {
             let mut fsrs_card = rs_fsrs::Card::new(chrono::Utc::now());
             fsrs_card.state = rs_fsrs::State::Review;
-            fsrs_card.early_lapses = i32::from(i < order.len() / 2);
+            fsrs_card.early_lapses = i32::from(i >= order.len() / 2);
             let card = CardData::Added { fsrs_card };
             state.cards.insert(
                 &deck.context,
@@ -3139,7 +3144,7 @@ mod tests {
                 .any(|gram| !predicted
                     .cards
                     .contains_key(&CardIndicator::WrittenGram { gram })),
-            "exercise a nonempty prediction suffix"
+            "exercise a nonempty prediction prefix"
         );
         assert!(
             predicted
@@ -3166,7 +3171,7 @@ mod tests {
         for pair in probabilities.windows(2) {
             // f32 box integration can introduce rounding at the last bit.
             assert!(
-                pair[0] <= pair[1] + 1e-6,
+                pair[0] + 1e-6 >= pair[1],
                 "nonmonotone interpolation: {pair:?}"
             );
         }
