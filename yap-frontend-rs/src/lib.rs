@@ -4930,6 +4930,12 @@ impl AudioResult {
         self.bytes.clone()
     }
 
+    /// Container-derived MIME type, including pronunciation-guide M4A audio.
+    #[bridge(getter)]
+    pub fn mime_type(&self) -> String {
+        audio_mime_type(&self.bytes).to_owned()
+    }
+
     /// The voice actor behind the clip when it's human-recorded, else `None`.
     #[bridge(getter)]
     #[bridgerton::stable]

@@ -46,6 +46,7 @@
             # PATH always has the GPU filters — publish can't silently fall back
             # to a day of CPU encoding just because the system ffmpeg changed.
             jellyfin-ffmpeg
+            fdk-aac-encoder
 
             # Node / frontend
             nodejs_22

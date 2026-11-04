@@ -132,10 +132,11 @@ import Observation
         }
         withExtendedLifetime(delegate) {}
     }
-    /// The cache stores WAV and MP3 under one extension; the
+    /// The cache stores WAV, MP3 and M4A under one extension; the
     /// hint spares CoreAudio from guessing the parser from the bytes.
     private static func container(of bytes: [UInt8]) -> (name: String, hint: String?) {
         if bytes.starts(with: Array("RIFF".utf8)) { return ("wav", AVFileType.wav.rawValue) }
+        if bytes.count >= 8, Array(bytes[4..<8]) == Array("ftyp".utf8) { return ("m4a", AVFileType.m4a.rawValue) }
         if bytes.starts(with: Array("ID3".utf8)) || bytes.first == 0xFF { return ("mp3", AVFileType.mp3.rawValue) }
         return ("unknown", nil)
     }

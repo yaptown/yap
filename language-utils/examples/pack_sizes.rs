@@ -61,8 +61,8 @@ fn main() {
         ("human_audio", true, size_of(&pack.sentences.human_audio)),
         (
             "pronunciation_audio",
-            false,
-            size_of(&pack.pronunciation_audio),
+            true,
+            size_of(&pack.sentences.pronunciation_audio),
         ),
         (
             "words_to_heteronyms",

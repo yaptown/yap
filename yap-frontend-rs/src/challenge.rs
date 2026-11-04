@@ -772,8 +772,10 @@ impl ReviewInfo {
                     .map(|segment| segment.spoken.as_str())
                     .collect::<Vec<_>>()
                     .join(" ");
-                let segments =
-                    cue_segments(segments, language_pack.pronunciation_audio.get(&spoken));
+                let segments = cue_segments(
+                    segments,
+                    language_pack.sentences.pronunciation_audio.get(&spoken),
+                );
                 crate::PronunciationCue {
                     audio: AudioRequest {
                         // The request and pack lookup share the exact spoken text.

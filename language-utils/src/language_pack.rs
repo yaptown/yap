@@ -1308,7 +1308,6 @@ impl LanguagePack {
                 heteronym_to_grams,
                 string_to_grams,
                 morphemes,
-                pronunciation_audio,
             }),
             sentences: LanguagePackSentences {
                 spur_space_fingerprint: fingerprint,
@@ -1328,6 +1327,7 @@ impl LanguagePack {
                 encoded_sentences,
                 sentences_containing_gram_index,
                 human_audio,
+                pronunciation_audio,
                 strokes: language_data.strokes,
             },
         };
@@ -1430,7 +1430,6 @@ pub struct LanguagePackCore {
     pub pronunciation_to_words: FxHashMap<Spur, Vec<Spur>>,
     pub minimal_pairs: MinimalPairs,
     pub pronunciation_data: PronunciationData,
-    pub pronunciation_audio: FxHashMap<String, PronunciationClip>,
     pub pattern_frequency_map: FxHashMap<(Spur, PatternPosition), u32>,
     pub pronunciation_max_freq_cache: FxHashMap<Spur, Frequency>,
     pub proper_noun_definitions: BTreeMap<Spur, ProperNounDefinition>,
@@ -1470,6 +1469,7 @@ pub struct LanguagePackSentences {
     pub encoded_sentences: lasso::CompressedRodeoReader<SentenceSpur, Symbol, SentenceText>,
     pub sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<SentenceSpur>>,
     pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
+    pub pronunciation_audio: FxHashMap<String, PronunciationClip>,
 }
 
 impl LanguagePackSentences {
@@ -1493,6 +1493,7 @@ impl LanguagePackSentences {
             encoded_sentences: lasso::CompressedRodeoReader::default(),
             sentences_containing_gram_index: FxHashMap::default(),
             human_audio: FxHashMap::default(),
+            pronunciation_audio: FxHashMap::default(),
         }
     }
 }
@@ -1924,7 +1925,22 @@ mod sense_tests {
 
     #[test]
     fn compressed_sentences_survive_pack_serialization() {
-        let pack = pack_with_senses(&[(0, 30), (1, 20), (2, 10)]);
+        let mut pack = pack_with_senses(&[(0, 30), (1, 20), (2, 10)]);
+        pack.sentences.pronunciation_audio.insert(
+            "cue".into(),
+            PronunciationClip {
+                audio: Audio {
+                    bytes: b"....ftypM4A ".to_vec(),
+                },
+                segments: vec![],
+            },
+        );
+        assert!(
+            LanguagePack::from_parts(pack.core.clone(), None)
+                .sentences
+                .pronunciation_audio
+                .is_empty()
+        );
         // The builder also compares every decoded sentence with its input in tests.
         let expected: Vec<_> = pack.decoded_sentences().collect();
         let core = rkyv::to_bytes::<rkyv::rancor::Error>(&*pack.core).unwrap();
@@ -1936,6 +1952,10 @@ mod sense_tests {
             ),
         );
         assert_eq!(restored.decoded_sentences().collect::<Vec<_>>(), expected);
+        assert_eq!(
+            restored.sentences.pronunciation_audio,
+            pack.sentences.pronunciation_audio
+        );
     }
 
     #[test]

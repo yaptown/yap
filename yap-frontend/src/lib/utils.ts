@@ -84,7 +84,7 @@ export async function playAudio(
       if (settled) return;
 
       audioUrl = URL.createObjectURL(
-        new Blob([result.bytes], { type: "audio/mpeg" }),
+        new Blob([result.bytes], { type: result.mime_type }),
       );
       audio = new Audio(audioUrl);
       if (onAudioElement) await onAudioElement(audio);

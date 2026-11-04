@@ -186,8 +186,12 @@ async fn run_inner(out: &Path, languages: &BTreeSet<String>) -> Result<()> {
         )
         .await?;
         println!(
-            "Verified {} pronunciation clips; synthesis audio cached and verification log written; pack not updated",
-            clips.len()
+            "Verified {} pronunciation clips ({} bytes); synthesis audio cached and verification log written; pack not updated",
+            clips.len(),
+            clips
+                .values()
+                .map(|clip| clip.audio.bytes.len())
+                .sum::<usize>()
         );
     }
     Ok(())

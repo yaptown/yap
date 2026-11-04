@@ -1024,8 +1024,12 @@ impl TtsKeys {
     /// `GOOGLE_CLOUD_API_KEY` and `GEMINI_API_KEY`, whichever are set.
     pub fn from_env() -> Self {
         Self {
-            google: std::env::var("GOOGLE_CLOUD_API_KEY").ok(),
-            gemini: std::env::var("GEMINI_API_KEY").ok(),
+            google: std::env::var("GOOGLE_CLOUD_API_KEY")
+                .ok()
+                .filter(|key| !key.is_empty()),
+            gemini: std::env::var("GEMINI_API_KEY")
+                .ok()
+                .filter(|key| !key.is_empty()),
         }
     }
 }
@@ -1137,7 +1141,7 @@ pub async fn synthesize(
                     let client = google_speech::GoogleTtsClient::new(api_key.to_string())
                         .with_max_attempts(5);
                     let outcome = client
-                        .synthesize(&google_speech::GoogleTtsRequest {
+                        .synthesize_lossless(&google_speech::GoogleTtsRequest {
                             text: text.clone(),
                             language_code: voice.language_code.to_string(),
                             voice_name: voice.voice_name.to_string(),
@@ -1176,8 +1180,7 @@ pub async fn synthesize(
                     };
                     match client.synthesize(&request).await {
                         Ok(Some(audio)) => {
-                            let bytes = audio_codec::encode_mp3(&audio.samples, audio.sample_rate)
-                                .with_context(|| format!("encoding Gemini audio for {text:?}"))?;
+                            let bytes = audio_codec::pcm_to_wav(&audio.samples, audio.sample_rate);
                             let defect = audio_codec::audio_defect(&bytes);
                             (bytes, 1, defect.is_none(), defect.map(str::to_string))
                         }

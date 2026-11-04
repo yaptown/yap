@@ -38,7 +38,7 @@ pub struct GoogleTtsRequest {
 /// every attempt was flagged as defective.
 #[derive(Debug, Clone)]
 pub struct GoogleTtsOutcome {
-    /// MP3-encoded audio bytes (the encoding we always request).
+    /// MP3 by default; RIFF/WAV PCM from `synthesize_lossless`.
     pub audio_bytes: Vec<u8>,
     /// Total attempts made, including the one whose audio we returned.
     pub attempts: usize,
@@ -91,6 +91,22 @@ impl GoogleTtsClient {
     /// Call Google TTS with the retry-on-defect loop. Returns once we either
     /// get audio that passes [`audio_defect`] or exhaust `max_attempts`.
     pub async fn synthesize(&self, request: &GoogleTtsRequest) -> Result<GoogleTtsOutcome> {
+        self.synthesize_encoded(request, "MP3").await
+    }
+
+    /// Preserve provider PCM for callers that cache and subsequently encode it.
+    pub async fn synthesize_lossless(
+        &self,
+        request: &GoogleTtsRequest,
+    ) -> Result<GoogleTtsOutcome> {
+        self.synthesize_encoded(request, "LINEAR16").await
+    }
+
+    async fn synthesize_encoded(
+        &self,
+        request: &GoogleTtsRequest,
+        encoding: &str,
+    ) -> Result<GoogleTtsOutcome> {
         let url = "https://texttospeech.googleapis.com/v1beta1/text:synthesize";
 
         let input = if request.is_ssml {
@@ -111,7 +127,7 @@ impl GoogleTtsClient {
                 name: request.voice_name.clone(),
             },
             audio_config: GoogleTtsAudioConfig {
-                audio_encoding: "MP3".to_string(),
+                audio_encoding: encoding.to_string(),
                 speaking_rate: request.speed,
             },
         };

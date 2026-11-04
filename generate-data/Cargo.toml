@@ -19,6 +19,7 @@ schemars.workspace = true
 stroke-order-sources = { path = "../libraries/stroke-order-sources" }
 language-utils = { path = "../language-utils" }
 google-speech = { path = "../libraries/google-speech" }
+audio-codec = { path = "../libraries/audio-codec" }
 base64 = "0.22"
 omnigram = { path = "../libraries/omnigram" }
 sentence-sampler = { path = "../libraries/sentence-sampler" }

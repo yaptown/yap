@@ -55,7 +55,7 @@ pub fn has_pronunciation_audio(language: Language, spoken_text: &str) -> bool {
         .packs
         .get(&language)
         .and_then(Weak::upgrade)
-        .is_some_and(|pack| pack.pronunciation_audio.contains_key(spoken_text))
+        .is_some_and(|pack| pack.sentences.pronunciation_audio.contains_key(spoken_text))
 }
 
 pub fn pronunciation_audio(language: Language, spoken_text: &str) -> Option<Vec<u8>> {
@@ -64,6 +64,7 @@ pub fn pronunciation_audio(language: Language, spoken_text: &str) -> Option<Vec<
         .packs
         .get(&language)?
         .upgrade()?
+        .sentences
         .pronunciation_audio
         .get(spoken_text)
         .map(|clip| clip.audio.bytes.clone())

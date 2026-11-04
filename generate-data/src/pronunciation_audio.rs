@@ -112,6 +112,152 @@ impl CueOutcome {
 
 const REPLACEMENT_ROUNDS: usize = 2;
 
+/// Encode the cached provider output, never the previously shipped MP3.
+/// Return the decoded final container too: both gates must hear what we ship.
+/// `None` for silent audio, which rejects the candidate like a synthesis defect.
+fn encode_pronunciation_audio(
+    source: &[u8],
+    padding_ms: u32,
+) -> Result<Option<(Vec<u8>, Vec<u8>, f64)>> {
+    let dir = tempfile::tempdir()?;
+    let input = dir.path().join("source");
+    let pcm = dir.path().join("source.wav");
+    let normalized = dir.path().join("normalized.wav");
+    let encoded = dir.path().join("clip.m4a");
+    std::fs::write(&input, source)?;
+    let run = |program: &str, args: &[&str]| -> Result<()> {
+        let output = std::process::Command::new(program)
+            .args(args)
+            .output()
+            .with_context(|| format!("running {program}"))?;
+        anyhow::ensure!(
+            output.status.success(),
+            "{program}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        Ok(())
+    };
+    run(
+        "ffmpeg",
+        &[
+            "-v",
+            "error",
+            "-i",
+            input.to_str().unwrap(),
+            "-ac",
+            "1",
+            "-ar",
+            "48000",
+            pcm.to_str().unwrap(),
+        ],
+    )?;
+    let (samples, rate) =
+        audio_codec::decode_wav_to_f32(&std::fs::read(&pcm)?).map_err(anyhow::Error::msg)?;
+    let threshold = 10_f32.powf(-45.0 / 20.0);
+    let Some(first) = samples.iter().position(|s| s.abs() > threshold) else {
+        return Ok(None);
+    };
+    let last = samples.iter().rposition(|s| s.abs() > threshold).unwrap() + 1;
+    let padding = padding_ms as usize * rate as usize / 1000;
+    let start = first.saturating_sub(padding);
+    let end = (last + padding).min(samples.len());
+    let filter = format!(
+        "atrim=start_sample={start}:end_sample={end},asetpts=PTS-STARTPTS,loudnorm=I=-16:TP=-1.5:LRA=11"
+    );
+    run(
+        "ffmpeg",
+        &[
+            "-v",
+            "error",
+            "-i",
+            pcm.to_str().unwrap(),
+            "-af",
+            &filter,
+            "-ar",
+            "48000",
+            "-ac",
+            "1",
+            normalized.to_str().unwrap(),
+        ],
+    )?;
+    run(
+        "fdkaac",
+        &[
+            "-S",
+            "-p",
+            "5",
+            "-s",
+            "2",
+            "-b",
+            "24000",
+            "-G",
+            "2",
+            "--no-timestamp",
+            "--moov-before-mdat",
+            "-o",
+            encoded.to_str().unwrap(),
+            normalized.to_str().unwrap(),
+        ],
+    )?;
+    let final_wav = dir.path().join("final.wav");
+    run(
+        "ffmpeg",
+        &[
+            "-v",
+            "error",
+            "-i",
+            encoded.to_str().unwrap(),
+            "-ac",
+            "1",
+            "-ar",
+            "48000",
+            "-fflags",
+            "+bitexact",
+            "-flags:a",
+            "+bitexact",
+            final_wav.to_str().unwrap(),
+        ],
+    )?;
+    let decoded = std::fs::read(final_wav)?;
+    // Measure decoder delay against the normalized encoder input rather than
+    // assuming a codec delay. Correlate at 2 kHz over +/- 100 ms.
+    let (reference, _) =
+        audio_codec::decode_wav_to_f32(&std::fs::read(normalized)?).map_err(anyhow::Error::msg)?;
+    let (final_samples, _) =
+        audio_codec::decode_wav_to_f32(&decoded).map_err(anyhow::Error::msg)?;
+    let delay = decoder_delay_ms(&reference, &final_samples);
+    Ok(Some((
+        std::fs::read(encoded)?,
+        decoded,
+        delay - start as f64 * 1000.0 / rate as f64,
+    )))
+}
+
+fn decoder_delay_ms(reference: &[f32], decoded: &[f32]) -> f64 {
+    let reference: Vec<_> = reference.iter().step_by(24).copied().collect();
+    let decoded: Vec<_> = decoded.iter().step_by(24).copied().collect();
+    let score = |lag: i32| {
+        let mut dot = 0.0_f64;
+        let mut a2 = 0.0_f64;
+        let mut b2 = 0.0_f64;
+        for (i, &a) in reference.iter().enumerate() {
+            if let Some(&b) = usize::try_from(i as i32 + lag)
+                .ok()
+                .and_then(|j| decoded.get(j))
+            {
+                dot += f64::from(a) * f64::from(b);
+                a2 += f64::from(a).powi(2);
+                b2 += f64::from(b).powi(2);
+            }
+        }
+        dot / (a2 * b2).sqrt().max(f64::EPSILON)
+    };
+    let lag = (-200..=200)
+        .max_by(|&a, &b| score(a).total_cmp(&score(b)))
+        .unwrap();
+    f64::from(lag) / 2.0
+}
+
 fn replacement_count(desired: usize, verified: usize, round: usize) -> usize {
     if round >= REPLACEMENT_ROUNDS {
         0
@@ -241,7 +387,7 @@ pub async fn generate_pronunciation_audio(
     let mut verified = FxHashMap::default();
     let mut failures = BTreeMap::new();
     for round in 0..=REPLACEMENT_ROUNDS {
-        let generated: Vec<_> = futures::stream::iter(requests)
+        let mut generated = futures::stream::iter(requests)
             .map(|(spoken, (segments, pattern, example))| {
                 let ctx = &ctx;
                 let store = &store;
@@ -294,31 +440,53 @@ pub async fn generate_pronunciation_audio(
                         },
                     ];
                     for candidate in candidates {
-                        let (bytes, phoneme, synthesis_error) = match ctx {
-                            Some(ctx) => {
-                                let (bytes, verification) = phoneme_verify::synthesize_verified(
-                                    ctx,
-                                    "tts-pronunciation",
-                                    &candidate,
-                                    &spoken,
-                                    keys,
-                                )
-                                .await?;
-                                (bytes, Some(verification), None)
-                            }
+                        let (source, mut synthesis_error) =
+                            phoneme_verify::synthesize(http, store, &candidate, &spoken, keys)
+                                .await
+                                .with_context(|| {
+                                    format!("synthesizing {spoken:?} via {}", candidate.label())
+                                })?;
+                        let encoded = match synthesis_error {
+                            // jpn-760 fails at 50/75 ms and passes at 100 ms (YAP-288).
+                            // Subprocesses and correlation block, so keep them off the stream.
                             None => {
-                                let (bytes, defect) = phoneme_verify::synthesize(
-                                    http, store, &candidate, &spoken, keys,
-                                )
-                                .await?;
-                                (bytes, None, defect)
+                                let source = source.clone();
+                                tokio::task::spawn_blocking(move || {
+                                    encode_pronunciation_audio(&source, 100)
+                                })
+                                .await??
                             }
+                            Some(_) => None,
+                        };
+                        if encoded.is_none() && synthesis_error.is_none() {
+                            synthesis_error = Some("silent audio".into());
+                        }
+                        let (bytes, decoded, timing_shift) = encoded.unwrap_or_default();
+                        let phoneme = if synthesis_error.is_none() {
+                            match ctx {
+                                Some(ctx) => Some(
+                                    phoneme_verify::verify_clip_bytes(
+                                        ctx,
+                                        "tts-pronunciation",
+                                        &spoken,
+                                        &candidate.label(),
+                                        &decoded,
+                                        phoneme_verify::expected_phoneme_variants(
+                                            ctx, &spoken, None,
+                                        ),
+                                    )
+                                    .await?,
+                                ),
+                                None => None,
+                            }
+                        } else {
+                            None
                         };
                         let whisper = if synthesis_error.is_none()
                             && phoneme.as_ref().is_none_or(ClipVerification::passed)
                         {
                             crate::pronunciation_whisper::verify(
-                                http, &bytes, language, &pattern, &example,
+                                http, &decoded, language, &pattern, &example,
                             )
                             .await?
                         } else {
@@ -335,7 +503,7 @@ pub async fn generate_pronunciation_audio(
                                 segments.iter().map(|s| s.spoken.as_str()).collect();
                             let timings = match ctx {
                                 Some(ctx) => {
-                                    phoneme_verify::segment_timings(ctx, &bytes, &spoken_segments)
+                                    phoneme_verify::segment_timings(ctx, &source, &spoken_segments)
                                         .await
                                 }
                                 None => Ok(Vec::new()),
@@ -346,8 +514,12 @@ pub async fn generate_pronunciation_audio(
                                     .zip(timings)
                                     .map(|(segment, (start_ms, end_ms))| TimedSegment {
                                         text: segment.display.clone(),
-                                        start_ms,
-                                        end_ms,
+                                        start_ms: (f64::from(start_ms) + timing_shift)
+                                            .max(0.0)
+                                            .round()
+                                            as u32,
+                                        end_ms: (f64::from(end_ms) + timing_shift).max(0.0).round()
+                                            as u32,
                                     })
                                     .collect(),
                                 Err(error) => {
@@ -360,9 +532,7 @@ pub async fn generate_pronunciation_audio(
                                 .map(|s| (s.text.clone(), s.start_ms, s.end_ms))
                                 .collect();
                             outcome.clip = Some(PronunciationClip {
-                                audio: Audio {
-                                    bytes: crate::human_audio::encode_audio_to_mp3(&bytes).await?,
-                                },
+                                audio: Audio { bytes },
                                 segments: timed,
                             });
                             outcome.passed = true;
@@ -375,12 +545,11 @@ pub async fn generate_pronunciation_audio(
                     anyhow::Ok(outcome)
                 }
             })
-            .buffered(16)
-            .try_collect()
-            .await?;
-        for outcome in generated {
+            .buffered(16);
+        while let Some(outcome) = generated.try_next().await? {
             serde_json::to_writer(&mut log, &outcome)?;
             writeln!(log)?;
+            log.flush()?;
             let reason = outcome.reason();
             if let Some(clip) = outcome.clip {
                 verified.insert(outcome.text, clip);
@@ -631,6 +800,18 @@ fn prune_unverified(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn measures_decoder_delay_in_both_directions() {
+        let signal: Vec<f32> = (0..4800)
+            .map(|i| ((i * 7919 % 1009) as f32 / 1009.0) - 0.5)
+            .collect();
+        let mut delayed = vec![0.0; 960];
+        delayed.extend_from_slice(&signal);
+        assert_eq!(decoder_delay_ms(&signal, &delayed), 20.0);
+        assert_eq!(decoder_delay_ms(&delayed, &signal), -20.0);
+    }
+
     fn example(target: &str) -> language_utils::WordPair {
         language_utils::WordPair {
             target: target.into(),

@@ -760,6 +760,7 @@ fn is_valid_audio_data(bytes: &[u8]) -> bool {
         || (bytes[0] == 0xFF && bytes[1] & 0xE0 == 0xE0)
         || bytes.starts_with(b"RIFF")
         || bytes.starts_with(b"OggS")
+        || bytes.get(4..8) == Some(b"ftyp")
 }
 
 #[cfg(test)]

@@ -2663,10 +2663,8 @@ pub struct VoiceActor {
     pub compensation: Compensation,
 }
 
-/// A single human-recorded audio clip.
-///
-/// `bytes` is OGG-encapsulated Opus (the format already accepted by
-/// `is_valid_audio_data` in yap-frontend-rs/src/audio.rs via the `OggS` magic).
+/// An embedded audio clip: MP3 for voice actors, HE-AAC v1 in M4A for
+/// pronunciation guides. Inspect the container bytes for playback MIME type.
 #[derive(Debug, Clone, Eq, PartialEq, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct Audio {
     pub bytes: Vec<u8>,
@@ -5340,6 +5338,8 @@ pub fn tts_cache_url(cache_filename: &str) -> String {
 pub fn audio_mime_type(bytes: &[u8]) -> &'static str {
     if bytes.starts_with(b"RIFF") {
         "audio/wav"
+    } else if bytes.get(4..8) == Some(b"ftyp") {
+        "audio/mp4"
     } else if bytes.starts_with(b"OggS") {
         "audio/ogg"
     } else {
@@ -5440,6 +5440,7 @@ mod tts_cache_key_tests {
     fn mime_type_follows_the_bytes_not_the_name() {
         assert_eq!(audio_mime_type(b"RIFF...."), "audio/wav");
         assert_eq!(audio_mime_type(b"OggS...."), "audio/ogg");
+        assert_eq!(audio_mime_type(b"....ftypM4A "), "audio/mp4");
         assert_eq!(audio_mime_type(b"ID3....."), "audio/mpeg");
     }
 }
