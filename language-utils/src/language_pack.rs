@@ -24,6 +24,121 @@ pub type SentenceSpur = Spur<SentenceText>;
 pub enum TranslationText {}
 pub type TranslationSpur = Spur<TranslationText>;
 
+/// Variable-length lists indexed by dense sentence keys: N+1 offsets into
+/// one flat array, with no per-sentence allocation or hash table.
+#[derive(Debug, PartialEq, Eq, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
+pub struct SentenceLists<T> {
+    starts: Vec<u32>,
+    keys: Vec<T>,
+}
+
+impl<T> SentenceLists<T> {
+    pub fn new(rows: impl IntoIterator<Item = impl IntoIterator<Item = T>>) -> Self {
+        let mut starts = vec![0];
+        let mut keys = Vec::new();
+        for row in rows {
+            keys.extend(row);
+            starts.push(u32::try_from(keys.len()).unwrap());
+        }
+        Self { starts, keys }
+    }
+
+    fn get(&self, sentence: SentenceSpur) -> &[T] {
+        let i = sentence.into_usize();
+        &self.keys[self.starts[i] as usize..self.starts[i + 1] as usize]
+    }
+}
+
+/// IDs are interned separately from metadata: some corpus sources have no
+/// visible movie or reader-book entry, but their provenance must survive.
+#[derive(Debug, PartialEq, Eq, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
+struct SourceIds {
+    ids: Vec<String>,
+    sentences: SentenceLists<u16>,
+}
+
+impl SourceIds {
+    fn new<'a>(rows: impl Iterator<Item = &'a [String]>) -> Self {
+        let mut ids = Vec::new();
+        let mut indices = FxHashMap::default();
+        let sentences = SentenceLists::new(rows.map(|row| {
+            row.iter()
+                .map(|id| {
+                    *indices.entry(id).or_insert_with(|| {
+                        let index = u16::try_from(ids.len()).unwrap();
+                        ids.push(id.clone());
+                        index
+                    })
+                })
+                .collect::<Vec<_>>()
+        }));
+        Self { ids, sentences }
+    }
+
+    fn get(&self, sentence: SentenceSpur) -> impl Iterator<Item = &String> {
+        self.sentences
+            .get(sentence)
+            .iter()
+            .map(|&i| &self.ids[i as usize])
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
+pub struct SentenceSources {
+    flags: Vec<u8>,
+    movies: SourceIds,
+    books: SourceIds,
+}
+
+impl SentenceSources {
+    pub fn new(rows: &[SentenceSource]) -> Self {
+        Self {
+            flags: rows
+                .iter()
+                .map(|source| {
+                    u8::from(source.from_anki)
+                        | (u8::from(source.from_tatoeba) << 1)
+                        | (u8::from(source.from_manual) << 2)
+                        | (u8::from(source.from_song) << 3)
+                })
+                .collect(),
+            movies: SourceIds::new(rows.iter().map(|source| source.movie_ids.as_slice())),
+            books: SourceIds::new(rows.iter().map(|source| source.book_ids.as_slice())),
+        }
+    }
+
+    fn get(&self, sentence: SentenceSpur) -> SentenceSourceRef<'_> {
+        let flags = self.flags[sentence.into_usize()];
+        SentenceSourceRef {
+            from_anki: flags & 1 != 0,
+            from_tatoeba: flags & 2 != 0,
+            from_manual: flags & 4 != 0,
+            from_song: flags & 8 != 0,
+            sources: self,
+            sentence,
+        }
+    }
+}
+
+pub struct SentenceSourceRef<'a> {
+    pub from_anki: bool,
+    pub from_tatoeba: bool,
+    pub from_manual: bool,
+    pub from_song: bool,
+    sources: &'a SentenceSources,
+    sentence: SentenceSpur,
+}
+
+impl<'a> SentenceSourceRef<'a> {
+    pub fn movie_ids(&self) -> impl Iterator<Item = &'a String> {
+        self.sources.movies.get(self.sentence)
+    }
+
+    pub fn book_ids(&self) -> impl Iterator<Item = &'a String> {
+        self.sources.books.get(self.sentence)
+    }
+}
+
 /// Build-time index, easiest first (descending ease, then ascending key),
 /// independent of the pack's frequency ordering.
 #[derive(Clone, Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
@@ -283,7 +398,16 @@ impl LanguagePack {
     }
 
     pub fn sentence_keys(&self) -> impl Iterator<Item = SentenceSpur> + '_ {
-        self.sentences.encoded_sentences.iter().map(|(key, _)| key)
+        (0..self.sentences.encoded_sentences.len())
+            .map(|i| SentenceSpur::try_from_usize(i).unwrap())
+    }
+
+    pub fn translations_of(&self, sentence: SentenceSpur) -> &[TranslationSpur] {
+        self.sentences.translations.get(sentence)
+    }
+
+    pub fn source_of(&self, sentence: SentenceSpur) -> SentenceSourceRef<'_> {
+        self.sentences.sentence_sources.get(sentence)
     }
 
     pub fn decoded_sentences(
@@ -394,19 +518,14 @@ impl LanguagePack {
         known_rank: impl Fn(u32) -> bool,
     ) -> Vec<SentenceSpur> {
         let required_keys = required_gram.map_or(&[][..], |gram| self.reading_keys(gram));
-        // Preserve candidate order, including tie-breaking in sentence selection.
+        // Preserve the gram index's candidate order; full-corpus searches use slot order.
         let candidate_sentences: &[SentenceSpur] = if let Some(required) = required_gram {
             match self.sentences.sentences_containing_gram_index.get(required) {
                 Some(sentences) => sentences,
                 None => return Vec::new(),
             }
         } else {
-            &self
-                .sentences
-                .translations
-                .keys()
-                .copied()
-                .collect::<Vec<_>>()
+            &self.sentence_keys().collect::<Vec<_>>()
         };
         candidate_sentences
             .iter()
@@ -1219,35 +1338,29 @@ impl LanguagePack {
         for text in translation_texts {
             translation_rodeo.get_or_intern(text);
         }
-        let translations: FxHashMap<SentenceSpur, Vec<TranslationSpur>> = language_data
-            .translations
-            .iter()
-            .map(|(text, translations)| {
-                (
-                    sentence_key(text),
-                    translations
-                        .iter()
-                        .map(|text| translation_rodeo.get(text).unwrap())
-                        .collect(),
-                )
-            })
-            .collect();
+        let mut translations = vec![Vec::new(); encoded_sentences.len()];
+        for (text, texts) in &language_data.translations {
+            translations[sentence_key(text).into_usize()] = texts
+                .iter()
+                .map(|text| translation_rodeo.get(text).unwrap())
+                .collect();
+        }
+        let translations = SentenceLists::new(translations);
         let translation_rodeo = translation_rodeo.into_resolver();
         for (text, _) in &encoded {
             assert!(
                 translations
-                    .get(&sentence_key(text))
-                    .is_some_and(|translations| translations
-                        .iter()
-                        .any(|key| !translation_rodeo.resolve(key).is_empty())),
+                    .get(sentence_key(text))
+                    .iter()
+                    .any(|key| !translation_rodeo.resolve(key).is_empty()),
                 "encoded sentence {text:?} must have a nonempty translation"
             );
         }
-        let sentence_sources = language_data
-            .sentence_sources
-            .iter()
-            .map(|(text, source)| (sentence_key(text), source.clone()))
-            .collect();
+        let mut sources = vec![SentenceSource::none(); encoded_sentences.len()];
+        for (text, source) in &language_data.sentence_sources {
+            sources[sentence_key(text).into_usize()] = source.clone();
+        }
+        let sentence_sources = SentenceSources::new(&sources);
         let homophone_practice = language_data
             .homophone_practice
             .iter()
@@ -1460,12 +1573,12 @@ pub struct LanguagePackSentences {
     pub spur_space_fingerprint: u64,
     pub target_language: crate::Language,
     pub translation_rodeo: lasso::RodeoResolver<String, TranslationSpur>,
-    pub translations: FxHashMap<SentenceSpur, Vec<TranslationSpur>>,
+    pub translations: SentenceLists<TranslationSpur>,
     pub source_gram_frequencies: FxHashMap<crate::FrequencySourceId, FrequencyList>,
     pub homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<SentenceSpur>>,
     pub movies: FxHashMap<String, MovieMetadata>,
     pub books: FxHashMap<String, BookMetadata>,
-    pub sentence_sources: FxHashMap<SentenceSpur, SentenceSource>,
+    pub sentence_sources: SentenceSources,
     pub encoded_sentences: lasso::CompressedRodeoReader<SentenceSpur, Symbol, SentenceText>,
     pub sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<SentenceSpur>>,
     pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
@@ -1484,12 +1597,12 @@ impl LanguagePackSentences {
             prefixed_text: FxHashMap::default(),
             grams_with_prefixed_text: FxHashMap::default(),
             strokes: crate::StrokeTable::default(),
-            translations: FxHashMap::default(),
+            translations: SentenceLists::new(std::iter::empty::<Vec<TranslationSpur>>()),
             source_gram_frequencies: FxHashMap::default(),
             homophone_practice: FxHashMap::default(),
             movies: FxHashMap::default(),
             books: FxHashMap::default(),
-            sentence_sources: FxHashMap::default(),
+            sentence_sources: SentenceSources::new(&[]),
             encoded_sentences: lasso::CompressedRodeoReader::default(),
             sentences_containing_gram_index: FxHashMap::default(),
             human_audio: FxHashMap::default(),
@@ -1507,7 +1620,7 @@ fn spur_space_fingerprint(
     written: &WrittenEaseOrder,
 ) -> u64 {
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-    hasher.update(b"sentence-expression-index-v1");
+    hasher.update(b"sentence-expression-index-v2-dense-metadata");
     hasher.update(&(core_strings.len() as u64).to_le_bytes());
     hasher.update(&(core_grams.len() as u64).to_le_bytes());
     for (_, s) in core_strings.iter() {
@@ -2071,8 +2184,8 @@ mod sense_tests {
         let full = core.with_sentences(sentences);
         assert!(Arc::ptr_eq(&core.core, &full.core));
         assert_eq!(core.spur_space_fingerprint, full.spur_space_fingerprint);
-        assert!(core.sentences.translations.is_empty());
-        assert!(!full.sentences.translations.is_empty());
+        assert_eq!(core.sentence_keys().count(), 0);
+        assert_ne!(full.sentence_keys().count(), 0);
         let gram = core.intern_gram(&gram("bank")).unwrap();
         assert_eq!(full.senses_of(gram), core.senses_of(gram));
         for (spur, text) in core.string_rodeo.iter() {
@@ -2135,7 +2248,17 @@ mod sense_tests {
                 ("bank".into(), encoded("bank", false)),
                 ("corpus-only".into(), encoded("corpus-only", true)),
             ],
-            sentence_sources: vec![("corpus-only".into(), SentenceSource::none())],
+            sentence_sources: vec![(
+                "corpus-only".into(),
+                SentenceSource {
+                    from_anki: true,
+                    from_tatoeba: true,
+                    from_manual: true,
+                    from_song: true,
+                    movie_ids: vec!["film-without-metadata".into(), "other-film".into()],
+                    book_ids: vec!["training-book".into(), "reader-book".into()],
+                },
+            )],
             source_gram_frequencies: [(
                 crate::FrequencySourceId::Movie("film".into()),
                 GramFrequencyList {
@@ -2225,12 +2348,31 @@ mod sense_tests {
                 .unwrap(),
             original_literals
         );
-        for (sentence, translations) in &full.sentences.translations {
+        let source = full.source_of(sentence);
+        assert!(source.from_anki && source.from_tatoeba && source.from_manual && source.from_song);
+        assert_eq!(
+            source.movie_ids().map(String::as_str).collect::<Vec<_>>(),
+            ["film-without-metadata", "other-film"]
+        );
+        assert_eq!(
+            source.book_ids().map(String::as_str).collect::<Vec<_>>(),
+            ["training-book", "reader-book"]
+        );
+        let bank = full.sentence_key("bank").unwrap();
+        let source = full.source_of(bank);
+        assert!(
+            !source.from_anki && !source.from_tatoeba && !source.from_manual && !source.from_song
+        );
+        assert_eq!(source.movie_ids().count(), 0);
+        assert_eq!(source.book_ids().count(), 0);
+        assert_eq!(full.translations_of(bank).len(), 2);
+        assert_eq!(full.translations_of(sentence).len(), 1);
+        for sentence in full.sentence_keys() {
             assert_eq!(
-                full.sentence_key(&full.sentence_text(*sentence)),
-                Some(*sentence)
+                full.sentence_key(&full.sentence_text(sentence)),
+                Some(sentence)
             );
-            for translation in translations {
+            for translation in full.translations_of(sentence) {
                 assert!(
                     full.sentences
                         .translation_rodeo

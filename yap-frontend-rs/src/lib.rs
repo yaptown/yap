@@ -1493,7 +1493,7 @@ fn comprehensible_sentence_from_spur(
         unique_phrases
     };
 
-    let native_languages = language_pack.sentences.translations.get(&sentence)?.clone();
+    let native_languages = language_pack.translations_of(sentence).to_vec();
 
     Some(ComprehensibleSentence {
         target_language: sentence,

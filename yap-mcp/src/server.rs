@@ -491,9 +491,7 @@ impl YapState {
     /// Human-readable provenance for a sentence.
     fn sentence_sources(&self, sentence: &SentenceSpur) -> Vec<String> {
         let pack = self.pack();
-        let Some(source) = pack.sentences.sentence_sources.get(sentence) else {
-            return Vec::new();
-        };
+        let source = pack.source_of(*sentence);
         let mut out = Vec::new();
         if source.from_anki {
             out.push("Anki deck".to_string());
@@ -508,8 +506,7 @@ impl YapState {
             out.push("song lyrics".to_string());
         }
         for movie in source
-            .movie_ids
-            .iter()
+            .movie_ids()
             .filter_map(|id| pack.sentences.movies.get(id))
         {
             match movie.year {
@@ -562,15 +559,10 @@ impl YapState {
         let render = |sentence: &SentenceSpur| SentenceOut {
             text: pack.sentence_text(*sentence),
             translations: pack
-                .sentences
-                .translations
-                .get(sentence)
-                .map(|ts| {
-                    ts.iter()
-                        .map(|t| pack.sentences.translation_rodeo.resolve(t).to_string())
-                        .collect()
-                })
-                .unwrap_or_default(),
+                .translations_of(*sentence)
+                .iter()
+                .map(|t| pack.sentences.translation_rodeo.resolve(t).to_string())
+                .collect(),
             sources: self.sentence_sources(sentence),
         };
         SampledSentences {

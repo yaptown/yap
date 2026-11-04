@@ -1178,14 +1178,6 @@ impl PlannerState {
             let Some(sentence) = self.unindexed.pop() else {
                 break;
             };
-            if pack
-                .sentences
-                .translations
-                .get(&sentence)
-                .is_none_or(|t| t.is_empty())
-            {
-                continue;
-            }
             let Some(encoded) = pack.sentence_grams(sentence) else {
                 continue;
             };
@@ -2134,10 +2126,9 @@ mod tests {
                 .map(|s| {
                     let text = pack.sentence_text(s);
                     let imdb = pack
-                        .sentences
-                        .sentence_sources
-                        .get(&s)
-                        .and_then(|source| source.movie_ids.first())
+                        .source_of(s)
+                        .movie_ids()
+                        .next()
                         .map(String::as_str)
                         .unwrap_or("tt0000001");
                     row(

@@ -504,9 +504,9 @@ mod tests {
         for (sentence_spur, sentence_grams) in lp.decoded_sentences() {
             let sentence_spur = &sentence_spur;
             // Every sentence should have at least one translation
-            let translations = lp.sentences.translations.get(sentence_spur);
+            let translations = lp.translations_of(*sentence_spur);
             assert!(
-                translations.is_some_and(|t| !t.is_empty()),
+                !translations.is_empty(),
                 "[{label}] Sentence {:?} has no translations",
                 lp.sentence_text(*sentence_spur)
             );

@@ -750,10 +750,8 @@ fn resolve_sentence(
     }
 
     let translation = language_pack
-        .sentences
-        .translations
-        .get(sentence_spur)
-        .and_then(|ts| ts.first())
+        .translations_of(*sentence_spur)
+        .first()
         .map(|t| {
             language_pack
                 .sentences
@@ -764,14 +762,9 @@ fn resolve_sentence(
 
     // Look up sentence source for attribution
     let source = language_pack
-        .sentences
-        .sentence_sources
-        .get(sentence_spur)
-        .and_then(|ss| {
-            ss.movie_ids
-                .iter()
-                .find_map(|id| language_pack.sentences.movies.get(id))
-        })
+        .source_of(*sentence_spur)
+        .movie_ids()
+        .find_map(|id| language_pack.sentences.movies.get(id))
         .map(|movie| {
             if let Some(year) = movie.year {
                 format!("{} ({})", movie.title, year)

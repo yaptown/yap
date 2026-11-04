@@ -443,23 +443,16 @@ impl Deck {
         }
 
         let movie_titles = language_pack
-            .sentences
-            .sentence_sources
-            .get(&sentence.target_language)
-            .map(|source| {
-                source
-                    .movie_ids
-                    .iter()
-                    .filter_map(|movie_id| {
-                        language_pack
-                            .sentences
-                            .movies
-                            .get(movie_id)
-                            .map(|metadata| (movie_id.clone(), metadata.title.clone()))
-                    })
-                    .collect()
+            .source_of(sentence.target_language)
+            .movie_ids()
+            .filter_map(|movie_id| {
+                language_pack
+                    .sentences
+                    .movies
+                    .get(movie_id)
+                    .map(|metadata| (movie_id.clone(), metadata.title.clone()))
             })
-            .unwrap_or_default();
+            .collect();
 
         let proper_noun_definitions: Vec<(String, language_utils::ProperNounDefinition)> = parts
             .iter()
@@ -622,23 +615,16 @@ impl Deck {
         primary_literal_indices.dedup();
 
         let movie_titles = language_pack
-            .sentences
-            .sentence_sources
-            .get(&target_language)
-            .map(|source| {
-                source
-                    .movie_ids
-                    .iter()
-                    .filter_map(|movie_id| {
-                        language_pack
-                            .sentences
-                            .movies
-                            .get(movie_id)
-                            .map(|metadata| (movie_id.clone(), metadata.title.clone()))
-                    })
-                    .collect()
+            .source_of(target_language)
+            .movie_ids()
+            .filter_map(|movie_id| {
+                language_pack
+                    .sentences
+                    .movies
+                    .get(movie_id)
+                    .map(|metadata| (movie_id.clone(), metadata.title.clone()))
             })
-            .unwrap_or_default();
+            .collect();
 
         let proper_noun_definitions: Vec<(String, language_utils::ProperNounDefinition)> =
             target_language_literals

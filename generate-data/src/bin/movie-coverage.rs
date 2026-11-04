@@ -70,12 +70,12 @@ async fn main() -> Result<()> {
     // Sentences the pack attributes to each movie, keyed by IMDb id.
     let pack = load_pack(&args.out, &course)?;
     let mut in_pack: BTreeMap<String, HashSet<String>> = BTreeMap::new();
-    for (sentence, source) in &pack.sentences.sentence_sources {
-        for id in &source.movie_ids {
+    for sentence in pack.sentence_keys() {
+        for id in pack.source_of(sentence).movie_ids() {
             in_pack
                 .entry(id.clone())
                 .or_default()
-                .insert(pack.sentence_text(*sentence));
+                .insert(pack.sentence_text(sentence));
         }
     }
 
