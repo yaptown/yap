@@ -585,7 +585,7 @@ pub struct MovieMetadata {
     pub rotten_tomatoes_score: Option<u8>,
     /// Authoritative film variety, or an unambiguous sentence-dialect vote.
     pub variety: Option<Language>,
-    /// Poster image bytes (JPEG format)
+    /// Poster image bytes: lossy WebP, 200×300
     pub poster_bytes: Option<Vec<u8>>,
 }
 

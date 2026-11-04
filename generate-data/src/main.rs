@@ -1636,13 +1636,13 @@ async fn main() -> anyhow::Result<()> {
                     match image::load_from_memory_with_format(&bytes, image::ImageFormat::Jpeg) {
                         Ok(img) => {
                             let resized =
-                                img.resize(400, 600, image::imageops::FilterType::Lanczos3);
+                                img.resize(200, 300, image::imageops::FilterType::Lanczos3);
                             let resized = image::DynamicImage::ImageRgb8(resized.to_rgb8());
                             let encoder = webp::Encoder::from_image(&resized)
                                 .expect("Failed to create WebP encoder");
                             let mut config =
                                 webp::WebPConfig::new().expect("Failed to create WebP config");
-                            config.quality = 40.0;
+                            config.quality = 30.0;
                             config.method = 6;
                             movie.poster_bytes = Some(
                                 encoder
