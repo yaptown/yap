@@ -205,8 +205,14 @@ Output format:
             } in thoughts.sentence_pairs
             {
                 sentence_pairs.push(HomophoneSentencePair {
-                    sentence1,
-                    sentence2,
+                    sentence1: language_utils::text_cleanup::cleanup_sentence(
+                        sentence1,
+                        target_language,
+                    ),
+                    sentence2: language_utils::text_cleanup::cleanup_sentence(
+                        sentence2,
+                        target_language,
+                    ),
                 });
             }
 

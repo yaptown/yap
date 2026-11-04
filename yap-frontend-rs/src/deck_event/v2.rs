@@ -115,11 +115,7 @@ fn convert_sentence_review(
             );
 
             // Look up the sentence in the language pack to get its literals
-            let sentence_spur = context
-                .language_pack
-                .sentences
-                .sentence_rodeo
-                .get(&cleaned_sentence)?;
+            let sentence_spur = context.language_pack.sentence_key(&cleaned_sentence)?;
             let sentence_literals = context
                 .language_pack
                 .sentence_to_literals(&sentence_spur, context.course.target_language)?;

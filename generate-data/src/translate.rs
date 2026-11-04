@@ -148,8 +148,8 @@ impl Translator {
         self.decisions.override_for(text)
     }
 
-    pub fn into_decisions(self) -> crate::translation_review::Decisions {
-        self.decisions
+    pub fn decisions(&self) -> &crate::translation_review::Decisions {
+        &self.decisions
     }
     pub fn review_client(&self) -> ChatClient {
         let model = match &self.backend {
@@ -805,6 +805,7 @@ impl Translator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::BTreeMap;
 
     const SMOKE_MODEL: &str = "gpt-6-luna";
 
@@ -827,6 +828,56 @@ mod tests {
             per_language_budget_micro: 0,
             budget_warned: AtomicBool::new(false),
         }
+    }
+
+    #[tokio::test]
+    async fn late_sentence_pass_reuses_translator_and_merges_only_usable_translations() {
+        let directory = tempfile::tempdir().unwrap();
+        let translator = offline_translator(directory.path());
+        for (text, translation) in [
+            ("bonjour", "hello"),
+            ("verre", "glass"),
+            ("untranslated", ""),
+        ] {
+            translator
+                .store(translator.primary_hash(text), translation)
+                .await;
+        }
+        let course = language_utils::Course {
+            target_language: Language::French,
+            native_language: Language::English,
+        };
+        let counts = BTreeMap::new();
+        let mut translations = crate::pipeline::translate_sentences(
+            &course,
+            [("bonjour", None)].into_iter(),
+            &translator,
+            &counts,
+        )
+        .await
+        .unwrap();
+        translator
+            .prime(&["verre".into(), "untranslated".into()])
+            .await
+            .unwrap();
+        translations.extend(
+            crate::pipeline::translate_sentences(
+                &course,
+                [("verre", None), ("untranslated", None)].into_iter(),
+                &translator,
+                &counts,
+            )
+            .await
+            .unwrap(),
+        );
+        assert_eq!(
+            translations,
+            BTreeMap::from([
+                ("bonjour".into(), vec!["hello".into()]),
+                ("verre".into(), vec!["glass".into()]),
+            ])
+        );
+        assert_eq!(translator.api_calls(), 0);
     }
 
     #[test]

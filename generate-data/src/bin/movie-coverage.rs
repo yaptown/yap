@@ -75,7 +75,7 @@ async fn main() -> Result<()> {
             in_pack
                 .entry(id.clone())
                 .or_default()
-                .insert(pack.sentences.sentence_rodeo.resolve(sentence).to_string());
+                .insert(pack.sentence_text(*sentence));
         }
     }
 

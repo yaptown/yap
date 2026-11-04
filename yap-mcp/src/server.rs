@@ -449,7 +449,7 @@ impl YapState {
             Some(text) => {
                 let text = cleanup_sentence(text.to_string(), self.context.course.target_language);
                 let pack = self.pack();
-                let Some(spur) = pack.sentences.sentence_rodeo.get(&text) else {
+                let Some(spur) = pack.sentence_key(&text) else {
                     return Err(
                         "that sentence isn't in yap's corpus — pass one exactly as returned by \
                          get_sentences, or omit it to let the server pick"
@@ -560,7 +560,7 @@ impl YapState {
             .collect();
 
         let render = |sentence: &SentenceSpur| SentenceOut {
-            text: pack.sentences.sentence_rodeo.resolve(sentence).to_string(),
+            text: pack.sentence_text(*sentence),
             translations: pack
                 .sentences
                 .translations

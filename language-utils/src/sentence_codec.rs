@@ -66,7 +66,14 @@ pub enum SymbolKind {
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, Hash, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize,
 )]
+#[rkyv(derive(Clone, Copy))]
 pub struct Symbol(NonZeroU32);
+
+impl From<ArchivedSymbol> for Symbol {
+    fn from(symbol: ArchivedSymbol) -> Self {
+        Self(symbol.0.to_native())
+    }
+}
 
 impl Symbol {
     const LEARNABLE: u32 = 1 << 31;

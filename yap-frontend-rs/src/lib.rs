@@ -1776,11 +1776,7 @@ impl weapon::AppState for Deck {
                     context.course.target_language,
                 );
 
-                if let Some(sentence_spur) = context
-                    .language_pack
-                    .sentences
-                    .sentence_rodeo
-                    .get(&cleaned_sentence)
+                if let Some(sentence_spur) = context.language_pack.sentence_key(&cleaned_sentence)
                     && let Some(encoded_sentence) =
                         context.language_pack.sentence_grams(sentence_spur)
                 {
@@ -2089,12 +2085,7 @@ impl weapon::AppState for Deck {
                     context.course.target_language,
                 );
 
-                if let Some(sentence_spur) = context
-                    .language_pack
-                    .sentences
-                    .sentence_rodeo
-                    .get(&cleaned_sentence)
-                {
+                if let Some(sentence_spur) = context.language_pack.sentence_key(&cleaned_sentence) {
                     let mut any_again = false;
 
                     let encoded_sentence = context.language_pack.sentence_grams(sentence_spur);
@@ -3900,12 +3891,7 @@ impl Deck {
             challenge_sentence.clone(),
             self.context.course.target_language,
         );
-        let sentence_spur = self
-            .context
-            .language_pack
-            .sentences
-            .sentence_rodeo
-            .get(&cleaned_sentence)?;
+        let sentence_spur = self.context.language_pack.sentence_key(&cleaned_sentence)?;
         let sentence_literals = self
             .context
             .language_pack
@@ -3960,12 +3946,7 @@ impl Deck {
             challenge_sentence.clone(),
             self.context.course.target_language,
         );
-        let sentence_spur = self
-            .context
-            .language_pack
-            .sentences
-            .sentence_rodeo
-            .get(&cleaned_sentence)?;
+        let sentence_spur = self.context.language_pack.sentence_key(&cleaned_sentence)?;
         let sentence_literals = self
             .context
             .language_pack
@@ -4241,10 +4222,10 @@ impl Deck {
         let known = comprehensible_grams.rank_bitset();
         let mut possible_sentences =
             language_pack.comprehensible_sentences(required_gram, |rank| known.contains(rank));
-        possible_sentences.sort_by_key(|sentence| {
-            let text = language_pack.sentences.sentence_rodeo.resolve(sentence);
+        possible_sentences.sort_by_cached_key(|sentence| {
+            let text = language_pack.sentence_text(*sentence);
             (
-                !clips::sentence_has_clip(language, text),
+                !clips::sentence_has_clip(language, &text),
                 *sentences_reviewed.get(sentence).unwrap_or(&0),
             )
         });
@@ -7139,11 +7120,7 @@ mod tests {
         // The sentence from v1 events (without proper French punctuation spacing)
         let raw_sentence = "Qu'est-ce que tu veux savoir?";
 
-        let raw_in_rodeo = language_pack
-            .sentences
-            .sentence_rodeo
-            .get(raw_sentence)
-            .is_some();
+        let raw_in_rodeo = language_pack.sentence_key(raw_sentence).is_some();
         assert!(
             !raw_in_rodeo,
             "Raw sentence should NOT be in language pack (it lacks proper French spacing)"
@@ -7154,27 +7131,19 @@ mod tests {
             Language::French,
         );
 
-        let cleaned_in_rodeo = language_pack
-            .sentences
-            .sentence_rodeo
-            .get(&cleaned_sentence)
-            .is_some();
+        let cleaned_in_rodeo = language_pack.sentence_key(&cleaned_sentence).is_some();
         let cleaned_in_encoded = language_pack
-            .sentences
-            .sentence_rodeo
-            .get(&cleaned_sentence)
+            .sentence_key(&cleaned_sentence)
             .and_then(|spur| language_pack.sentence_grams(spur))
             .is_some();
         let cleaned_has_literals = language_pack
-            .sentences
-            .sentence_rodeo
-            .get(&cleaned_sentence)
+            .sentence_key(&cleaned_sentence)
             .and_then(|spur| language_pack.sentence_to_literals(&spur, Language::French))
             .is_some();
 
         assert!(
             cleaned_in_rodeo,
-            "Cleaned sentence should be in sentence_rodeo"
+            "Cleaned sentence should be in the sentence index"
         );
         assert!(
             cleaned_in_encoded,
@@ -7195,7 +7164,7 @@ mod tests {
         .expect("Failed to load French pack - run `cargo run --bin generate-data -- fra` first");
         let mut seen = std::collections::BTreeSet::new();
         for sentence in pack.sentence_keys() {
-            let text = pack.sentences.sentence_rodeo.resolve(&sentence);
+            let text = pack.sentence_text(sentence);
             if !text.contains([';', ':', '«', '»', '!', '?']) {
                 continue;
             }
@@ -7204,12 +7173,12 @@ mod tests {
                 .unwrap();
             let reconstructed = language_utils::literals_to_text(&literals);
             assert_eq!(reconstructed, text);
-            assert_eq!(cleanup_sentence(text.into(), Language::French), text);
+            assert_eq!(cleanup_sentence(text.clone(), Language::French), text);
             // Stored event payloads keep their old spaces. Replay cleans only
             // the lookup copy, which must still identify this encoded sentence.
             let old = text.replace(['\u{202F}', '\u{00A0}'], " ");
             let cleaned = cleanup_sentence(old, Language::French);
-            assert_eq!(pack.sentences.sentence_rodeo.get(&cleaned), Some(sentence));
+            assert_eq!(pack.sentence_key(&cleaned), Some(sentence));
             seen.extend(
                 text.chars()
                     .filter(|c| [';', ':', '«', '»', '!', '?'].contains(c)),
@@ -7598,7 +7567,7 @@ mod tests {
             let lp = &deck.context.language_pack;
             println!("\n=== Sentence inspection: {needle:?} ===");
             for (sentence_spur, sentence_grams) in lp.decoded_sentences() {
-                let sentence_text = lp.sentences.sentence_rodeo.resolve(&sentence_spur);
+                let sentence_text = lp.sentence_text(sentence_spur);
                 if !sentence_text.contains(&needle) {
                     continue;
                 }

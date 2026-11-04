@@ -3563,7 +3563,7 @@ dependencies = [
 [[package]]
 name = "lasso"
 version = "0.7.3"
-source = "git+https://github.com/anchpop/lasso.git?rev=2830220890ea6725302a88a178a02661472f1a46#2830220890ea6725302a88a178a02661472f1a46"
+source = "git+https://github.com/anchpop/lasso.git?rev=a47d223dcbf1b7b5da7e5961b145e45e8599dbcf#a47d223dcbf1b7b5da7e5961b145e45e8599dbcf"
 dependencies = [
  "bytecheck",
  "hashbrown 0.14.5",

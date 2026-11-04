@@ -9,6 +9,7 @@ pub use word_prefix::{compute_word_prefix, prefixed_text};
 pub mod indexmap;
 pub mod language_pack;
 pub mod sentence_codec;
+pub(crate) mod sentence_text;
 pub use language_pack::{
     PACKS_ORIGIN, SentenceSpur, SentenceText, TranslationSpur, TranslationText,
 };
@@ -798,81 +799,21 @@ impl SentenceGrams<TaggedGram<SpurGram>> {
         gram_rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>,
         language: Language,
     ) -> Vec<GramLiterals<TaggedGram<SpurGram>>> {
-        // First pass: collect all atoms with their gram index, preserving
-        // Control tokens so whitespace corrections are honored.
-        let mut all_atoms: Vec<(usize, Atom<String>)> = Vec::new();
-        for (gram_idx, gram) in self.grams.iter().enumerate() {
-            let gram_spur = match gram {
-                SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => g,
-            };
-            let gram_resolved = gram_rodeo.resolve(&gram_spur.gram).resolve(string_rodeo);
-            for atom in gram_resolved.iter() {
-                all_atoms.push((gram_idx, atom.clone()));
-            }
+        let atoms = self.grams.iter().enumerate().flat_map(|(index, gram)| {
+            let (SentenceGram::Learnable(entry) | SentenceGram::Obvious(entry)) = gram;
+            gram_rodeo
+                .resolve(&entry.gram)
+                .iter()
+                .map(move |atom| (index, atom.resolve(string_rodeo)))
+        });
+        let mut grouped = vec![Vec::new(); self.grams.len()];
+        for (index, word, whitespace) in render_words(atoms, self.capitalize_first, language) {
+            grouped[index].push(Literal { word, whitespace });
         }
-
-        // Collect just the words for capitalization
-        if self.capitalize_first
-            && let Some((_, Atom::Tok(first_word))) = all_atoms
-                .iter_mut()
-                .find(|(_, a)| matches!(a, Atom::Tok(_)))
-        {
-            first_word.text = capitalize_first_letter(&first_word.text);
-        }
-
-        // Build literals using control tokens for whitespace correction.
-        // We need to look ahead across gram boundaries for correct whitespace,
-        // so we iterate over the flat atom list, then group by gram index.
-        let mut literals_with_gram_idx: Vec<(usize, Literal<String>)> = Vec::new();
-        let mut i = 0;
-        while i < all_atoms.len() {
-            let (gram_idx, atom) = &all_atoms[i];
-            match atom {
-                Atom::Tok(word) => {
-                    // Determine whitespace: check if next atom is a Control token
-                    let whitespace = if i + 1 < all_atoms.len() {
-                        match &all_atoms[i + 1].1 {
-                            Atom::Control(ctrl) => {
-                                i += 1; // consume the control token
-                                ctrl.0
-                            }
-                            Atom::Tok(next_word) => {
-                                predict_whitespace(word, Some(next_word), language)
-                            }
-                        }
-                    } else {
-                        predict_whitespace(word, None, language)
-                    };
-
-                    literals_with_gram_idx.push((
-                        *gram_idx,
-                        Literal {
-                            word: word.clone(),
-                            whitespace,
-                        },
-                    ));
-                }
-                Atom::Control(_) => {
-                    // Standalone control token (not preceded by Tok) — skip
-                }
-            }
-            i += 1;
-        }
-
-        // Group literals back into their grams
         self.grams
             .into_iter()
-            .enumerate()
-            .map(|(gram_idx, gram)| {
-                gram.map(|gram_spur| {
-                    let literals: Vec<Literal<String>> = literals_with_gram_idx
-                        .iter()
-                        .filter(|(idx, _)| *idx == gram_idx)
-                        .map(|(_, lit)| lit.clone())
-                        .collect();
-                    (gram_spur, literals)
-                })
-            })
+            .zip(grouped)
+            .map(|(gram, literals)| gram.map(|entry| (entry, literals)))
             .collect()
     }
 }
@@ -1074,20 +1015,21 @@ impl SentenceInfo {
         interners: &GramInterners,
         language: Language,
     ) -> Vec<Literal<String>> {
-        let atoms: Vec<Atom<String>> = self
+        let atoms = self
             .sentence
             .tokens
             .iter()
-            .flat_map(|key| interners.grams.resolve(&key.gram).iter())
-            .map(|a| a.resolve(&interners.strings))
-            .collect();
-        let mut words = atoms_to_literals(&atoms, language);
-        if self.sentence.capitalize_first
-            && let Some(first_word) = words.first_mut()
-        {
-            first_word.word.text = capitalize_first_letter(&first_word.word.text);
-        }
-        words
+            .enumerate()
+            .flat_map(|(index, key)| {
+                interners
+                    .grams
+                    .resolve(&key.gram)
+                    .iter()
+                    .map(move |atom| (index, atom.resolve(&interners.strings)))
+            });
+        render_words(atoms, self.sentence.capitalize_first, language)
+            .map(|(_, word, whitespace)| Literal { word, whitespace })
+            .collect()
     }
 
     /// The sentence's gram segmentation: each encoded gram with the range
@@ -5806,51 +5748,43 @@ pub fn literals_to_atoms(
     (atoms, capitalize_first)
 }
 
-/// Convert a sequence of Atoms back into Literals.
-///
-/// This is the reverse conversion that reconstructs the original
-/// whitespace from predictions and control tokens.
-pub fn atoms_to_literals(atoms: &[Atom<String>], language: Language) -> Vec<Literal<String>> {
-    let mut literals = Vec::new();
-    let mut i = 0;
-
-    while i < atoms.len() {
-        let atom = &atoms[i];
-
-        match atom {
-            Atom::<String>::Tok(word) => {
-                let word = word.clone();
-
-                // Look ahead to determine whitespace
-                let whitespace = if i + 1 < atoms.len() {
-                    match &atoms[i + 1] {
-                        // If next is a control token, use its whitespace
-                        Atom::<String>::Control(ctrl) => {
-                            i += 1; // consume the control token
-                            ctrl.0
-                        }
-                        // Otherwise predict based on next word
-                        Atom::<String>::Tok(next_word) => {
-                            predict_whitespace(&word, Some(next_word), language)
-                        }
-                    }
-                } else {
-                    // Last token - predict with no lookahead
-                    predict_whitespace(&word, None, language)
-                };
-
-                literals.push(Literal { word, whitespace });
+/// Stream words with their source gram indices. Capitalization and whitespace
+/// overrides are applied here, with one atom of lookahead across gram boundaries.
+pub fn render_words(
+    atoms: impl Iterator<Item = (usize, Atom<String>)>,
+    mut capitalize_first: bool,
+    language: Language,
+) -> impl Iterator<Item = (usize, Word<String>, Whitespace)> {
+    let mut atoms = atoms.peekable();
+    std::iter::from_fn(move || {
+        loop {
+            let (index, atom) = atoms.next()?;
+            let Atom::Tok(mut word) = atom else {
+                continue;
+            };
+            if capitalize_first {
+                word.text = capitalize_first_letter(&word.text);
+                capitalize_first = false;
             }
-            Atom::<String>::Control(_) => {
-                // Standalone control tokens shouldn't happen in well-formed input,
-                // but if they do, skip them
-            }
+            let whitespace = match atoms.peek() {
+                Some((_, Atom::Control(control))) => {
+                    let whitespace = control.0;
+                    atoms.next();
+                    whitespace
+                }
+                Some((_, Atom::Tok(next))) => predict_whitespace(&word, Some(next), language),
+                None => Whitespace::None,
+            };
+            return Some((index, word, whitespace));
         }
+    })
+}
 
-        i += 1;
-    }
-
-    literals
+/// Reconstruct literals from already-cased atoms, preserving whitespace overrides.
+pub fn atoms_to_literals(atoms: &[Atom<String>], language: Language) -> Vec<Literal<String>> {
+    render_words(atoms.iter().cloned().map(|atom| (0, atom)), false, language)
+        .map(|(_, word, whitespace)| Literal { word, whitespace })
+        .collect()
 }
 
 /// Reconstruct the original sentence text from literals

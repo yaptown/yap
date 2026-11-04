@@ -802,13 +802,7 @@ mod translation_sense_tests {
             .context
             .language_pack
             .sentence_to_literals(
-                &deck
-                    .context
-                    .language_pack
-                    .sentences
-                    .sentence_rodeo
-                    .get(sentence)
-                    .unwrap(),
+                &deck.context.language_pack.sentence_key(sentence).unwrap(),
                 Language::English,
             )
             .unwrap();
@@ -1143,7 +1137,7 @@ mod translation_sense_tests {
             let challenge = deck
                 .translation_challenge_for_sentence(
                     pack.resolve_entry(&gram(text, sense)).unwrap(),
-                    pack.sentences.sentence_rodeo.get(sentence).unwrap(),
+                    pack.sentence_key(sentence).unwrap(),
                 )
                 .unwrap();
             assert_eq!(challenge.primary_literal_indices, indices);

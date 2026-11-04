@@ -2,7 +2,7 @@
 
 use language_utils::{
     Atom, EncodedSentence, Gram, GramInterners, GramVocabEntry, Language, Literal, SpurGram,
-    literals_to_atoms, predict_whitespace,
+    literals_to_atoms,
 };
 use omnigram::WhitespacePredictionSummary;
 use omnigram::unigram::{Seq, UnigramTrainer, UnigramTrainerConfig};
@@ -247,25 +247,9 @@ fn write_supertokens_txt(
 
     for (seq, count) in model.get_vocab_with_counts() {
         if seq.len() >= 2 {
-            // Reconstruct text with proper whitespace
-            let words: Vec<_> = seq
-                .0
-                .iter()
-                .filter_map(|atom| match atom {
-                    Atom::Tok(word) => Some(word.resolve(reader)),
-                    Atom::Control(_) => None,
-                })
-                .collect();
-
-            let mut text = String::new();
-            for (i, word) in words.iter().enumerate() {
-                text.push_str(&word.text);
-                if i + 1 < words.len() {
-                    let ws = predict_whitespace(word, Some(&words[i + 1]), language);
-                    text.push_str(ws.as_str());
-                }
-            }
-
+            let text = Gram(seq.0.clone())
+                .resolve(reader)
+                .to_display_string(language);
             supertokens.push((text, seq.len(), count));
         }
     }

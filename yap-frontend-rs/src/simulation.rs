@@ -508,7 +508,7 @@ mod tests {
             assert!(
                 translations.is_some_and(|t| !t.is_empty()),
                 "[{label}] Sentence {:?} has no translations",
-                lp.sentences.sentence_rodeo.resolve(sentence_spur)
+                lp.sentence_text(*sentence_spur)
             );
 
             // Every sentence should render to a non-empty sequence of literals
@@ -516,7 +516,7 @@ mod tests {
             assert!(
                 literals.as_ref().is_some_and(|l| !l.is_empty()),
                 "[{label}] Sentence {:?} produced no literals",
-                lp.sentences.sentence_rodeo.resolve(sentence_spur)
+                lp.sentence_text(*sentence_spur)
             );
 
             // Every learnable gram in a sentence should have a definition
@@ -532,7 +532,7 @@ mod tests {
                         lp.gram_definitions.contains_key(&gram_spur.sense),
                         "[{label}] Learnable gram {:?} in sentence {:?} has no definition",
                         lp.gram_rodeo.resolve(&gram_spur.sense.gram),
-                        lp.sentences.sentence_rodeo.resolve(sentence_spur)
+                        lp.sentence_text(*sentence_spur)
                     );
                 }
             }

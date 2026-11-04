@@ -1085,24 +1085,19 @@ pub async fn segment_corpus(
     })
 }
 
-/// Translate every sentence_corpus app sentence into the course's native language
+/// Translate supplied sentences into the course's native language.
 /// (osmo-cached; warmed before this stage). Returns text → translations —
 /// sentences with no usable translation are absent from the map, which is
-/// how downstream pack assembly excludes them. Also writes the translations
-/// file as a pure output.
-pub async fn translate_sentences(
+/// how downstream pack assembly excludes them. The caller merges translation
+/// passes before writing their combined output.
+pub async fn translate_sentences<'a>(
     course: &Course,
-    sentence_corpus: &TargetSentences,
-    translator: Translator,
+    sentences: impl ExactSizeIterator<Item = (&'a str, Option<&'a str>)>,
+    translator: &Translator,
     token_counts: &BTreeMap<String, usize>,
 ) -> anyhow::Result<BTreeMap<String, Vec<String>>> {
     let course = *course;
-    let CourseDirs {
-        native_specific_dir,
-        ..
-    } = course_dirs(&course)?;
-
-    let total = sentence_corpus.app_sentences.len() as u64;
+    let total = sentences.len() as u64;
     let translate_label = format!(
         "translations {} → {}",
         course.target_language.iso_639_1(),
@@ -1118,37 +1113,28 @@ pub async fn translate_sentences(
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
     use futures::{StreamExt, TryStreamExt};
-    let translator_ref = &translator;
     let pb_ref = &pb;
-    let all_translations: BTreeMap<String, IndexSet<String>> =
-        futures::stream::iter(sentence_corpus.app_sentences.iter().map(
-            |(target_language_sentence, native_sentence, _)| {
-                let target_language_sentence = target_language_sentence.clone();
-                let native_sentence = native_sentence.clone();
-                async move {
-                    let translation_set = translator_ref
-                        .sentence_translations(
-                            &target_language_sentence,
-                            native_sentence.as_deref(),
-                        )
-                        .await?;
-                    pb_ref.inc(1);
-                    anyhow::Ok((target_language_sentence, translation_set))
-                }
-            },
-        ))
-        .buffer_unordered(100)
-        .try_collect()
-        .await?;
+    let all_translations: BTreeMap<String, IndexSet<String>> = futures::stream::iter(
+        sentences.map(|(target_language_sentence, native_sentence)| async move {
+            let translation_set = translator
+                .sentence_translations(target_language_sentence, native_sentence)
+                .await?;
+            pb_ref.inc(1);
+            anyhow::Ok((target_language_sentence.to_owned(), translation_set))
+        }),
+    )
+    .buffer_unordered(100)
+    .try_collect()
+    .await?;
 
     pb.finish_with_message(format!(
-        "~${:.4} · {} calls",
+        "~${:.4} cumulative · {} calls",
         translator.cost_estimate_usd(),
         translator.api_calls()
     ));
     let review_client = (course.target_language == language_utils::Language::Japanese)
         .then(|| translator.review_client());
-    let decisions = translator.into_decisions();
+    let decisions = translator.decisions();
 
     let mut translations: BTreeMap<String, Vec<String>> = all_translations
         .into_iter()
@@ -1159,26 +1145,13 @@ pub async fn translate_sentences(
     if let Some(client) = review_client {
         crate::translation_review::review(
             course,
-            &decisions,
+            decisions,
             token_counts,
             &mut translations,
             &client,
         )
         .await?;
     }
-
-    let file =
-        File::create(native_specific_dir.join("target_language_to_native_translations.jsonl"))
-            .context("Failed to create translations file")?;
-    let mut writer = BufWriter::new(file);
-    for (text, translation_list) in &translations {
-        writeln!(
-            writer,
-            "{}",
-            serde_json::to_string(&(text, translation_list))?
-        )?;
-    }
-    writer.flush()?;
 
     Ok(translations)
 }

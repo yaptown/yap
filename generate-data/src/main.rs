@@ -2,8 +2,7 @@ use anyhow::Context;
 use itertools::Itertools;
 use language_utils::TaggedGram;
 use language_utils::{
-    Atom, COURSES, Course, EncodedSentence, Gram, GramFrequencyEntry, GramVocabEntry,
-    HomophonePractice, SentenceGram,
+    Atom, COURSES, Course, EncodedSentence, Gram, GramFrequencyEntry, GramVocabEntry, SentenceGram,
 };
 use rustc_hash::FxHashMap;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -287,7 +286,7 @@ async fn main() -> anyhow::Result<()> {
                 )
             })
             .collect();
-        let (inventories, translations_map) = tokio::try_join!(
+        let (inventories, (mut translations_map, translator)) = tokio::try_join!(
             generate_data::StageTimer::run(
                 "sense assignment",
                 generate_data::usage_discovery::assign_senses(
@@ -303,14 +302,18 @@ async fn main() -> anyhow::Result<()> {
                 let translator = translator
                     .await
                     .context("Translation cache warmup task failed")??;
-                generate_data::pipeline::translate_sentences(
+                let translations = generate_data::pipeline::translate_sentences(
                     course,
-                    &sentence_corpus,
-                    translator,
+                    sentence_corpus
+                        .app_sentences
+                        .iter()
+                        .map(|(text, native, _)| (text.as_str(), native.as_deref())),
+                    &translator,
                     &translation_token_counts,
                 )
                 .await
-                .context("Failed to translate sentences")
+                .context("Failed to translate sentences")?;
+                anyhow::Ok((translations, translator))
             }),
         )?;
         readings
@@ -930,9 +933,12 @@ async fn main() -> anyhow::Result<()> {
         let defined_atoms: std::collections::HashSet<_> =
             defined_gram_set.iter().map(|entry| &entry.gram).collect();
         let gram_vocabulary_count_before = gram_vocabulary.len();
-        let gram_vocabulary: Vec<GramVocabEntry<String>> = gram_vocabulary
-            .into_iter()
+        // Encoder token IDs still address the original, unfiltered vocabulary.
+        let encoder_vocabulary = gram_vocabulary;
+        let gram_vocabulary: Vec<GramVocabEntry<String>> = encoder_vocabulary
+            .iter()
             .filter(|entry| !entry.atoms.is_learnable() || defined_atoms.contains(&entry.atoms))
+            .cloned()
             .collect();
         let removed_vocab_count = gram_vocabulary_count_before - gram_vocabulary.len();
         if removed_vocab_count > 0 {
@@ -1168,6 +1174,7 @@ async fn main() -> anyhow::Result<()> {
                 // an atom the corpus never saw can't be expressed in the gram
                 // system and is dropped (its practice pair falls away below).
                 let mut unencodable = 0usize;
+                let mut new_sentences = BTreeMap::new();
                 for (text, words) in &homophone_literals {
                     if nlp_sentences.contains_key(text) {
                         continue;
@@ -1177,7 +1184,7 @@ async fn main() -> anyhow::Result<()> {
                         unencodable += 1;
                         continue;
                     };
-                    nlp_sentences.insert(
+                    new_sentences.insert(
                         text.clone(),
                         language_utils::SentenceInfo {
                             sentence,
@@ -1202,32 +1209,98 @@ async fn main() -> anyhow::Result<()> {
                     );
                 }
 
-                practice
-                    .into_iter()
-                    .map(|(pair, practice)| {
-                        (
-                            pair,
-                            HomophonePractice {
-                                sentence_pairs: practice
-                                    .sentence_pairs
-                                    .into_iter()
-                                    .filter(|p| {
-                                        nlp_sentences.contains_key(&p.sentence1)
-                                            && nlp_sentences.contains_key(&p.sentence2)
-                                    })
-                                    .collect(),
-                            },
+                // These rows arrived after the corpus's packed-gram view was
+                // built. Only existing ranked readings/phrases can be shipped;
+                // this stage does not invent new vocabulary or reading labels.
+                for info in new_sentences.values_mut() {
+                    info.multiword_terms
+                        .high_confidence
+                        .retain(|term| canonical_phrases.contains_key(&term.gram.gram));
+                    info.multiword_terms
+                        .low_confidence
+                        .retain(|term| canonical_phrases.contains_key(&term.gram.gram));
+                }
+                let new_encoded: Vec<_> = new_sentences
+                    .iter()
+                    .map(|(text, info)| (text.clone(), info.sentence.clone()))
+                    .collect();
+                let mut new_grams = generate_data::pipeline::sentence_grams(
+                    &new_encoded,
+                    &new_sentences,
+                    &encoder_vocabulary,
+                    &readings,
+                    &canonical_phrases,
+                );
+                let ranked: std::collections::HashSet<_> = reading_frequencies
+                    .iter()
+                    .map(|entry| &entry.gram)
+                    .collect();
+                new_grams.retain(|(_, sentence)| {
+                    sentence
+                        .grams
+                        .iter()
+                        .filter_map(SentenceGram::learnable)
+                        .all(|gram| ranked.contains(gram))
+                });
+                for (_, sentence) in &mut new_grams {
+                    sentence
+                        .multiword_terms
+                        .retain(|term| ranked.contains(&term.gram));
+                    sentence
+                        .low_confidence_multiword_terms
+                        .retain(|term| ranked.contains(&term.gram));
+                }
+                println!(
+                    "Homophone sentences: {} encodable, {} with ranked readings/senses to translate",
+                    new_encoded.len(),
+                    new_grams.len()
+                );
+                let new_texts: Vec<_> = new_grams.iter().map(|(text, _)| text.clone()).collect();
+                nlp_sentences.extend(new_sentences);
+                encoded_sentences_with_grams.extend(new_grams);
+                if !new_texts.is_empty() {
+                    let targets: Vec<_> = new_texts
+                        .iter()
+                        .filter(|text| translator.needs_translation(text))
+                        .cloned()
+                        .collect();
+                    translator.prime(&targets).await?;
+                    let token_counts = new_texts
+                        .iter()
+                        .filter(|_| course.target_language == language_utils::Language::Japanese)
+                        .map(|text| {
+                            (
+                                text.clone(),
+                                generate_data::translation_review::token_count(
+                                    &nlp_sentences[text]
+                                        .decode_words(&interners, course.target_language),
+                                ),
+                            )
+                        })
+                        .collect();
+                    translations_map.extend(
+                        generate_data::pipeline::translate_sentences(
+                            course,
+                            new_texts.iter().map(|text| (text.as_str(), None)),
+                            &translator,
+                            &token_counts,
                         )
-                    })
-                    .filter(|(_, practice)| !practice.sentence_pairs.is_empty())
-                    .collect()
+                        .await
+                        .context("Failed to translate homophone practice sentences")?,
+                    );
+                }
+
+                practice
             };
 
             anyhow::Ok(homophone_practice)
         };
         let (redundant_senses, homophone_practice) = tokio::try_join!(
             generate_data::StageTimer::run("sense redundancy", redundancy_stage),
-            generate_data::StageTimer::run("homophone practice + NLP", homophone_stage),
+            generate_data::StageTimer::run(
+                "homophone practice + NLP + translations",
+                homophone_stage
+            ),
         )?;
         // Last of the dictionary steps: it rewrites notes that the stages above
         // put into their prompts.
@@ -1287,6 +1360,18 @@ async fn main() -> anyhow::Result<()> {
         // against `target_language_sentences` below is where untranslatable
         // sentences (which the segmented corpus deliberately includes) fall
         // out.
+        // Both passes use the same translator; persist the merged output once.
+        {
+            let file = File::create(
+                native_specific_dir.join("target_language_to_native_translations.jsonl"),
+            )
+            .context("Failed to create translations file")?;
+            let mut writer = BufWriter::new(file);
+            for entry in &translations_map {
+                writeln!(writer, "{}", serde_json::to_string(&entry)?)?;
+            }
+            writer.flush()?;
+        }
         let translations: Vec<(String, Vec<String>)> = translations_map.into_iter().collect();
         let target_language_sentences: Vec<String> =
             translations.iter().map(|(text, _)| text.clone()).collect();
@@ -1381,6 +1466,17 @@ async fn main() -> anyhow::Result<()> {
         let kept_sentences: std::collections::HashSet<String> = nlp_sentences
             .iter()
             .map(|(sentence, _)| sentence.clone())
+            .collect();
+
+        let homophone_practice = homophone_practice
+            .into_iter()
+            .filter_map(|(pair, mut practice)| {
+                practice.sentence_pairs.retain(|pair| {
+                    kept_sentences.contains(&pair.sentence1)
+                        && kept_sentences.contains(&pair.sentence2)
+                });
+                (!practice.sentence_pairs.is_empty()).then_some((pair, practice))
+            })
             .collect();
 
         let target_language_sentences = target_language_sentences
@@ -1651,6 +1747,13 @@ async fn main() -> anyhow::Result<()> {
                 )
             })
             .filter(|(_, list)| !list.entries.is_empty())
+            .collect();
+
+        // Attribution is shipped only for usable sentences; the frequency totals
+        // above intentionally include the unfiltered corpus.
+        let sentence_sources = sentence_sources
+            .into_iter()
+            .filter(|(sentence, _)| kept_sentences.contains(sentence))
             .collect();
 
         // Generate landing page showcase data

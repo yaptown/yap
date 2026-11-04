@@ -509,11 +509,7 @@ impl Deck {
         );
         Some(TranscribeComprehensibleSentence {
             literal_ruby,
-            target_language: language_pack
-                .sentences
-                .sentence_rodeo
-                .resolve(&sentence.target_language)
-                .to_string(),
+            target_language: language_pack.sentence_text(sentence.target_language),
             native_language: language_pack
                 .sentences
                 .translation_rodeo
@@ -525,11 +521,7 @@ impl Deck {
             gram_breakdowns_for_lookup,
             audio: AudioRequest {
                 request: TtsRequest {
-                    text: language_pack
-                        .sentences
-                        .sentence_rodeo
-                        .resolve(&sentence.target_language)
-                        .to_string(),
+                    text: language_pack.sentence_text(sentence.target_language),
                     language: self.context.course.target_language,
                     is_ssml: false,
                     // Left at the provider default so a human recording of
@@ -680,11 +672,7 @@ impl Deck {
         );
         Some(TranslateComprehensibleSentence {
             literal_ruby,
-            target_language: language_pack
-                .sentences
-                .sentence_rodeo
-                .resolve(&target_language)
-                .to_string(),
+            target_language: language_pack.sentence_text(target_language),
             target_language_literals,
             literal_gram_indices,
             gram_definitions_for_lookup,
@@ -716,11 +704,7 @@ impl Deck {
                 .collect(),
             audio: AudioRequest {
                 request: TtsRequest {
-                    text: language_pack
-                        .sentences
-                        .sentence_rodeo
-                        .resolve(&target_language)
-                        .to_string(),
+                    text: language_pack.sentence_text(target_language),
                     language: self.context.course.target_language,
                     is_ssml: false,
                     instructions: None,

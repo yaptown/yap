@@ -717,55 +717,35 @@ fn resolve_sentence(
     let string_rodeo = &language_pack.string_rodeo;
     let gram_rodeo = &language_pack.gram_rodeo;
 
-    // Collect all (word, slug, gloss) tuples
-    let mut word_entries: Vec<(language_utils::Word<String>, Option<String>, Option<String>)> =
-        Vec::new();
-    for sg in &sentence_grams.grams {
-        let spur_gram = match sg {
-            SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => &g.sense,
-        };
-        let info = gram_to_info.get(spur_gram);
-        let slug = info.and_then(|i| i.slug.clone());
-        let gloss = info.and_then(|i| i.gloss.clone());
-        let gram = gram_rodeo.resolve(&spur_gram.gram).resolve(string_rodeo);
-        for atom in gram.iter() {
-            if let Atom::Tok(word) = atom {
-                word_entries.push((word.clone(), slug.clone(), gloss.clone()));
-            }
-        }
-    }
-
-    // Capitalize first word if needed
-    if sentence_grams.capitalize_first
-        && let Some((first_word, _, _)) = word_entries.first_mut()
-    {
-        first_word.text = language_utils::capitalize_first_letter(&first_word.text);
-    }
-
-    // Build segments, grouping consecutive words with the same gram slug
+    let literals =
+        sentence_grams
+            .without_readings()
+            .to_literals(string_rodeo, gram_rodeo, language);
     let mut segments: Vec<SentenceSegment> = Vec::new();
-    for (i, (word, slug, gloss)) in word_entries.iter().enumerate() {
-        let next_word = word_entries.get(i + 1).map(|(w, _, _)| w);
-        let whitespace = language_utils::predict_whitespace(word, next_word, language)
-            .as_str()
-            .to_string();
-
-        // Try to merge with previous segment if same slug (for multi-word grams)
-        if let Some(last) = segments.last_mut()
-            && last.slug == *slug
-            && slug.is_some()
-        {
-            // Append this word's text to the previous segment
-            let prev_ws = std::mem::replace(&mut last.whitespace, whitespace);
-            last.text.push_str(&prev_ws);
-            last.text.push_str(&word.text);
-        } else {
-            segments.push(SentenceSegment {
-                text: word.text.clone(),
-                whitespace,
-                slug: slug.clone(),
-                gloss: gloss.clone(),
-            });
+    for gram in literals {
+        let (SentenceGram::Learnable((entry, words)) | SentenceGram::Obvious((entry, words))) =
+            gram;
+        let info = gram_to_info.get(&entry);
+        let slug = info.and_then(|info| info.slug.clone());
+        let gloss = info.and_then(|info| info.gloss.clone());
+        for literal in words {
+            let whitespace = literal.whitespace.to_string();
+            // Merge consecutive words linked to the same dictionary entry.
+            if let Some(last) = segments.last_mut()
+                && last.slug == slug
+                && slug.is_some()
+            {
+                let previous = std::mem::replace(&mut last.whitespace, whitespace);
+                last.text.push_str(&previous);
+                last.text.push_str(&literal.word.text);
+            } else {
+                segments.push(SentenceSegment {
+                    text: literal.word.text,
+                    whitespace,
+                    slug: slug.clone(),
+                    gloss: gloss.clone(),
+                });
+            }
         }
     }
 
@@ -1122,6 +1102,90 @@ fn main() -> Result<()> {
 mod tests {
     use super::*;
     use language_utils::{Course, Language};
+
+    #[test]
+    fn sentence_rendering_preserves_cross_gram_overrides_and_capitalization() {
+        use language_utils::{
+            Atom, ConsolidatedLanguageData, ControlToken, Gram, GramVocabEntry, OtherWord,
+            OtherWordType, ReadingTaggedGram, SentenceGrams, TaggedGram, Whitespace, Word,
+        };
+        let word = |text: &str| {
+            Atom::Tok(Word {
+                text: text.to_owned(),
+                word_type: WordType::Other(OtherWord {
+                    other_tag: OtherWordType::X,
+                }),
+            })
+        };
+        // The second gram's control overrides the first word's predicted space.
+        let grams = [
+            Gram(vec![word("bonjour")]),
+            Gram(vec![
+                Atom::Control(ControlToken(Whitespace::None)),
+                word("ami"),
+            ]),
+        ];
+        let text = "Bonjourami";
+        let course = Course {
+            target_language: Language::French,
+            native_language: Language::English,
+        };
+        let pack = LanguagePack::new(
+            ConsolidatedLanguageData {
+                target_language_sentences: vec![text.into()],
+                translations: vec![(text.into(), vec!["Hello friend".into()])],
+                gram_vocabulary: grams
+                    .iter()
+                    .map(|gram| GramVocabEntry {
+                        atoms: gram.clone(),
+                        frequency: 1,
+                    })
+                    .collect(),
+                encoded_sentences: vec![(
+                    text.into(),
+                    SentenceGrams {
+                        grams: grams
+                            .iter()
+                            .map(|gram| {
+                                SentenceGram::Obvious(ReadingTaggedGram::without_reading(
+                                    TaggedGram {
+                                        gram: gram.clone(),
+                                        sense: None,
+                                    },
+                                ))
+                            })
+                            .collect(),
+                        capitalize_first: true,
+                        multiword_terms: vec![],
+                        low_confidence_multiword_terms: vec![],
+                    },
+                )],
+                ..Default::default()
+            },
+            course,
+        );
+        let key = pack.sentence_key(text).unwrap();
+        let info = pack
+            .sentence_grams(key)
+            .unwrap()
+            .grams
+            .into_iter()
+            .map(|gram| {
+                let (SentenceGram::Learnable(entry) | SentenceGram::Obvious(entry)) = gram;
+                (
+                    entry.sense,
+                    GramInfo {
+                        slug: Some("greeting".into()),
+                        gloss: Some("hello".into()),
+                    },
+                )
+            })
+            .collect();
+        let rendered = resolve_sentence(&pack, &key, course.target_language, &info).unwrap();
+        assert_eq!(plain_sentence(&rendered), pack.sentence_text(key));
+        assert_eq!(rendered.segments.len(), 1);
+        assert_eq!(rendered.segments[0].slug.as_deref(), Some("greeting"));
+    }
 
     fn repo_root() -> std::path::PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR"))

@@ -124,11 +124,6 @@ fn main() {
     rows.push(("gram_rodeo", false, size_of(&pack.gram_rodeo)));
     rows.push(("string_rodeo", false, size_of(&pack.string_rodeo)));
     rows.push((
-        "sentence_rodeo",
-        true,
-        size_of(&pack.sentences.sentence_rodeo),
-    ));
-    rows.push((
         "translation_rodeo",
         true,
         size_of(&pack.sentences.translation_rodeo),
