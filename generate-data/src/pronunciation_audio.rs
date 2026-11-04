@@ -112,13 +112,19 @@ impl CueOutcome {
 
 const REPLACEMENT_ROUNDS: usize = 2;
 
+#[derive(Default)]
+struct EncodedClip {
+    m4a: Vec<u8>,
+    /// The shipped container decoded back to WAV, which is what the gates hear.
+    decoded_wav: Vec<u8>,
+    /// Add to the source's word timings to place them in the trimmed clip.
+    timing_shift_ms: f64,
+}
+
 /// Encode the cached provider output, never the previously shipped MP3.
 /// Return the decoded final container too: both gates must hear what we ship.
 /// `None` for silent audio, which rejects the candidate like a synthesis defect.
-fn encode_pronunciation_audio(
-    source: &[u8],
-    padding_ms: u32,
-) -> Result<Option<(Vec<u8>, Vec<u8>, f64)>> {
+fn encode_pronunciation_audio(source: &[u8], padding_ms: u32) -> Result<Option<EncodedClip>> {
     let dir = tempfile::tempdir()?;
     let input = dir.path().join("source");
     let pcm = dir.path().join("source.wav");
@@ -226,11 +232,11 @@ fn encode_pronunciation_audio(
     let (final_samples, _) =
         audio_codec::decode_wav_to_f32(&decoded).map_err(anyhow::Error::msg)?;
     let delay = decoder_delay_ms(&reference, &final_samples);
-    Ok(Some((
-        std::fs::read(encoded)?,
-        decoded,
-        delay - start as f64 * 1000.0 / rate as f64,
-    )))
+    Ok(Some(EncodedClip {
+        m4a: std::fs::read(encoded)?,
+        decoded_wav: decoded,
+        timing_shift_ms: delay - start as f64 * 1000.0 / rate as f64,
+    }))
 }
 
 fn decoder_delay_ms(reference: &[f32], decoded: &[f32]) -> f64 {
@@ -461,7 +467,11 @@ pub async fn generate_pronunciation_audio(
                         if encoded.is_none() && synthesis_error.is_none() {
                             synthesis_error = Some("silent audio".into());
                         }
-                        let (bytes, decoded, timing_shift) = encoded.unwrap_or_default();
+                        let EncodedClip {
+                            m4a: bytes,
+                            decoded_wav: decoded,
+                            timing_shift_ms: timing_shift,
+                        } = encoded.unwrap_or_default();
                         let phoneme = if synthesis_error.is_none() {
                             match ctx {
                                 Some(ctx) => Some(
