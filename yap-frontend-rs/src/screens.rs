@@ -683,8 +683,8 @@ impl Deck {
         sentence_list: Option<SentenceListSelection>,
     ) -> SentenceListNavigation {
         let pack = &self.context.language_pack;
-        let available = |frequencies: &language_utils::language_pack::FrequencyList| {
-            !frequencies.entries.is_empty() && frequencies.total_count > 0
+        let available = |frequencies: &language_utils::language_pack::SourceFrequencyList| {
+            !frequencies.is_empty() && frequencies.total_count > 0
         };
         let has_movies = pack.sentences.movies.keys().any(|id| {
             pack.sentences

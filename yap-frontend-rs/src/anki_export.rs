@@ -824,8 +824,10 @@ impl Deck {
         let pack = &self.context.language_pack;
         let language = self.context.course.target_language;
         let known = Self::percent_known_in(
-            pack,
-            &pack.gram_frequencies,
+            pack.gram_frequencies.total_count,
+            pack.gram_frequencies
+                .resolved(pack)
+                .map(|(gram, frequency)| (gram, *frequency)),
             self.get_comprehensible_written_grams(true),
             self.get_comprehensible_listening_grams(true),
         );
@@ -1639,9 +1641,16 @@ impl PlannerState {
                 known: self.seed.get_comprehensible_listening_grams(true),
                 taught,
             };
-            Deck::percent_known_in(pack, &pack.gram_frequencies, written, listening)
-                .percent_known
-                .round()
+            Deck::percent_known_in(
+                pack.gram_frequencies.total_count,
+                pack.gram_frequencies
+                    .resolved(pack)
+                    .map(|(gram, frequency)| (gram, *frequency)),
+                written,
+                listening,
+            )
+            .percent_known
+            .round()
         };
         let (before, after) = (everyday(&FxHashSet::default()), everyday(&self.taught));
         let finish_message =
@@ -3486,8 +3495,10 @@ mod tests {
             total_count: 110,
         };
         let score = Deck::percent_known_in(
-            pack,
-            &source,
+            source.total_count,
+            source
+                .resolved(pack)
+                .map(|(gram, frequency)| (gram, *frequency)),
             cache.written(pack, &cards, false),
             cache.listening(pack, &cards, false),
         );

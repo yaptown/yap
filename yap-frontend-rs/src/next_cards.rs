@@ -155,8 +155,16 @@ impl NextCardsIterator {
                 .get(&source_id)
         });
 
-        let gram_source =
-            sentence_list_freq_list.unwrap_or(&context.language_pack.gram_frequencies);
+        let gram_source = || match sentence_list_freq_list {
+            Some(list) => itertools::Either::Left(list.resolved(&context.language_pack)),
+            None => itertools::Either::Right(
+                context
+                    .language_pack
+                    .gram_frequencies
+                    .resolved(&context.language_pack)
+                    .map(|(gram, frequency)| (gram, *frequency)),
+            ),
+        };
 
         // Initialize counts by iterating once over tracked cards. Ghosts are
         // excluded — onboarding thresholds measure deliberate adds, not words
@@ -184,7 +192,7 @@ impl NextCardsIterator {
         let mut text = RankedSenses::new(sorted_prefix_len);
         let mut single = RankedSenses::new(sorted_prefix_len);
         let mut easy = RankedSenses::new(sorted_prefix_len);
-        for (reading, frequency) in gram_source.resolved(&context.language_pack) {
+        for (reading, frequency) in gram_source() {
             // Lists descend by count. A reading's value cannot exceed ln(count),
             // so stop only after every active pool has enough UNIQUE senses above
             // every remaining reading's upper bound.
@@ -202,7 +210,7 @@ impl NextCardsIterator {
                 continue;
             }
             let Some(value) =
-                context.card_value_with_frequency(&card, cards.get(&card), regressions, *frequency)
+                context.card_value_with_frequency(&card, cards.get(&card), regressions, frequency)
             else {
                 continue;
             };
@@ -250,8 +258,7 @@ impl NextCardsIterator {
         // usable values (otherwise the comprehensible filter in next_listening_card
         // can skip past the sorted portion).
         let mut listening_seen = std::collections::HashSet::new();
-        let mut listening_values: Vec<(NotNan<f32>, SpurGram)> = gram_source
-            .resolved(&context.language_pack)
+        let mut listening_values: Vec<(NotNan<f32>, SpurGram)> = gram_source()
             .filter_map(|(gram, _)| {
                 if !comprehensible_written.contains(gram) || !listening_seen.insert(gram.sense.gram)
                 {

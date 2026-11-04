@@ -247,6 +247,61 @@ impl FrequencyList<SpurReadingGram> {
     }
 }
 
+/// Count-ordered source frequencies. Separate arrays avoid padding each u8
+/// count to the alignment of a GramKey; all other frequency data is global.
+#[derive(Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
+pub struct SourceFrequencyList {
+    keys: Vec<GramKey>,
+    counts: Vec<u8>,
+    pub total_count: u64,
+}
+
+impl SourceFrequencyList {
+    pub fn new(
+        entries: impl IntoIterator<Item = (GramKey, u32)>,
+        total_count: u64,
+        global: &FrequencyList,
+    ) -> Self {
+        let (keys, counts) = entries
+            .into_iter()
+            .map(|(key, count)| {
+                assert!(
+                    global.entries.contains_key(&key),
+                    "source gram must exist in global frequencies"
+                );
+                (
+                    key,
+                    u8::try_from(count).expect("source count must fit in u8"),
+                )
+            })
+            .unzip();
+        Self {
+            keys,
+            counts,
+            total_count,
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.keys.is_empty()
+    }
+
+    pub fn resolved<'a>(
+        &'a self,
+        pack: &'a LanguagePack,
+    ) -> impl DoubleEndedIterator<Item = (&'a SpurReadingGram, Frequency)> {
+        self.keys.iter().zip(&self.counts).map(|(key, &count)| {
+            (
+                pack.reading_gram(*key),
+                Frequency {
+                    count: u32::from(count),
+                    ..*pack.gram_frequencies.entries.get(key).unwrap()
+                },
+            )
+        })
+    }
+}
+
 /// The written order owns each reading-tagged gram once. Learnable keys form
 /// the prefix whose indices are ease ranks; sentence-only keys follow it.
 #[derive(Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
@@ -871,8 +926,6 @@ impl LanguagePack {
         let human_audio = language_data.human_audio.clone();
         let pronunciation_audio = language_data.pronunciation_audio.clone();
 
-        let source_gram_frequencies_data = language_data.source_gram_frequencies.clone();
-
         let proper_noun_definitions = {
             language_data
                 .proper_noun_definitions
@@ -1106,42 +1159,6 @@ impl LanguagePack {
                 .collect()
         };
 
-        let source_gram_frequencies: FxHashMap<
-            crate::FrequencySourceId,
-            FrequencyList<SpurReadingGram>,
-        > = source_gram_frequencies_data
-            .iter()
-            .map(|(source_id, freq_list)| {
-                let mut map: IndexMap<SpurReadingGram, Frequency> = IndexMap::new();
-                for entry in &freq_list.entries {
-                    let interned_gram = entry.gram.get_interned(&rodeo);
-                    if let Some(interned_gram) = interned_gram
-                        && let Some(gram_spur) = interned_gram.get_interned(&gram_rodeo)
-                    {
-                        // Use ease from global gram_frequencies; fall back to ln(count)
-                        let global_freq = gram_frequencies.entries.get(&gram_spur);
-                        map.insert(
-                            gram_spur,
-                            Frequency {
-                                count: entry.count,
-                                direct_count: entry.direct_count,
-                                easy: global_freq.is_some_and(|f| f.easy),
-                                compositional: global_freq.is_some_and(|f| f.compositional),
-                                ease: global_freq
-                                    .map(|f| f.ease)
-                                    .unwrap_or_else(|| (entry.count as f32).ln()),
-                            },
-                        );
-                    }
-                }
-                (
-                    source_id.clone(),
-                    FrequencyList::new(map, freq_list.total_count),
-                )
-            })
-            .filter(|(_, list)| !list.entries.is_empty())
-            .collect();
-
         let pronunciation_max_freq_cache: FxHashMap<Spur, Frequency> = pronunciation_to_words
             .iter()
             .filter_map(|(pronunciation, words)| {
@@ -1277,20 +1294,36 @@ impl LanguagePack {
             reading_keys.entry(reading.sense).or_default().push(key);
         }
         let learnable_count = reading_grams.len();
-        let mut intern_list = |list: FrequencyList<SpurReadingGram>| {
-            let mut entries = IndexMap::new();
-            for (reading, frequency) in list.entries.iter() {
-                entries.insert(reading_grams.get_or_intern(*reading), *frequency);
-            }
-            FrequencyList {
-                entries,
-                total_count: list.total_count,
-            }
+        let mut entries = IndexMap::new();
+        for (reading, frequency) in gram_frequencies.entries.iter() {
+            entries.insert(reading_grams.get_or_intern(*reading), *frequency);
+        }
+        let gram_frequencies = FrequencyList {
+            entries,
+            total_count: gram_frequencies.total_count,
         };
-        let gram_frequencies = intern_list(gram_frequencies);
-        let source_gram_frequencies = source_gram_frequencies
-            .into_iter()
-            .map(|(source, list)| (source, intern_list(list)))
+        let source_gram_frequencies = language_data
+            .source_gram_frequencies
+            .iter()
+            .filter(|(_, list)| !list.entries.is_empty())
+            .map(|(source, list)| {
+                let entries = list.entries.iter().map(|entry| {
+                    let reading = entry
+                        .gram
+                        .get_interned(&rodeo)
+                        .unwrap()
+                        .get_interned(&gram_rodeo)
+                        .unwrap();
+                    let key = reading_grams
+                        .get(reading)
+                        .expect("source gram must exist in global frequencies");
+                    (key, entry.count)
+                });
+                (
+                    source.clone(),
+                    SourceFrequencyList::new(entries, list.total_count, &gram_frequencies),
+                )
+            })
             .collect();
         let sequences: std::collections::HashSet<_> = encoded
             .iter()
@@ -1574,7 +1607,7 @@ pub struct LanguagePackSentences {
     pub target_language: crate::Language,
     pub translation_rodeo: lasso::RodeoResolver<String, TranslationSpur>,
     pub translations: SentenceLists<TranslationSpur>,
-    pub source_gram_frequencies: FxHashMap<crate::FrequencySourceId, FrequencyList>,
+    pub source_gram_frequencies: FxHashMap<crate::FrequencySourceId, SourceFrequencyList>,
     pub homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<SentenceSpur>>,
     pub movies: FxHashMap<String, MovieMetadata>,
     pub books: FxHashMap<String, BookMetadata>,
@@ -1620,7 +1653,7 @@ fn spur_space_fingerprint(
     written: &WrittenEaseOrder,
 ) -> u64 {
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-    hasher.update(b"sentence-expression-index-v2-dense-metadata");
+    hasher.update(b"sentence-expression-index-v3-source-counts");
     hasher.update(&(core_strings.len() as u64).to_le_bytes());
     hasher.update(&(core_grams.len() as u64).to_le_bytes());
     for (_, s) in core_strings.iter() {
@@ -2241,8 +2274,8 @@ mod sense_tests {
                 })
                 .collect(),
             gram_frequencies: GramFrequencyList {
-                entries: vec![frequency("bank")],
-                total_count: 10,
+                entries: vec![frequency("bank"), frequency("source-only")],
+                total_count: 20,
             },
             encoded_sentences: vec![
                 ("bank".into(), encoded("bank", false)),
@@ -2262,7 +2295,10 @@ mod sense_tests {
             source_gram_frequencies: [(
                 crate::FrequencySourceId::Movie("film".into()),
                 GramFrequencyList {
-                    entries: vec![frequency("source-only")],
+                    entries: vec![GramFrequencyEntry {
+                        count: 3,
+                        ..frequency("source-only")
+                    }],
                     total_count: 10,
                 },
             )]
@@ -2347,6 +2383,35 @@ mod sense_tests {
             full.sentence_to_literals(&sentence, Language::English)
                 .unwrap(),
             original_literals
+        );
+        let source_frequencies = &full.sentences.source_gram_frequencies
+            [&crate::FrequencySourceId::Movie("film".into())];
+        let (reading, frequency) = source_frequencies.resolved(&full).next().unwrap();
+        let key = full.written_ease_order.grams.get(reading).unwrap();
+        let global = full.gram_frequencies.entries.get(&key).unwrap();
+        assert_eq!(frequency.count, 3);
+        assert_eq!(global.count, 10);
+        assert_eq!(
+            (frequency.easy, frequency.compositional, frequency.ease),
+            (global.easy, global.compositional, global.ease)
+        );
+        assert_eq!(source_frequencies.total_count, 10);
+        assert!(
+            std::panic::catch_unwind(|| SourceFrequencyList::new(
+                [(key, 256)],
+                256,
+                &full.gram_frequencies
+            ))
+            .is_err()
+        );
+        let absent = GramKey::try_from_usize(full.written_ease_order.grams.len()).unwrap();
+        assert!(
+            std::panic::catch_unwind(|| SourceFrequencyList::new(
+                [(absent, 1)],
+                1,
+                &full.gram_frequencies
+            ))
+            .is_err()
         );
         let source = full.source_of(sentence);
         assert!(source.from_anki && source.from_tatoeba && source.from_manual && source.from_song);

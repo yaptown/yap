@@ -136,7 +136,7 @@ impl Deck {
             .sentences
             .source_gram_frequencies
             .get(&source)
-            .is_some_and(|f| !f.entries.is_empty() && f.total_count > 0);
+            .is_some_and(|f| !f.is_empty() && f.total_count > 0);
         if !available {
             return SentenceListProgress::new(0.0, false);
         }

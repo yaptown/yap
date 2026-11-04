@@ -442,7 +442,7 @@ mod tests {
             lang: language_utils::Language,
             label: &str,
             list_name: &str,
-            entries: impl Iterator<Item = (&'a language_utils::SpurReadingGram, &'a crate::Frequency)>,
+            entries: impl Iterator<Item = (&'a language_utils::SpurReadingGram, crate::Frequency)>,
         ) {
             let mut prev_count = u32::MAX;
             for (gram_spur, freq) in entries {
@@ -480,7 +480,9 @@ mod tests {
             lang,
             &label,
             "gram_frequencies",
-            lp.gram_frequencies.resolved(lp),
+            lp.gram_frequencies
+                .resolved(lp)
+                .map(|(gram, frequency)| (gram, *frequency)),
         );
         for (source_id, freq_list) in &lp.sentences.source_gram_frequencies {
             let list_name = format!("source_gram_frequencies[{source_id:?}]");

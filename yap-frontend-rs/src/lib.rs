@@ -2703,13 +2703,12 @@ impl Deck {
     /// Calculate the percentage of a frequency list that is covered by the given known gram sets.
     /// Each gram contributes its full frequency count if known in both written and listening,
     /// or half if known in only one. 100% = all grams known in both modalities.
-    fn percent_known_in(
-        pack: &language_utils::language_pack::LanguagePack,
-        frequency_list: &language_utils::language_pack::FrequencyList,
+    fn percent_known_in<'a>(
+        total: u64,
+        entries: impl Iterator<Item = (&'a language_utils::SpurReadingGram, Frequency)>,
         known_written: impl GramMembership,
         known_listening: impl GramMembership,
     ) -> ComprehensionScore {
-        let total = frequency_list.total_count;
         if total == 0 {
             return ComprehensionScore {
                 percent_known: 0.0,
@@ -2718,8 +2717,7 @@ impl Deck {
         }
 
         let mut all_available_learned = true;
-        let known: f64 = frequency_list
-            .resolved(pack)
+        let known: f64 = entries
             .map(|(gram, freq)| {
                 let written = known_written.contains(gram);
                 let listening = known_listening.contains(gram);
@@ -2751,7 +2749,14 @@ impl Deck {
         known_written: impl GramMembership,
         known_listening: impl GramMembership,
     ) -> tiers::EssentialPosition {
-        let coverage = Self::percent_known_in(pack, frequency_list, known_written, known_listening);
+        let coverage = Self::percent_known_in(
+            frequency_list.total_count,
+            frequency_list
+                .resolved(pack)
+                .map(|(gram, frequency)| (gram, *frequency)),
+            known_written,
+            known_listening,
+        );
         tiers::position(frequency_list, coverage.percent_known)
     }
 
@@ -2795,8 +2800,8 @@ impl Deck {
                     .get(&source_id)
                     .map(|fl| {
                         Self::percent_known_in(
-                            &self.context.language_pack,
-                            fl,
+                            fl.total_count,
+                            fl.resolved(&self.context.language_pack),
                             known_written,
                             known_listening,
                         )
@@ -3212,8 +3217,12 @@ impl Deck {
         let written = self.get_comprehensible_written_grams(true);
         let listening = self.get_comprehensible_listening_grams(true);
         Self::percent_known_in(
-            &self.context.language_pack,
-            &self.context.language_pack.gram_frequencies,
+            self.context.language_pack.gram_frequencies.total_count,
+            self.context
+                .language_pack
+                .gram_frequencies
+                .resolved(&self.context.language_pack)
+                .map(|(gram, frequency)| (gram, *frequency)),
             written,
             listening,
         )
@@ -3355,7 +3364,7 @@ impl Deck {
                 continue;
             };
 
-            if movie_frequencies.entries.is_empty() {
+            if movie_frequencies.is_empty() {
                 continue;
             }
 
@@ -3365,38 +3374,34 @@ impl Deck {
                 continue;
             }
 
+            let mut comprehensible_word_count = 0u64;
+            let mut unknown_by_sense: FxHashMap<TaggedGram<SpurGram>, u64> = FxHashMap::default();
+            let entries = movie_frequencies
+                .resolved(language_pack)
+                .inspect(|(gram, frequency)| {
+                    if include_milestones {
+                        if comprehensible_written.contains(gram) {
+                            comprehensible_word_count += u64::from(frequency.count);
+                        } else {
+                            *unknown_by_sense.entry(gram.sense).or_default() +=
+                                u64::from(frequency.count);
+                        }
+                    }
+                });
             let score = Self::percent_known_in(
-                language_pack,
-                movie_frequencies,
+                total_word_count,
+                entries,
                 comprehensible_written,
                 comprehensible_listening,
             );
             let percent_known = score.percent_known;
             // For milestone calculation, use written comprehension as the card count basis
             let cards_to_next_milestone = if include_milestones && !score.all_available_learned {
-                let comprehensible_word_count: u64 = movie_frequencies
-                    .resolved(language_pack)
-                    .filter_map(|(gram, freq)| {
-                        comprehensible_written
-                            .contains(gram)
-                            .then_some(freq.count as u64)
-                    })
-                    .sum();
-
                 let next_milestone = ((percent_known / 5.0).ceil() * 5.0).min(100.0);
                 let target_word_count = ((next_milestone / 100.0) * total_word_count as f64) as u64;
                 let words_needed = target_word_count.saturating_sub(comprehensible_word_count);
 
                 if words_needed > 0 {
-                    // Collect unknown grams with their frequencies.
-                    let mut unknown_by_sense: FxHashMap<TaggedGram<SpurGram>, u64> =
-                        FxHashMap::default();
-                    for (reading, frequency) in movie_frequencies.resolved(language_pack) {
-                        if !comprehensible_written.contains(reading) {
-                            *unknown_by_sense.entry(reading.sense).or_default() +=
-                                frequency.count as u64;
-                        }
-                    }
                     let mut unknown_words: Vec<_> = unknown_by_sense.into_iter().collect();
 
                     // Sort by frequency descending (most common first).
@@ -3449,13 +3454,13 @@ impl Deck {
                 continue;
             };
 
-            if freq_list.entries.is_empty() || freq_list.total_count == 0 {
+            if freq_list.is_empty() || freq_list.total_count == 0 {
                 continue;
             }
 
             let score = Self::percent_known_in(
-                language_pack,
-                freq_list,
+                freq_list.total_count,
+                freq_list.resolved(language_pack),
                 comprehensible_written,
                 comprehensible_listening,
             );
@@ -3710,8 +3715,10 @@ impl Deck {
             None => position.projected_percent(
                 freq_list,
                 Self::percent_known_in(
-                    &self.context.language_pack,
-                    freq_list,
+                    freq_list.total_count,
+                    freq_list
+                        .resolved(&self.context.language_pack)
+                        .map(|(gram, frequency)| (gram, *frequency)),
                     &projected_written,
                     &projected_listening,
                 )
@@ -5787,10 +5794,10 @@ mod tests {
 
     #[test]
     fn movie_selection_matches_full_stats_without_browser_milestones() {
-        use language_utils::{FrequencySourceId, language_pack::FrequencyList};
+        use language_utils::{FrequencySourceId, language_pack::SourceFrequencyList};
         let mut deck = Deck::default();
         let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
-        let (&gram, &frequency) = pack.gram_frequencies.entries.get_index(0).unwrap();
+        let (&gram, _) = pack.gram_frequencies.entries.get_index(0).unwrap();
         pack.sentences.movies.clear();
         pack.sentences.source_gram_frequencies.clear();
         for (id, language, rating, total, populated) in [
@@ -5816,14 +5823,11 @@ mod tests {
             );
             pack.sentences.source_gram_frequencies.insert(
                 FrequencySourceId::Movie(id.into()),
-                FrequencyList {
-                    entries: if populated {
-                        [(gram, frequency)].into_iter().collect()
-                    } else {
-                        Default::default()
-                    },
-                    total_count: total,
-                },
+                SourceFrequencyList::new(
+                    populated.then_some((gram, 1)),
+                    total,
+                    &pack.gram_frequencies,
+                ),
             );
         }
         let stats = deck.get_movie_stats();
