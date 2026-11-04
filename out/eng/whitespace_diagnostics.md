@@ -1,12 +1,12 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 3924895
-Total errors: 11086
+Total predictions: 3928786
+Total errors: 11058
 Accuracy: 99.72%
 
 ## Error Patterns (sorted by frequency)
 
-### "can" + "'t" (5811 occurrences)
+### "can" + "'t" (5828 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
@@ -14,7 +14,7 @@ Accuracy: 99.72%
   - "I can't help it, I always want some more."
   - "I can't stand it any longer," he says.
 
-### "can" + "not" (737 occurrences)
+### "can" + "not" (734 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
@@ -22,7 +22,7 @@ Accuracy: 99.72%
   - "I cannot say my name."
   - "I cannot sit, I cannot stand, I can but hang myself!"
 
-### "," + """ (491 occurrences)
+### "," + """ (505 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -46,7 +46,7 @@ Accuracy: 99.72%
   - Ah, yes,” he cried, “here’s the end of a long light ladder against the eaves.
   - Ah,” said he, “I forgot that I had not seen you for some weeks.
 
-### "say" + """ (97 occurrences)
+### "say" + """ (99 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -54,7 +54,7 @@ Accuracy: 99.72%
   - And what if I say "no"?
   - But when condoms is lost, everyone say "this is not mine, this is not mine".
 
-### """ + "is" (89 occurrences)
+### """ + "is" (87 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -70,7 +70,7 @@ Accuracy: 99.72%
   - "Approximately" in the Indian Ocean?
   - "Beautiful" in a classic, powerful font.
 
-### "the" + """ (77 occurrences)
+### "the" + """ (78 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -94,7 +94,7 @@ Accuracy: 99.72%
   - And-- and I just-- I really feel like I can-- I can talk to you, you know?
   - And-- and I just-- I really feel like I can-- I can talk to you, you know?
 
-### "a" + """ (65 occurrences)
+### "a" + """ (64 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -110,7 +110,7 @@ Accuracy: 99.72%
   - Are you gonna finish me off?
   - Are you gonna fucking do it?
 
-### "called" + """ (60 occurrences)
+### "called" + """ (59 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -118,7 +118,7 @@ Accuracy: 99.72%
   - And your so-called "government" isn't recognized by any UN member states.
   - Aozaki is a vixen that once was called "Disgraced Scarlet."
 
-### "'s" + """ (48 occurrences)
+### "'s" + """ (47 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -134,7 +134,7 @@ Accuracy: 99.72%
   - "And my second problem," he said.
   - "Are you planning on buying it?" he asked.
 
-### "said" + """ (42 occurrences)
+### "said" + """ (43 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -150,21 +150,21 @@ Accuracy: 99.72%
   - "Chile, happiness is coming" and "hello" after.
   - "Cœur" and "chœur" have the same pronunciation.
 
-### "is" + """ (39 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - All I ever hear is "poor Millie"!
-  - And who is "we"?
-  - He is "exhausted."
-
-### """ + "I" (38 occurrences)
+### """ + "I" (39 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "But I can speak to my Law Reader," I continued.
   - "But I have fish waiting for me," I said.
   - "But I'm already queuing," I tell him.
+
+### "is" + """ (37 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - All I ever hear is "poor Millie"!
+  - And who is "we"?
+  - He is "exhausted."
 
 ### "word" + """ (34 occurrences)
 - Predicted: None
@@ -214,14 +214,6 @@ Accuracy: 99.72%
   - "Burn it," she says!
   - "Come with me," she said, holding out her hand.
 
-### "says" + """ (24 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - And this one says "corral."
-  - Beside my microphone it says "head off"!
-  - Chicken says "what?"
-
 ### "means" + """ (23 occurrences)
 - Predicted: None
 - Actual: Space
@@ -229,6 +221,14 @@ Accuracy: 99.72%
   - "Almaty" means "The Father of Apples" in many Turkic languages.
   - "Beseda" means "word" in Slovene.
   - "Burzum" means "darkness" in the Black Speech of Mordor.
+
+### "says" + """ (23 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - And this one says "corral."
+  - Beside my microphone it says "head off"!
+  - Chicken says "what?"
 
 ### "this" + """ (22 occurrences)
 - Predicted: None
@@ -254,14 +254,6 @@ Accuracy: 99.72%
   - A man's gotta do what a man's gotta do.
   - A man's gotta do what a man's gotta do.
 
-### "to" + """ (21 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "If P, then Q" is logically equivalent to "If not Q, then not P".
-  - According to "his" logic you're to blame, as we heard.
-  - And you're listening to "The night is still young".
-
 ### ";" + "“" (20 occurrences)
 - Predicted: None
 - Actual: Space
@@ -277,6 +269,14 @@ Accuracy: 99.72%
   - But with more of an "action" feel and more modern.
   - Did I hear you call me an "old sow"?
   - Get me an "Apollo Choco".
+
+### "to" + """ (20 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "If P, then Q" is logically equivalent to "If not Q, then not P".
+  - According to "his" logic you're to blame, as we heard.
+  - And you're listening to "The night is still young".
 
 ### """ + "or" (19 occurrences)
 - Predicted: None
@@ -302,14 +302,6 @@ Accuracy: 99.72%
   - I'mma call them too, dawg!
   - I'mma come and getcha!
 
-### "and" + """ (18 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Blood type" and "Favorite colour"?
-  - "Chile, happiness is coming" and "hello" after.
-  - "Cœur" and "chœur" have the same pronunciation.
-
 ### "for" + """ (18 occurrences)
 - Predicted: None
 - Actual: Space
@@ -318,7 +310,7 @@ Accuracy: 99.72%
   - Desperately I searched for "Buddha's stone begging bowl".
   - Even a mess of slop can pass for "Joy Luck Dragon Phoenix."
 
-### """ + "to" (16 occurrences)
+### """ + "to" (17 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -326,13 +318,13 @@ Accuracy: 99.72%
   - Except we've changed the word "love" to "Christmas."
   - For two days everyone has been saying "no" to me.
 
-### "by" + """ (16 occurrences)
+### "and" + """ (17 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - But you called me by "that" name.
-  - Dictatorship can be summed up by "shut up!", democracy by "keep talking".
-  - Dictatorship can be summed up by "shut up!", democracy by "keep talking".
+  - "Blood type" and "Favorite colour"?
+  - "Chile, happiness is coming" and "hello" after.
+  - "Cœur" and "chœur" have the same pronunciation.
 
 ### "that" + """ (16 occurrences)
 - Predicted: None
@@ -349,6 +341,14 @@ Accuracy: 99.72%
   - "Tokyo" can be translated as "eastern capital".
   - Bertha Pappenheim described psychoanalysis as "the talking cure".
   - Children whose parents are dead are referred to as "orphans".
+
+### "by" + """ (15 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - But you called me by "that" name.
+  - Dictatorship can be summed up by "shut up!", democracy by "keep talking".
+  - Dictatorship can be summed up by "shut up!", democracy by "keep talking".
 
 ### "or" + """ (15 occurrences)
 - Predicted: None
@@ -470,6 +470,14 @@ Accuracy: 99.72%
   - Don't "Haha" me!
   - Don't "What is it" me!
 
+### """ + "was" (11 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Helga" was one.
+  - "Hoess" was the other one.
+  - "Last night" was never going to work.
+
 ### "--" + "It" (11 occurrences)
 - Predicted: None
 - Actual: Space
@@ -518,14 +526,6 @@ Accuracy: 99.72%
   - What does "Ekto Gamat" mean?
   - What does "Tatoeba" mean?
 
-### """ + "was" (10 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Helga" was one.
-  - "Hoess" was the other one.
-  - "Last night" was never going to work.
-
 ### "about" + """ (10 occurrences)
 - Predicted: None
 - Actual: Space
@@ -541,6 +541,14 @@ Accuracy: 99.72%
   - Don't "Boobie" me!
   - Don't "Haha" me!
   - Don't "What is it" me!
+
+### "with" + """ (10 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - At times I confuse "curve" with "carve".
+  - Both spelt with "p"!
+  - I thought you always started with "Tell me about your mother."
 
 ### """ + "you" (9 occurrences)
 - Predicted: None
@@ -558,14 +566,6 @@ Accuracy: 99.72%
   - And "Mama Rose"?
   - And "Mr. Castorp" left so suddenly.
 
-### "are" + """ (9 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - And who are "they", may I ask?
-  - Sir, orders are "do not return to Earth."
-  - The Stones are "in me".
-
 ### "her" + """ (9 occurrences)
 - Predicted: None
 - Actual: Space
@@ -574,13 +574,13 @@ Accuracy: 99.72%
   - And she'll let you call her "Mama."
   - Everyone in there calls her "kind-hearted" Geum-ja.
 
-### "with" + """ (9 occurrences)
+### "saying" + """ (9 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - At times I confuse "curve" with "carve".
-  - Both spelt with "p"!
-  - I thought you always started with "Tell me about your mother."
+  - "Hyperbole" is a fancy way of saying "exaggeration."
+  - And stop saying "okay" all the time, okay?
+  - Carry on saying "fag"!
 
 ### """ + "as" (8 occurrences)
 - Predicted: None
@@ -614,13 +614,13 @@ Accuracy: 99.72%
   - A "ghost building"?
   - A "hysterical anthropocentrist."
 
-### "saying" + """ (8 occurrences)
+### "are" + """ (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - "Hyperbole" is a fancy way of saying "exaggeration."
-  - And stop saying "okay" all the time, okay?
-  - Carry on saying "fag"!
+  - And who are "they", may I ask?
+  - Sir, orders are "do not return to Earth."
+  - The Stones are "in me".
 
 ### "term" + """ (8 occurrences)
 - Predicted: None
@@ -693,14 +693,6 @@ Accuracy: 99.72%
   - What does "Ekto Gamat" mean?
   - What does "Tatoeba" mean?
   - What does "cultural relativism" mean to you?
-
-### """ + "has" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Clausewitz" has started.
-  - "Satan" has a question.
-  - "Time flies by so fast!" has been said.
 
 ### """ + "now" (6 occurrences)
 - Predicted: None
@@ -821,6 +813,14 @@ Accuracy: 99.72%
   - I'll make my "gaps" a bit classier than Williams's.
   - Is "arse" a swear word?
   - Is "heterological" a homological word?
+
+### """ + "has" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Satan" has a question.
+  - "Time flies by so fast!" has been said.
+  - Just the word "French" has her wet her pants.
 
 ### """ + "isn't" (5 occurrences)
 - Predicted: None
@@ -957,6 +957,22 @@ Accuracy: 99.72%
   - Not "love."
   - Not "rich, but still nice."
   - Not "we".
+
+### "call" + """ (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Is that what you call "I won't be long"?
+  - It's what they call "chronic".
+  - This is what we call "tempura".
+
+### "our" + """ (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Fiona, my love, we're but a kiss away from our "happily ever after."
+  - Great, we get our "divine wind" AFTER we surrender.
+  - I want the plaster to fall off the ceiling onto our "enemy".
 
 ### "rock" + "'n" (5 occurrences)
 - Predicted: Space
@@ -1142,14 +1158,6 @@ Accuracy: 99.72%
   - What "straight facts"?
   - What "what"?
 
-### "call" + """ (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Is that what you call "I won't be long"?
-  - This is what we call "tempura".
-  - We're putting you on what we call "sudden death academic probation."
-
 ### "did" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1165,14 +1173,6 @@ Accuracy: 99.72%
   - I met you on "Blood Bath", right?
   - Put on "Jingle Bells."
   - Put on "Patricia."
-
-### "our" + """ (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Fiona, my love, we're but a kiss away from our "happily ever after."
-  - Great, we get our "divine wind" AFTER we surrender.
-  - I want the plaster to fall off the ceiling onto our "enemy".
 
 ### "play" + """ (4 occurrences)
 - Predicted: None
@@ -1286,6 +1286,14 @@ Accuracy: 99.72%
   - To address him as "Monseigneur" seems too feudal.
   - To call him "my lord" seems too feudal.
 
+### """ + "so" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - He texted, "Stand by," so we stand by.
+  - I asked if Dad called you and you said "Yes" so I said "hun"?
+  - We need an "off-label use" so it can be prescribed.
+
 ### """ + "stands" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1333,6 +1341,14 @@ Accuracy: 99.72%
   - No wonder you're "Little" Zé!
   - So if you say that Tina's your girlfriend, people will assume that you're "gay."
   - We're "The Clique."
+
+### "," + ".." (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "But what is heaven, and all its wonders, .. when Ma, I don't have you."
+  - He's not fighting for Hindu freedom, ..
+  - I love Bhaskor da, ..
 
 ### "-" + "a" (3 occurrences)
 - Predicted: None
@@ -1478,14 +1494,6 @@ Accuracy: 99.72%
   - Or "Has been placed under new ownership by" whatever her name was.
   - Or "skipper".
 
-### "Watanabe" + "!" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Like Watanabe !
-  - Mr. Kanji Watanabe !
-  - Mr. Watanabe !
-
 ### "Yak" + "ul" (3 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1526,14 +1534,6 @@ Accuracy: 99.72%
   - They're doing "hat shop."
   - This is Sonic Youth doing "Superstar" by the Carpenters.
 
-### "from" + """ (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - I'm Kita sensei from "The hearing classroom."
-  - It'll protects you from "Witch in Waste Land".
-  - Start over from "I am a woman."
-
 ### "got" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1549,14 +1549,6 @@ Accuracy: 99.72%
   - Do you have "mate"?
   - If you have "AI" customer service, you have no customer service.
   - You have "le trac"?
-
-### "hey" + "?" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A political speech hey ?
-  - Good one hey ?
-  - It's chilly hey ?
 
 ### "his" + """ (3 occurrences)
 - Predicted: None
@@ -1645,13 +1637,6 @@ Accuracy: 99.72%
   - Do you understand "light"?
   - I understand "boom".
   - We don't understand "embassy".
-
-### """ + "!" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Doofus" !
-  - "The ungluable" !
 
 ### """ + "France" (2 occurrences)
 - Predicted: None
@@ -1835,13 +1820,6 @@ Accuracy: 99.72%
   - I know you're like, "This fucking guy," right?
   - It's like, "Why'd I even tell this guy he could stop by," right?
 
-### """ + "so" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - He texted, "Stand by," so we stand by.
-  - We need an "off-label use" so it can be prescribed.
-
 ### """ + "thing" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1869,13 +1847,6 @@ Accuracy: 99.72%
 - Examples:
   - I'm tired of museums, - graveyards of the arts.
   - They have one, - but it's expensive.
-
-### "," + ".." (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "But what is heaven, and all its wonders, .. when Ma, I don't have you."
-  - He's not fighting for Hindu freedom, ..
 
 ### "-" + "He" (2 occurrences)
 - Predicted: None
@@ -2101,13 +2072,6 @@ Accuracy: 99.72%
   - Can't touch the thugs Don't touch the thugs.
   - Don-- Don't worry about it.
 
-### "From" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - From "Cenci" by the Pantheon.
-  - From "Waste Land"?
-
 ### "London" + "—" (2 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2255,6 +2219,13 @@ Accuracy: 99.72%
   - Is it that song from the film "Cocktail"?
   - The dinosaurs in the film "Jurassic Park" were true-to-life.
 
+### "from" + """ (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'm Kita sensei from "The hearing classroom."
+  - Start over from "I am a woman."
+
 ### "fucking" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2275,13 +2246,6 @@ Accuracy: 99.72%
 - Examples:
   - Is there owt to drink in't fridge?
   - Though this be madness, yet there is method in't.
-
-### "into" + """ (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - I had been turned into "Turnip head".
-  - Uh, the Bates Motel in Psycho was not separated into "little bungalows."
 
 ### "know" + "—" (2 occurrences)
 - Predicted: Space
@@ -2324,13 +2288,6 @@ Accuracy: 99.72%
 - Examples:
   - He said he has his own "little announcement" to make.
   - What say we do our own "project assignment"?
-
-### "park" + "?" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - In that park ?
-  - Why would Mr Watanabe have wanted to create a park ?
 
 ### "played" + """ (2 occurrences)
 - Predicted: None
@@ -2465,13 +2422,6 @@ Accuracy: 99.72%
   - I think "great" would be an overstatement.
   - I think "potato" is the funniest word.
 
-### "time" + "!" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - I don't have time !
-  - We live losing our time !
-
 ### "up" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2492,6 +2442,13 @@ Accuracy: 99.72%
 - Examples:
   - Just want "zoo-chero" in-in the coffee.
   - That you didn't want "words."
+
+### "what" + "?" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Mad or what ?
+  - So what ?
 
 ### "why" + """ (2 occurrences)
 - Predicted: None
@@ -2570,6 +2527,12 @@ Accuracy: 99.72%
   - Now then—your turn.
   - “Now, what is your own impression as to the young lady’s—your wife’s character?”
 
+### """ + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Doofus" !
+
 ### """ + ""consider" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2581,6 +2544,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - "I love you" - I could never say something like that.
+
+### """ + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - We can fetch our "Trabant" .
 
 ### """ + "A" (1 occurrences)
 - Predicted: None
@@ -3320,12 +3289,6 @@ Accuracy: 99.72%
 - Examples:
   - What's the "JB" stand for?
 
-### """ + "started" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - "Clausewitz" started today.
-
 ### """ + "status" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3362,12 +3325,6 @@ Accuracy: 99.72%
 - Examples:
   - "I really need some new clothes," thought Dima.
 
-### """ + "today" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - The Führer started "Clausewitz" today.
-
 ### """ + "tonight" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3385,6 +3342,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - I have seen "Star Wars" twice.
+
+### """ + "und" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Center" und "Friedrich's Grove".
 
 ### """ + "vase" (1 occurrences)
 - Predicted: None
@@ -3511,6 +3474,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - As the French would say, "Iet it pass".
+
+### ","" + "Carson" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Now suppose you say "present," Carson.
 
 ### ","" + "Christopher" (1 occurrences)
 - Predicted: None
@@ -3704,6 +3673,12 @@ Accuracy: 99.72%
 - Examples:
   - You are not that- Sameer.
 
+### "-" + "Thank" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'll call you if I need it- Thank you.
+
 ### "-" + "That" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3817,6 +3792,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - I learned some new tricks- even faked my death a couple of times.
+
+### "-" + "fish" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Remember how I got scared of a cat- fish?
 
 ### "-" + "flat" (1 occurrences)
 - Predicted: None
@@ -4538,6 +4519,12 @@ Accuracy: 99.72%
 - Examples:
   - As "Private and confidential".
 
+### "Auntie" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Remember to tell Auntie "thank you."
+
 ### "Azad" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4555,6 +4542,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - Black Box .
+
+### "Budhan" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Hey Budhan .
 
 ### "But" + """ (1 occurrences)
 - Predicted: None
@@ -4616,17 +4609,11 @@ Accuracy: 99.72%
 - Examples:
   - It's from English "shoes".
 
-### "Excuses" + "!" (1 occurrences)
+### "FRG" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Excuses !
-
-### "Failures" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Failures !
+  - Protests in the Chancellor's office in the FRG .
 
 ### "First" + """ (1 occurrences)
 - Predicted: None
@@ -4639,6 +4626,12 @@ Accuracy: 99.72%
 - Actual: None
 - Examples:
   - For—was I really gone three days?
+
+### "From" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - From "Cenci" by the Pantheon.
 
 ### "Galaxy" + """ (1 occurrences)
 - Predicted: None
@@ -4676,18 +4669,6 @@ Accuracy: 99.72%
 - Examples:
   - He has been a disappointment to me, Mr. Holmes—a grievous disappointment.
 
-### "Howl" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Howl !
-
-### "Hurry" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Hurry !
-
 ### "I" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -4724,23 +4705,11 @@ Accuracy: 99.72%
 - Examples:
   - In "Little Red Riding Hood", the wolf devours grandma!
 
-### "Incredible" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Incredible !
-
 ### "Isn't" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Isn't "perished" correct?
-
-### "It" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - It "Harbor town", is again.
 
 ### "It" + "'" (1 occurrences)
 - Predicted: Space
@@ -4802,12 +4771,6 @@ Accuracy: 99.72%
 - Examples:
   - I wouldn’t frighten Kate—poor little Kate.
 
-### "Kimura" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - And Kimura ?
-
 ### "Kira" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -4868,12 +4831,6 @@ Accuracy: 99.72%
 - Examples:
   - Your Majesty - to be torn apart by five horses.
 
-### "Manager" + "??" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - You're the Population Dpt Manager ??
-
 ### "Memorium" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4897,12 +4854,6 @@ Accuracy: 99.72%
 - Actual: None
 - Examples:
   - “No—except that it was Leadenhall Street.”
-
-### "Obara" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Mr. Obara ?
 
 ### "Oh" + "--" (1 occurrences)
 - Predicted: None
@@ -4964,12 +4915,6 @@ Accuracy: 99.72%
 - Examples:
   - “Why, I am a Queen—the Queen of all the Field Mice!”
 
-### "Really" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Really !?
-
 ### "Robert" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4987,12 +4932,6 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - INSPECTOR SINGH "l'm Munna, the dude with a degree."
-
-### "Saito" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - And for Mr. Saito ?
 
 ### "Saying" + """ (1 occurrences)
 - Predicted: None
@@ -5078,6 +5017,12 @@ Accuracy: 99.72%
 - Examples:
   - Through "Eletrobras."
 
+### "Trabbi" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - He's bought a Trabbi .
+
 ### "Volga" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5089,12 +5034,6 @@ Accuracy: 99.72%
 - Actual: None
 - Examples:
   - Was't a wolf stole Sam?
-
-### "Watanabe" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Wasn't it Mr. Watanabe ?
 
 ### "Were" + "'" (1 occurrences)
 - Predicted: Space
@@ -5185,12 +5124,6 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - Teo Furiase, aka "the Fury of God."
-
-### "alive" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - He is barely alive !
 
 ### "all" + """ (1 occurrences)
 - Predicted: None
@@ -5366,12 +5299,6 @@ Accuracy: 99.72%
 - Examples:
   - And this has prompted what Mrs Bird calls "a full-blown midlife crisis".
 
-### "cancer" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Did he know he had a cancer ?
-
 ### "car" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5401,12 +5328,6 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - I called the cat "Tama".
-
-### "certain" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Are you certain ?
 
 ### "change" + """ (1 occurrences)
 - Predicted: None
@@ -5444,12 +5365,6 @@ Accuracy: 99.72%
 - Examples:
   - Room cleaning—Excellent.
 
-### "closer" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - What if we got closer ?
-
 ### "color" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5461,12 +5376,6 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - I commanded "about face"!
-
-### "condemned" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - He knew he was condemned !
 
 ### "conditioned" + ".." (1 occurrences)
 - Predicted: None
@@ -5509,12 +5418,6 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - On his deathbed -- and I’m quoting verbatim.
-
-### "decided" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - No not if we are decided !
 
 ### "define" + """ (1 occurrences)
 - Predicted: None
@@ -5582,12 +5485,6 @@ Accuracy: 99.72%
 - Examples:
   - To drink or not to drink - that is the question.
 
-### "drink" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Do you want a drink ?
-
 ### "ear" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5611,12 +5508,6 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - You told me she enjoyed "The Human Apparatus".
-
-### "even" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Some say recently even "Witch in the Waste Land" is out there.
 
 ### "exciting" + """ (1 occurrences)
 - Predicted: None
@@ -5642,12 +5533,6 @@ Accuracy: 99.72%
 - Examples:
   - Do you know the expression "thank you?"
 
-### "extraordinary" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - It was extraordinary !
-
 ### "face" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5660,17 +5545,11 @@ Accuracy: 99.72%
 - Examples:
   - "Arise, plants and factories "And close your ranks.
 
-### "far" + "!" (1 occurrences)
+### "far" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Yo go too far !
-
-### "fast" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Without the politicians it wouldn't have been so fast !
+  - Of course it's far .
 
 ### "father" + """ (1 occurrences)
 - Predicted: None
@@ -5792,12 +5671,6 @@ Accuracy: 99.72%
 - Examples:
   - If she knew I'm getting kicked by buffaloes, she'll kick me out.
 
-### "gettin" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - He's gettin'away!
-
 ### "go" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5828,12 +5701,6 @@ Accuracy: 99.72%
 - Examples:
   - No, I'm going "home" home.
 
-### "going" + "I" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - But, where are you goingI'm going a bit further from your destination.
-
 ### "gonna" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5851,12 +5718,6 @@ Accuracy: 99.72%
 - Actual: None
 - Examples:
   - Well, yes, of course the pay is good—too good.
-
-### "graciously" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Why don't they give us the money graciously ?
 
 ### "guy" + """ (1 occurrences)
 - Predicted: None
@@ -5930,12 +5791,6 @@ Accuracy: 99.72%
 - Examples:
   - A hunchback from Crespin, hiding on the hill-- sounds fishy.
 
-### "him" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - You that isn't him .
-
 ### "him" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -5972,12 +5827,6 @@ Accuracy: 99.72%
 - Examples:
   - She is impetuous—volcanic, I was about to say.
 
-### "incorrigible" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - You are incorrigible !
-
 ### "indicated" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -6001,6 +5850,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - I don't suffer from insanity - I enjoy it!
+
+### "into" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Uh, the Bates Motel in Psycho was not separated into "little bungalows."
 
 ### "invaded" + """ (1 occurrences)
 - Predicted: None
@@ -6080,18 +5935,6 @@ Accuracy: 99.72%
 - Examples:
   - They call the kid "kid."
 
-### "kidding" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Are you kidding !
-
-### "kind" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - I was attacked by someone similar in kind "Witch in Waste Land"?
-
 ### "know" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -6109,12 +5952,6 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - Ivan - "Our squadron's last "And deadly battle.
-
-### "laughin" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - What are you laughin'at?
 
 ### "le" + ""coun" (1 occurrences)
 - Predicted: None
@@ -6188,23 +6025,11 @@ Accuracy: 99.72%
 - Examples:
   - Yeah, not get so hung up on making "our Claire."
 
-### "man" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - What a man !
-
 ### "man" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Well, I guess I am a rather interesting man - refined, intelligent.
-
-### "manager" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Assistant manager !
 
 ### "many" + """ (1 occurrences)
 - Predicted: None
@@ -6254,12 +6079,6 @@ Accuracy: 99.72%
 - Examples:
   - So you're going to Africa to meet "Great Hunger"?
 
-### "melancholy" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - I hate melancholy !
-
 ### "mentions" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6289,12 +6108,6 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - I really wanted to see the movie "Nasrai."
-
-### "much" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Wasn't he right to insist so much ?
 
 ### "music" + "-" (1 occurrences)
 - Predicted: None
@@ -6356,11 +6169,11 @@ Accuracy: 99.72%
 - Examples:
   - He was nicknamed "The Potato King."
 
-### "not" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "not" + "just" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - If they'll give us the money or not !
+  - Then why notjust wear one?
 
 ### "notify" + """ (1 occurrences)
 - Predicted: None
@@ -6404,29 +6217,23 @@ Accuracy: 99.72%
 - Examples:
   - This is a special occasion - the birthday of our dear friend Gosha.
 
-### "of" + "him" (1 occurrences)
+### "of" + "jeans" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - I've gotten sort of fond ofhim, you know?
+  - A pair ofjeans, a white shirt.
 
-### "off" + "her" (1 occurrences)
+### "of" + "your" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Maybe you can sweep her offher feet with that broom.
+  - Could you send a few ofyour guys at least?
 
 ### "on" + ""People Today" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Friends, stay with us for more surprises on "People Today".
-
-### "on" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Madam, magic is forbidden from here on .
 
 ### "on" + "?" (1 occurrences)
 - Predicted: None
@@ -6512,12 +6319,6 @@ Accuracy: 99.72%
 - Examples:
   - If I don't sell them at this price how can I afford to pay "protection money"?
 
-### "penpushers" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - What can be done amongst those penpushers ?
-
 ### "physics" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6542,12 +6343,6 @@ Accuracy: 99.72%
 - Examples:
   - He sang the words of his poems ..
 
-### "poses" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - And such poses !
-
 ### "positive" + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6559,12 +6354,6 @@ Accuracy: 99.72%
 - Actual: None
 - Examples:
   - “She was as bright as possible—at least until after the ceremony.”
-
-### "preference" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Nobody has a preference ?
 
 ### "press" + """ (1 occurrences)
 - Predicted: None
@@ -6583,12 +6372,6 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - I said print "station."
-
-### "project" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Withdraw your project !
 
 ### "pronoun" + """ (1 occurrences)
 - Predicted: None
@@ -6674,12 +6457,6 @@ Accuracy: 99.72%
 - Examples:
   - Married to a cop, is a waitress in the restaurant "Crimea".
 
-### "right" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - You're all right ?
-
 ### "right" + "‐" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -6722,23 +6499,11 @@ Accuracy: 99.72%
 - Examples:
   - I saw "Star Wars" some months ago.
 
-### "say" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - What did you say ?
-
 ### "screams" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Kentucky screams "fuck".
-
-### "section" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Anti-Epidemic section ?
 
 ### "see" + "-" (1 occurrences)
 - Predicted: None
@@ -6770,23 +6535,17 @@ Accuracy: 99.72%
 - Examples:
   - McCarthy kept two servants—a man and a girl.
 
-### "she" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Isn't she "Witch in Waste Land"?
-
 ### "shepherd" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "The Lord is my shepherd "I shall not want.
 
-### "should" + "'nt" (1 occurrences)
+### "shouldn't" + "just" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - He should'nt have bothered the other departments.
+  - We shouldn'tjust allow our project to end.
 
 ### "shout" + """ (1 occurrences)
 - Predicted: None
@@ -6806,23 +6565,11 @@ Accuracy: 99.72%
 - Examples:
   - Are you showing "Nastrus" again?
 
-### "sick" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - That makes me sick !
-
 ### "sign" + ""&" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - The sign "&" stands for "and".
-
-### "sing" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Let's sing !
 
 ### "singing" + """ (1 occurrences)
 - Predicted: None
@@ -6835,6 +6582,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - Not a single letter, not a single "made in".
+
+### "sir" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I want to take a small round sir ..
 
 ### "sleep" + "'st" (1 occurrences)
 - Predicted: Space
@@ -6853,12 +6606,6 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - You called your son "Tom".
-
-### "son" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - You have a son ?
 
 ### "sound" + """ (1 occurrences)
 - Predicted: None
@@ -6883,18 +6630,6 @@ Accuracy: 99.72%
 - Actual: None
 - Examples:
   - Retired from operatic stage—ha!
-
-### "started" + """ (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - The Führer started "Clausewitz" today.
-
-### "stay" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - They couldn't stay !
 
 ### "steeples" + "-" (1 occurrences)
 - Predicted: None
@@ -7016,23 +6751,11 @@ Accuracy: 99.72%
 - Examples:
   - A pleasure to have you aboard the "Weser", Captain.
 
-### "the" + ""Witch in Waste Land" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Isn't it the "Witch in Waste Land", is it, master?
-
 ### "their" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Only their "welcome" has clout.
-
-### "them" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Don't you resent them ?
 
 ### "themselves" + """ (1 occurrences)
 - Predicted: None
@@ -7106,12 +6829,6 @@ Accuracy: 99.72%
 - Examples:
   - If you asked me, I’d go home tomorrow— if you wanted.
 
-### "too" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - And you too !
-
 ### "too" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -7153,6 +6870,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - He's of the type "do as I say, not as I do".
+
+### "und" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - "Center" und "Friedrich's Grove".
 
 ### "unload" + "—" (1 occurrences)
 - Predicted: Space
@@ -7232,12 +6955,6 @@ Accuracy: 99.72%
 - Examples:
   - You're weird - I like you.
 
-### "what" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - So what ?
-
 ### "when" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -7267,12 +6984,6 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - If you have so many problems then why ..
-
-### "wicked" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - They are so wicked !
 
 ### "wife" + "—" (1 occurrences)
 - Predicted: Space
@@ -7304,11 +7015,11 @@ Accuracy: 99.72%
 - Examples:
   - Or perhaps he searched for words - words that could express his pain.
 
-### "work" + "?" (1 occurrences)
+### "workshop" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Are you going to work ?
+  - The PGH TV workshop "Adolf Hennecke" was winded up.
 
 ### "world" + """ (1 occurrences)
 - Predicted: None
@@ -7340,6 +7051,12 @@ Accuracy: 99.72%
 - Examples:
   - Don't get me wrong -- I love this type.
 
+### "yelling" + """ (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I was the one yelling "Thief!"
+
 ### "yellow" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -7357,12 +7074,6 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - Hopefully, being ridiculous doesn't kill you !
-
-### "you" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Who are you ?
 
 ### "you" + "—" (1 occurrences)
 - Predicted: Space

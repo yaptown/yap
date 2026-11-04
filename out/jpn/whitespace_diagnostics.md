@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 2922702
-Total errors: 63726
+Total predictions: 2922714
+Total errors: 63728
 Accuracy: 97.82%
 
 ## Error Patterns (sorted by frequency)
@@ -16942,6 +16942,14 @@ Accuracy: 97.82%
   - きっと下着やＳＥＸのことは 言わなくていい
   - 裁判で 言いたくない事は 言わなくていい
 
+### "は" + "言葉" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 一つ 怪物は 言葉を喋ってはいけない
+  - 俺あさ 石田くん→友情ってのは 言葉や理屈 それらを超えた所にあると思うんだ
+  - 公判中は 言葉が多過ぎました
+
 ### "は" + "許されない" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -33795,13 +33803,6 @@ Accuracy: 97.82%
 - Examples:
   - それが僕の父だとは 言わなかった自分が学んだことを 伝えたかった
   - どこに行くかは 言わなかった
-
-### "は" + "言葉" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 俺あさ 石田くん→友情ってのは 言葉や理屈 それらを超えた所にあると思うんだ
-  - 公判中は 言葉が多過ぎました
 
 ### "は" + "計画" (2 occurrences)
 - Predicted: None
@@ -232396,6 +232397,12 @@ Accuracy: 97.82%
 - Actual: Space
 - Examples:
   - 何一つ 冒険しなかった
+
+### "一つ" + "怪物" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 一つ 怪物は 言葉を喋ってはいけない
 
 ### "一つ" + "早う" (1 occurrences)
 - Predicted: None

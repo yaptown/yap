@@ -132,7 +132,7 @@
 {"sentence":"Cris, non posso da solo prenditi cura di Clayton.","failure_count":3}
 {"sentence":"Curiosamente, al mattino, mi sveglio con le orecchie dure.","failure_count":3}
 {"sentence":"D'accordo, io non chiedo a te e tu non chiedi a me.","failure_count":3}
-{"sentence":"D'oro le sputacchiere, maniglie d'oro e soldi che spuntano dai cassetti.","failure_count":2}
+{"sentence":"D'oro le sputacchiere, maniglie d'oro e soldi che spuntano dai cassetti.","failure_count":3}
 {"sentence":"Dai, Jones, sai bene come si fa..!","failure_count":3}
 {"sentence":"Dallo a me, Clarice, da brava.","failure_count":1}
 {"sentence":"Dando luogo ad una consapevolezza che io chiamo \"me.\"","failure_count":3}
@@ -391,7 +391,7 @@
 {"sentence":"Nemmeno Tom è divertente.","failure_count":3}
 {"sentence":"Nemmeno Tom è impegnato.","failure_count":3}
 {"sentence":"Nemmeno Tom è occupato.","failure_count":3}
-{"sentence":"Nemmeno a me ?","failure_count":2}
+{"sentence":"Nemmeno a me ?","failure_count":3}
 {"sentence":"Nemmeno così la posso bere.","failure_count":3}
 {"sentence":"Nemmeno di te stesso.","failure_count":3}
 {"sentence":"Nemmeno il cellulare.","failure_count":3}
@@ -598,7 +598,6 @@
 {"sentence":"Ritiriamoci.","failure_count":3}
 {"sentence":"Romilly, mi senti!?","failure_count":3}
 {"sentence":"Rue de madrid.","failure_count":3}
-{"sentence":"Sa perché non gliel'ha data?","failure_count":2}
 {"sentence":"Sadanandji, dicci quando veranno ultimate le rimanenti linee elettriche?","failure_count":3}
 {"sentence":"Sai scrivere al computer?","failure_count":1}
 {"sentence":"Saketa ha uccido le guardie e rubato i nostri segreti militari.","failure_count":3}
@@ -624,8 +623,8 @@
 {"sentence":"Se non è stato un lupo, chi lo voleva, se l'è già preso.","failure_count":3}
 {"sentence":"Se pianta la pianta troppo vicina, competono per l'acqua.","failure_count":1}
 {"sentence":"Se puoi anticipare la consegna te ne sarei grato.","failure_count":1}
-{"sentence":"Se svieni adesso, ti perdi il meglio.","failure_count":2}
-{"sentence":"Se tu mi avesti veramente amata mi avresti cambiata!","failure_count":2}
+{"sentence":"Se svieni adesso, ti perdi il meglio.","failure_count":3}
+{"sentence":"Se tu mi avesti veramente amata mi avresti cambiata!","failure_count":3}
 {"sentence":"Se tu sei un possidente, io mi vanto di essere un'aristocratica!","failure_count":3}
 {"sentence":"Se tutti i nobili usassero questo tè, non ci sarebbe più una corte.","failure_count":3}
 {"sentence":"Sei andato a scuola per due anni, non è vero?","failure_count":1}
