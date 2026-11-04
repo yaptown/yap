@@ -11,6 +11,9 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  # The runners' CMake 4 refuses audiopus_sys's bundled libopus, which declares
+  # an older minimum; 3.5 is the oldest policy CMake 4 still supports.
+  CMAKE_POLICY_VERSION_MINIMUM: "3.5"
 
 # Structure: checks, three build jobs, and immutable pack publishing run in parallel;
 # deploy jobs gate on ALL of them, so nothing deploys unless every check passes,

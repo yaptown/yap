@@ -57,6 +57,7 @@ deploy-output/
 
 # Generated output files that are never read back (regenerated every run)
 out/*/homophone_practice.jsonl
+out/*/curated_notes.jsonl
 out/*/homophones_top_1000.jsonl
 out/*/pronunciation_sounds.jsonl
 out/*/target_language_sentences_nlp.jsonl
