@@ -1496,13 +1496,13 @@ async fn main() -> anyhow::Result<()> {
 
         // Validate that all learnable grams in kept sentences have definitions
         {
+            let encoded_by_sentence: HashMap<_, _> = encoded_sentences_with_grams
+                .iter()
+                .map(|(sentence, grams)| (sentence.as_str(), grams))
+                .collect();
             let mut missing_grams = Vec::new();
             for (sentence, _) in &nlp_sentences {
-                if let Some(sg) = encoded_sentences_with_grams
-                    .iter()
-                    .find(|(s, _)| s == sentence)
-                    .map(|(_, sg)| sg)
-                {
+                if let Some(sg) = encoded_by_sentence.get(sentence.as_str()) {
                     for gram in &sg.grams {
                         if let SentenceGram::Learnable(g) = gram
                             && !defined_gram_set.contains(&g.sense)
