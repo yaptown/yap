@@ -45,7 +45,12 @@ itertools = "0.14.0"
 weblocks.workspace = true
 yap-i18n = { version = "0.1.0", path = "../libraries/yap-i18n" }
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# Enable decoding on fetch-happen's native reqwest transport in production too.
+reqwest = { workspace = true, features = ["brotli"] }
+
 [dev-dependencies]
+brotli = "9.1.1"
 pack-builder.workspace = true
 wasm-bindgen-test = "0.3.72"
 criterion = { version = "0.8", features = ["html_reports"] }

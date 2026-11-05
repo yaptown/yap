@@ -1065,6 +1065,44 @@ pub fn course_from_directory_slug(slug: &str) -> Option<Course> {
     (course_directory_slug(course) == slug).then_some(course)
 }
 
+/// Fixed raw-byte boundaries shared by publication, download and resume caches.
+pub const LANGUAGE_DATA_CHUNK_SIZE: usize = 16 * 1024 * 1024;
+
+pub fn language_data_chunk_count(total_size: usize) -> usize {
+    total_size.max(1).div_ceil(LANGUAGE_DATA_CHUNK_SIZE)
+}
+
+pub fn language_data_chunk_len(total_size: usize, chunk_index: usize) -> usize {
+    total_size
+        .saturating_sub(chunk_index * LANGUAGE_DATA_CHUNK_SIZE)
+        .min(LANGUAGE_DATA_CHUNK_SIZE)
+}
+
+pub fn pack_chunk_key(course: Course, part: PackPart, meta: PartMeta, index: usize) -> String {
+    format!(
+        "{}/language_data_{}_{}.chunk_{}_of_{}.rkyv",
+        course_directory_slug(course),
+        part.slug(),
+        meta.hash,
+        index,
+        language_data_chunk_count(meta.size)
+    )
+}
+
+pub fn pack_chunk_url(
+    origin: &str,
+    course: Course,
+    part: PackPart,
+    meta: PartMeta,
+    index: usize,
+) -> String {
+    format!(
+        "{}/{}",
+        origin.trim_end_matches('/'),
+        pack_chunk_key(course, part, meta, index)
+    )
+}
+
 pub fn pack_key(course: Course, part: PackPart, hash: u64) -> String {
     format!(
         "{}/language_data_{}_{hash}.rkyv",

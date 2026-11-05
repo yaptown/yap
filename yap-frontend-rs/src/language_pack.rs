@@ -3,8 +3,8 @@ use language_utils::{
     Course, Language,
     language_pack::{
         ArchivedLanguagePackCore, ArchivedLanguagePackSentences, LanguagePack, LanguagePackCore,
-        LanguagePackSentences, PackMetadata, PackPart, PartMeta, course_directory_slug, pack_url,
-        parse_hash_metadata,
+        LanguagePackSentences, PackMetadata, PackPart, PartMeta, course_directory_slug,
+        language_data_chunk_count, language_data_chunk_len, pack_chunk_url, parse_hash_metadata,
     },
 };
 use opfs::{
@@ -145,10 +145,6 @@ fn language_data_hashes_for_course(course: Course) -> Result<PackMetadata, Langu
 
 const LANGUAGE_DATA_WRITE_CHUNK_SIZE: usize = 1024 * 1024;
 const LANGUAGE_DATA_WRITE_ATTEMPTS: usize = 3;
-/// Download/cache granularity. A fixed chunk size (instead of a fixed chunk
-/// count) keeps resume granularity sane now that parts range from ~2 MB to
-/// ~200 MB.
-const LANGUAGE_DATA_CHUNK_SIZE: usize = 16 * 1024 * 1024;
 
 /// When a chunk request is abandoned. A server that accepts the connection
 /// and never answers (a wedged local backend, a proxy black-holing the
@@ -211,10 +207,6 @@ struct ChunkDescriptor {
     chunk_index: usize,
 }
 
-fn language_data_chunk_count(total_size: usize) -> usize {
-    total_size.max(1).div_ceil(LANGUAGE_DATA_CHUNK_SIZE)
-}
-
 fn language_data_chunk_filename(part: PackPart, meta: PartMeta, chunk_index: usize) -> String {
     let chunk_len = language_data_chunk_len(meta.size, chunk_index);
     format!(
@@ -229,13 +221,6 @@ fn language_data_chunk_filenames(part: PackPart, meta: PartMeta) -> Vec<String> 
     (0..language_data_chunk_count(meta.size))
         .map(|chunk_index| language_data_chunk_filename(part, meta, chunk_index))
         .collect()
-}
-
-fn language_data_chunk_len(total_size: usize, chunk_index: usize) -> usize {
-    let chunk_start = chunk_index * LANGUAGE_DATA_CHUNK_SIZE;
-    total_size
-        .saturating_sub(chunk_start)
-        .min(LANGUAGE_DATA_CHUNK_SIZE)
 }
 
 /// Every filename both halves of the current pack version are allowed to
@@ -667,7 +652,13 @@ async fn download_language_data_chunk(
         part,
         chunk_index,
     };
-    let url = pack_url(crate::utils::packs_origin(), course, part, meta.hash);
+    let url = pack_chunk_url(
+        crate::utils::packs_origin(),
+        course,
+        part,
+        meta,
+        chunk_index,
+    );
     fetch_language_data_chunk(
         &url,
         request,
@@ -698,14 +689,6 @@ async fn fetch_language_data_chunk(
     let abort = bridgerton::AbortController::new();
     let send = fetch_happen::Client
         .get(url)
-        .header(
-            "Range",
-            format!(
-                "bytes={}-{}",
-                chunk_index * LANGUAGE_DATA_CHUNK_SIZE,
-                chunk_index * LANGUAGE_DATA_CHUNK_SIZE + expected_chunk_len - 1
-            ),
-        )
         .abort_signal(abort.signal())
         .send();
     let response = bridgerton::platform::timeout(deadlines.first_byte_ms, send)
@@ -722,7 +705,7 @@ async fn fetch_language_data_chunk(
             source,
         })?;
 
-    if !response.ok() {
+    if response.status() != 200 {
         log::error!(
             "Server returned error while fetching {} chunk {}: {}",
             part.slug(),
@@ -730,17 +713,6 @@ async fn fetch_language_data_chunk(
             response.status()
         );
         return Err(LanguageDataError::ServerError(response.status()));
-    }
-
-    if response.status() != 206
-        && !(response.status() == 200
-            && chunk_index == 0
-            && expected_chunk_len == expected_total_size)
-    {
-        abort.abort();
-        return Err(LanguageDataError::InvalidData(yap_i18n::tr!(
-            "loading-range-ignored"
-        )));
     }
 
     let reader = response
@@ -770,7 +742,10 @@ async fn fetch_language_data_chunk(
                 if chunk.len() > expected_chunk_len.saturating_sub(chunk_bytes.len()) {
                     abort.abort();
                     return Err(LanguageDataError::InvalidData(yap_i18n::tr!(
-                        "loading-range-oversized"
+                        "loading-chunk-size",
+                        index = chunk_index,
+                        actual = chunk_bytes.len() + chunk.len(),
+                        expected = expected_chunk_len
                     )));
                 }
                 chunk_bytes.extend_from_slice(&chunk);
@@ -935,6 +910,7 @@ async fn stale_language_data_files(
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod native_tests {
     use super::*;
+    use language_utils::language_pack::LANGUAGE_DATA_CHUNK_SIZE;
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
     #[tokio::test]
@@ -1013,22 +989,14 @@ mod native_tests {
             native_language: Language::English,
         };
         for (status, body, chunk_index, total_size, succeeds) in [
-            (206, b"pack".as_slice(), 0, 4, true),
-            (
-                206,
-                b"pack".as_slice(),
-                1,
-                LANGUAGE_DATA_CHUNK_SIZE + 4,
-                true,
-            ),
+            (206, b"pack".as_slice(), 0, 4, false),
             (200, b"pack".as_slice(), 0, 4, true),
-            (200, b"pack".as_slice(), 0, 8, false),
             (
                 200,
                 b"pack".as_slice(),
                 1,
                 LANGUAGE_DATA_CHUNK_SIZE + 4,
-                false,
+                true,
             ),
             (200, b"oversized".as_slice(), 0, 4, false),
             (200, b"bad".as_slice(), 0, 4, false),
@@ -1048,21 +1016,38 @@ mod native_tests {
                     }
                 }
                 let header = String::from_utf8(request.clone()).unwrap();
-                assert!(
-                    header.starts_with("GET /fra_for_eng/language_data_core_123.rkyv HTTP/1.1")
+                let key = language_utils::language_pack::pack_chunk_key(
+                    course,
+                    PackPart::Core,
+                    PartMeta {
+                        hash: 123,
+                        size: total_size,
+                    },
+                    chunk_index,
                 );
-                let start = chunk_index * LANGUAGE_DATA_CHUNK_SIZE;
-                assert!(
-                    header
-                        .to_ascii_lowercase()
-                        .contains(&format!("range: bytes={start}-{}", start + 3))
-                );
-                socket.write_all(format!("HTTP/1.1 {status} Partial Content\r\nContent-Range: bytes {start}-{end}/{total_size}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len(), end = start + 3).as_bytes()).await.unwrap();
-                socket.write_all(body).await.unwrap();
+                assert!(header.starts_with(&format!("GET /{key} HTTP/1.1")));
+                assert!(!header.to_ascii_lowercase().contains("\r\nrange:"));
+                let mut compressed = Vec::new();
+                std::io::copy(
+                    &mut brotli::CompressorReader::new(body, 4096, 11, 24),
+                    &mut compressed,
+                )
+                .unwrap();
+                socket.write_all(format!("HTTP/1.1 {status} Response\r\nContent-Encoding: br\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", compressed.len()).as_bytes()).await.unwrap();
+                socket.write_all(&compressed).await.unwrap();
             });
             let progress = std::cell::RefCell::new(Vec::new());
             let result = fetch_language_data_chunk(
-                &format!("http://{address}/fra_for_eng/language_data_core_123.rkyv"),
+                &pack_chunk_url(
+                    &format!("http://{address}"),
+                    course,
+                    PackPart::Core,
+                    PartMeta {
+                        hash: 123,
+                        size: total_size,
+                    },
+                    chunk_index,
+                ),
                 ChunkDescriptor {
                     course,
                     part: PackPart::Core,
@@ -1079,8 +1064,10 @@ mod native_tests {
             if succeeds {
                 assert_eq!(result.unwrap(), b"pack");
                 assert_eq!(progress.borrow().last(), Some(&100.0));
-            } else if status == 503 {
-                assert!(matches!(result, Err(LanguageDataError::ServerError(503))));
+            } else if status != 200 {
+                assert!(
+                    matches!(result, Err(LanguageDataError::ServerError(code)) if code == status)
+                );
             } else {
                 assert!(matches!(result, Err(LanguageDataError::InvalidData(_))));
             }
@@ -1110,7 +1097,7 @@ mod native_tests {
                     continue;
                 }
                 let response = if close_first_connection {
-                    "HTTP/1.1 206 Partial Content\r\nContent-Range: bytes 0-3/4\r\nContent-Length: 4\r\nConnection: close\r\n\r\npack"
+                    "HTTP/1.1 200 OK\r\nContent-Length: 4\r\nConnection: close\r\n\r\npack"
                 } else {
                     "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 4\r\nConnection: close\r\n\r\nbusy"
                 };
@@ -1230,7 +1217,7 @@ mod native_tests {
     /// trips the (longer) stall deadline instead of the first-byte one.
     #[tokio::test]
     async fn stalled_body_times_out() {
-        match fetch_from_stalled_server(b"HTTP/1.1 206 Partial Content\r\nContent-Range: bytes 0-3/4\r\nContent-Length: 4\r\n\r\n").await {
+        match fetch_from_stalled_server(b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\n").await {
             Err(LanguageDataError::Timeout(message)) => {
                 assert!(message.contains("stalled"), "{message}")
             }

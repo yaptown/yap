@@ -8,7 +8,8 @@ use axum::{
 use language_utils::{
     Course, PACKS_ORIGIN,
     language_pack::{
-        PackPart, course_directory_slug, course_from_directory_slug, pack_key, pack_url,
+        LANGUAGE_DATA_CHUNK_SIZE, PackPart, course_directory_slug, course_from_directory_slug,
+        language_data_chunk_count, language_data_chunk_len, pack_chunk_key, pack_key, pack_url,
         parse_hash_metadata,
     },
 };
@@ -37,7 +38,7 @@ async fn serve_from(
     root: &DiskPath,
     slug: &str,
     filename: &str,
-    request: Request<Body>,
+    mut request: Request<Body>,
 ) -> Result<Response, StatusCode> {
     let course = course_from_directory_slug(slug).ok_or(StatusCode::NOT_FOUND)?;
     let dir = root.join(slug);
@@ -45,13 +46,29 @@ async fn serve_from(
         .await
         .map_err(|_| StatusCode::NOT_FOUND)?;
     let metadata = parse_hash_metadata(&metadata).map_err(|_| StatusCode::NOT_FOUND)?;
-    let (part, meta) = [
-        (PackPart::Core, metadata.core),
-        (PackPart::Sentences, metadata.sentences),
-    ]
-    .into_iter()
-    .find(|(part, meta)| pack_key(course, *part, meta.hash) == format!("{slug}/{filename}"))
-    .ok_or(StatusCode::NOT_FOUND)?;
+    let key = format!("{slug}/{filename}");
+    let (part, meta, chunk) = PackPart::ALL
+        .into_iter()
+        .find_map(|part| {
+            let meta = metadata.part(part);
+            if pack_key(course, part, meta.hash) == key {
+                Some((part, meta, None))
+            } else {
+                (0..language_data_chunk_count(meta.size))
+                    .find(|&index| pack_chunk_key(course, part, meta, index) == key)
+                    .map(|index| (part, meta, Some(index)))
+            }
+        })
+        .ok_or(StatusCode::NOT_FOUND)?;
+    if let Some(index) = chunk {
+        // Development streams the same raw chunk, without spending time compressing it.
+        let start = index * LANGUAGE_DATA_CHUNK_SIZE;
+        let end = start + language_data_chunk_len(meta.size, index) - 1;
+        request.headers_mut().insert(
+            header::RANGE,
+            format!("bytes={start}-{end}").parse().unwrap(),
+        );
+    }
     let path = dir.join(part.filename());
     if tokio::fs::metadata(&path)
         .await
@@ -66,6 +83,11 @@ async fn serve_from(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     let mut response = response.map(Body::new);
+    if chunk.is_some() && response.status() == StatusCode::PARTIAL_CONTENT {
+        *response.status_mut() = StatusCode::OK;
+        response.headers_mut().remove(header::CONTENT_RANGE);
+        response.headers_mut().remove(header::ACCEPT_RANGES);
+    }
     response.headers_mut().insert(
         header::CONTENT_TYPE,
         header::HeaderValue::from_static("application/octet-stream"),
@@ -256,6 +278,23 @@ mod tests {
             std::fs::write(dir.join(part.filename()), b"abcdefgh").unwrap();
         }
         for (part, hash) in [(PackPart::Core, 123), (PackPart::Sentences, 456)] {
+            let chunk_name = format!("language_data_{}_{hash}.chunk_0_of_1.rkyv", part.slug());
+            let response = serve_from(
+                root.path(),
+                "fra_for_eng",
+                &chunk_name,
+                Request::new(Body::empty()),
+            )
+            .await
+            .unwrap();
+            assert_eq!(response.status(), StatusCode::OK);
+            assert!(!response.headers().contains_key(header::CONTENT_RANGE));
+            assert_eq!(
+                axum::body::to_bytes(response.into_body(), 10)
+                    .await
+                    .unwrap(),
+                "abcdefgh"
+            );
             let name = format!("language_data_{}_{hash}.rkyv", part.slug());
             let request = Request::builder()
                 .header(header::RANGE, "bytes=1-3")

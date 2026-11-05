@@ -2,7 +2,9 @@
 //! CI publishes immutable objects in parallel, then moves pointers inside the gated deploy job.
 use clap::Parser;
 use language_utils::language_pack::{
-    PACKS_ORIGIN, PackPart, course_from_directory_slug, pack_key, pack_url, parse_hash_metadata,
+    LANGUAGE_DATA_CHUNK_SIZE, PACKS_ORIGIN, PackPart, course_from_directory_slug,
+    language_data_chunk_count, language_data_chunk_len, pack_chunk_key, pack_chunk_url, pack_key,
+    pack_url, parse_hash_metadata,
 };
 use rusty_s3::{Bucket, Credentials, S3Action, UrlStyle};
 use std::{path::PathBuf, time::Duration};
@@ -19,6 +21,9 @@ struct Args {
     /// Neither check mode needs credentials.
     #[arg(long)]
     check: bool,
+    /// Compress all chunks and report totals without network access or credentials.
+    #[arg(long, conflicts_with_all = ["check", "pointers"])]
+    dry_run: bool,
     /// Publish only metadata pointers, after HEAD-verifying every referenced pack.
     /// Requires language_data.hash files only, not local archives or LFS.
     #[arg(long)]
@@ -35,6 +40,70 @@ struct Object {
     key: String,
     url: String,
     size: usize,
+    /// Raw offset; None denotes the legacy whole-file object.
+    offset: Option<usize>,
+}
+
+impl Object {
+    fn compress(&self) -> std::io::Result<Option<Vec<u8>>> {
+        let Some(offset) = self.offset else {
+            return Ok(None);
+        };
+        let file = std::fs::File::open(&self.path)?;
+        // Inputs remain stable for the duration of publication, as during validation.
+        let bytes = unsafe { memmap2::Mmap::map(&file)? };
+        let mut encoded = Vec::new();
+        std::io::copy(
+            &mut brotli::CompressorReader::new(&bytes[offset..offset + self.size], 4096, 11, 24),
+            &mut encoded,
+        )?;
+        Ok(Some(encoded))
+    }
+
+    /// Ask for a chunk's stored brotli bytes. Cloudflare would otherwise decode
+    /// it, and it compresses text pointers on the fly when a client accepts br.
+    fn wire(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+        if self.offset.is_some() {
+            request.header(reqwest::header::ACCEPT_ENCODING, "br")
+        } else {
+            request
+        }
+    }
+
+    fn matches(&self, response: &reqwest::Response) -> bool {
+        if response.status() != reqwest::StatusCode::OK {
+            return false;
+        }
+        // A chunk's key fixes its part hash and index, so its raw length is
+        // determined; R2's public domain doesn't return custom metadata anyway.
+        if self.offset.is_some() {
+            response
+                .headers()
+                .get("content-encoding")
+                .is_some_and(|v| v == "br")
+                && wire_size(response).is_some_and(|size| size > 0)
+        } else {
+            wire_size(response) == Some(self.size as u64)
+        }
+    }
+}
+
+// HEAD has an empty body, so Response::content_length() is not the object size.
+fn wire_size(response: &reqwest::Response) -> Option<u64> {
+    response
+        .headers()
+        .get(reqwest::header::CONTENT_LENGTH)?
+        .to_str()
+        .ok()?
+        .parse()
+        .ok()
+}
+
+#[derive(Clone, Copy)]
+enum ObjectKind {
+    Pointer,
+    Raw,
+    Brotli,
 }
 
 struct PreparedCourse {
@@ -101,12 +170,24 @@ fn local_courses(args: &Args) -> Result<Vec<PreparedCourse>> {
                     Ok(())
                 })();
                 match validate {
-                    Ok(()) => parts.push(Object {
-                        path,
-                        key: pack_key(course, part, meta.hash),
-                        url: pack_url(PACKS_ORIGIN, course, part, meta.hash),
-                        size: meta.size,
-                    }),
+                    Ok(()) => {
+                        parts.push(Object {
+                            path: path.clone(),
+                            key: pack_key(course, part, meta.hash),
+                            url: pack_url(PACKS_ORIGIN, course, part, meta.hash),
+                            size: meta.size,
+                            offset: None,
+                        });
+                        for index in 0..language_data_chunk_count(meta.size) {
+                            parts.push(Object {
+                                path: path.clone(),
+                                key: pack_chunk_key(course, part, meta, index),
+                                url: pack_chunk_url(PACKS_ORIGIN, course, part, meta, index),
+                                size: language_data_chunk_len(meta.size, index),
+                                offset: Some(index * LANGUAGE_DATA_CHUNK_SIZE),
+                            });
+                        }
+                    }
                     Err(error) => errors.push(format!("{}: {error}", path.display())),
                 }
             }
@@ -182,12 +263,17 @@ async fn put(
     key: &str,
     body: reqwest::Body,
     size: usize,
-    pointer: bool,
+    kind: ObjectKind,
 ) -> Result<()> {
     let url = bucket
         .put_object(Some(credentials), key)
         .sign(Duration::from_secs(3600));
-    http.put(url)
+    let pointer = matches!(kind, ObjectKind::Pointer);
+    let mut request = http.put(url);
+    if let ObjectKind::Brotli = kind {
+        request = request.header("Content-Encoding", "br");
+    }
+    request
         .header(
             reqwest::header::CONTENT_TYPE,
             if pointer {
@@ -219,6 +305,8 @@ async fn run() -> Result<()> {
     let args = Args::parse();
     let courses = local_courses(&args)?;
     let http = reqwest::Client::builder()
+        // Chunk checks inspect the stored brotli bytes, so never decode them.
+        .no_brotli()
         .timeout(Duration::from_secs(900))
         .build()?;
     // Pointer checks verify only the mutable metadata, using the captured local
@@ -239,17 +327,25 @@ async fn run() -> Result<()> {
     }
     let mut missing = Vec::new();
     let mut errors = Vec::new();
+    let mut compressed_total = 0u64;
+    let raw_total: usize = courses
+        .iter()
+        .flat_map(|c| &c.parts)
+        .filter(|o| o.offset.is_some())
+        .map(|o| o.size)
+        .sum();
     for object in courses.iter().flat_map(|course| &course.parts) {
-        match http.head(&object.url).send().await {
-            Ok(response)
-                if response.status() == reqwest::StatusCode::OK
-                    && response
-                        .headers()
-                        .get(reqwest::header::CONTENT_LENGTH)
-                        .and_then(|v| v.to_str().ok())
-                        .and_then(|v| v.parse::<usize>().ok())
-                        == Some(object.size) =>
-            {
+        if args.dry_run {
+            if object.offset.is_some() {
+                missing.push(object);
+            }
+            continue;
+        }
+        match object.wire(http.head(&object.url)).send().await {
+            Ok(response) if object.matches(&response) => {
+                if object.offset.is_some() {
+                    compressed_total += wire_size(&response).unwrap();
+                }
                 println!(
                     "{} {}",
                     if args.check { "verified" } else { "skipped" },
@@ -303,7 +399,7 @@ async fn run() -> Result<()> {
                 &pointer.key,
                 reqwest::Body::from(pointer.bytes.clone()),
                 pointer.bytes.len(),
-                true,
+                ObjectKind::Pointer,
             )
             .await?;
             verify_pointer(&http, &pointer).await?;
@@ -311,40 +407,82 @@ async fn run() -> Result<()> {
         }
         return Ok(());
     }
-    if missing.is_empty() {
-        return Ok(());
-    }
-    let (bucket, credentials) = writer()?;
-    for object in missing {
-        let file = tokio::fs::File::open(&object.path).await?;
-        put(
-            &http,
-            &bucket,
-            &credentials,
-            &object.key,
-            reqwest::Body::from(file),
-            object.size,
-            false,
-        )
-        .await?;
-        let response = http
-            .get(fresh_url(&object.url)?)
-            .header(reqwest::header::RANGE, "bytes=0-1023")
-            .send()
-            .await?;
-        if response.status() != reqwest::StatusCode::PARTIAL_CONTENT {
-            return Err(format!(
-                "{}: public range returned {}",
-                object.key,
-                response.status()
-            )
-            .into());
+    let writer = if args.dry_run || missing.is_empty() {
+        None
+    } else {
+        Some(writer()?)
+    };
+    let mut compression_time = Duration::ZERO;
+    // Quality 11 needs substantial scratch space: bound concurrent encoders.
+    let parallelism = std::thread::available_parallelism()?.get().min(8);
+    for batch in missing.chunks(parallelism) {
+        let started = std::time::Instant::now();
+        let encoded = std::thread::scope(|scope| {
+            let tasks: Vec<_> = batch
+                .iter()
+                .map(|object| scope.spawn(|| object.compress()))
+                .collect();
+            tasks
+                .into_iter()
+                .map(|task| task.join().unwrap())
+                .collect::<std::io::Result<Vec<_>>>()
+        })?;
+        compression_time += started.elapsed();
+        for (object, encoded) in batch.iter().zip(encoded) {
+            let (body, size, kind, chunk_hash) = if let Some(encoded) = encoded {
+                let size = encoded.len();
+                let hash = xxh3_64(&encoded);
+                compressed_total += size as u64;
+                println!(
+                    "compressed {}: {} -> {} bytes",
+                    object.key, object.size, size
+                );
+                (
+                    reqwest::Body::from(encoded),
+                    size,
+                    ObjectKind::Brotli,
+                    Some(hash),
+                )
+            } else {
+                (
+                    reqwest::Body::from(tokio::fs::File::open(&object.path).await?),
+                    object.size,
+                    ObjectKind::Raw,
+                    None,
+                )
+            };
+            let Some((bucket, credentials)) = &writer else {
+                continue;
+            };
+            put(&http, bucket, credentials, &object.key, body, size, kind).await?;
+            let mut request = object.wire(http.get(fresh_url(&object.url)?));
+            if object.offset.is_none() {
+                request = request.header(
+                    reqwest::header::RANGE,
+                    format!("bytes=0-{}", object.size.min(1024) - 1),
+                );
+            }
+            let response = request.send().await?;
+            if let Some(hash) = chunk_hash {
+                if !object.matches(&response) {
+                    return Err(format!("{}: invalid public chunk headers", object.key).into());
+                }
+                let bytes = response.bytes().await?;
+                if xxh3_64(&bytes) != hash {
+                    return Err(format!("{}: public chunk differs from upload", object.key).into());
+                }
+            } else if response.status() != reqwest::StatusCode::PARTIAL_CONTENT
+                || response.bytes().await?.len() != object.size.min(1024)
+            {
+                return Err(format!("{}: invalid public range response", object.key).into());
+            }
+            println!("uploaded and verified {}", object.key);
         }
-        if response.bytes().await?.len() != 1024 {
-            return Err(format!("{}: public range did not return 1024 bytes", object.key).into());
-        }
-        println!("uploaded and verified {}", object.key);
     }
+    println!(
+        "chunk totals: raw={raw_total} compressed={compressed_total} compression_wall_seconds={:.3}",
+        compression_time.as_secs_f64()
+    );
     Ok(())
 }
 
@@ -372,6 +510,48 @@ mod tests {
         )
         .unwrap();
     }
+    #[tokio::test]
+    async fn compressed_chunks_round_trip_and_head_uses_wire_headers() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let root = tempfile::tempdir().unwrap();
+        fixture(root.path(), "fra_for_eng");
+        let args =
+            Args::try_parse_from(["publish-packs", "--out-dir", root.path().to_str().unwrap()])
+                .unwrap();
+        let courses = local_courses(&args).unwrap();
+        let chunk = &courses[0].parts[1];
+        let compressed = chunk.compress().unwrap().unwrap();
+        let mut decoded = Vec::new();
+        std::io::copy(
+            &mut brotli::Decompressor::new(compressed.as_slice(), 4096),
+            &mut decoded,
+        )
+        .unwrap();
+        assert_eq!(decoded, b"test pack");
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = Vec::new();
+            while !request.ends_with(b"\r\n\r\n") {
+                request.push(socket.read_u8().await.unwrap());
+            }
+            assert!(request.starts_with(b"HEAD "));
+            socket.write_all(format!("HTTP/1.1 200 OK\r\nContent-Encoding: br\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", compressed.len()).as_bytes()).await.unwrap();
+        });
+        let response = reqwest::Client::builder()
+            .no_brotli()
+            .build()
+            .unwrap()
+            .head(format!("http://{address}"))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.content_length(), Some(0));
+        assert!(chunk.matches(&response));
+        server.await.unwrap();
+    }
+
     #[test]
     fn discovers_and_selects_courses() {
         let root = tempfile::tempdir().unwrap();
@@ -381,6 +561,7 @@ mod tests {
         let mut args = Args {
             check: true,
             pointers: false,
+            dry_run: false,
             out: root.path().to_owned(),
             courses: vec![],
         };
@@ -399,6 +580,7 @@ mod tests {
         let args = Args {
             check: true,
             pointers: false,
+            dry_run: false,
             out: root.path().to_owned(),
             courses: vec![],
         };
@@ -406,7 +588,7 @@ mod tests {
         std::fs::write(path, b"changed after validation").unwrap();
         assert_eq!(courses[0].pointer.bytes, original);
         assert_eq!(courses[0].pointer.key, "fra_for_eng/language_data.hash");
-        assert_eq!(courses[0].parts.len(), 2);
+        assert_eq!(courses[0].parts.len(), 4);
         let metadata =
             parse_hash_metadata(std::str::from_utf8(&courses[0].pointer.bytes).unwrap()).unwrap();
         assert!(
@@ -426,6 +608,7 @@ mod tests {
         let args = Args {
             check: false,
             pointers: false,
+            dry_run: false,
             out: root.path().to_owned(),
             courses: vec![],
         };
@@ -442,6 +625,7 @@ mod tests {
         let mut args = Args {
             check: false,
             pointers: true,
+            dry_run: false,
             out: root.path().to_owned(),
             courses: vec![],
         };
@@ -451,7 +635,7 @@ mod tests {
             courses[0].parts[0].key,
             "fra_for_eng/language_data_core_123.rkyv"
         );
-        assert_eq!(courses[0].parts[1].size, 2048);
+        assert_eq!(courses[0].parts[2].size, 2048);
         assert!(courses[0].parts.iter().all(|part| !part.path.exists()));
         args.pointers = false;
         assert!(local_courses(&args).is_err());
@@ -478,6 +662,7 @@ mod tests {
         let args = Args {
             check: true,
             pointers: false,
+            dry_run: false,
             out: root.path().to_owned(),
             courses: vec![],
         };
