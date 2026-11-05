@@ -63,7 +63,7 @@ pub async fn find_redundant_senses(
     inventories: &BTreeMap<Gram<String>, UsageInventory>,
     frequencies: &[GramFrequencyEntry<String>],
 ) -> anyhow::Result<BTreeMap<String, Vec<Vec<Entry>>>> {
-    let texts = language_utils::word_prefix::prefixed_texts(
+    let texts = pack_builder::word_prefix::prefixed_texts(
         frequencies,
         dictionary,
         phrases,

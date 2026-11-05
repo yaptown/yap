@@ -313,12 +313,12 @@ impl DeckEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use language_utils::language_pack::LanguagePack;
     use language_utils::{
-        Atom, ConsolidatedLanguageData, Course, GramFrequencyList, GramVocabEntry, Heteronym,
-        PartOfSpeech, ReadingGramFrequencyEntry as GramFrequencyEntry, SentenceGram, SentenceGrams,
-        TaggedGram, Word, WordType,
+        Atom, Course, GramVocabEntry, Heteronym, PartOfSpeech,
+        ReadingGramFrequencyEntry as GramFrequencyEntry, SentenceGram, SentenceGrams, TaggedGram,
+        Word, WordType,
     };
+    use pack_builder::{ConsolidatedLanguageData, GramFrequencyList};
     use std::{num::NonZeroU32, sync::Arc};
 
     fn context() -> (crate::Context, Gram<String>) {
@@ -379,7 +379,7 @@ mod tests {
         (
             crate::Context {
                 study_goal: None,
-                language_pack: Arc::new(LanguagePack::new(data, course)),
+                language_pack: Arc::new(pack_builder::build(data, course)),
                 course,
                 timezone: chrono::FixedOffset::east_opt(0).unwrap(),
             },

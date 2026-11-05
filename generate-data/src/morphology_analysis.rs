@@ -3327,7 +3327,7 @@ pub mod gold_morphology {
                 persons
                     .into_iter()
                     .map(|p| {
-                        let mut m = base.clone();
+                        let mut m = base;
                         m.person = p;
                         m
                     })
@@ -3853,19 +3853,19 @@ pub mod gold_morphology {
             };
 
             for form in &conjugation.shushikei {
-                add(&mut out, form, lemma, pos, present.clone());
+                add(&mut out, form, lemma, pos, present);
             }
             for form in &conjugation.rentaikei {
-                add(&mut out, form, lemma, pos, present.clone());
+                add(&mut out, form, lemma, pos, present);
             }
             for form in &conjugation.perfective {
-                add(&mut out, form, lemma, pos, past.clone());
+                add(&mut out, form, lemma, pos, past);
             }
             for form in &conjugation.meireikei {
-                add(&mut out, form, lemma, pos, imperative.clone());
+                add(&mut out, form, lemma, pos, imperative);
             }
             for form in &conjugation.kateikei {
-                add(&mut out, form, lemma, pos, conditional.clone());
+                add(&mut out, form, lemma, pos, conditional);
             }
             for form in &conjugation.mizenkei {
                 add(&mut out, form, lemma, pos, Morphology::default());
@@ -3918,7 +3918,7 @@ pub mod gold_morphology {
             };
 
             for form in &inflection.shushikei {
-                add(&mut out, form, lemma, pos, present.clone());
+                add(&mut out, form, lemma, pos, present);
                 // Bare stem, as tokenized in 大きすぎる → 大き + すぎる.
                 if let Some(stem) = form.strip_suffix('い')
                     && !stem.is_empty()
@@ -3927,10 +3927,10 @@ pub mod gold_morphology {
                 }
             }
             for form in &inflection.rentaikei {
-                add(&mut out, form, lemma, pos, present.clone());
+                add(&mut out, form, lemma, pos, present);
             }
             for form in &inflection.informal_past {
-                add(&mut out, form, lemma, pos, past.clone());
+                add(&mut out, form, lemma, pos, past);
                 // Onbin past stem, as tokenized in 高かった → 高かっ + た.
                 if let Some(stem) = form.strip_suffix('た')
                     && !stem.is_empty()
@@ -3939,10 +3939,10 @@ pub mod gold_morphology {
                 }
             }
             for form in &inflection.meireikei {
-                add(&mut out, form, lemma, pos, imperative.clone());
+                add(&mut out, form, lemma, pos, imperative);
             }
             for form in &inflection.kateikei {
-                add(&mut out, form, lemma, pos, conditional.clone());
+                add(&mut out, form, lemma, pos, conditional);
             }
             for form in &inflection.mizenkei {
                 add(&mut out, form, lemma, pos, Morphology::default());
@@ -4014,66 +4014,66 @@ pub mod gold_morphology {
             // ---- Auxiliaries (word, lemma, morphologies) ----
             let aux: &[(&str, &str, Vec<Morphology>)] = &[
                 // Past-tense marker
-                ("た", "た", vec![past.clone()]),
-                ("たら", "た", vec![conditional.clone()]),
-                ("たろ", "た", vec![none.clone()]),
+                ("た", "た", vec![past]),
+                ("たら", "た", vec![conditional]),
+                ("たろ", "た", vec![none]),
                 // Copula だ and its polite forms
-                ("だ", "だ", vec![present.clone()]),
-                ("です", "だ", vec![formal_present.clone()]),
-                ("でし", "だ", vec![formal.clone()]),
-                ("でしょ", "だ", vec![formal.clone()]),
-                ("だっ", "だ", vec![none.clone()]),
-                ("だろ", "だ", vec![none.clone()]),
-                ("で", "だ", vec![none.clone()]),
-                ("な", "だ", vec![none.clone()]),
-                ("なら", "だ", vec![conditional.clone()]),
-                ("じゃ", "だ", vec![none.clone()]),
+                ("だ", "だ", vec![present]),
+                ("です", "だ", vec![formal_present]),
+                ("でし", "だ", vec![formal]),
+                ("でしょ", "だ", vec![formal]),
+                ("だっ", "だ", vec![none]),
+                ("だろ", "だ", vec![none]),
+                ("で", "だ", vec![none]),
+                ("な", "だ", vec![none]),
+                ("なら", "だ", vec![conditional]),
+                ("じゃ", "だ", vec![none]),
                 // Polite ます
-                ("ます", "ます", vec![formal_present.clone()]),
-                ("ました", "ます", vec![formal_past.clone()]),
-                ("ません", "ます", vec![formal_present.clone()]),
-                ("まし", "ます", vec![formal.clone()]),
-                ("ませ", "ます", vec![formal.clone()]),
-                ("ましょ", "ます", vec![formal.clone()]),
+                ("ます", "ます", vec![formal_present]),
+                ("ました", "ます", vec![formal_past]),
+                ("ません", "ます", vec![formal_present]),
+                ("まし", "ます", vec![formal]),
+                ("ませ", "ます", vec![formal]),
+                ("ましょ", "ます", vec![formal]),
                 // Negative ない (as auxiliary; the adjective reading is scraped)
-                ("ない", "ない", vec![present.clone()]),
-                ("なかった", "ない", vec![past.clone()]),
-                ("なかっ", "ない", vec![none.clone()]),
-                ("なく", "ない", vec![none.clone()]),
-                ("なけれ", "ない", vec![conditional.clone()]),
-                ("なきゃ", "ない", vec![conditional.clone()]),
+                ("ない", "ない", vec![present]),
+                ("なかった", "ない", vec![past]),
+                ("なかっ", "ない", vec![none]),
+                ("なく", "ない", vec![none]),
+                ("なけれ", "ない", vec![conditional]),
+                ("なきゃ", "ない", vec![conditional]),
                 // Literary negative ぬ
-                ("ぬ", "ぬ", vec![none.clone()]),
-                ("ん", "ぬ", vec![none.clone()]),
-                ("ず", "ぬ", vec![none.clone()]),
+                ("ぬ", "ぬ", vec![none]),
+                ("ん", "ぬ", vec![none]),
+                ("ず", "ぬ", vec![none]),
                 // Volitional
-                ("う", "う", vec![none.clone()]),
-                ("よう", "よう", vec![none.clone()]),
+                ("う", "う", vec![none]),
+                ("よう", "よう", vec![none]),
                 // Desiderative たい
-                ("たい", "たい", vec![desiderative_present.clone()]),
-                ("たく", "たい", vec![desiderative.clone()]),
-                ("たかっ", "たい", vec![desiderative.clone()]),
+                ("たい", "たい", vec![desiderative_present]),
+                ("たく", "たい", vec![desiderative]),
+                ("たかっ", "たい", vec![desiderative]),
                 // Honorific imperatives
-                ("なさい", "なさる", vec![formal_imperative.clone()]),
-                ("なさっ", "なさる", vec![formal.clone()]),
-                ("なさる", "なさる", vec![formal_present.clone()]),
-                ("ください", "くださる", vec![formal_imperative.clone()]),
-                ("下さい", "くださる", vec![formal_imperative.clone()]),
-                ("くださっ", "くださる", vec![formal.clone()]),
+                ("なさい", "なさる", vec![formal_imperative]),
+                ("なさっ", "なさる", vec![formal]),
+                ("なさる", "なさる", vec![formal_present]),
+                ("ください", "くださる", vec![formal_imperative]),
+                ("下さい", "くださる", vec![formal_imperative]),
+                ("くださっ", "くださる", vec![formal]),
                 // Voice auxiliaries (ichidan stems + non-past)
-                ("れ", "れる", vec![none.clone()]),
-                ("れる", "れる", vec![present.clone()]),
-                ("られ", "られる", vec![none.clone()]),
-                ("られる", "られる", vec![present.clone()]),
-                ("せ", "せる", vec![none.clone()]),
-                ("せる", "せる", vec![present.clone()]),
-                ("させ", "させる", vec![none.clone()]),
-                ("させる", "させる", vec![present.clone()]),
+                ("れ", "れる", vec![none]),
+                ("れる", "れる", vec![present]),
+                ("られ", "られる", vec![none]),
+                ("られる", "られる", vec![present]),
+                ("せ", "せる", vec![none]),
+                ("せる", "せる", vec![present]),
+                ("させ", "させる", vec![none]),
+                ("させる", "させる", vec![present]),
                 // Deontic べし
-                ("べき", "べし", vec![none.clone()]),
-                ("べく", "べし", vec![none.clone()]),
+                ("べき", "べし", vec![none]),
+                ("べく", "べし", vec![none]),
                 // Negative volitional
-                ("まい", "まい", vec![none.clone()]),
+                ("まい", "まい", vec![none]),
             ];
             for (word, lemma, morphs) in aux {
                 out.insert(
@@ -4102,10 +4102,10 @@ pub mod gold_morphology {
                 ("と", vec![case(Case::Comitative)]),
                 ("より", vec![case(Case::Comparative)]),
                 // Topic/focus particles and multi-role で carry no single case.
-                ("は", vec![none.clone()]),
-                ("も", vec![none.clone()]),
-                ("で", vec![none.clone()]),
-                ("ほど", vec![none.clone()]),
+                ("は", vec![none]),
+                ("も", vec![none]),
+                ("で", vec![none]),
+                ("ほど", vec![none]),
             ];
             for (word, morphs) in adp {
                 out.insert(
@@ -4174,29 +4174,29 @@ pub mod gold_morphology {
                     vec![person_polite(Person::Third, Polite::Informal)],
                 ),
                 // Demonstratives, interrogatives, and other featureless pronouns
-                ("これ", vec![none.clone()]),
-                ("それ", vec![none.clone()]),
-                ("あれ", vec![none.clone()]),
-                ("どれ", vec![none.clone()]),
-                ("これら", vec![plural.clone()]),
-                ("ここ", vec![none.clone()]),
-                ("そこ", vec![none.clone()]),
-                ("あそこ", vec![none.clone()]),
-                ("どこ", vec![none.clone()]),
-                ("こちら", vec![none.clone()]),
-                ("そちら", vec![none.clone()]),
-                ("あちら", vec![none.clone()]),
-                ("どちら", vec![none.clone()]),
-                ("何", vec![none.clone()]),
-                ("何か", vec![none.clone()]),
-                ("誰", vec![none.clone()]),
-                ("だれ", vec![none.clone()]),
-                ("誰か", vec![none.clone()]),
-                ("いつ", vec![none.clone()]),
-                ("自分", vec![none.clone()]),
-                ("みんな", vec![none.clone()]),
-                ("皆", vec![none.clone()]),
-                ("の", vec![none.clone()]),
+                ("これ", vec![none]),
+                ("それ", vec![none]),
+                ("あれ", vec![none]),
+                ("どれ", vec![none]),
+                ("これら", vec![plural]),
+                ("ここ", vec![none]),
+                ("そこ", vec![none]),
+                ("あそこ", vec![none]),
+                ("どこ", vec![none]),
+                ("こちら", vec![none]),
+                ("そちら", vec![none]),
+                ("あちら", vec![none]),
+                ("どちら", vec![none]),
+                ("何", vec![none]),
+                ("何か", vec![none]),
+                ("誰", vec![none]),
+                ("だれ", vec![none]),
+                ("誰か", vec![none]),
+                ("いつ", vec![none]),
+                ("自分", vec![none]),
+                ("みんな", vec![none]),
+                ("皆", vec![none]),
+                ("の", vec![none]),
             ];
             for (word, morphs) in pron {
                 out.insert(
@@ -4480,20 +4480,20 @@ pub mod gold_morphology {
                 ),
                 ("这些", "這些", vec![m(None, Some(Plural), None, None)]),
                 ("那些", "那些", vec![m(None, Some(Plural), None, None)]),
-                ("自己", "自己", vec![none.clone()]),
-                ("什么", "什麼", vec![none.clone()]),
-                ("谁", "誰", vec![none.clone()]),
-                ("这", "這", vec![none.clone()]),
-                ("那", "那", vec![none.clone()]),
-                ("这里", "這裡", vec![none.clone()]),
-                ("那里", "那裡", vec![none.clone()]),
-                ("哪里", "哪裡", vec![none.clone()]),
-                ("这儿", "這兒", vec![none.clone()]),
-                ("那儿", "那兒", vec![none.clone()]),
-                ("哪儿", "哪兒", vec![none.clone()]),
-                ("大家", "大家", vec![none.clone()]),
-                ("人家", "人家", vec![none.clone()]),
-                ("别人", "別人", vec![none.clone()]),
+                ("自己", "自己", vec![none]),
+                ("什么", "什麼", vec![none]),
+                ("谁", "誰", vec![none]),
+                ("这", "這", vec![none]),
+                ("那", "那", vec![none]),
+                ("这里", "這裡", vec![none]),
+                ("那里", "那裡", vec![none]),
+                ("哪里", "哪裡", vec![none]),
+                ("这儿", "這兒", vec![none]),
+                ("那儿", "那兒", vec![none]),
+                ("哪儿", "哪兒", vec![none]),
+                ("大家", "大家", vec![none]),
+                ("人家", "人家", vec![none]),
+                ("别人", "別人", vec![none]),
             ];
 
             let aspect = |a: Aspect| Morphology {
@@ -4507,17 +4507,17 @@ pub mod gold_morphology {
                 // Experiential 过 ("have ever...") is a completed-action aspect
                 ("过", "過", vec![aspect(Aspect::Perfect)]),
                 // Featureless structural / sentence-final particles
-                ("的", "的", vec![none.clone()]),
-                ("吗", "嗎", vec![none.clone()]),
-                ("吧", "吧", vec![none.clone()]),
-                ("呢", "呢", vec![none.clone()]),
-                ("啊", "啊", vec![none.clone()]),
-                ("呀", "呀", vec![none.clone()]),
-                ("啦", "啦", vec![none.clone()]),
-                ("地", "地", vec![none.clone()]),
-                ("得", "得", vec![none.clone()]),
-                ("之", "之", vec![none.clone()]),
-                ("嘛", "嘛", vec![none.clone()]),
+                ("的", "的", vec![none]),
+                ("吗", "嗎", vec![none]),
+                ("吧", "吧", vec![none]),
+                ("呢", "呢", vec![none]),
+                ("啊", "啊", vec![none]),
+                ("呀", "呀", vec![none]),
+                ("啦", "啦", vec![none]),
+                ("地", "地", vec![none]),
+                ("得", "得", vec![none]),
+                ("之", "之", vec![none]),
+                ("嘛", "嘛", vec![none]),
             ];
 
             let mut out = BTreeMap::new();
@@ -4672,16 +4672,16 @@ pub mod gold_morphology {
                 ("พวกเขา", vec![person_plural(Third)]),
                 ("พวกมัน", vec![person_plural(Third)]),
                 // Featureless pronouns
-                ("อะไร", vec![none.clone()]),
-                ("ใคร", vec![none.clone()]),
-                ("ไหน", vec![none.clone()]),
-                ("นี่", vec![none.clone()]),
-                ("นั่น", vec![none.clone()]),
-                ("โน่น", vec![none.clone()]),
-                ("กัน", vec![none.clone()]),
-                ("ทุกคน", vec![none.clone()]),
-                ("บางคน", vec![none.clone()]),
-                ("ตัวเอง", vec![none.clone()]),
+                ("อะไร", vec![none]),
+                ("ใคร", vec![none]),
+                ("ไหน", vec![none]),
+                ("นี่", vec![none]),
+                ("นั่น", vec![none]),
+                ("โน่น", vec![none]),
+                ("กัน", vec![none]),
+                ("ทุกคน", vec![none]),
+                ("บางคน", vec![none]),
+                ("ตัวเอง", vec![none]),
             ];
 
             let part: &[(&str, Vec<Morphology>)] = &[
@@ -4695,19 +4695,19 @@ pub mod gold_morphology {
                 ("ว่ะ", vec![polite(Intimate)]), // rude/blunt
                 ("วะ", vec![polite(Intimate)]), // rude/blunt
                 // Featureless discourse particles
-                ("นะ", vec![none.clone()]),
-                ("สิ", vec![none.clone()]),
-                ("เถอะ", vec![none.clone()]),
-                ("ล่ะ", vec![none.clone()]),
-                ("น่ะ", vec![none.clone()]),
-                ("เหรอ", vec![none.clone()]),
-                ("หรอ", vec![none.clone()]),
-                ("ไหม", vec![none.clone()]),
-                ("มั้ย", vec![none.clone()]),
-                ("หรอก", vec![none.clone()]),
-                ("เลย", vec![none.clone()]),
-                ("ไม่", vec![none.clone()]),
-                ("ๆ", vec![none.clone()]),
+                ("นะ", vec![none]),
+                ("สิ", vec![none]),
+                ("เถอะ", vec![none]),
+                ("ล่ะ", vec![none]),
+                ("น่ะ", vec![none]),
+                ("เหรอ", vec![none]),
+                ("หรอ", vec![none]),
+                ("ไหม", vec![none]),
+                ("มั้ย", vec![none]),
+                ("หรอก", vec![none]),
+                ("เลย", vec![none]),
+                ("ไม่", vec![none]),
+                ("ๆ", vec![none]),
             ];
 
             let aspect = |a: Aspect| Morphology {
@@ -4720,14 +4720,14 @@ pub mod gold_morphology {
                 ("กำลัง", vec![aspect(Aspect::Progressive)]),
                 ("อยู่", vec![aspect(Aspect::Progressive)]),
                 // Modal / attainment auxiliaries carry no aspect of their own
-                ("ได้", vec![none.clone()]),
-                ("ต้อง", vec![none.clone()]),
-                ("อยาก", vec![none.clone()]),
-                ("เคย", vec![none.clone()]),
-                ("ควร", vec![none.clone()]),
-                ("คง", vec![none.clone()]),
-                ("อาจ", vec![none.clone()]),
-                ("น่า", vec![none.clone()]),
+                ("ได้", vec![none]),
+                ("ต้อง", vec![none]),
+                ("อยาก", vec![none]),
+                ("เคย", vec![none]),
+                ("ควร", vec![none]),
+                ("คง", vec![none]),
+                ("อาจ", vec![none]),
+                ("น่า", vec![none]),
             ];
 
             let mut out = BTreeMap::new();

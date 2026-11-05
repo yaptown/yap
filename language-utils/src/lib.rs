@@ -1,6 +1,9 @@
+mod definition;
+pub use definition::DefinitionTextKind;
 pub mod book;
 pub mod book_sentence;
 mod han_script_tables;
+mod unigram_token;
 use han_script_tables::{SIMPLIFIED_ONLY, TRADITIONAL_ONLY};
 pub mod clip_content_ratings;
 pub mod features;
@@ -9,9 +12,10 @@ pub use word_prefix::{compute_word_prefix, prefixed_text};
 pub mod indexmap;
 pub mod language_pack;
 pub mod sentence_codec;
-pub(crate) mod sentence_text;
+pub mod sentence_text;
 pub use language_pack::{
-    PACKS_ORIGIN, SentenceSpur, SentenceText, TranslationSpur, TranslationText,
+    DefinitionText, DefinitionTextSpur, PACKS_ORIGIN, SentenceSpur, SentenceText, TranslationSpur,
+    TranslationText,
 };
 pub mod minimal_pairs;
 pub mod morphology_label;
@@ -24,7 +28,6 @@ pub type SpurReadingGram = ReadingTaggedGram<SpurGram, lasso::Spur>;
 pub mod text_cleanup;
 pub use strokes::{Stroke, StrokeGlyph, StrokeStandard, StrokeTable};
 
-use rustc_hash::FxHashMap;
 use std::collections::BTreeMap;
 use std::hash::Hash;
 
@@ -198,10 +201,13 @@ impl std::fmt::Display for PartOfSpeech {
     rkyv::Archive,
     rkyv::Serialize,
     rkyv::Deserialize,
+    Copy,
+    Hash,
 )]
-pub struct TargetToNativeWord {
-    pub native: String,
-    pub note: Option<String>,
+#[schemars(rename = "TargetToNativeWord")]
+pub struct TargetToNativeWord<S = String> {
+    pub native: S,
+    pub note: Option<S>,
     /// The note was written to be shown on flashcards, not just in the
     /// dictionary: by hand in `custom_definitions.jsonl`, or by the
     /// `curated_notes` stage for an early word that needs explaining. Out of
@@ -210,8 +216,8 @@ pub struct TargetToNativeWord {
     #[schemars(skip)]
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub note_is_curated: bool,
-    pub example_sentence_target_language: String,
-    pub example_sentence_native_language: String,
+    pub example_sentence_target_language: S,
+    pub example_sentence_native_language: S,
     pub cognate: bool,
     pub false_cognate: bool,
 }
@@ -231,16 +237,17 @@ pub struct TargetToNativeWord {
     rkyv::Serialize,
     rkyv::Deserialize,
 )]
-pub struct PhrasebookDefinitionEntry {
-    pub target_language_multi_word_term: String,
-    pub meaning: String,
-    pub additional_notes: String,
+#[schemars(rename = "PhrasebookDefinitionEntry")]
+pub struct PhrasebookDefinitionEntry<S = String> {
+    pub target_language_multi_word_term: S,
+    pub meaning: S,
+    pub additional_notes: S,
     /// As [`TargetToNativeWord::note_is_curated`], for `additional_notes`.
     #[schemars(skip)]
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub note_is_curated: bool,
-    pub target_language_example: String,
-    pub native_language_example: String,
+    pub target_language_example: S,
+    pub native_language_example: S,
     pub informal: bool,
     pub compositional: bool,
     pub cognate: bool,
@@ -323,9 +330,17 @@ pub struct DictionaryDefinition {
     rkyv::Serialize,
     rkyv::Deserialize,
 )]
-pub enum GramDefinition {
-    Dictionary(DictionaryEntry),
-    Phrasebook(PhrasebookDefinitionEntry),
+#[serde(bound(
+    deserialize = "S: serde::Deserialize<'de>, D: serde::Deserialize<'de>, M: serde::Deserialize<'de>, G: serde::Deserialize<'de> + Default"
+))]
+pub enum GramDefinition<
+    S = String,
+    D = Vec<TargetToNativeWord<S>>,
+    M = Vec<Morphology>,
+    G = Vec<MorphemeSegment<S>>,
+> {
+    Dictionary(DictionaryEntry<S, D, M, G>),
+    Phrasebook(PhrasebookDefinitionEntry<S>),
 }
 
 #[bridgerton::bridge(transparent)]
@@ -343,15 +358,27 @@ pub enum GramDefinition {
     rkyv::Serialize,
     rkyv::Deserialize,
 )]
-pub struct DictionaryEntry {
-    pub target_language_word: String,
-    pub definitions: Vec<TargetToNativeWord>,
-    pub morphology: Vec<Morphology>,
+#[schemars(
+    rename = "DictionaryEntry",
+    bound = "S: schemars::JsonSchema, D: schemars::JsonSchema, M: schemars::JsonSchema, G: schemars::JsonSchema + Default"
+)]
+#[serde(bound(
+    deserialize = "S: serde::Deserialize<'de>, D: serde::Deserialize<'de>, M: serde::Deserialize<'de>, G: serde::Deserialize<'de> + Default"
+))]
+pub struct DictionaryEntry<
+    S = String,
+    D = Vec<TargetToNativeWord<S>>,
+    M = Vec<Morphology>,
+    G = Vec<MorphemeSegment<S>>,
+> {
+    pub target_language_word: S,
+    pub definitions: D,
+    pub morphology: M,
     /// Etymological segmentation of the word. Each entry pairs the surface
     /// substring with its canonical / lemma form — e.g. `destabilize` →
     /// `[(de, de), (stabl, stable), (ize, ize)]`.
     #[serde(default)]
-    pub segments: Vec<MorphemeSegment<String>>,
+    pub segments: G,
 }
 
 impl From<(DictionaryDefinition, Vec<Morphology>)> for DictionaryEntry {
@@ -1154,7 +1181,9 @@ pub struct Heteronym<S> {
     rkyv::Archive,
     rkyv::Serialize,
     rkyv::Deserialize,
+    Copy,
 )]
+#[serde(bound(deserialize = "S: serde::Deserialize<'de>"))]
 pub struct MorphemeSegment<S> {
     pub surface: S,
     pub canonical: S,
@@ -1530,38 +1559,6 @@ pub struct ReadingGramFrequencyEntry<S> {
     pub direct_count: u32,
     pub disambiguation_key: u32,
     pub gram: ReadingTaggedGram<Gram<S>, S>,
-}
-
-/// A frequency list with its total count (for percentage calculations).
-/// Used in ConsolidatedLanguageData (pre-interning).
-#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
-pub struct GramFrequencyList {
-    pub entries: Vec<ReadingGramFrequencyEntry<String>>,
-    /// Total gram count from unfiltered data (for accurate percentage calculations)
-    pub total_count: u64,
-}
-
-/// Derived sense view for dictionary and morphology consumers.
-pub fn aggregate_sense_frequencies(
-    entries: &[ReadingGramFrequencyEntry<String>],
-) -> Vec<GramFrequencyEntry<String>> {
-    let mut senses: BTreeMap<TaggedGram<Gram<String>>, GramFrequencyEntry<String>> =
-        BTreeMap::new();
-    for entry in entries {
-        let total = senses
-            .entry(entry.gram.sense.clone())
-            .or_insert(GramFrequencyEntry {
-                gram: entry.gram.sense.clone(),
-                count: 0,
-                direct_count: 0,
-                disambiguation_key: entry.disambiguation_key,
-            });
-        total.count += entry.count;
-        total.direct_count += entry.direct_count;
-    }
-    let mut entries: Vec<_> = senses.into_values().collect();
-    entries.sort_by_key(|entry| std::cmp::Reverse(entry.clone()));
-    entries
 }
 
 #[derive(
@@ -2690,251 +2687,6 @@ pub struct TimedSegment {
 pub struct PronunciationClip {
     pub audio: Audio,
     pub segments: Vec<TimedSegment>,
-}
-
-/// Consolidated data structure containing all generated language data
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct ConsolidatedLanguageData {
-    /// Learner-facing redundancy sets, keyed by the exact prefixed front.
-    pub redundant_senses: BTreeMap<String, Vec<Vec<TaggedGram<Gram<String>>>>>,
-    /// Downloaded stroke forms for the course's writable units.
-    pub strokes: StrokeTable,
-    /// All target language sentences from Anki cards
-    pub target_language_sentences: Vec<String>,
-    /// Mapping from target language sentences to all native translations
-    pub translations: Vec<(String, Vec<String>)>,
-    /// NLP-analyzed sentences with multiword terms and heteronyms
-    pub nlp_sentences: Vec<(String, SentenceInfo)>,
-    /// Unified phrasebook: maps gram to definition entry (both MWE phrases and learned multi-atom grams)
-    pub phrasebook: BTreeMap<TaggedGram<Gram<String>>, PhrasebookDefinitionEntry>,
-    /// Proper noun definitions for names, places, organizations
-    pub proper_noun_definitions: BTreeMap<String, ProperNounDefinition>,
-    /// Per-source gram frequencies (movies, Pimsleur lessons, etc.)
-    pub source_gram_frequencies: FxHashMap<FrequencySourceId, GramFrequencyList>,
-    /// Mapping from words to their IPA pronunciations
-    /// (one canonical "main" plus optional documented alternates).
-    pub word_to_pronunciation: Vec<(String, Pronunciations)>,
-    /// Mapping from IPA pronunciations to lists of words
-    pub pronunciation_to_words: Vec<(Pronunciation, Vec<String>)>,
-    /// Minimal pairs grouped by their distinguishing phoneme pair. Built
-    /// once in `generate-data`; the language pack translates this into its
-    /// interned `MinimalPairs` and also derives the inverse
-    /// `word → 1-off words` map from it.
-    pub minimal_pairs: Vec<crate::minimal_pairs::MinimalPairGroup>,
-    /// Pronunciation patterns and guides for the course
-    pub pronunciation_data: PronunciationData,
-    /// Homophone disambiguation practice sentences
-    pub homophone_practice: BTreeMap<HomophoneWordPair<String>, HomophonePractice<String>>,
-    /// Movie metadata indexed by movie ID
-    pub movies: FxHashMap<String, MovieMetadata>,
-    /// Book metadata indexed by book slug
-    pub books: FxHashMap<String, BookMetadata>,
-    /// Sentence source provenance tracking (including movie_ids/book_ids)
-    pub sentence_sources: Vec<(String, SentenceSource)>,
-    /// Gram vocabulary: maps gram ID to display info (index = gram ID)
-    pub gram_vocabulary: Vec<GramVocabEntry<String>>,
-    /// Gram frequencies for learnable grams
-    pub gram_frequencies: GramFrequencyList,
-    /// Encoded sentences: sentence text -> grams with learnability and capitalize_first
-    pub encoded_sentences: Vec<(String, ReadingSentence<Gram<String>, String>)>,
-    /// Gram dictionary: definitions for grams (keyed by Gram for correct surface-form matching)
-    pub gram_dictionary: BTreeMap<TaggedGram<Gram<String>>, DictionaryEntry>,
-    /// Morpheme classification + info, keyed by (surface, canonical) pair.
-    /// The pair prevents ambiguity when the same surface maps to different
-    /// underlying morphemes (e.g. `-er` as agent vs. comparative).
-    pub morphemes: BTreeMap<MorphemeSegment<String>, MorphemeInfo<String>>,
-    /// Human-recorded audio clips, indexed by voice actor and then by the
-    /// target-language phrase they speak. The nested-map shape enforces that
-    /// each (actor, phrase) pair has at most one clip.
-    pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
-    /// Phonemizer-verified TTS clips for pronunciation challenges, keyed by
-    /// the cue's spoken text — the same string the frontend requests.
-    pub pronunciation_audio: FxHashMap<String, PronunciationClip>,
-}
-
-impl ConsolidatedLanguageData {
-    pub fn intern(&self, rodeo: &mut lasso::Rodeo) {
-        // Intern empty string and space, just to make sure it's in there
-        let _ = rodeo.get_or_intern("");
-        let _ = rodeo.get_or_intern(" ");
-
-        for gram in self.gram_dictionary.keys() {
-            for atom in gram.gram.iter() {
-                if let Atom::Tok(word) = atom {
-                    rodeo.get_or_intern(&word.text);
-                    if let WordType::Heteronym(h) = &word.word_type {
-                        rodeo.get_or_intern(&h.word);
-                        rodeo.get_or_intern(&h.lemma);
-                    }
-                }
-            }
-        }
-        for entry in self.phrasebook.values() {
-            rodeo.get_or_intern(&entry.target_language_multi_word_term);
-        }
-
-        // Intern every string sentences can reference: sentence words are
-        // encoded against the gram vocabulary, so interning the vocabulary's
-        // atoms covers them (display-time capitalization is applied after
-        // resolving, so capitalized variants need no Spurs).
-        for entry in &self.gram_vocabulary {
-            for atom in entry.atoms.iter() {
-                if let Atom::Tok(word) = atom {
-                    rodeo.get_or_intern(&word.text);
-                    if let WordType::Heteronym(h) = &word.word_type {
-                        rodeo.get_or_intern(&h.word);
-                        rodeo.get_or_intern(&h.lemma);
-                    }
-                }
-            }
-        }
-
-        // intern pronunciations (full IPA strings) and their individual phonemes
-        // (space-separated tokens). Per-phoneme Spurs let the minimal-pairs index
-        // store distinguishing phonemes compactly without re-interning sub-tokens.
-        // Only the main pronunciation is interned — alternates exist in the
-        // intermediate JSONL for the audio verifier but aren't part of the
-        // packed data model, so embedding them would just bloat the archive.
-        for (_word, pronunciations) in &self.word_to_pronunciation {
-            rodeo.get_or_intern(&pronunciations.main);
-            for phoneme in pronunciations.main.split_whitespace() {
-                rodeo.get_or_intern(phoneme);
-            }
-        }
-
-        // intern minimal-pair contents (words + distinguishing phonemes). These
-        // strings are almost always already interned via gram_dictionary and
-        // word_to_pronunciation above, but interning explicitly keeps the
-        // field self-contained.
-        for group in &self.minimal_pairs {
-            for phoneme in &group.phonemes {
-                rodeo.get_or_intern(phoneme);
-            }
-            for pair in &group.pairs {
-                rodeo.get_or_intern(&pair.word_a);
-                rodeo.get_or_intern(&pair.word_b);
-            }
-        }
-
-        // intern pronunciation data
-        for (sound, _) in &self.pronunciation_data.sounds {
-            rodeo.get_or_intern(sound);
-        }
-        for guide in &self.pronunciation_data.guides {
-            rodeo.get_or_intern(&guide.pattern);
-            rodeo.get_or_intern(&guide.description);
-            for word_pair in &guide.example_words {
-                rodeo.get_or_intern(&word_pair.target);
-                rodeo.get_or_intern(&word_pair.native);
-                rodeo.get_or_intern(&word_pair.cultural_context);
-            }
-        }
-
-        // intern homophone practice data
-        for word_pair in self.homophone_practice.keys() {
-            word_pair.get_or_intern(rodeo);
-        }
-
-        // intern movie data
-        for movie in self.movies.values() {
-            rodeo.get_or_intern(&movie.id);
-            rodeo.get_or_intern(&movie.title);
-        }
-
-        // Intern source metadata, not sentence text keys.
-        for (_, source) in &self.sentence_sources {
-            for movie_id in &source.movie_ids {
-                rodeo.get_or_intern(movie_id);
-            }
-        }
-
-        // intern proper noun definitions keys
-        for proper_noun in self.proper_noun_definitions.keys() {
-            rodeo.get_or_intern(proper_noun);
-        }
-
-        // intern morpheme segment keys (surface + canonical + optional tag) and info payloads
-        for (segment, info) in &self.morphemes {
-            rodeo.get_or_intern(&segment.surface);
-            rodeo.get_or_intern(&segment.canonical);
-            if let Some(tag) = &segment.tag {
-                rodeo.get_or_intern(tag);
-            }
-            match info {
-                MorphemeInfo::Root { heteronym } => {
-                    rodeo.get_or_intern(&heteronym.word);
-                    rodeo.get_or_intern(&heteronym.lemma);
-                }
-                MorphemeInfo::Bound { meaning }
-                | MorphemeInfo::Derivation { meaning }
-                | MorphemeInfo::Inflection { meaning } => {
-                    if let Some(m) = meaning {
-                        rodeo.get_or_intern(m);
-                    }
-                }
-            }
-        }
-
-        // intern gram vocabulary atom texts
-        for entry in &self.gram_vocabulary {
-            for atom in &entry.atoms {
-                if let Atom::<String>::Tok(word) = atom {
-                    rodeo.get_or_intern(&word.text);
-                    // Also intern word and lemma if it's a heteronym
-                    if let WordType::Heteronym(h) = &word.word_type {
-                        rodeo.get_or_intern(&h.word);
-                        rodeo.get_or_intern(&h.lemma);
-                    }
-                }
-            }
-        }
-
-        // Intern encoded atoms and readings, not sentence text keys.
-        for (_, encoded) in &self.encoded_sentences {
-            for entry in encoded.all_grams() {
-                if let Some(reading) = &entry.reading {
-                    rodeo.get_or_intern(reading);
-                }
-                for atom in &entry.sense.gram {
-                    atom.get_or_intern(rodeo);
-                }
-            }
-        }
-
-        // intern source gram frequencies
-        for freq_list in self.source_gram_frequencies.values() {
-            for entry in &freq_list.entries {
-                if let Some(reading) = &entry.gram.reading {
-                    rodeo.get_or_intern(reading);
-                }
-                for atom in &entry.gram.sense.gram {
-                    if let Atom::<String>::Tok(word) = atom {
-                        rodeo.get_or_intern(&word.text);
-                        if let WordType::Heteronym(h) = &word.word_type {
-                            rodeo.get_or_intern(&h.word);
-                            rodeo.get_or_intern(&h.lemma);
-                        }
-                    }
-                }
-            }
-        }
-
-        // intern master gram frequencies
-        for entry in &self.gram_frequencies.entries {
-            if let Some(reading) = &entry.gram.reading {
-                rodeo.get_or_intern(reading);
-            }
-            for atom in &entry.gram.sense.gram {
-                if let Atom::<String>::Tok(word) = atom {
-                    rodeo.get_or_intern(&word.text);
-                    if let WordType::Heteronym(h) = &word.word_type {
-                        rodeo.get_or_intern(&h.word);
-                        rodeo.get_or_intern(&h.lemma);
-                    }
-                }
-            }
-        }
-    }
 }
 
 #[bridgerton::bridge(transparent)]
@@ -5049,13 +4801,6 @@ impl HomophoneWordPair<String> {
             word1: rodeo.get(&self.word1)?,
             word2: rodeo.get(&self.word2)?,
         })
-    }
-
-    fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> HomophoneWordPair<lasso::Spur> {
-        HomophoneWordPair {
-            word1: rodeo.get_or_intern(&self.word1),
-            word2: rodeo.get_or_intern(&self.word2),
-        }
     }
 }
 

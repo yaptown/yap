@@ -13,3 +13,6 @@ anyhow = "1.0.102"
 rustc-hash = "2.1"
 indexmap.workspace = true
 unicode-normalization.workspace = true
+
+[dev-dependencies]
+pack-builder.workspace = true

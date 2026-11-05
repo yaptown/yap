@@ -40,7 +40,7 @@ impl Deck {
         let mut words = FxHashMap::default();
         for (frequency_index, (spur_gram, _)) in language_pack.sense_frequencies.iter().enumerate()
         {
-            let Some(gram_def) = language_pack.gram_definitions.get(spur_gram) else {
+            let Some(gram_def) = language_pack.definition_metadata(spur_gram) else {
                 continue;
             };
             if !language_pack.is_visible(*spur_gram, target_language) {
@@ -59,12 +59,13 @@ impl Deck {
                     .to_display_string(target_language);
                 let normalized_display = remove_accents_lowercase(&display_text);
                 let definition_contains = match gram_def {
-                    GramDefinition::Dictionary(dict_def) => dict_def
-                        .definitions
-                        .iter()
-                        .any(|d| remove_accents_lowercase(&d.native).contains(q.as_str())),
+                    GramDefinition::Dictionary(dict_def) => dict_def.definitions.iter().any(|d| {
+                        remove_accents_lowercase(&language_pack.definition_text(&d.native))
+                            .contains(q.as_str())
+                    }),
                     GramDefinition::Phrasebook(pb_def) => {
-                        remove_accents_lowercase(&pb_def.meaning).contains(q.as_str())
+                        remove_accents_lowercase(&language_pack.definition_text(&pb_def.meaning))
+                            .contains(q.as_str())
                     }
                 };
                 if !normalized_display.contains(q.as_str()) && !definition_contains {
@@ -111,8 +112,7 @@ impl Deck {
             .visible_senses(spur_gram.gram, target_language)
             .iter()
             .filter_map(|sense_gram| {
-                let definition =
-                    definition_view(language_pack.gram_definitions.get(sense_gram)?.clone());
+                let definition = definition_view(language_pack.gram_definition(sense_gram)?);
                 let frequency_index = language_pack.sense_frequencies.get_index_of(sense_gram)?;
                 Some(DictionarySense {
                     frequency_index,
@@ -304,11 +304,10 @@ mod tests {
     use crate::{Context, DeckState};
     use language_utils::{Atom, Gram, WordType};
     use language_utils::{
-        ConsolidatedLanguageData, Course, DictionaryEntry, GramFrequencyList, GramVocabEntry,
-        Heteronym, PartOfSpeech, PronunciationData,
+        Course, DictionaryEntry, GramVocabEntry, Heteronym, PartOfSpeech, PronunciationData,
         ReadingGramFrequencyEntry as GramFrequencyEntry, TaggedGram, TargetToNativeWord, Word,
-        language_pack::LanguagePack,
     };
+    use pack_builder::{ConsolidatedLanguageData, GramFrequencyList};
     use std::{collections::BTreeMap, num::NonZeroU32, sync::Arc};
 
     // Entirely synthetic: these tests must never load the regenerating packs on disk.
@@ -340,7 +339,7 @@ mod tests {
             target_language: Language::English,
             native_language: Language::French,
         };
-        let pack = LanguagePack::new(
+        let pack = pack_builder::build(
             ConsolidatedLanguageData {
                 redundant_senses: BTreeMap::new(),
                 strokes: Default::default(),
@@ -559,13 +558,12 @@ mod translation_sense_tests {
     use crate::{CardData, Context, DeckEvent, DeckState};
     use language_utils::{Atom, Gram, WordType};
     use language_utils::{
-        ConsolidatedLanguageData, Course, DictionaryEntry, GramFrequencyList, GramVocabEntry,
-        Heteronym, MultiwordTermMatch, OtherWord, OtherWordType, PartOfSpeech,
-        ReadingGramFrequencyEntry as GramFrequencyEntry, SentenceGram, SentenceGrams, TaggedGram,
-        TargetToNativeWord, Word,
+        Course, DictionaryEntry, GramVocabEntry, Heteronym, MultiwordTermMatch, OtherWord,
+        OtherWordType, PartOfSpeech, ReadingGramFrequencyEntry as GramFrequencyEntry, SentenceGram,
+        SentenceGrams, TaggedGram, TargetToNativeWord, Word,
         autograde::{LiteralGrades, Remembered},
-        language_pack::LanguagePack,
     };
+    use pack_builder::{ConsolidatedLanguageData, GramFrequencyList};
     use std::{num::NonZeroU32, sync::Arc};
 
     fn gram(text: &str, sense: u32) -> TaggedGram<Gram<String>> {
@@ -734,7 +732,7 @@ mod translation_sense_tests {
         };
         let context = Context {
             study_goal: None,
-            language_pack: Arc::new(LanguagePack::new(data, course)),
+            language_pack: Arc::new(pack_builder::build(data, course)),
             course,
             timezone: chrono::FixedOffset::east_opt(0).unwrap(),
         };

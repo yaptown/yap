@@ -435,7 +435,7 @@ async fn main() -> anyhow::Result<()> {
             &encoded_sentences_with_grams,
             &gram_vocabulary,
         );
-        let gram_frequencies = language_utils::aggregate_sense_frequencies(&reading_frequencies);
+        let gram_frequencies = pack_builder::aggregate_sense_frequencies(&reading_frequencies);
         let master_total_count: u64 = gram_frequencies.iter().map(|e| e.count as u64).sum();
 
         // Filter to only include those with count > 3
@@ -1571,7 +1571,7 @@ async fn main() -> anyhow::Result<()> {
                 .map(|(w, p)| (w.clone(), p.main.clone()))
                 .collect();
             let groups =
-                language_utils::minimal_pairs::find_minimal_pairs(&word_to_main, &word_max_freq);
+                pack_builder::minimal_pairs::find_minimal_pairs(&word_to_main, &word_max_freq);
             let minimal_pairs_file = target_language_dir.join("minimal_pairs.jsonl");
             let mut file =
                 File::create(&minimal_pairs_file).context("Failed to create minimal pairs file")?;
@@ -1729,7 +1729,7 @@ async fn main() -> anyhow::Result<()> {
         // Compute total counts per source BEFORE filtering, then filter entries
         let source_gram_frequencies: rustc_hash::FxHashMap<
             language_utils::FrequencySourceId,
-            language_utils::GramFrequencyList,
+            pack_builder::GramFrequencyList,
         > = unfiltered_source_freqs
             .into_iter()
             .map(|(source_id, freqs)| {
@@ -1740,7 +1740,7 @@ async fn main() -> anyhow::Result<()> {
                     .collect();
                 (
                     source_id,
-                    language_utils::GramFrequencyList {
+                    pack_builder::GramFrequencyList {
                         entries: filtered_entries,
                         total_count,
                     },
@@ -1912,7 +1912,7 @@ async fn main() -> anyhow::Result<()> {
         );
 
         // Create consolidated data structure
-        let consolidated_data = language_utils::ConsolidatedLanguageData {
+        let consolidated_data = pack_builder::ConsolidatedLanguageData {
             redundant_senses,
             strokes,
             target_language_sentences,
@@ -1930,7 +1930,7 @@ async fn main() -> anyhow::Result<()> {
             books,
             sentence_sources,
             gram_vocabulary,
-            gram_frequencies: language_utils::GramFrequencyList {
+            gram_frequencies: pack_builder::GramFrequencyList {
                 entries: reading_frequencies,
                 total_count: master_total_count,
             },
@@ -1941,8 +1941,7 @@ async fn main() -> anyhow::Result<()> {
             pronunciation_audio,
         };
 
-        let mut language_pack =
-            language_utils::language_pack::LanguagePack::new(consolidated_data, *course);
+        let mut language_pack = pack_builder::build(consolidated_data, *course);
         if course.target_language == language_utils::Language::Japanese {
             generate_data::readings::furigana::Segmenter::load()
                 .await?

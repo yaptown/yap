@@ -561,7 +561,7 @@ impl YapState {
             translations: pack
                 .translations_of(*sentence)
                 .iter()
-                .map(|t| pack.sentences.translation_rodeo.resolve(t).to_string())
+                .map(|t| pack.sentences.translation_rodeo.resolve_string(t))
                 .collect(),
             sources: self.sentence_sources(sentence),
         };

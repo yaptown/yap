@@ -5370,13 +5370,15 @@ impl Deck {
                 }
                 _ => return String::new(),
             };
-            match language_pack.gram_definitions.get(gram) {
+            match language_pack.definition_metadata(gram) {
                 Some(language_utils::GramDefinition::Dictionary(dict)) => dict
                     .definitions
                     .first()
-                    .map(|d| d.native.clone())
+                    .map(|d| language_pack.definition_text(&d.native))
                     .unwrap_or_default(),
-                Some(language_utils::GramDefinition::Phrasebook(pb)) => pb.meaning.clone(),
+                Some(language_utils::GramDefinition::Phrasebook(pb)) => {
+                    language_pack.definition_text(&pb.meaning)
+                }
                 None => String::new(),
             }
         };
@@ -5659,7 +5661,7 @@ mod tests {
             target_language: Language::SpanishLatinAmerican,
             ..french
         };
-        let pack = Arc::new(LanguagePack::new(Default::default(), french));
+        let pack = Arc::new(pack_builder::build(Default::default(), french));
         let weak = Arc::downgrade(&pack);
         RECENT_PACK.with(|recent| *recent.borrow_mut() = Some((french, true, weak.clone())));
         weapon.load_language_pack_core(french, None).await.unwrap();
@@ -5679,7 +5681,7 @@ mod tests {
         drop(weapon);
         drop(next_weapon.get_deck_state(french, 0).await.unwrap());
         assert!(next_weapon.deck_fold.borrow().is_some());
-        let spanish_pack = Arc::new(LanguagePack::new(Default::default(), spanish));
+        let spanish_pack = Arc::new(pack_builder::build(Default::default(), spanish));
         RECENT_PACK.with(|recent| {
             *recent.borrow_mut() = Some((spanish, true, Arc::downgrade(&spanish_pack)))
         });
@@ -5701,7 +5703,7 @@ mod tests {
             native_language: Language::English,
             target_language: Language::French,
         };
-        let pack = Arc::new(LanguagePack::new(Default::default(), course));
+        let pack = Arc::new(pack_builder::build(Default::default(), course));
         *weapon.language_pack.borrow_mut() = Some(LoadedLanguagePack {
             course,
             pack: pack.clone(),
@@ -5749,7 +5751,7 @@ mod tests {
         };
         let context = Context {
             study_goal,
-            language_pack: Arc::new(LanguagePack::new(Default::default(), course)),
+            language_pack: Arc::new(pack_builder::build(Default::default(), course)),
             course,
             timezone: chrono::FixedOffset::east_opt(0).unwrap(),
         };
@@ -5823,11 +5825,11 @@ mod tests {
             );
             pack.sentences.source_gram_frequencies.insert(
                 FrequencySourceId::Movie(id.into()),
-                SourceFrequencyList::new(
-                    populated.then_some((gram, 1)),
-                    total,
-                    &pack.gram_frequencies,
-                ),
+                SourceFrequencyList {
+                    keys: populated.then_some(gram).into_iter().collect(),
+                    counts: populated.then_some(1).into_iter().collect(),
+                    total_count: total,
+                },
             );
         }
         let stats = deck.get_movie_stats();

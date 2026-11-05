@@ -58,7 +58,7 @@ impl Context {
         let Some(gram_def) = grams
             .iter()
             .flat_map(|g| self.language_pack.senses_of(*g))
-            .find_map(|g| self.language_pack.gram_definitions.get(g))
+            .find_map(|g| self.language_pack.definition_metadata(g))
         else {
             return false;
         };
@@ -76,11 +76,14 @@ impl Context {
         let gram_def = grams
             .iter()
             .flat_map(|g| self.language_pack.senses_of(*g))
-            .find_map(|g| self.language_pack.gram_definitions.get(g))?;
+            .find_map(|g| self.language_pack.definition_metadata(g))?;
         let GramDefinition::Dictionary(entry) = gram_def else {
             return None;
         };
-        entry.definitions.first().map(|d| d.native.clone())
+        entry
+            .definitions
+            .first()
+            .map(|d| self.language_pack.definition_text(&d.native))
     }
 }
 

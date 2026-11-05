@@ -409,7 +409,7 @@ async fn later_stages(
         })
     })
     .collect();
-    let frequencies = language_utils::aggregate_sense_frequencies(
+    let frequencies = pack_builder::aggregate_sense_frequencies(
         &crate::frequencies::compute_reading_gram_frequencies(
             &sentences,
             &segmented.gram_vocabulary,

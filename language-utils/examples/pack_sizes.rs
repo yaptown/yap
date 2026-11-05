@@ -112,6 +112,18 @@ fn main() {
         ),
         ("gram_frequencies", false, size_of(&pack.gram_frequencies)),
         ("gram_definitions", false, size_of(&pack.gram_definitions)),
+        ("definition_texts", false, size_of(&pack.definition_texts)),
+        ("definition_lists", false, size_of(&pack.definition_lists)),
+        (
+            "definition_morphology",
+            false,
+            size_of(&pack.definition_morphology),
+        ),
+        (
+            "definition_segments",
+            false,
+            size_of(&pack.definition_segments),
+        ),
         (
             "heteronym_to_grams",
             false,

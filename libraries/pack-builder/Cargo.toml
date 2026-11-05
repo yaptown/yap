@@ -1,0 +1,13 @@
+[package]
+name = "pack-builder"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+omnigram.workspace = true
+serde.workspace = true
+language-utils = { path = "../../language-utils" }
+lasso.workspace = true
+rkyv.workspace = true
+xxhash-rust.workspace = true
+rustc-hash = "2.1"

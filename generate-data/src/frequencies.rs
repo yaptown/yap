@@ -227,7 +227,7 @@ mod tests {
         let per_source =
             compute_per_source_reading_gram_frequencies(&sentences, &sources, &vocabulary);
         assert_eq!(per_source[&source], frequencies);
-        let aggregated = language_utils::aggregate_sense_frequencies(&frequencies);
+        let aggregated = pack_builder::aggregate_sense_frequencies(&frequencies);
         assert_eq!(aggregated.len(), 1);
         assert_eq!((aggregated[0].count, aggregated[0].direct_count), (9, 4));
     }

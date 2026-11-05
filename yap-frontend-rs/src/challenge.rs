@@ -181,7 +181,7 @@ impl ReviewInfo {
                 definitions: language_pack
                     .visible_senses(candidate_gram, target_language)
                     .iter()
-                    .filter_map(|sense| language_pack.gram_definitions.get(sense).cloned())
+                    .filter_map(|sense| language_pack.gram_definition(sense))
                     .map(definition_view)
                     .collect(),
             }
@@ -295,7 +295,7 @@ impl ReviewInfo {
                 .copied()
                 .collect();
             consumed.extend(members.iter().copied());
-            let definition = language_pack.gram_definitions[representative].clone();
+            let definition = language_pack.gram_definition(representative).unwrap();
             let resolved = language_pack.resolve_gram(&representative.gram);
             let label = if matches!(definition, GramDefinition::Phrasebook(_)) {
                 Some(yap_i18n::tr!("challenge-multiword"))
@@ -398,7 +398,7 @@ impl Deck {
                              breakdowns: &mut Vec<Option<Breakdown>>|
          -> usize {
             let idx = defs.len();
-            defs.push(language_pack.gram_definitions.get(gram_spur).cloned());
+            defs.push(language_pack.gram_definition(gram_spur));
             breakdowns.push(language_pack.compute_breakdown(gram_spur.gram));
             idx
         };
@@ -506,8 +506,7 @@ impl Deck {
             native_language: language_pack
                 .sentences
                 .translation_rodeo
-                .resolve(sentence.native_languages.first()?)
-                .to_string(),
+                .resolve_string(sentence.native_languages.first()?),
             parts,
             part_gram_indices,
             gram_definitions_for_lookup,
@@ -582,7 +581,7 @@ impl Deck {
             };
 
             let group_index = gram_definitions_for_lookup.len();
-            let definition = language_pack.gram_definitions.get(&gram_spur).cloned();
+            let definition = language_pack.gram_definition(&gram_spur);
             gram_definitions_for_lookup.push(definition);
             let breakdown = language_pack.compute_breakdown(gram_spur.gram);
             gram_breakdowns_for_lookup.push(breakdown);
@@ -672,7 +671,7 @@ impl Deck {
                 .collect(),
             phrase_definitions: unique_target_language_phrases
                 .iter()
-                .map(|p| language_pack.gram_definitions.get(p).cloned())
+                .map(|p| language_pack.gram_definition(p))
                 .collect(),
             phrase_breakdowns: unique_target_language_phrases
                 .iter()
@@ -680,13 +679,7 @@ impl Deck {
                 .collect(),
             native_translations: native_languages
                 .iter()
-                .map(|n| {
-                    language_pack
-                        .sentences
-                        .translation_rodeo
-                        .resolve(n)
-                        .to_string()
-                })
+                .map(|n| language_pack.sentences.translation_rodeo.resolve_string(n))
                 .collect(),
             audio: AudioRequest {
                 request: TtsRequest {

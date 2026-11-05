@@ -416,7 +416,7 @@ pub async fn process_sentences(
 
 /// Convert tokenizations to Literals without multiword detection.
 /// This is useful when you only need the literal words from sentences
-/// (e.g., for omnigram training) without the heavier multiword matching.
+/// (e.g., for unigram training) without the heavier multiword matching.
 pub fn convert_tokens_to_literals(
     sentences_tokenizations: &BTreeMap<String, Tokenization>,
     language: Language,

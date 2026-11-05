@@ -46,6 +46,7 @@ weblocks.workspace = true
 yap-i18n = { version = "0.1.0", path = "../libraries/yap-i18n" }
 
 [dev-dependencies]
+pack-builder.workspace = true
 wasm-bindgen-test = "0.3.72"
 criterion = { version = "0.8", features = ["html_reports"] }
 tokio = { workspace = true }

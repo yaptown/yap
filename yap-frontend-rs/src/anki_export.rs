@@ -329,9 +329,8 @@ fn word_note(
     bundled: &mut Vec<AnkiBundledMedia>,
 ) -> AnkiNote {
     let senses = pack
-        .gram_definitions
-        .get(&gram)
-        .map(|def| crate::definition_view(def.clone()).senses)
+        .gram_definition(&gram)
+        .map(|def| crate::definition_view(def).senses)
         .unwrap_or_default();
     let audio = if pack
         .sentences
@@ -1714,11 +1713,11 @@ mod tests {
     use super::*;
     use crate::CardIndicator;
     use language_utils::{
-        Atom, ConsolidatedLanguageData, Course, DictionaryEntry, Gram, GramFrequencyList,
-        GramVocabEntry, Heteronym, PartOfSpeech, ReadingGramFrequencyEntry as GramFrequencyEntry,
-        SentenceGram, SentenceGrams, TaggedGram, TargetToNativeWord, Word, WordType,
-        language_pack::LanguagePack,
+        Atom, Course, DictionaryEntry, Gram, GramVocabEntry, Heteronym, PartOfSpeech,
+        ReadingGramFrequencyEntry as GramFrequencyEntry, SentenceGram, SentenceGrams, TaggedGram,
+        TargetToNativeWord, Word, WordType, language_pack::LanguagePack,
     };
+    use pack_builder::{ConsolidatedLanguageData, GramFrequencyList};
     use std::sync::Arc;
     use weapon::AppState;
 
@@ -2121,7 +2120,7 @@ mod tests {
         edit(&mut data);
         let context = crate::Context {
             study_goal: None,
-            language_pack: Arc::new(LanguagePack::new(data, course)),
+            language_pack: Arc::new(pack_builder::build(data, course)),
             course,
             timezone: chrono::FixedOffset::east_opt(0).unwrap(),
         };

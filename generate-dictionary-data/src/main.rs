@@ -271,10 +271,11 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
         if !language_pack.is_visible(*spur_gram, course.target_language) {
             continue;
         }
-        let gram_def = match language_pack.gram_definitions.get(spur_gram) {
+        let gram_def = match language_pack.gram_definition(spur_gram) {
             Some(def) => def,
             None => continue,
         };
+        let gram_def = &gram_def;
 
         let gram = gram_rodeo.resolve(&spur_gram.gram);
         let resolved = gram.resolve(string_rodeo);
@@ -410,7 +411,7 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
                 conjugation_index
                     .entry((lemma_str.clone(), pos_val))
                     .or_default()
-                    .push((word.clone(), morph.clone()));
+                    .push((word.clone(), *morph));
             }
         }
 
@@ -580,15 +581,14 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
         let dt = resolved.to_display_string(target_language);
         let slug = display_text_to_slug.get(&dt).cloned();
         let gloss = language_pack
-            .gram_definitions
-            .get(spur_gram)
+            .definition_metadata(spur_gram)
             .map(|def| match def {
                 GramDefinition::Dictionary(d) => d
                     .definitions
                     .first()
-                    .map(|dd| dd.native.clone())
+                    .map(|dd| language_pack.definition_text(&dd.native))
                     .unwrap_or_default(),
-                GramDefinition::Phrasebook(p) => p.meaning.clone(),
+                GramDefinition::Phrasebook(p) => language_pack.definition_text(&p.meaning),
             })
             .filter(|g| !g.is_empty());
         if slug.is_some() || gloss.is_some() {
@@ -752,13 +752,7 @@ fn resolve_sentence(
     let translation = language_pack
         .translations_of(*sentence_spur)
         .first()
-        .map(|t| {
-            language_pack
-                .sentences
-                .translation_rodeo
-                .resolve(t)
-                .to_string()
-        });
+        .map(|t| language_pack.sentences.translation_rodeo.resolve_string(t));
 
     // Look up sentence source for attribution
     let source = language_pack
@@ -1099,9 +1093,10 @@ mod tests {
     #[test]
     fn sentence_rendering_preserves_cross_gram_overrides_and_capitalization() {
         use language_utils::{
-            Atom, ConsolidatedLanguageData, ControlToken, Gram, GramVocabEntry, OtherWord,
-            OtherWordType, ReadingTaggedGram, SentenceGrams, TaggedGram, Whitespace, Word,
+            Atom, ControlToken, Gram, GramVocabEntry, OtherWord, OtherWordType, ReadingTaggedGram,
+            SentenceGrams, TaggedGram, Whitespace, Word,
         };
+        use pack_builder::ConsolidatedLanguageData;
         let word = |text: &str| {
             Atom::Tok(Word {
                 text: text.to_owned(),
@@ -1123,7 +1118,7 @@ mod tests {
             target_language: Language::French,
             native_language: Language::English,
         };
-        let pack = LanguagePack::new(
+        let pack = pack_builder::build(
             ConsolidatedLanguageData {
                 target_language_sentences: vec![text.into()],
                 translations: vec![(text.into(), vec!["Hello friend".into()])],

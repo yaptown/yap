@@ -4,18 +4,19 @@ use language_utils::{
     Atom, EncodedSentence, Gram, GramInterners, GramVocabEntry, Language, Literal, SpurGram,
     literals_to_atoms,
 };
-use omnigram::WhitespacePredictionSummary;
-use omnigram::unigram::{Seq, UnigramTrainer, UnigramTrainerConfig};
+mod whitespace;
+use omnigram::unigram::{Seq, UnigramModel, UnigramTrainer, UnigramTrainerConfig};
 use std::collections::{BTreeMap, HashSet};
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::Path;
+use whitespace::WhitespacePredictionSummary;
 
 /// The trained unigram model, kept alive so sentences minted after training
 /// (e.g. homophone practice) can be encoded with the exact same machinery as
 /// the corpus.
 pub struct SentenceEncoder {
-    model: omnigram::unigram::UnigramModel<Atom<lasso::Spur>>,
+    model: UnigramModel<Atom<lasso::Spur>>,
 }
 
 impl SentenceEncoder {
@@ -237,7 +238,7 @@ fn write_vocabulary(gram_vocabulary: &[GramVocabEntry<String>], output_dir: &Pat
 
 /// Write human-readable supertokens file
 fn write_supertokens_txt(
-    model: &omnigram::unigram::UnigramModel<Atom<lasso::Spur>>,
+    model: &UnigramModel<Atom<lasso::Spur>>,
     reader: &lasso::RodeoReader,
     language: Language,
     output_dir: &Path,

@@ -94,7 +94,7 @@ impl Deck {
         let pack = &self.context.language_pack;
         let language = self.context.course.target_language;
         let (sense, _) = pack.sense_frequencies.get_index(frequency_index)?;
-        let definition = definition_view(pack.gram_definitions.get(sense)?.clone());
+        let definition = definition_view(pack.gram_definition(sense)?);
         let display_text = pack.resolve_gram(&sense.gram).to_display_string(language);
         let rank = yap_i18n::format_count(frequency_index as u32 + 1);
         Some(AssumedKnownWord {

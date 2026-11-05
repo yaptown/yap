@@ -1,4 +1,4 @@
-//! Stats test for omnigram tokenization on real French data.
+//! Stats test for unigram tokenization on real French data.
 //!
 //! Run with: cargo test -p generate-data --release --test tokenization_stats -- --nocapture
 

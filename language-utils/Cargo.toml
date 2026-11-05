@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+omnigram.workspace = true
 bridgerton.workspace = true
 lexide-types.workspace = true
 schemars.workspace = true

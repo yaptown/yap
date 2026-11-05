@@ -1751,6 +1751,7 @@ impl FeatureSet for Polite {
     rkyv::Serialize,
     rkyv::Deserialize,
     Default,
+    Copy,
 )]
 pub struct Morphology {
     pub gender: Option<Gender>,

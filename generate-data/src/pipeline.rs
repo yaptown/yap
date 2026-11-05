@@ -608,7 +608,7 @@ pub async fn segment_corpus(
     timer.lap("tokenization fork");
 
     // Convert tokenizations to literals (without multiword detection)
-    // Multiword detection will happen later, after omnigram training
+    // Multiword detection will happen later, after unigram training
     let sentence_literals =
         crate::nlp::convert_tokens_to_literals(&sentences_tokenizations, course.target_language);
 
@@ -646,7 +646,7 @@ pub async fn segment_corpus(
         crate::nlp::convert_tokens_to_literals(&restricted_tokenizations, course.target_language);
     timer.lap("literals + filters");
 
-    // Merge restricted literals into sentence_literals for omnigram training.
+    // Merge restricted literals into sentence_literals for unigram training.
     // BTreeMap insert means duplicates (sentences in both sets) are naturally handled.
     let mut all_sentence_literals = sentence_literals.clone();
     for (text, lits) in &restricted_literals {
@@ -674,7 +674,7 @@ pub async fn segment_corpus(
             })
             .collect();
 
-    // Convert multiword term tokenizations to grams for seeding into omnigram
+    // Convert multiword term tokenizations to grams for seeding into unigram
     timer.lap("multiword term filtering");
     let multiword_term_literals = crate::nlp::convert_tokens_to_literals(
         &multiword_terms_tokenizations,
@@ -706,7 +706,7 @@ pub async fn segment_corpus(
         &corpus_dir,
         &seed_grams,
     );
-    timer.lap("omnigram training");
+    timer.lap("unigram training");
 
     // Get set of terms that are known to be discontinuous (had "..." in source files)
     let discontinuous_terms = crate::wiktionary_terms::get_discontinuous_terms(&course);
@@ -756,7 +756,7 @@ pub async fn segment_corpus(
                             .collect(),
                     ));
                 }
-                // For omnigram-discovered grams without lexide tokens,
+                // For unigram-discovered grams without lexide tokens,
                 // build lemma+POS patterns from the gram's atoms directly
                 if gram.len() <= 1 {
                     return None;
@@ -845,7 +845,7 @@ pub async fn segment_corpus(
         &term_grams,
     )?;
 
-    // Run multiword detection (after omnigram training)
+    // Run multiword detection (after unigram training)
     let mut multiword_matches = crate::nlp::generate_nlp_sentences(
         &sentence_literals,
         &sentences_tokenizations,
@@ -1233,7 +1233,7 @@ mod tests {
             })
             .collect();
         let words = |sentences: &[_]| {
-            language_utils::aggregate_sense_frequencies(
+            pack_builder::aggregate_sense_frequencies(
                 &crate::frequencies::compute_reading_gram_frequencies(sentences, &vocabulary),
             )
             .into_iter()

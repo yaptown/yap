@@ -46,11 +46,18 @@ pub(crate) fn render(
     ControlFlow::Continue(())
 }
 
-impl<T: Into<Symbol>> Projection<T> for SentenceText {
+impl<A: lasso::SymbolTable + 'static> Projection<A> for SentenceText
+where
+    for<'a> A::Item<'a>: Into<Symbol>,
+{
     type Context<'a> = RenderContext<'a>;
     type Query = str;
 
-    fn hash_row(cx: &RenderContext<'_>, row: impl Iterator<Item = T>, h: &mut ProjectionHasher) {
+    fn hash_row<'a>(
+        cx: &RenderContext<'_>,
+        row: impl Iterator<Item = A::Item<'a>>,
+        h: &mut ProjectionHasher,
+    ) {
         let _ = render(cx, row, |piece| {
             h.write(piece.as_bytes());
             ControlFlow::Continue(())
@@ -61,7 +68,11 @@ impl<T: Into<Symbol>> Projection<T> for SentenceText {
         h.write(q.as_bytes());
     }
 
-    fn matches(cx: &RenderContext<'_>, row: impl Iterator<Item = T>, mut q: &str) -> bool {
+    fn matches<'a>(
+        cx: &RenderContext<'_>,
+        row: impl Iterator<Item = A::Item<'a>>,
+        mut q: &str,
+    ) -> bool {
         render(cx, row, |piece| match q.strip_prefix(piece) {
             Some(rest) => {
                 q = rest;
