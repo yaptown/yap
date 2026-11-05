@@ -1,9 +1,9 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-dire quelque chose	filled	10396	10	12	0.83	yes	"Au pas de course", ça veut dire "cours".	dire … cours
+dire quelque chose	filled	10399	10	12	0.83	yes	"Au pas de course", ça veut dire "cours".	dire … cours
 dire quelque chose	clitic	2660	10	12	0.83	yes	Je croyais t'avoir dit de ne pas venir ici.	t' … dit
 sa mère	clitic	2390	12	12	1.00	yes		
-sortir quelque chose	filled	788	9	12	0.75	yes	Je croyais que j'allais m'en sortir tout seul.	m' … sortir
-arriver à quelqu'un	filled	690	7	12	0.58	no	Hier, je suis arrivé à Tokyo.	arrivé … à … Tokyo
+sortir quelque chose	filled	789	9	12	0.75	yes	Je croyais que j'allais m'en sortir tout seul.	m' … sortir
+arriver à quelqu'un	filled	691	7	12	0.58	no	Hier, je suis arrivé à Tokyo.	arrivé … à … Tokyo
 arriver à quelqu'un	clitic	615	12	12	1.00	yes		
 sortir quelque chose	clitic	397	8	12	0.67	yes	Comment vas-tu t'en sortir sans boulot ?	t' … sortir
 désolé de faire quelque chose	infinitive	264	12	12	1.00	yes		
