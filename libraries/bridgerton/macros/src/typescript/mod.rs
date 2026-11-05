@@ -24,3 +24,32 @@ pub fn declaration(input: &syn::DeriveInput, attrs: ContainerAttrs) -> syn::Resu
     container.check()?;
     Ok(text)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn defaults_are_emitted_without_becoming_parameter_names() {
+        let input =
+            syn::parse_quote! { struct Defaulted<T = String, U = T> { first: T, second: U } };
+        let declaration = declaration(&input, ContainerAttrs::default()).unwrap();
+        assert_eq!(
+            declaration,
+            "export interface Defaulted<T = string, U = T> {\n    first: T;\n    second: U;\n}"
+        );
+        let input = syn::parse_quote! { struct ViaDefault<T = String, U = T> { value: U, #[serde(skip)] marker: std::marker::PhantomData<T> } };
+        let indirect = super::declaration(&input, ContainerAttrs::default()).unwrap();
+        assert!(indirect.contains("ViaDefault<T = string, U = T>"));
+        let input = syn::parse_quote! { enum Choice<T = String> { Value(T), Empty } };
+        let declaration = super::declaration(
+            &input,
+            ContainerAttrs {
+                namespace: true,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        assert!(declaration.contains("Choice<T = string>"));
+        assert!(!declaration.contains("__ChoiceT"));
+    }
+}

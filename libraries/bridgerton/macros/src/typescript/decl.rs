@@ -5,10 +5,35 @@ use super::comments::clean_comments;
 use super::{TsType, TsTypeElement, TsTypeLit, comments::write_doc_comments};
 
 #[derive(Debug, Clone)]
+pub struct TsTypeParam {
+    pub name: String,
+    pub default: Option<TsType>,
+}
+
+impl From<String> for TsTypeParam {
+    fn from(name: String) -> Self {
+        Self {
+            name,
+            default: None,
+        }
+    }
+}
+
+impl Display for TsTypeParam {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)?;
+        if let Some(default) = &self.default {
+            write!(f, " = {default}")?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct TsTypeAliasDecl {
     pub id: String,
     pub export: bool,
-    pub type_params: Vec<String>,
+    pub type_params: Vec<TsTypeParam>,
     pub type_ann: TsType,
     pub comments: Vec<String>,
 }
@@ -29,7 +54,12 @@ impl Display for TsTypeAliasDecl {
         let right = if self.type_params.is_empty() {
             self.id.clone()
         } else {
-            let type_params = self.type_params.join(", ");
+            let type_params = self
+                .type_params
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(", ");
             format!("{}<{}>", self.id, type_params)
         };
 
@@ -45,7 +75,7 @@ impl Display for TsTypeAliasDecl {
 #[derive(Debug)]
 pub struct TsInterfaceDecl {
     pub id: String,
-    pub type_params: Vec<String>,
+    pub type_params: Vec<TsTypeParam>,
     pub extends: Vec<TsType>,
     pub body: Vec<TsTypeElement>,
     pub comments: Vec<String>,
@@ -58,7 +88,12 @@ impl Display for TsInterfaceDecl {
         write!(f, "export interface {}", self.id)?;
 
         if !self.type_params.is_empty() {
-            let type_params = self.type_params.join(", ");
+            let type_params = self
+                .type_params
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(", ");
             write!(f, "<{type_params}>")?;
         }
 
@@ -92,7 +127,7 @@ impl Display for TsInterfaceDecl {
 #[derive(Debug)]
 pub struct TsEnumDecl {
     pub id: String,
-    pub type_params: Vec<String>,
+    pub type_params: Vec<TsTypeParam>,
     pub members: Vec<TsTypeAliasDecl>,
     pub namespace: bool,
     pub comments: Vec<String>,
@@ -188,6 +223,11 @@ impl TsEnumDecl {
 impl Display for TsEnumDecl {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.namespace {
+            let parameter_names = self
+                .type_params
+                .iter()
+                .map(|p| p.name.clone())
+                .collect::<Vec<_>>();
             let mut type_refs = self
                 .members
                 .iter()
@@ -197,7 +237,7 @@ impl Display for TsEnumDecl {
 
                     type_refs
                         .iter()
-                        .filter(|(name, _)| !self.type_params.contains(name))
+                        .filter(|(name, _)| !parameter_names.contains(name))
                         .map(|(name, type_args)| {
                             let mut type_refs = Vec::new();
                             let ts_type = TsEnumDecl::replace_type_params(
@@ -211,7 +251,7 @@ impl Display for TsEnumDecl {
                             TsTypeAliasDecl {
                                 id: format!("__{}{}", self.id, name),
                                 export: false,
-                                type_params: type_refs,
+                                type_params: type_refs.into_iter().map(Into::into).collect(),
                                 type_ann: ts_type,
                                 comments: vec![],
                             }
@@ -243,7 +283,7 @@ impl Display for TsEnumDecl {
                         type_ann: elem
                             .type_ann
                             .clone()
-                            .prefix_type_refs(&prefix, &self.type_params),
+                            .prefix_type_refs(&prefix, &parameter_names),
                         comments: elem.comments.clone(),
                     })
                     .map(|elem| format!("\n{}", elem.to_string_with_indent(4)))

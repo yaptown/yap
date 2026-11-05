@@ -10,7 +10,7 @@ use super::{
     attrs::FieldAttrs,
     comments::extract_doc_comments,
     container::Container,
-    decl::{Decl, TsEnumDecl, TsInterfaceDecl, TsTypeAliasDecl},
+    decl::{Decl, TsEnumDecl, TsInterfaceDecl, TsTypeAliasDecl, TsTypeParam},
 };
 
 enum ParsedFields {
@@ -59,12 +59,31 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn create_relevant_type_params(&self, type_ref_names: HashSet<&String>) -> Vec<String> {
-        self.container
+    fn create_relevant_type_params(&self, type_ref_names: HashSet<&String>) -> Vec<TsTypeParam> {
+        let mut needed: HashSet<String> = type_ref_names.into_iter().cloned().collect();
+        let params: Vec<_> = self
+            .container
             .generics()
             .type_params()
-            .map(|p| p.ident.to_string())
-            .filter(|t| type_ref_names.contains(t))
+            .map(|p| TsTypeParam {
+                name: p.ident.to_string(),
+                default: p
+                    .default
+                    .as_ref()
+                    .map(|ty| TsType::from_syn_type(&self.container.attrs.ty_config, ty)),
+            })
+            .collect();
+        // Defaults may refer to earlier parameters even when fields do not.
+        for param in params.iter().rev() {
+            if needed.contains(&param.name)
+                && let Some(default) = &param.default
+            {
+                needed.extend(default.type_ref_names().into_iter().cloned());
+            }
+        }
+        params
+            .into_iter()
+            .filter(|p| needed.contains(&p.name))
             .collect()
     }
 
@@ -197,7 +216,7 @@ impl<'a> Parser<'a> {
             (
                 TsType::Override {
                     type_override: t.clone(),
-                    type_params,
+                    type_params: type_params.into_iter().map(|p| p.name).collect(),
                 },
                 Some(ts_attrs),
             )

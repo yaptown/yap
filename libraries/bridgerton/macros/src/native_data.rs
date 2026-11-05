@@ -158,6 +158,32 @@ pub fn expand(item: Item) -> syn::Result<Tokens> {
     let params = generics.type_params().map(|p| &p.ident).collect::<Vec<_>>();
     let (impl_generics, ty_generics, where_clause) = bounded.split_for_impl();
     let label = name.to_string().trim_start_matches("r#").to_owned();
+    let defaults = generics
+        .type_params()
+        .enumerate()
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .take_while(|(_, p)| p.default.is_some())
+        .map(|(index, p)| {
+            let default = p.default.as_ref().unwrap();
+            let actual = &p.ident;
+            let length = index + 1;
+            quote! {
+                if arguments.len() == #length
+                    && ::core::any::type_name::<#actual>() == ::core::any::type_name::<#default>()
+                {
+                    arguments.pop();
+                }
+            }
+        })
+        .collect::<Vec<_>>();
+    let omit_defaults = (!defaults.is_empty()).then(|| {
+        quote! {
+            let mut arguments = arguments;
+            #(#defaults)*
+        }
+    });
     Ok(quote! {
         impl #impl_generics ::bridgerton::value::Value for #name #ty_generics #where_clause {
             fn read(reader:&mut ::bridgerton::value::Reader<'_>)->Result<Self,::bridgerton::Error>{reader.nested(|reader|{#read})}
@@ -172,6 +198,7 @@ pub fn expand(item: Item) -> syn::Result<Tokens> {
         impl #impl_generics ::bridgerton::schema::NativeType for #name #ty_generics #where_clause {
             fn native_type(registry:&mut ::bridgerton::schema::Registry)->::bridgerton::schema::Type {
                 let arguments=vec![#(<#params as ::bridgerton::schema::NativeType>::native_type(registry)),*];
+                #omit_defaults
                 registry.named::<Self>(#label,arguments,|registry|{#shape})
             }
         }
