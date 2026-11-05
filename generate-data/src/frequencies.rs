@@ -2,7 +2,7 @@ use language_utils::{FrequencySourceId, Gram, GramVocabEntry, SentenceGram};
 use language_utils::{ReadingGramFrequencyEntry, ReadingTaggedGram};
 use rustc_hash::FxHashMap;
 use std::cmp::Reverse;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::fs::File;
 use std::io::Write;
 
@@ -34,8 +34,8 @@ pub fn compute_per_source_reading_gram_frequencies(
     sentence_to_sources: &FxHashMap<String, Vec<FrequencySourceId>>,
     gram_vocabulary: &[GramVocabEntry<String>],
 ) -> FxHashMap<FrequencySourceId, Vec<ReadingGramFrequencyEntry<String>>> {
-    // Collect all unique source IDs
-    let all_source_ids: HashSet<&FrequencySourceId> = sentence_to_sources
+    // Stable insertion order also makes the serialized outer frequency map repeatable.
+    let all_source_ids: BTreeSet<&FrequencySourceId> = sentence_to_sources
         .values()
         .flat_map(|ids| ids.iter())
         .collect();
