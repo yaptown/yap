@@ -644,7 +644,7 @@
 {"sentence":"このスキャンダルにより我が社はひどくイメージダウンしてしまった。","failure_count":3}
 {"sentence":"このステーキは靴の皮と同じ位固い。","failure_count":1}
 {"sentence":"このスーツはまだまだ着られる。","failure_count":3}
-{"sentence":"このスープは水の様に、さらさらしています。","failure_count":2}
+{"sentence":"このスープは水の様に、さらさらしています。","failure_count":3}
 {"sentence":"このセーターを着てごらんなさい。","failure_count":1}
 {"sentence":"このドアが、どうしても開かなかったんです。","failure_count":3}
 {"sentence":"このドアがどうしても開かないんだ。","failure_count":3}
