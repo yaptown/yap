@@ -47,9 +47,9 @@ fn main() {
             size_of(&pack.sentences.encoded_sentences),
         ),
         (
-            "sentences_containing_gram_index",
+            "sentence_index",
             true,
-            size_of(&pack.sentences.sentences_containing_gram_index),
+            size_of(&pack.sentences.sentence_index),
         ),
         (
             "sentence_sources",

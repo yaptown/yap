@@ -650,19 +650,29 @@ pub fn build(language_data: ConsolidatedLanguageData, course: Course) -> Languag
                 )
             })
             .collect();
-        let mut sentences_containing_gram_index: FxHashMap<
-            TaggedGram<SpurGram>,
-            Vec<SentenceSpur>,
-        > = FxHashMap::default();
-        for (text, sentence) in &encoded {
-            let key = sentence_key(text);
-            for gram in sentence.all_grams() {
-                sentences_containing_gram_index
-                    .entry(gram.sense)
-                    .or_default()
-                    .push(key);
+        let mut needed = vec![false; written_ease_order.grams.len()];
+        for sense in sense_frequencies.keys() {
+            if let Some(keys) = reading_keys.get(sense) {
+                for key in keys {
+                    needed[key.index() as usize] = true;
+                }
             }
         }
+        let mut by_key = vec![Vec::new(); needed.len()];
+        for slot in 0..encoded_sentences.len() {
+            let sentence = SentenceSpur::try_from_usize(slot).unwrap();
+            let id = u32::try_from(slot).unwrap();
+            for symbol in encoded_sentences.try_resolve(&sentence).unwrap() {
+                if let language_utils::sentence_codec::SymbolKind::Gram(key) = symbol.kind() {
+                    let k = key.index() as usize;
+                    if needed[k] && by_key[k].last() != Some(&id) {
+                        by_key[k].push(id);
+                    }
+                }
+            }
+        }
+        let sentence_index =
+            language_utils::sentence_index::SentenceIndex::new(encoded_sentences.len(), &by_key);
         let definition_texts = definition_job.join().unwrap();
         let definitions =
             definition_text::intern_lists(gram_definitions.into_iter().map(|(key, definition)| {
@@ -716,7 +726,7 @@ pub fn build(language_data: ConsolidatedLanguageData, course: Course) -> Languag
                 books,
                 sentence_sources,
                 encoded_sentences,
-                sentences_containing_gram_index,
+                sentence_index,
                 human_audio,
                 pronunciation_audio,
                 strokes: language_data.strokes,
@@ -804,7 +814,7 @@ fn spur_space_fingerprint(
     written: &WrittenEaseOrder,
 ) -> u64 {
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-    hasher.update(b"sentence-expression-index-v5-interned-definitions-xxh3");
+    hasher.update(b"sentence-expression-index-v6-elias-fano");
     hasher.update(&(core_strings.len() as u64).to_le_bytes());
     hasher.update(&(core_grams.len() as u64).to_le_bytes());
     for (_, s) in core_strings.iter() {

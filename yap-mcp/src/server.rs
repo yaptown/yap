@@ -457,10 +457,8 @@ impl YapState {
                     );
                 };
                 let contains = pack
-                    .sentences
-                    .sentences_containing_gram_index
-                    .get(&interned)
-                    .is_some_and(|sentences| sentences.contains(&spur));
+                    .sentences_containing(&interned)
+                    .any(|candidate| candidate == spur);
                 if !contains {
                     return Err(format!(
                         "that sentence doesn't contain «{display}» — pick one from get_sentences \
@@ -540,12 +538,7 @@ impl YapState {
             .collect();
 
         let pack = self.pack();
-        let all_containing = pack
-            .sentences
-            .sentences_containing_gram_index
-            .get(&interned)
-            .cloned()
-            .unwrap_or_default();
+        let all_containing: Vec<_> = pack.sentences_containing(&interned).collect();
         let other_pool: Vec<SentenceSpur> = all_containing
             .iter()
             .copied()

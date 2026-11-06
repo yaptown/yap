@@ -332,15 +332,7 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
         // Collect example sentences, prioritizing those where the gram appears
         // as a direct encoded gram over those where it only appears via multiword terms.
         let sentence_spurs: Vec<language_utils::SentenceSpur> = {
-            let mut seen_sentences = std::collections::HashSet::new();
-            let all_sentences: Vec<language_utils::SentenceSpur> = language_pack
-                .sentences
-                .sentences_containing_gram_index
-                .get(spur_gram)
-                .into_iter()
-                .flat_map(|sentences| sentences.iter().copied())
-                .filter(|s| seen_sentences.insert(*s))
-                .collect();
+            let all_sentences = language_pack.sentences_containing(spur_gram);
 
             // Partition: direct gram matches first, then multiword matches
             let mut direct = Vec::new();

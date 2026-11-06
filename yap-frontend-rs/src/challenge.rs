@@ -547,10 +547,8 @@ impl Deck {
     ) -> Option<TranslateComprehensibleSentence> {
         let language_pack: &Arc<LanguagePack> = &self.context.language_pack;
         if !language_pack
-            .sentences
-            .sentences_containing_gram_index
-            .get(&gram)
-            .is_some_and(|sentences| sentences.contains(&sentence))
+            .sentences_containing(&gram)
+            .any(|candidate| candidate == sentence)
         {
             return None;
         }

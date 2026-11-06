@@ -12,6 +12,7 @@ pub use word_prefix::{compute_word_prefix, prefixed_text};
 pub mod indexmap;
 pub mod language_pack;
 pub mod sentence_codec;
+pub mod sentence_index;
 pub mod sentence_text;
 pub use language_pack::{
     DefinitionText, DefinitionTextSpur, PACKS_ORIGIN, SentenceSpur, SentenceText, TranslationSpur,

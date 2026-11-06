@@ -532,6 +532,29 @@ impl LanguagePack {
         self.gram_rodeo.resolve(gram).resolve(&self.string_rodeo)
     }
 
+    /// Sentences containing a course sense, in ascending key order without duplicates.
+    pub fn sentences_containing(
+        &self,
+        sense: &TaggedGram<SpurGram>,
+    ) -> impl Iterator<Item = SentenceSpur> + '_ {
+        let keys = self.reading_keys(sense);
+        let (single, merged) = if let [key] = keys {
+            (
+                Some(self.sentences.sentence_index.sentences(*key)),
+                Vec::new(),
+            )
+        } else {
+            let mut sentences: Vec<_> = keys
+                .iter()
+                .flat_map(|key| self.sentences.sentence_index.sentences(*key))
+                .collect();
+            sentences.sort_unstable();
+            sentences.dedup();
+            (None, sentences)
+        };
+        single.into_iter().flatten().chain(merged)
+    }
+
     /// Sentences containing the required sense (if any) whose other learnable
     /// symbols pass the caller's rank-bitset test. Translations are a build invariant.
     pub fn comprehensible_sentences(
@@ -540,18 +563,14 @@ impl LanguagePack {
         known_rank: impl Fn(u32) -> bool,
     ) -> Vec<SentenceSpur> {
         let required_keys = required_gram.map_or(&[][..], |gram| self.reading_keys(gram));
-        // Preserve the gram index's candidate order; full-corpus searches use slot order.
-        let candidate_sentences: &[SentenceSpur] = if let Some(required) = required_gram {
-            match self.sentences.sentences_containing_gram_index.get(required) {
-                Some(sentences) => sentences,
-                None => return Vec::new(),
-            }
-        } else {
-            &self.sentence_keys().collect::<Vec<_>>()
-        };
+        // Both indexed and full-corpus candidates are in sentence-key order.
+        let candidate_sentences: Box<dyn Iterator<Item = SentenceSpur> + '_> =
+            if let Some(required) = required_gram {
+                Box::new(self.sentences_containing(required))
+            } else {
+                Box::new(self.sentence_keys())
+            };
         candidate_sentences
-            .iter()
-            .copied()
             .filter(|&sentence| {
                 self.sentence_is_comprehensible(sentence, required_keys, &known_rank)
             })
@@ -843,7 +862,7 @@ pub struct LanguagePackSentences {
     pub books: FxHashMap<String, BookMetadata>,
     pub sentence_sources: SentenceSources,
     pub encoded_sentences: lasso::CompressedRodeoReader<SentenceSpur, Vec<Symbol>, SentenceText>,
-    pub sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<SentenceSpur>>,
+    pub sentence_index: crate::sentence_index::SentenceIndex,
     pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
     pub pronunciation_audio: FxHashMap<String, PronunciationClip>,
 }
@@ -867,7 +886,7 @@ impl LanguagePackSentences {
             books: FxHashMap::default(),
             sentence_sources: SentenceSources::default(),
             encoded_sentences: lasso::CompressedRodeoReader::default(),
-            sentences_containing_gram_index: FxHashMap::default(),
+            sentence_index: crate::sentence_index::SentenceIndex::default(),
             human_audio: FxHashMap::default(),
             pronunciation_audio: FxHashMap::default(),
         }
