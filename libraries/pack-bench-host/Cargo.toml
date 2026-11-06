@@ -1,0 +1,12 @@
+[package]
+name = "pack-bench-host"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+language-utils = { path = "../../language-utils" }
+wasmtime = { version = "49.0.5", default-features = false, features = ["cranelift", "runtime", "std"] }
+
+[dev-dependencies]
+pack-builder.workspace = true

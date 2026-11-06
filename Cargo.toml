@@ -29,6 +29,8 @@ members = [
     "libraries/phoneme-verify",
     "libraries/omnigram",
     "libraries/pack-builder",
+    "libraries/pack-bench",
+    "libraries/pack-bench-host",
     "libraries/user-metrics",
     "libraries/google-speech",
     "libraries/audio-codec",
