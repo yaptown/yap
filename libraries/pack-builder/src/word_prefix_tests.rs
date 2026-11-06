@@ -87,6 +87,7 @@ fn cross_gram_pages_and_prefixed_text_survive_split() {
             target_language: Language::French,
             native_language: Language::English,
         },
+        None,
     );
     let a = pack.resolve_entry(&est).unwrap();
     let b = pack.resolve_entry(&phrase).unwrap();

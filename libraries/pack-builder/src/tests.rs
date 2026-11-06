@@ -8,10 +8,15 @@ mod sense_tests {
         assert_eq!(senses[0].sense.unwrap().get(), 2);
         assert_eq!(pack.visible_senses(bare, Language::English), senses);
         assert_eq!(pack.redundant_with(senses[0]), vec![senses[0]]);
-        pack.sentences.redundant_senses.insert(
-            pack.sentences.prefixed_text[&bare],
-            vec![vec![senses[1], senses[0]]],
+        let mut data = data_with_surface(&[(2, 20), (1, 10), (3, 5)], "bank");
+        data.redundant_senses.insert(
+            "bank".into(),
+            vec![vec![
+                senses[1].map(|_| gram("bank")),
+                senses[0].map(|_| gram("bank")),
+            ]],
         );
+        pack = build(data, fixture_course(), None);
         let standalone = TaggedGram {
             gram: bare,
             sense: NonZeroU32::new(3),
@@ -30,9 +35,8 @@ mod sense_tests {
         let LanguagePack {
             core, sentences, ..
         } = pack;
-        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&sentences).unwrap();
-        let sentences =
-            rkyv::from_bytes::<LanguagePackSentences, rkyv::rancor::Error>(&bytes).unwrap();
+        let bytes = sentences.borrow_owner().clone();
+        let sentences = PackSentences::from_bytes(bytes).unwrap();
         let core = LanguagePack::from_parts(core, None);
         let bare = core.intern_gram(&gram("bank")).unwrap();
         assert!(core.sentences.redundant_senses.is_empty());
@@ -50,9 +54,12 @@ mod sense_tests {
 
     #[test]
     fn ease_order_is_deterministic_and_independent_of_frequency_order() {
-        let entries = [(3, 4.0), (2, 1.0), (1, 4.0)];
-        let a = ease_order(entries.into_iter());
-        let b = ease_order(entries.into_iter().rev());
+        let entries: [(u8, f32); 3] = [(3, 4.0), (2, 1.0), (1, 4.0)];
+        let a = rkyv::to_bytes::<rkyv::rancor::Error>(&ease_order(entries.into_iter())).unwrap();
+        let b =
+            rkyv::to_bytes::<rkyv::rancor::Error>(&ease_order(entries.into_iter().rev())).unwrap();
+        let a = rkyv::access::<ArchivedEaseOrder<u8>, rkyv::rancor::Error>(&a).unwrap();
+        let b = rkyv::access::<ArchivedEaseOrder<u8>, rkyv::rancor::Error>(&b).unwrap();
         assert_eq!(a.iter_from(0).collect::<Vec<_>>(), vec![1, 3, 2]);
         assert_eq!(
             a.iter_from(0).collect::<Vec<_>>(),
@@ -66,15 +73,17 @@ mod sense_tests {
         assert_eq!(a.partition_point(|ease| ease >= 5.0), 0);
         assert_eq!(a.partition_point(|ease| ease >= 0.0), 3);
         assert_eq!(a.iter_from(3).count(), 0);
-        let empty = ease_order::<u32>(std::iter::empty());
+        let bytes =
+            rkyv::to_bytes::<rkyv::rancor::Error>(&ease_order::<u8>(std::iter::empty())).unwrap();
+        let empty = rkyv::access::<ArchivedEaseOrder<u8>, rkyv::rancor::Error>(&bytes).unwrap();
         assert_eq!(empty.partition_point(|_| true), 0);
         assert_eq!(empty.iter_from(0).count(), 0);
     }
 
     #[test]
     fn compressed_sentences_survive_pack_serialization() {
-        let mut pack = pack_with_senses(&[(0, 30), (1, 20), (2, 10)]);
-        pack.sentences.pronunciation_audio.insert(
+        let mut data = data_with_surface(&[(0, 30), (1, 20), (2, 10)], "bank");
+        data.pronunciation_audio.insert(
             "cue".into(),
             PronunciationClip {
                 audio: Audio {
@@ -83,6 +92,7 @@ mod sense_tests {
                 segments: vec![],
             },
         );
+        let pack = build(data, fixture_course(), None);
         assert!(
             LanguagePack::from_parts(pack.core.clone(), None)
                 .sentences
@@ -91,26 +101,21 @@ mod sense_tests {
         );
         // The builder also compares every decoded sentence with its input in tests.
         let expected: Vec<_> = pack.decoded_sentences().collect();
-        let core = rkyv::to_bytes::<rkyv::rancor::Error>(&*pack.core).unwrap();
-        let sentences = rkyv::to_bytes::<rkyv::rancor::Error>(&pack.sentences).unwrap();
+        let core = pack.core.borrow_owner().clone();
+        let sentences = pack.sentences.borrow_owner().clone();
         let restored = LanguagePack::from_parts(
-            rkyv::from_bytes::<LanguagePackCore, rkyv::rancor::Error>(&core).unwrap(),
-            Some(
-                rkyv::from_bytes::<LanguagePackSentences, rkyv::rancor::Error>(&sentences).unwrap(),
-            ),
+            PackCore::from_bytes(core).unwrap(),
+            Some(PackSentences::from_bytes(sentences).unwrap()),
         );
         assert_eq!(restored.decoded_sentences().collect::<Vec<_>>(), expected);
-        assert_eq!(
-            restored.sentences.pronunciation_audio,
-            pack.sentences.pronunciation_audio
-        );
+        assert_eq!(restored.sentences.bytes(), pack.sentences.bytes());
     }
 
     #[test]
     fn stored_ease_orders_and_senses_agree_with_frequencies() {
         let pack = pack();
-        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&*pack.core).unwrap();
-        let core = rkyv::from_bytes::<LanguagePackCore, rkyv::rancor::Error>(&bytes).unwrap();
+        let bytes = pack.core.borrow_owner().clone();
+        let core = PackCore::from_bytes(bytes).unwrap();
         let loaded = LanguagePack::from_parts(core, None);
         for pack in [&pack, &loaded] {
             let bare = pack.intern_gram(&gram("bank")).unwrap();
@@ -120,15 +125,19 @@ mod sense_tests {
                     .resolved(pack)
                     .map(|(gram, frequency)| (*gram, *frequency))
                     .collect(),
-                total_count: pack.gram_frequencies.total_count,
+                total_count: pack.gram_frequencies.total_count.to_native(),
             };
             let (written, listening) = ease_orders(&frequencies);
             assert_eq!(pack.senses, sense_index(&pack.sense_frequencies));
             assert_eq!(
                 pack.written_ease_order.iter_from(0).collect::<Vec<_>>(),
-                written.iter_from(0).collect::<Vec<_>>()
+                written
+                    .entries
+                    .iter()
+                    .map(|(key, _)| *key)
+                    .collect::<Vec<_>>()
             );
-            for (rank, gram) in written.iter_from(0).enumerate() {
+            for (rank, gram) in written.entries.iter().map(|(key, _)| *key).enumerate() {
                 assert_eq!(pack.written_ease_order.rank(&gram), Some(rank as u32));
             }
             assert_eq!(pack.listening_ease_order.entries, listening.entries);
@@ -141,10 +150,15 @@ mod sense_tests {
 
     #[test]
     fn listening_frequency_sums_all_sense_counts() {
-        let mut pack = pack();
+        let mut data = data_with_surface(&[(2, 20), (1, 10)], "bank");
+        data.gram_frequencies
+            .entries
+            .iter_mut()
+            .find(|entry| entry.gram.sense.sense == NonZeroU32::new(1))
+            .unwrap()
+            .direct_count = 7;
+        let pack = build(data, fixture_course(), None);
         let bare = pack.intern_gram(&gram("bank")).unwrap();
-        let entry = pack.senses_of(bare)[1];
-        pack.sense_frequencies.get_mut(&entry).unwrap().direct_count = 7;
         let total = pack.gram_frequency_total(bare).unwrap();
         assert_eq!(total.count, 30);
         assert_eq!(total.direct_count, 27);
@@ -163,7 +177,7 @@ mod sense_tests {
         GramVocabEntry, Language, PronunciationData,
         ReadingGramFrequencyEntry as GramFrequencyEntry, Word,
     };
-    use std::num::NonZeroU32;
+    use std::{collections::BTreeMap, num::NonZeroU32, sync::Arc};
 
     fn movie(id: &str, poster_bytes: Option<Vec<u8>>) -> MovieMetadata {
         MovieMetadata {
@@ -194,6 +208,7 @@ mod sense_tests {
                 target_language: Language::English,
                 native_language: Language::French,
             },
+            None,
         );
         assert_eq!(
             loaded.sentences.movies.keys().collect::<Vec<_>>(),
@@ -328,24 +343,10 @@ mod sense_tests {
             target_language: Language::English,
             native_language: Language::French,
         };
-        let repeated = build(data.clone(), course);
-        let generated = build(data, course);
-        assert_eq!(
-            rkyv::to_bytes::<rkyv::rancor::Error>(&*generated.core)
-                .unwrap()
-                .as_slice(),
-            rkyv::to_bytes::<rkyv::rancor::Error>(&*repeated.core)
-                .unwrap()
-                .as_slice(),
-        );
-        assert_eq!(
-            rkyv::to_bytes::<rkyv::rancor::Error>(&generated.sentences)
-                .unwrap()
-                .as_slice(),
-            rkyv::to_bytes::<rkyv::rancor::Error>(&repeated.sentences)
-                .unwrap()
-                .as_slice(),
-        );
+        let repeated = build(data.clone(), course, None);
+        let generated = build(data, course, None);
+        assert_eq!(generated.core.bytes(), repeated.core.bytes());
+        assert_eq!(generated.sentences.bytes(), repeated.sentences.bytes());
         let sentence = generated.sentence_key("corpus-only").unwrap();
         assert_eq!(generated.sentence_text(sentence), "corpus-only");
         let original_literals = generated
@@ -364,12 +365,10 @@ mod sense_tests {
         assert!(core.string_rodeo.get("translation-only").is_none());
         assert_eq!(sentences.encoded_sentences.len(), 2);
         assert_eq!(sentences.translation_rodeo.len(), 2);
-        let core_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&*core).unwrap();
-        let sentence_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&sentences).unwrap();
-        let core = rkyv::from_bytes::<LanguagePackCore, rkyv::rancor::Error>(&core_bytes).unwrap();
-        let sentences =
-            rkyv::from_bytes::<LanguagePackSentences, rkyv::rancor::Error>(&sentence_bytes)
-                .unwrap();
+        let core_bytes = core.borrow_owner().clone();
+        let sentence_bytes = sentences.borrow_owner().clone();
+        let core = PackCore::from_bytes(core_bytes).unwrap();
+        let sentences = PackSentences::from_bytes(sentence_bytes).unwrap();
         let core = LanguagePack::from_parts(core, None);
         let full = core.with_sentences(sentences);
         assert_eq!(full.spur_space_fingerprint, fingerprint);
@@ -388,8 +387,10 @@ mod sense_tests {
                 .unwrap(),
             original_literals
         );
-        let source_frequencies = &full.sentences.source_gram_frequencies
-            [&language_utils::FrequencySourceId::Movie("film".into())];
+        let source_frequencies = full
+            .sentences
+            .source_frequencies(&language_utils::FrequencySourceId::Movie("film".into()))
+            .unwrap();
         let (reading, frequency) = source_frequencies.resolved(&full).next().unwrap();
         let key = full.written_ease_order.grams.get(reading).unwrap();
         let global = full.gram_frequencies.entries.get(&key).unwrap();
@@ -400,11 +401,20 @@ mod sense_tests {
             (global.easy, global.compositional, global.ease)
         );
         assert_eq!(source_frequencies.total_count, 10);
+        let frequency_input = FrequencyList {
+            entries: full
+                .gram_frequencies
+                .entries
+                .iter()
+                .map(|(key, value)| (*key, *value))
+                .collect(),
+            total_count: full.gram_frequencies.total_count.to_native(),
+        };
         assert!(
             std::panic::catch_unwind(|| sources::source_frequencies(
                 [(key, 256)],
                 256,
-                &full.gram_frequencies
+                &frequency_input
             ))
             .is_err()
         );
@@ -413,18 +423,18 @@ mod sense_tests {
             std::panic::catch_unwind(|| sources::source_frequencies(
                 [(absent, 1)],
                 1,
-                &full.gram_frequencies
+                &frequency_input
             ))
             .is_err()
         );
         let source = full.source_of(sentence);
         assert!(source.from_anki && source.from_tatoeba && source.from_manual && source.from_song);
         assert_eq!(
-            source.movie_ids().map(String::as_str).collect::<Vec<_>>(),
+            source.movie_ids().collect::<Vec<_>>(),
             ["film-without-metadata", "other-film"]
         );
         assert_eq!(
-            source.book_ids().map(String::as_str).collect::<Vec<_>>(),
+            source.book_ids().collect::<Vec<_>>(),
             ["training-book", "reader-book"]
         );
         let bank = full.sentence_key("bank").unwrap();
@@ -450,8 +460,8 @@ mod sense_tests {
                 );
             }
         }
-        for (words, practice) in &full.sentences.homophone_practice {
-            assert_eq!(words.resolve(&full.string_rodeo).word2, "banc");
+        for (words, practice) in full.sentences.homophone_practice.iter() {
+            assert_eq!(full.string_rodeo.resolve(&words.word2), "banc");
             assert_eq!(
                 full.sentence_text(practice.sentence_pairs[0].sentence2),
                 "corpus-only"
@@ -461,52 +471,49 @@ mod sense_tests {
             full.decoded_sentences().collect::<Vec<_>>(),
             repeated.decoded_sentences().collect::<Vec<_>>()
         );
-        assert_eq!(full.sentences.translations, repeated.sentences.translations);
-        assert_eq!(
-            full.sentences.sentence_sources,
-            repeated.sentences.sentence_sources
-        );
+        assert_eq!(full.sentences.bytes(), repeated.sentences.bytes());
         assert!(Arc::ptr_eq(&core.core, &full.core));
     }
 
     #[test]
     #[should_panic(expected = "language pack halves are from different builds")]
     fn sentence_upgrade_rejects_mismatched_core() {
-        let LanguagePack {
-            core,
-            mut sentences,
-            ..
-        } = pack();
-        sentences.spur_space_fingerprint ^= 1;
+        let core = pack().core;
+        let sentences = pack_with_surface(&[(2, 20), (1, 10)], "Bank").sentences;
         LanguagePack::from_parts(core, None).with_sentences(sentences);
     }
 
     #[test]
     fn ruby_segmentations_live_only_in_the_sentence_half() {
-        let mut pack = pack();
         let expected = BTreeMap::from([(
-            ("東 京".into(), "とうきょう".into()),
+            ("bank".into(), "ばんく".into()),
             vec![language_utils::readings::RubySegment {
-                base: "東".into(),
-                ruby: Some("とう".into()),
+                base: "bank".into(),
+                ruby: Some("ばんく".into()),
             }],
         )]);
-        pack.sentences.ruby_segmentations = expected.clone();
+        let segment = |text: &str, reading: &str| {
+            expected
+                .get(&(text.to_string(), reading.to_string()))
+                .cloned()
+        };
+        let pack = build(
+            data_with_surface(&[(2, 20), (1, 10)], "bank"),
+            fixture_course(),
+            Some(&segment),
+        );
         let LanguagePack {
             core, sentences, ..
         } = pack;
-        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&sentences).unwrap();
-        let sentences =
-            rkyv::from_bytes::<LanguagePackSentences, rkyv::rancor::Error>(&bytes).unwrap();
+        let bytes = sentences.borrow_owner().clone();
+        let sentences = PackSentences::from_bytes(bytes).unwrap();
         let core_only = LanguagePack::from_parts(core, None);
         assert!(core_only.sentences.ruby_segmentations.is_empty());
-        assert_eq!(
-            core_only
-                .with_sentences(sentences)
-                .sentences
-                .ruby_segmentations,
-            expected
-        );
+        let full = core_only.with_sentences(sentences);
+        let actual: BTreeMap<(String, String), Vec<language_utils::readings::RubySegment>> =
+            rkyv::deserialize::<_, rkyv::rancor::Error>(&full.sentences.ruby_segmentations)
+                .unwrap();
+        assert_eq!(actual, expected);
     }
 
     fn pack() -> LanguagePack {
@@ -518,150 +525,153 @@ mod sense_tests {
     fn pack_with_senses(senses: &[(u32, u32)]) -> LanguagePack {
         pack_with_surface(senses, "bank")
     }
+    fn fixture_course() -> Course {
+        Course {
+            target_language: Language::English,
+            native_language: Language::French,
+        }
+    }
     fn pack_with_surface(senses: &[(u32, u32)], surface: &str) -> LanguagePack {
+        build(data_with_surface(senses, surface), fixture_course(), None)
+    }
+    fn data_with_surface(senses: &[(u32, u32)], surface: &str) -> ConsolidatedLanguageData {
         let bare = gram("bank");
         let tagged = |sense| TaggedGram {
             gram: bare.clone(),
             sense: NonZeroU32::new(sense),
         };
-        build(
-            ConsolidatedLanguageData {
-                redundant_senses: BTreeMap::new(),
-                strokes: language_utils::StrokeTable::from_iter([(
-                    "一".into(),
-                    vec![language_utils::StrokeGlyph {
-                        standard: language_utils::StrokeStandard::Japan,
-                        strokes: vec![language_utils::Stroke {
-                            points: vec![(0.1, 0.5), (0.9, 0.5)],
-                        }],
+        ConsolidatedLanguageData {
+            redundant_senses: BTreeMap::new(),
+            strokes: language_utils::StrokeTable::from_iter([(
+                "一".into(),
+                vec![language_utils::StrokeGlyph {
+                    standard: language_utils::StrokeStandard::Japan,
+                    strokes: vec![language_utils::Stroke {
+                        points: vec![(0.1, 0.5), (0.9, 0.5)],
                     }],
-                )]),
-                target_language_sentences: vec![surface.into()],
-                translations: vec![(surface.into(), vec!["banque".into()])],
-                nlp_sentences: vec![],
-                phrasebook: BTreeMap::new(),
-                proper_noun_definitions: BTreeMap::new(),
-                source_gram_frequencies: FxHashMap::default(),
-                word_to_pronunciation: vec![],
-                pronunciation_to_words: vec![],
-                minimal_pairs: vec![],
-                pronunciation_data: PronunciationData {
-                    sounds: vec![],
-                    guides: vec![],
-                    pattern_frequencies: vec![],
-                },
-                homophone_practice: BTreeMap::new(),
-                movies: FxHashMap::default(),
-                books: FxHashMap::default(),
-                sentence_sources: vec![],
-                gram_vocabulary: [bare.clone(), gram(surface)]
-                    .into_iter()
-                    .collect::<std::collections::BTreeSet<_>>()
-                    .into_iter()
-                    .map(|atoms| GramVocabEntry {
-                        atoms,
-                        frequency: 30,
+                }],
+            )]),
+            target_language_sentences: vec![surface.into()],
+            translations: vec![(surface.into(), vec!["banque".into()])],
+            nlp_sentences: vec![],
+            phrasebook: BTreeMap::new(),
+            proper_noun_definitions: BTreeMap::new(),
+            source_gram_frequencies: FxHashMap::default(),
+            word_to_pronunciation: vec![],
+            pronunciation_to_words: vec![],
+            minimal_pairs: vec![],
+            pronunciation_data: PronunciationData {
+                sounds: vec![],
+                guides: vec![],
+                pattern_frequencies: vec![],
+            },
+            homophone_practice: BTreeMap::new(),
+            movies: FxHashMap::default(),
+            books: FxHashMap::default(),
+            sentence_sources: vec![],
+            gram_vocabulary: [bare.clone(), gram(surface)]
+                .into_iter()
+                .collect::<std::collections::BTreeSet<_>>()
+                .into_iter()
+                .map(|atoms| GramVocabEntry {
+                    atoms,
+                    frequency: 30,
+                })
+                .collect(),
+            gram_frequencies: GramFrequencyList {
+                entries: senses
+                    .iter()
+                    .flat_map(|&(sense, count)| {
+                        let direct_sense = senses
+                            .iter()
+                            .find(|&&(sense, _)| sense == 1)
+                            .unwrap_or(&senses[0])
+                            .0;
+                        let mut readings = Vec::new();
+                        if sense == direct_sense {
+                            readings.push(Some("ばんく".to_owned()));
+                        }
+                        if sense == 0 {
+                            readings.push(Some("ぎんこう".to_owned()));
+                        }
+                        if sense == 2 {
+                            readings.push(Some("ていぼう".to_owned()));
+                        }
+                        if readings.is_empty() {
+                            readings.push(None);
+                        }
+                        let extra = readings.len() as u32 - 1;
+                        readings.into_iter().enumerate().map(move |(i, reading)| {
+                            let count = if i == 0 { count - extra } else { 1 };
+                            GramFrequencyEntry {
+                                count,
+                                direct_count: count,
+                                disambiguation_key: 0,
+                                gram: language_utils::ReadingTaggedGram {
+                                    sense: TaggedGram {
+                                        gram: gram(if sense == 1 { surface } else { "bank" }),
+                                        sense: NonZeroU32::new(sense),
+                                    },
+                                    reading,
+                                },
+                            }
+                        })
                     })
                     .collect(),
-                gram_frequencies: GramFrequencyList {
-                    entries: senses
-                        .iter()
-                        .flat_map(|&(sense, count)| {
-                            let direct_sense = senses
-                                .iter()
-                                .find(|&&(sense, _)| sense == 1)
-                                .unwrap_or(&senses[0])
-                                .0;
-                            let mut readings = Vec::new();
-                            if sense == direct_sense {
-                                readings.push(Some("ばんく".to_owned()));
-                            }
-                            if sense == 0 {
-                                readings.push(Some("ぎんこう".to_owned()));
-                            }
-                            if sense == 2 {
-                                readings.push(Some("ていぼう".to_owned()));
-                            }
-                            if readings.is_empty() {
-                                readings.push(None);
-                            }
-                            let extra = readings.len() as u32 - 1;
-                            readings.into_iter().enumerate().map(move |(i, reading)| {
-                                let count = if i == 0 { count - extra } else { 1 };
-                                GramFrequencyEntry {
-                                    count,
-                                    direct_count: count,
-                                    disambiguation_key: 0,
-                                    gram: language_utils::ReadingTaggedGram {
-                                        sense: TaggedGram {
-                                            gram: gram(if sense == 1 { surface } else { "bank" }),
-                                            sense: NonZeroU32::new(sense),
-                                        },
-                                        reading,
-                                    },
-                                }
-                            })
-                        })
-                        .collect(),
-                    total_count: senses.iter().map(|&(_, count)| u64::from(count)).sum(),
+                total_count: senses.iter().map(|&(_, count)| u64::from(count)).sum(),
+            },
+            encoded_sentences: vec![(
+                surface.into(),
+                SentenceGrams {
+                    grams: vec![SentenceGram::Learnable(language_utils::ReadingTaggedGram {
+                        sense: TaggedGram {
+                            gram: gram(surface),
+                            sense: NonZeroU32::new(
+                                senses
+                                    .iter()
+                                    .find(|&&(sense, _)| sense == 1)
+                                    .unwrap_or(&senses[0])
+                                    .0,
+                            ),
+                        },
+                        reading: Some("ばんく".into()),
+                    })],
+                    capitalize_first: false,
+                    multiword_terms: vec![language_utils::MultiwordTermMatch {
+                        gram: language_utils::ReadingTaggedGram {
+                            sense: tagged(0),
+                            reading: Some("ぎんこう".into()),
+                        },
+                        matched_word_indices: vec![0],
+                    }]
+                    .into_iter()
+                    .filter(|term| {
+                        senses
+                            .iter()
+                            .any(|&(sense, _)| NonZeroU32::new(sense) == term.gram.sense.sense)
+                    })
+                    .collect(),
+                    low_confidence_multiword_terms: vec![language_utils::MultiwordTermMatch {
+                        gram: language_utils::ReadingTaggedGram {
+                            sense: tagged(2),
+                            reading: Some("ていぼう".into()),
+                        },
+                        matched_word_indices: vec![0],
+                    }]
+                    .into_iter()
+                    .filter(|term| {
+                        senses
+                            .iter()
+                            .any(|&(sense, _)| NonZeroU32::new(sense) == term.gram.sense.sense)
+                    })
+                    .collect(),
                 },
-                encoded_sentences: vec![(
-                    surface.into(),
-                    SentenceGrams {
-                        grams: vec![SentenceGram::Learnable(language_utils::ReadingTaggedGram {
-                            sense: TaggedGram {
-                                gram: gram(surface),
-                                sense: NonZeroU32::new(
-                                    senses
-                                        .iter()
-                                        .find(|&&(sense, _)| sense == 1)
-                                        .unwrap_or(&senses[0])
-                                        .0,
-                                ),
-                            },
-                            reading: Some("ばんく".into()),
-                        })],
-                        capitalize_first: false,
-                        multiword_terms: vec![language_utils::MultiwordTermMatch {
-                            gram: language_utils::ReadingTaggedGram {
-                                sense: tagged(0),
-                                reading: Some("ぎんこう".into()),
-                            },
-                            matched_word_indices: vec![0],
-                        }]
-                        .into_iter()
-                        .filter(|term| {
-                            senses
-                                .iter()
-                                .any(|&(sense, _)| NonZeroU32::new(sense) == term.gram.sense.sense)
-                        })
-                        .collect(),
-                        low_confidence_multiword_terms: vec![language_utils::MultiwordTermMatch {
-                            gram: language_utils::ReadingTaggedGram {
-                                sense: tagged(2),
-                                reading: Some("ていぼう".into()),
-                            },
-                            matched_word_indices: vec![0],
-                        }]
-                        .into_iter()
-                        .filter(|term| {
-                            senses
-                                .iter()
-                                .any(|&(sense, _)| NonZeroU32::new(sense) == term.gram.sense.sense)
-                        })
-                        .collect(),
-                    },
-                )],
-                gram_dictionary: BTreeMap::new(),
-                morphemes: BTreeMap::new(),
-                human_audio: FxHashMap::default(),
-                pronunciation_audio: FxHashMap::default(),
-            },
-            Course {
-                target_language: Language::English,
-                native_language: Language::French,
-            },
-        )
+            )],
+            gram_dictionary: BTreeMap::new(),
+            morphemes: BTreeMap::new(),
+            human_audio: FxHashMap::default(),
+            pronunciation_audio: FxHashMap::default(),
+        }
     }
 
     fn assert_resolution(pack: &LanguagePack) {
@@ -723,20 +733,33 @@ mod sense_tests {
     #[test]
     fn strokes_live_in_sentences_and_round_trip() {
         let pack = pack();
-        let strokes = pack.sentences.strokes.clone();
+        let strokes = rkyv::deserialize::<language_utils::StrokeTable, rkyv::rancor::Error>(
+            &pack.sentences.strokes,
+        )
+        .unwrap();
         assert!(!strokes.is_empty());
         let LanguagePack {
             core, sentences, ..
         } = pack;
-        assert_eq!(sentences.strokes, strokes);
-        let core_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&*core).unwrap();
-        let sentence_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&sentences).unwrap();
-        let core = rkyv::from_bytes::<LanguagePackCore, rkyv::rancor::Error>(&core_bytes).unwrap();
-        let sentences =
-            rkyv::from_bytes::<LanguagePackSentences, rkyv::rancor::Error>(&sentence_bytes)
-                .unwrap();
+        assert_eq!(
+            rkyv::deserialize::<language_utils::StrokeTable, rkyv::rancor::Error>(
+                &sentences.strokes
+            )
+            .unwrap(),
+            strokes
+        );
+        let core_bytes = core.borrow_owner().clone();
+        let sentence_bytes = sentences.borrow_owner().clone();
+        let core = PackCore::from_bytes(core_bytes).unwrap();
+        let sentences = PackSentences::from_bytes(sentence_bytes).unwrap();
         let pack = LanguagePack::from_parts(core, Some(sentences));
-        assert_eq!(pack.sentences.strokes, strokes);
+        assert_eq!(
+            rkyv::deserialize::<language_utils::StrokeTable, rkyv::rancor::Error>(
+                &pack.sentences.strokes
+            )
+            .unwrap(),
+            strokes
+        );
         let core = pack.core;
         assert!(
             LanguagePack::from_parts(core, None)
@@ -776,12 +799,10 @@ mod sense_tests {
         for reading in ["ばんく", "ぎんこう", "ていぼう"] {
             assert!(core.string_rodeo.get(reading).is_some());
         }
-        let core_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&*core).unwrap();
-        let sentence_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&sentences).unwrap();
-        let core = rkyv::from_bytes::<LanguagePackCore, rkyv::rancor::Error>(&core_bytes).unwrap();
-        let sentences =
-            rkyv::from_bytes::<LanguagePackSentences, rkyv::rancor::Error>(&sentence_bytes)
-                .unwrap();
+        let core_bytes = core.borrow_owner().clone();
+        let sentence_bytes = sentences.borrow_owner().clone();
+        let core = PackCore::from_bytes(core_bytes).unwrap();
+        let sentences = PackSentences::from_bytes(sentence_bytes).unwrap();
         let pack = LanguagePack::from_parts(core, Some(sentences));
         assert_eq!(resolved(&pack), expected);
         let sentence = pack
@@ -802,15 +823,21 @@ mod sense_tests {
 
     #[test]
     fn loading_uses_the_stored_reading_index_without_scanning_sentences() {
-        let LanguagePack {
-            core,
-            mut sentences,
-            ..
-        } = pack();
-        let expected = sentences.gram_readings.clone();
+        let original = pack();
+        let expected: FxHashMap<_, Vec<_>> = original
+            .sentences
+            .gram_readings
+            .iter()
+            .map(|(gram, readings)| (*gram, readings.to_vec()))
+            .collect();
         assert!(!expected.is_empty());
-        sentences.encoded_sentences = lasso::CompressedRodeoReader::default();
-        let pack = LanguagePack::from_parts(core, Some(sentences));
+        let mut sentences =
+            LanguagePackSentences::empty(original.spur_space_fingerprint.to_native());
+        sentences.gram_readings = expected.clone();
+        let sentences =
+            PackSentences::from_bytes(rkyv::to_bytes::<rkyv::rancor::Error>(&sentences).unwrap())
+                .unwrap();
+        let pack = LanguagePack::from_parts(original.core, Some(sentences));
         assert_eq!(pack.sentences.gram_readings, expected);
     }
 
@@ -894,12 +921,10 @@ mod sense_tests {
         let LanguagePack {
             core, sentences, ..
         } = pack();
-        let core_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&*core).unwrap();
-        let sentence_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&sentences).unwrap();
-        let core = rkyv::from_bytes::<LanguagePackCore, rkyv::rancor::Error>(&core_bytes).unwrap();
-        let sentences =
-            rkyv::from_bytes::<LanguagePackSentences, rkyv::rancor::Error>(&sentence_bytes)
-                .unwrap();
+        let core_bytes = core.borrow_owner().clone();
+        let sentence_bytes = sentences.borrow_owner().clone();
+        let core = PackCore::from_bytes(core_bytes).unwrap();
+        let sentences = PackSentences::from_bytes(sentence_bytes).unwrap();
         let pack = LanguagePack::from_parts(core, Some(sentences));
         assert_resolution(&pack);
         let sentence = pack.sentence_key("bank").unwrap();

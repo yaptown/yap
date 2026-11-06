@@ -1,3 +1,60 @@
+#[cfg(target_endian = "big")]
+compile_error!("language packs require little-endian targets");
+
+// Only fixed-layout, pointer-free Copy pack values may use this implementation.
+// Each caller supplies byte validation for its native representation.
+macro_rules! archive_as_self {
+    ($ty:ty => $($field:tt),+ $(,)?) => {
+        // SAFETY: callers have explicit representations and fixed-width fields;
+        // the crate rejects big-endian targets.
+        unsafe impl rkyv::Portable for $ty {}
+        impl rkyv::Archive for $ty {
+            type Archived = Self;
+            type Resolver = ();
+            fn resolve(&self, _: (), out: rkyv::Place<Self>) {
+                // Write each padding-free field, preserving zeroed struct padding.
+                $(unsafe { std::ptr::addr_of_mut!((*out.ptr()).$field).write(self.$field); })+
+            }
+        }
+        impl<S: rkyv::rancor::Fallible + ?Sized> rkyv::Serialize<S> for $ty {
+            fn serialize(&self, _: &mut S) -> Result<(), S::Error> { Ok(()) }
+        }
+        impl<D: rkyv::rancor::Fallible + ?Sized> rkyv::Deserialize<Self, D> for $ty {
+            fn deserialize(&self, _: &mut D) -> Result<Self, D::Error> { Ok(*self) }
+        }
+    };
+}
+pub(crate) use archive_as_self;
+
+#[cfg(test)]
+mod archive_value_tests {
+    use super::*;
+    use lasso::Key;
+
+    #[test]
+    fn compact_keys_validate_required_fields_and_optional_niches() {
+        assert_eq!(std::mem::size_of::<TaggedGram<SpurGram>>(), 8);
+        assert_eq!(std::mem::size_of::<SpurReadingGram>(), 12);
+        for optional in [None, std::num::NonZeroU32::new(42)] {
+            let value = ReadingTaggedGram {
+                sense: TaggedGram {
+                    gram: SpurGram::try_from_usize(7).unwrap(),
+                    sense: optional,
+                },
+                reading: optional.map(|_| lasso::Spur::try_from_usize(9).unwrap()),
+            };
+            let mut bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&value).unwrap();
+            assert_eq!(
+                *rkyv::access::<SpurReadingGram, rkyv::rancor::Error>(&bytes).unwrap(),
+                value
+            );
+            // Zero is valid for both optional fields, but never for the required gram.
+            bytes[..4].fill(0);
+            assert!(rkyv::access::<SpurReadingGram, rkyv::rancor::Error>(&bytes).is_err());
+        }
+    }
+}
+
 mod definition;
 pub use definition::DefinitionTextKind;
 pub mod book;
@@ -52,6 +109,10 @@ use crate::features::Morphology;
     schemars::JsonSchema,
 )]
 #[schemars(rename = "PartOfSpeech")]
+#[repr(u8)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self)]
 pub enum PartOfSpeechTag {
     #[serde(rename = "ADJ")]
     Adj, // adjective
@@ -135,6 +196,10 @@ impl std::fmt::Display for PartOfSpeechTag {
     rkyv::Deserialize,
     schemars::JsonSchema,
 )]
+#[repr(u8)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self)]
 pub enum PartOfSpeech {
     #[serde(rename = "ADJ")]
     Adj, // adjective
@@ -802,7 +867,7 @@ impl<G, S> SentenceGrams<ReadingTaggedGram<G, S>> {
 impl SentenceGrams<ReadingTaggedGram<SpurGram, lasso::Spur>> {
     pub fn resolve(
         &self,
-        rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>,
+        rodeo: &impl lasso::Reader<Gram<lasso::Spur>, SpurGram>,
     ) -> SentenceGrams<ReadingTaggedGram<Gram<lasso::Spur>, lasso::Spur>> {
         self.clone().map(|g| g.resolve(rodeo))
     }
@@ -810,7 +875,7 @@ impl SentenceGrams<ReadingTaggedGram<SpurGram, lasso::Spur>> {
 impl SentenceGrams<ReadingTaggedGram<Gram<lasso::Spur>, lasso::Spur>> {
     pub fn resolve(
         &self,
-        rodeo: &lasso::RodeoReader,
+        rodeo: &impl lasso::Reader<String>,
     ) -> SentenceGrams<ReadingTaggedGram<Gram<String>, String>> {
         self.clone().map(|g| g.resolve(rodeo))
     }
@@ -823,8 +888,8 @@ pub type GramLiterals<G> = SentenceGram<(G, Vec<Literal<String>>)>;
 impl SentenceGrams<TaggedGram<SpurGram>> {
     pub fn to_literals(
         self,
-        string_rodeo: &lasso::RodeoReader<String>,
-        gram_rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>,
+        string_rodeo: &impl lasso::Reader<String>,
+        gram_rodeo: &impl lasso::Reader<Gram<lasso::Spur>, SpurGram>,
         language: Language,
     ) -> Vec<GramLiterals<TaggedGram<SpurGram>>> {
         let atoms = self.grams.iter().enumerate().flat_map(|(index, gram)| {
@@ -849,7 +914,7 @@ impl SentenceGrams<TaggedGram<SpurGram>> {
 impl SentenceGrams<TaggedGram<SpurGram>> {
     pub fn resolve(
         &self,
-        rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>,
+        rodeo: &impl lasso::Reader<Gram<lasso::Spur>, SpurGram>,
     ) -> SentenceGrams<TaggedGram<Gram<lasso::Spur>>> {
         SentenceGrams {
             grams: self
@@ -873,7 +938,10 @@ impl SentenceGrams<TaggedGram<SpurGram>> {
 }
 
 impl SentenceGrams<TaggedGram<Gram<lasso::Spur>>> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> SentenceGrams<TaggedGram<Gram<String>>> {
+    pub fn resolve(
+        &self,
+        rodeo: &impl lasso::Reader<String>,
+    ) -> SentenceGrams<TaggedGram<Gram<String>>> {
         SentenceGrams {
             grams: self
                 .grams
@@ -909,7 +977,7 @@ impl<S> SentenceGram<S> {
 impl SentenceGram<SpurGram> {
     pub fn resolve(
         &self,
-        rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>,
+        rodeo: &impl lasso::Reader<Gram<lasso::Spur>, SpurGram>,
     ) -> SentenceGram<Gram<lasso::Spur>> {
         match self {
             SentenceGram::Learnable(g) => SentenceGram::Learnable(rodeo.resolve(g).to_gram()),
@@ -919,7 +987,7 @@ impl SentenceGram<SpurGram> {
 }
 
 impl SentenceGram<Gram<lasso::Spur>> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> SentenceGram<Gram<String>> {
+    pub fn resolve(&self, rodeo: &impl lasso::Reader<String>) -> SentenceGram<Gram<String>> {
         match self {
             SentenceGram::Learnable(g) => SentenceGram::Learnable(g.resolve(rodeo)),
             SentenceGram::Obvious(g) => SentenceGram::Obvious(g.resolve(rodeo)),
@@ -1012,18 +1080,7 @@ pub struct NlpAnalyzedSentence {
 
 /// A more condensed version of NlpAnalyzedSentence
 #[derive(
-    Clone,
-    Debug,
-    serde::Serialize,
-    serde::Deserialize,
-    Hash,
-    Eq,
-    PartialEq,
-    Ord,
-    PartialOrd,
-    rkyv::Archive,
-    rkyv::Serialize,
-    rkyv::Deserialize,
+    Clone, Debug, serde::Serialize, serde::Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd,
 )]
 pub struct SentenceInfo {
     /// The sentence itself, in its canonical (encoded) representation. Only
@@ -1150,6 +1207,10 @@ pub struct DocToken {
     rkyv::Deserialize,
     schemars::JsonSchema,
 )]
+#[repr(C)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self, archive_bounds(S: rkyv::Archive<Archived = S> + rkyv::Portable))]
 pub struct Heteronym<S> {
     pub word: S,
     pub lemma: S,
@@ -1179,17 +1240,38 @@ pub struct Heteronym<S> {
     PartialEq,
     Ord,
     PartialOrd,
-    rkyv::Archive,
-    rkyv::Serialize,
-    rkyv::Deserialize,
     Copy,
 )]
+#[repr(C)]
 #[serde(bound(deserialize = "S: serde::Deserialize<'de>"))]
 pub struct MorphemeSegment<S> {
     pub surface: S,
     pub canonical: S,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tag: Option<S>,
+}
+
+archive_as_self!(MorphemeSegment<lasso::Spur> => surface, canonical, tag);
+archive_as_self!(MorphemeSegment<DefinitionTextSpur> => surface, canonical, tag);
+
+// The transparent Spur niche makes every optional tag bit pattern valid.
+unsafe impl<T, C: rkyv::rancor::Fallible + ?Sized> rkyv::bytecheck::CheckBytes<C>
+    for MorphemeSegment<lasso::Spur<T>>
+where
+    C::Error: rkyv::rancor::Source,
+{
+    unsafe fn check_bytes(value: *const Self, context: &mut C) -> Result<(), C::Error> {
+        unsafe {
+            rkyv::bytecheck::CheckBytes::check_bytes(
+                std::ptr::addr_of!((*value).surface),
+                context,
+            )?;
+            rkyv::bytecheck::CheckBytes::check_bytes(
+                std::ptr::addr_of!((*value).canonical),
+                context,
+            )
+        }
+    }
 }
 
 /// Classification + learner-facing info for a single morpheme, as stored in
@@ -1240,6 +1322,10 @@ pub enum MorphemeInfo<S> {
     rkyv::Deserialize,
     schemars::JsonSchema,
 )]
+#[repr(u8)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self)]
 pub enum OtherWordType {
     #[serde(rename = "PROPN")]
     Propn, // proper noun
@@ -1269,6 +1355,10 @@ pub enum OtherWordType {
     rkyv::Deserialize,
     schemars::JsonSchema,
 )]
+#[repr(C)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self)]
 pub struct OtherWord {
     pub other_tag: OtherWordType,
 }
@@ -1292,6 +1382,14 @@ pub struct OtherWord {
     schemars::JsonSchema,
 )]
 #[serde(tag = "type")]
+#[repr(u8)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self,
+    archive_bounds(S: rkyv::Archive<Archived = S> + rkyv::Portable,
+        Heteronym<S>: rkyv::Archive<Archived = Heteronym<S>>),
+    deserialize_bounds(S: rkyv::Archive<Archived = S> + rkyv::Portable,
+        Heteronym<S>: rkyv::Archive<Archived = Heteronym<S>>))]
 pub enum WordType<S> {
     /// A word with dictionary/grammatical information
     Heteronym(Heteronym<S>),
@@ -1317,6 +1415,14 @@ pub enum WordType<S> {
     rkyv::Deserialize,
     schemars::JsonSchema,
 )]
+#[repr(C)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self,
+    archive_bounds(S: rkyv::Archive<Archived = S> + rkyv::Portable,
+        WordType<S>: rkyv::Archive<Archived = WordType<S>>),
+    deserialize_bounds(S: rkyv::Archive<Archived = S> + rkyv::Portable,
+        WordType<S>: rkyv::Archive<Archived = WordType<S>>))]
 pub struct Word<S> {
     pub text: S,
     pub word_type: WordType<S>,
@@ -1339,6 +1445,14 @@ pub struct Word<S> {
     serde::Serialize,
     serde::Deserialize,
 )]
+#[repr(C)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self,
+    archive_bounds(S: rkyv::Archive<Archived = S> + rkyv::Portable,
+        Word<S>: rkyv::Archive<Archived = Word<S>>),
+    deserialize_bounds(S: rkyv::Archive<Archived = S> + rkyv::Portable,
+        Word<S>: rkyv::Archive<Archived = Word<S>>))]
 pub struct Literal<S> {
     pub word: Word<S>,
     #[serde(with = "literal_whitespace")]
@@ -1374,7 +1488,7 @@ impl Word<String> {
         }
     }
 
-    pub fn get_interned(&self, rodeo: &lasso::RodeoReader) -> Option<Word<lasso::Spur>> {
+    pub fn get_interned(&self, rodeo: &impl lasso::Reader<String>) -> Option<Word<lasso::Spur>> {
         let word_type = match &self.word_type {
             WordType::Heteronym(h) => WordType::Heteronym(h.get_interned(rodeo)?),
             WordType::Other(other) => WordType::Other(*other),
@@ -1394,7 +1508,7 @@ impl Literal<String> {
         }
     }
 
-    pub fn get_interned(&self, rodeo: &lasso::RodeoReader) -> Option<Literal<lasso::Spur>> {
+    pub fn get_interned(&self, rodeo: &impl lasso::Reader<String>) -> Option<Literal<lasso::Spur>> {
         Some(Literal {
             word: self.word.get_interned(rodeo)?,
             whitespace: self.whitespace,
@@ -1403,7 +1517,7 @@ impl Literal<String> {
 }
 
 impl Word<lasso::Spur> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> Word<String> {
+    pub fn resolve(&self, rodeo: &impl lasso::Reader<String>) -> Word<String> {
         Word {
             text: rodeo.resolve(&self.text).to_string(),
             word_type: match &self.word_type {
@@ -1415,7 +1529,7 @@ impl Word<lasso::Spur> {
 }
 
 impl Literal<lasso::Spur> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> Literal<String> {
+    pub fn resolve(&self, rodeo: &impl lasso::Reader<String>) -> Literal<String> {
         Literal {
             word: self.word.resolve(rodeo),
             whitespace: self.whitespace,
@@ -1434,7 +1548,10 @@ impl Heteronym<String> {
         }
     }
 
-    pub fn get_interned(&self, rodeo: &lasso::RodeoReader) -> Option<Heteronym<lasso::Spur>> {
+    pub fn get_interned(
+        &self,
+        rodeo: &impl lasso::Reader<String>,
+    ) -> Option<Heteronym<lasso::Spur>> {
         let word = rodeo.get(&self.word)?;
         let lemma = rodeo.get(&self.lemma)?;
         Some(Heteronym {
@@ -1446,7 +1563,7 @@ impl Heteronym<String> {
 }
 
 impl Heteronym<lasso::Spur> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> Heteronym<String> {
+    pub fn resolve(&self, rodeo: &impl lasso::Reader<String>) -> Heteronym<String> {
         Heteronym {
             word: rodeo.resolve(&self.word).to_string(),
             lemma: rodeo.resolve(&self.lemma).to_string(),
@@ -1472,6 +1589,14 @@ impl Heteronym<lasso::Spur> {
     schemars::JsonSchema,
 )]
 #[serde(tag = "type")]
+#[repr(u8)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self,
+    archive_bounds(S: rkyv::Archive<Archived = S> + rkyv::Portable,
+        Heteronym<S>: rkyv::Archive<Archived = Heteronym<S>>),
+    deserialize_bounds(S: rkyv::Archive<Archived = S> + rkyv::Portable,
+        Heteronym<S>: rkyv::Archive<Archived = Heteronym<S>>))]
 pub enum Lexeme<S> {
     Heteronym { heteronym: Heteronym<S> },
     Multiword { phrase: S },
@@ -1505,7 +1630,7 @@ impl Lexeme<String> {
         }
     }
 
-    pub fn get_interned(&self, rodeo: &lasso::RodeoReader) -> Option<Lexeme<lasso::Spur>> {
+    pub fn get_interned(&self, rodeo: &impl lasso::Reader<String>) -> Option<Lexeme<lasso::Spur>> {
         match self {
             Lexeme::Heteronym { heteronym } => Some(Lexeme::Heteronym {
                 heteronym: heteronym.get_interned(rodeo)?,
@@ -1528,7 +1653,7 @@ impl Lexeme<String> {
 }
 
 impl Lexeme<lasso::Spur> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> Lexeme<String> {
+    pub fn resolve(&self, rodeo: &impl lasso::Reader<String>) -> Lexeme<String> {
         match self {
             Lexeme::Heteronym { heteronym } => Lexeme::Heteronym {
                 heteronym: heteronym.resolve(rodeo),
@@ -1562,16 +1687,9 @@ pub struct ReadingGramFrequencyEntry<S> {
     pub gram: ReadingTaggedGram<Gram<S>, S>,
 }
 
-#[derive(
-    Copy,
-    Clone,
-    Debug,
-    serde::Serialize,
-    serde::Deserialize,
-    rkyv::Archive,
-    rkyv::Serialize,
-    rkyv::Deserialize,
-)]
+#[derive(Copy, Clone, Debug, serde::Serialize, serde::Deserialize, rkyv::bytecheck::CheckBytes)]
+#[repr(C)]
+#[bytecheck(crate = rkyv::bytecheck)]
 pub struct Frequency {
     pub count: u32,
     /// Count of occurrences in actual sentences only (not including multi-word term occurrences).
@@ -1589,6 +1707,8 @@ pub struct Frequency {
     /// Used as the x-axis in the isotonic regression (instead of raw frequency_score).
     pub ease: f32,
 }
+
+archive_as_self!(Frequency => count, direct_count, easy, compositional, ease);
 
 impl Frequency {
     pub fn frequency_score(&self) -> f32 {
@@ -1915,6 +2035,10 @@ pub mod transcription_challenge {
     rkyv::Deserialize,
     schemars::JsonSchema,
 )]
+#[repr(u8)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self)]
 pub enum Whitespace {
     Space,
     NarrowNbsp,
@@ -2073,6 +2197,10 @@ fn literal_json_keeps_actual_gaps() {
     rkyv::Deserialize,
     schemars::JsonSchema,
 )]
+#[repr(transparent)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self)]
 pub struct ControlToken(pub Whitespace);
 
 /// An atom is either a word token or a control token.
@@ -2094,6 +2222,14 @@ pub struct ControlToken(pub Whitespace);
     rkyv::Deserialize,
     schemars::JsonSchema,
 )]
+#[repr(u8)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self,
+    archive_bounds(S: rkyv::Archive<Archived = S> + rkyv::Portable,
+        Word<S>: rkyv::Archive<Archived = Word<S>>),
+    deserialize_bounds(S: rkyv::Archive<Archived = S> + rkyv::Portable,
+        Word<S>: rkyv::Archive<Archived = Word<S>>))]
 pub enum Atom<S> {
     /// A regular word token
     Tok(Word<S>),
@@ -2109,7 +2245,7 @@ impl Atom<String> {
         }
     }
 
-    pub fn get_interned(&self, rodeo: &lasso::RodeoReader) -> Option<Atom<lasso::Spur>> {
+    pub fn get_interned(&self, rodeo: &impl lasso::Reader<String>) -> Option<Atom<lasso::Spur>> {
         match self {
             Atom::Tok(word) => Some(Atom::Tok(word.get_interned(rodeo)?)),
             Atom::Control(ctrl) => Some(Atom::Control(*ctrl)),
@@ -2118,7 +2254,7 @@ impl Atom<String> {
 }
 
 impl Atom<lasso::Spur> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> Atom<String> {
+    pub fn resolve(&self, rodeo: &impl lasso::Reader<String>) -> Atom<String> {
         match self {
             Atom::Tok(word) => Atom::Tok(word.resolve(rodeo)),
             Atom::Control(ctrl) => Atom::Control(*ctrl),
@@ -2233,11 +2369,9 @@ pub struct Gram<S>(pub Vec<Atom<S>>);
     Hash,
     serde::Serialize,
     serde::Deserialize,
-    rkyv::Archive,
-    rkyv::Serialize,
-    rkyv::Deserialize,
     schemars::JsonSchema,
 )]
+#[repr(C)]
 pub struct TaggedGram<G> {
     pub gram: G,
     /// Which sense of `gram` this is, numbered per gram from 1 in the order
@@ -2247,6 +2381,20 @@ pub struct TaggedGram<G> {
 }
 
 pub type SpurGram = lasso::Spur<Gram<lasso::Spur>>;
+archive_as_self!(TaggedGram<SpurGram> => gram, sense);
+
+// Option<NonZeroU32> uses the zero niche, so every bit pattern of sense is valid.
+unsafe impl<C: rkyv::rancor::Fallible + ?Sized> rkyv::bytecheck::CheckBytes<C>
+    for TaggedGram<SpurGram>
+where
+    C::Error: rkyv::rancor::Source,
+{
+    unsafe fn check_bytes(value: *const Self, context: &mut C) -> Result<(), C::Error> {
+        unsafe {
+            rkyv::bytecheck::CheckBytes::check_bytes(std::ptr::addr_of!((*value).gram), context)
+        }
+    }
+}
 impl<G> TaggedGram<G> {
     pub fn map<H>(self, f: impl FnOnce(G) -> H) -> TaggedGram<H> {
         TaggedGram {
@@ -2266,7 +2414,7 @@ impl<G> TaggedGram<G> {
 impl TaggedGram<Gram<String>> {
     pub fn get_interned(
         &self,
-        rodeo: &lasso::RodeoReader,
+        rodeo: &impl lasso::Reader<String>,
     ) -> Option<TaggedGram<Gram<lasso::Spur>>> {
         Some(TaggedGram {
             gram: self.gram.get_interned(rodeo)?,
@@ -2278,7 +2426,7 @@ impl TaggedGram<Gram<String>> {
 impl TaggedGram<Gram<lasso::Spur>> {
     pub fn get_interned(
         &self,
-        rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>,
+        rodeo: &impl lasso::Reader<Gram<lasso::Spur>, SpurGram>,
     ) -> Option<TaggedGram<SpurGram>> {
         Some(TaggedGram {
             gram: self.gram.get_interned(rodeo)?,
@@ -2388,7 +2536,7 @@ impl<S> Gram<S> {
 }
 
 impl grm<lasso::Spur> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> Gram<String> {
+    pub fn resolve(&self, rodeo: &impl lasso::Reader<String>) -> Gram<String> {
         Gram(self.atoms.iter().map(|a| a.resolve(rodeo)).collect())
     }
 }
@@ -2426,7 +2574,7 @@ impl Gram<String> {
 
     /// Looks up all strings in this gram in the given rodeo reader.
     /// Returns None if any string is not found.
-    pub fn get_interned(&self, rodeo: &lasso::RodeoReader) -> Option<Gram<lasso::Spur>> {
+    pub fn get_interned(&self, rodeo: &impl lasso::Reader<String>) -> Option<Gram<lasso::Spur>> {
         Some(Gram(
             self.0
                 .iter()
@@ -2437,14 +2585,17 @@ impl Gram<String> {
 }
 
 impl Gram<lasso::Spur> {
-    pub fn get_interned(&self, rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>) -> Option<SpurGram> {
+    pub fn get_interned(
+        &self,
+        rodeo: &impl lasso::Reader<Gram<lasso::Spur>, SpurGram>,
+    ) -> Option<SpurGram> {
         rodeo.get(self)
     }
 }
 
 impl Gram<lasso::Spur> {
     /// Resolves all interned strings in this gram using the given rodeo reader.
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> Gram<String> {
+    pub fn resolve(&self, rodeo: &impl lasso::Reader<String>) -> Gram<String> {
         Gram(self.0.iter().map(|a| a.resolve(rodeo)).collect())
     }
 }
@@ -2482,6 +2633,18 @@ impl<'a, S> IntoIterator for &'a Gram<S> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
+    }
+}
+
+impl lasso::ArchivedInternedRef for ArchivedGram<lasso::Spur> {
+    type Ref = grm<lasso::Spur>;
+    fn as_archived_ref(&self) -> &Self::Ref {
+        grm::from_slice(self.0.as_slice())
+    }
+}
+impl lasso::ArchivedValueEq<grm<lasso::Spur>> for ArchivedGram<lasso::Spur> {
+    fn archived_eq(&self, query: &grm<lasso::Spur>) -> bool {
+        self.0.as_slice() == query.atoms()
     }
 }
 
@@ -2572,7 +2735,7 @@ impl SentenceGram<Gram<String>> {
 
     pub fn get_interned(
         &self,
-        rodeo: &lasso::RodeoReader,
+        rodeo: &impl lasso::Reader<String>,
     ) -> Option<SentenceGram<Gram<lasso::Spur>>> {
         match self {
             SentenceGram::Learnable(gram) => {
@@ -2610,7 +2773,10 @@ impl GramVocabEntry<String> {
         }
     }
 
-    pub fn get_interned(&self, rodeo: &lasso::RodeoReader) -> Option<GramVocabEntry<lasso::Spur>> {
+    pub fn get_interned(
+        &self,
+        rodeo: &impl lasso::Reader<String>,
+    ) -> Option<GramVocabEntry<lasso::Spur>> {
         Some(GramVocabEntry {
             atoms: self.atoms.get_interned(rodeo)?,
             frequency: self.frequency,
@@ -2619,7 +2785,7 @@ impl GramVocabEntry<String> {
 }
 
 impl GramVocabEntry<lasso::Spur> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> GramVocabEntry<String> {
+    pub fn resolve(&self, rodeo: &impl lasso::Reader<String>) -> GramVocabEntry<String> {
         GramVocabEntry {
             atoms: self.atoms.resolve(rodeo),
             frequency: self.frequency,
@@ -2838,6 +3004,10 @@ pub enum SoundPosition {
     rkyv::Deserialize,
     schemars::JsonSchema,
 )]
+#[repr(u8)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self)]
 pub enum PatternPosition {
     Beginning,
     End,
@@ -2986,6 +3156,10 @@ pub struct PronunciationData {
     rkyv::Serialize,
     rkyv::Deserialize,
 )]
+#[repr(u8)]
+#[derive(rkyv::Portable, rkyv::bytecheck::CheckBytes)]
+#[bytecheck(crate = rkyv::bytecheck)]
+#[rkyv(as = Self)]
 pub enum Language {
     French,
     English,
@@ -4796,7 +4970,7 @@ impl HomophoneWordPair<String> {
 
     pub fn get_interned(
         &self,
-        rodeo: &lasso::RodeoReader,
+        rodeo: &impl lasso::Reader<String>,
     ) -> Option<HomophoneWordPair<lasso::Spur>> {
         Some(HomophoneWordPair {
             word1: rodeo.get(&self.word1)?,
@@ -4806,7 +4980,7 @@ impl HomophoneWordPair<String> {
 }
 
 impl HomophoneWordPair<lasso::Spur> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> HomophoneWordPair<String> {
+    pub fn resolve(&self, rodeo: &impl lasso::Reader<String>) -> HomophoneWordPair<String> {
         HomophoneWordPair {
             word1: rodeo.resolve(&self.word1).to_string(),
             word2: rodeo.resolve(&self.word2).to_string(),
@@ -4843,7 +5017,7 @@ where
 impl HomophoneSentencePair<String> {
     pub fn get_interned(
         &self,
-        rodeo: &lasso::RodeoReader<String, SentenceSpur>,
+        rodeo: &impl lasso::Reader<String, SentenceSpur>,
     ) -> Option<HomophoneSentencePair<SentenceSpur>> {
         Some(HomophoneSentencePair {
             sentence1: rodeo.get(&self.sentence1)?,
@@ -4855,7 +5029,7 @@ impl HomophoneSentencePair<String> {
 impl HomophoneSentencePair<SentenceSpur> {
     pub fn resolve(
         &self,
-        rodeo: &lasso::RodeoReader<String, SentenceSpur>,
+        rodeo: &impl lasso::Reader<String, SentenceSpur>,
     ) -> HomophoneSentencePair<String> {
         HomophoneSentencePair {
             sentence1: rodeo.resolve(&self.sentence1).to_string(),
@@ -4889,7 +5063,7 @@ where
 impl HomophonePractice<String> {
     pub fn get_interned(
         &self,
-        rodeo: &lasso::RodeoReader<String, SentenceSpur>,
+        rodeo: &impl lasso::Reader<String, SentenceSpur>,
     ) -> Option<HomophonePractice<SentenceSpur>> {
         Some(HomophonePractice {
             sentence_pairs: self
@@ -4904,7 +5078,7 @@ impl HomophonePractice<String> {
 impl HomophonePractice<SentenceSpur> {
     pub fn resolve(
         &self,
-        rodeo: &lasso::RodeoReader<String, SentenceSpur>,
+        rodeo: &impl lasso::Reader<String, SentenceSpur>,
     ) -> HomophonePractice<String> {
         HomophonePractice {
             sentence_pairs: self
@@ -5228,8 +5402,12 @@ const ENGLISH_CLITICS: &[&str] = &["'s", "'m", "'re", "'ve", "'ll", "'d", "n't"]
 /// quote mark or a word that merely begins with an apostrophe ("'cause") is
 /// not a clitic.
 pub fn attaches_to_preceding_word(text: &str) -> bool {
-    let normalized = text.to_lowercase().replace('\u{2019}', "'");
-    ENGLISH_CLITICS.contains(&normalized.as_str())
+    ENGLISH_CLITICS.iter().any(|clitic| {
+        text.chars()
+            .flat_map(char::to_lowercase)
+            .map(|c| if c == '\u{2019}' { '\'' } else { c })
+            .eq(clitic.chars())
+    })
 }
 
 /// Capitalize the first letter of a string, leaving the rest unchanged.
@@ -5318,12 +5496,12 @@ pub fn lowercase_first_letter(s: &str) -> (String, bool) {
 /// - Before closing brackets/quotes/punctuation: no space
 /// - After hyphen in compounds: no space
 /// - Default: space
-pub fn predict_whitespace(
-    left: &Word<String>,
-    right: Option<&Word<String>>,
+pub fn predict_whitespace<S: AsRef<str>>(
+    left: &Word<S>,
+    right: Option<&Word<S>>,
     language: Language,
 ) -> Whitespace {
-    let left_text = &left.text;
+    let left_text = left.text.as_ref();
 
     // If there's no right token, no whitespace needed
     let right = match right {
@@ -5331,7 +5509,7 @@ pub fn predict_whitespace(
         None => return Whitespace::None,
     };
 
-    let right_text = &right.text;
+    let right_text = right.text.as_ref();
 
     if attaches_to_preceding_word(right_text) {
         return Whitespace::None;
@@ -5388,7 +5566,7 @@ pub fn predict_whitespace(
     // Korean: particles attach directly to the preceding word, but only when
     // the POS actually indicates a particle/adposition (not a verb or other POS
     // that happens to share the same text as a particle).
-    if language == Language::Korean && KOREAN_PARTICLES.contains(&right_text.as_str()) {
+    if language == Language::Korean && KOREAN_PARTICLES.contains(&right_text) {
         let is_particle_pos = match &right.word_type {
             WordType::Heteronym(h) => matches!(h.pos, PartOfSpeech::Part | PartOfSpeech::Adp),
             WordType::Other(_) => true, // Non-heteronym tokens that match particle text are likely particles
@@ -5497,11 +5675,11 @@ pub fn literals_to_atoms(
 
 /// Stream words with their source gram indices. Capitalization and whitespace
 /// overrides are applied here, with one atom of lookahead across gram boundaries.
-pub fn render_words(
-    atoms: impl Iterator<Item = (usize, Atom<String>)>,
+pub fn render_words<S: AsRef<str> + From<String>>(
+    atoms: impl Iterator<Item = (usize, Atom<S>)>,
     mut capitalize_first: bool,
     language: Language,
-) -> impl Iterator<Item = (usize, Word<String>, Whitespace)> {
+) -> impl Iterator<Item = (usize, Word<S>, Whitespace)> {
     let mut atoms = atoms.peekable();
     std::iter::from_fn(move || {
         loop {
@@ -5510,7 +5688,7 @@ pub fn render_words(
                 continue;
             };
             if capitalize_first {
-                word.text = capitalize_first_letter(&word.text);
+                word.text = capitalize_first_letter(word.text.as_ref()).into();
                 capitalize_first = false;
             }
             let whitespace = match atoms.peek() {
@@ -6597,14 +6775,14 @@ mod tagged_gram_tests {
 impl TaggedGram<SpurGram> {
     pub fn resolve(
         &self,
-        rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>,
+        rodeo: &impl lasso::Reader<Gram<lasso::Spur>, SpurGram>,
     ) -> TaggedGram<Gram<lasso::Spur>> {
         self.map(|gram| rodeo.resolve(&gram).to_gram())
     }
 }
 
 impl TaggedGram<Gram<lasso::Spur>> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> TaggedGram<Gram<String>> {
+    pub fn resolve(&self, rodeo: &impl lasso::Reader<String>) -> TaggedGram<Gram<String>> {
         self.clone().map(|gram| gram.resolve(rodeo))
     }
 }

@@ -328,7 +328,7 @@ impl CardIndicator<String> {
                         let gram_spur = context
                             .language_pack
                             .string_to_grams
-                            .get(&phrase)?
+                            .get(phrase.as_str())?
                             .first()?;
                         let gram = context
                             .language_pack

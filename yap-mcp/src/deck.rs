@@ -85,8 +85,8 @@ pub fn detect_course(
     ))
 }
 
-/// Lazily-loaded, shared language packs, keyed by course. Loading deserializes
-/// a >100 MB rkyv archive, so packs are loaded at most once and shared.
+/// Lazily-loaded, shared language packs, keyed by course. Loading reads and
+/// validates the archive bytes once; subsequent callers share the same storage.
 pub struct PackCache {
     out_dir: std::path::PathBuf,
     packs: tokio::sync::Mutex<BTreeMap<Course, Arc<LanguagePack>>>,

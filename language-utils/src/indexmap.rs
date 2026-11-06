@@ -10,6 +10,41 @@ pub struct IndexMap<K: Hash + Eq + Clone, V: Clone> {
     order: Vec<(K, V)>,
 }
 
+impl<K, V> ArchivedIndexMap<K, V>
+where
+    K: Clone + Hash + Eq + rkyv::Archive<Archived = K>,
+    V: Clone + rkyv::Archive,
+{
+    pub fn len(&self) -> usize {
+        self.order.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.order.is_empty()
+    }
+    pub fn get_index_of(&self, key: &K) -> Option<usize> {
+        self.indices.get(key).map(|i| i.to_native() as usize)
+    }
+    pub fn get(&self, key: &K) -> Option<&rkyv::Archived<V>> {
+        self.get_index(self.get_index_of(key)?)
+            .map(|(_, value)| value)
+    }
+    pub fn contains_key(&self, key: &K) -> bool {
+        self.indices.contains_key(key)
+    }
+    pub fn get_index(&self, index: usize) -> Option<(&K, &rkyv::Archived<V>)> {
+        self.order.get(index).map(|entry| (&entry.0, &entry.1))
+    }
+    pub fn iter(&self) -> impl DoubleEndedIterator<Item = (&K, &rkyv::Archived<V>)> {
+        self.order.iter().map(|entry| (&entry.0, &entry.1))
+    }
+    pub fn keys(&self) -> impl Iterator<Item = &K> {
+        self.order.iter().map(|entry| &entry.0)
+    }
+    pub fn values(&self) -> impl Iterator<Item = &rkyv::Archived<V>> {
+        self.order.iter().map(|entry| &entry.1)
+    }
+}
+
 impl<K: Clone + Hash + Eq, V: Clone> IndexMap<K, V> {
     pub fn new() -> Self {
         Self {

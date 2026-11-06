@@ -67,7 +67,7 @@ pub fn pronunciation_audio(language: Language, spoken_text: &str) -> Option<Vec<
         .sentences
         .pronunciation_audio
         .get(spoken_text)
-        .map(|clip| clip.audio.bytes.clone())
+        .map(|clip| clip.audio.bytes.to_vec())
 }
 
 /// Return a human-recorded clip for `(language, text)` if any voice actor
@@ -79,7 +79,7 @@ pub fn lookup(language: Language, text: &str) -> Option<HumanAudio> {
         let registry = &mut *registry;
         let pack = registry.packs.get(&language)?.upgrade()?;
 
-        let mut actors: Vec<&language_utils::VoiceActor> = pack
+        let mut actors: Vec<&language_utils::ArchivedVoiceActor> = pack
             .sentences
             .human_audio
             .iter()
@@ -102,11 +102,14 @@ pub fn lookup(language: Language, text: &str) -> Option<HumanAudio> {
             .get(actor)?
             .get(text)?
             .bytes
-            .clone();
+            .to_vec();
         Some(HumanAudio {
             bytes,
-            actor_name: actor.name.clone(),
-            compensation: actor.compensation,
+            actor_name: actor.name.to_string(),
+            compensation: rkyv::deserialize::<Compensation, rkyv::rancor::Error>(
+                &actor.compensation,
+            )
+            .unwrap(),
         })
     }
 }

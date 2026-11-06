@@ -5,7 +5,7 @@ use std::{collections::BTreeSet, hash::Hash};
 use isotonic::SmoothRegression;
 use language_utils::{
     SpurGram, SpurReadingGram, TaggedGram,
-    language_pack::{EaseOrder, LanguagePack},
+    language_pack::{ArchivedEaseOrder, LanguagePack},
 };
 use rustc_hash::FxHashMap;
 
@@ -44,8 +44,8 @@ struct ComprehensibleGrams<'a, K> {
     cards: &'a FxHashMap<K, CardKnowledge>,
 }
 
-impl<K: Copy + Eq + Hash + Ord> ComprehensibleGrams<'_, K> {
-    fn contains(&self, order: &EaseOrder<K>, key: &K, planned: bool) -> bool {
+impl<K: Copy + Eq + Hash + Ord + rkyv::Archive<Archived = K>> ComprehensibleGrams<'_, K> {
+    fn contains(&self, order: &ArchivedEaseOrder<K>, key: &K, planned: bool) -> bool {
         let Some(rank) = order.rank(key) else {
             return false;
         };
@@ -58,7 +58,11 @@ impl<K: Copy + Eq + Hash + Ord> ComprehensibleGrams<'_, K> {
         )
     }
 
-    fn iter<'a>(&'a self, order: &'a EaseOrder<K>, planned: bool) -> impl Iterator<Item = K> + 'a {
+    fn iter<'a>(
+        &'a self,
+        order: &'a ArchivedEaseOrder<K>,
+        planned: bool,
+    ) -> impl Iterator<Item = K> + 'a {
         self.threshold_rank
             .into_iter()
             .flat_map(|rank| order.iter_from(0).take(rank as usize))
@@ -77,8 +81,8 @@ pub(crate) struct CachedComprehensibleGrams {
     listening: Option<u32>,
 }
 
-fn threshold<K: Copy + Eq + Hash + Ord>(
-    order: &EaseOrder<K>,
+fn threshold<K: Copy + Eq + Hash + Ord + rkyv::Archive<Archived = K>>(
+    order: &ArchivedEaseOrder<K>,
     regression: Option<&SmoothRegression<f32>>,
 ) -> Option<u32> {
     // Isotonic regression and box smoothing preserve monotonicity.

@@ -4,11 +4,10 @@
 use super::kanjidic::{self, Verifier};
 use anyhow::Result;
 use language_utils::{
-    Language, SentenceGram,
-    language_pack::LanguagePack,
-    readings::{RubySegment, canonical_kana, ruby_segments},
+    Language,
+    readings::{RubySegment, canonical_kana},
 };
-use std::{collections::BTreeSet, path::Path};
+use std::path::Path;
 
 const DIRECTORY: &str = ".cache/readings/jmdict-furigana-2.3.1-2026-10-25";
 const URL: &str = "https://github.com/Doublevil/JmdictFurigana/releases/download/2.3.1%2B2026-10-25/JmdictFurigana.json";
@@ -87,53 +86,6 @@ impl Segmenter {
     pub fn segment(&self, text: &str, reading: &str) -> Option<Vec<RubySegment>> {
         kanjidic::ruby(text, reading, &self.0)
     }
-
-    pub fn populate(&self, pack: &mut LanguagePack) {
-        pack.sentences.ruby_segmentations = pairs(pack)
-            .into_iter()
-            .filter_map(|(text, reading)| {
-                let segments = self.segment(&text, &reading)?;
-                (segments != ruby_segments(&text, &reading, Language::Japanese))
-                    .then_some(((text, reading), segments))
-            })
-            .collect();
-    }
-}
-
-/// Exact word/card forms and exact occurrence forms, including internal whitespace.
-pub fn pairs(pack: &LanguagePack) -> BTreeSet<(String, String)> {
-    let mut pairs = BTreeSet::new();
-    for (gram, readings) in &pack.sentences.gram_readings {
-        let text = pack
-            .resolve_gram(&gram.gram)
-            .to_display_string(Language::Japanese);
-        for reading in readings {
-            pairs.insert((text.clone(), pack.string_rodeo.resolve(reading).into()));
-        }
-    }
-    for (_, sentence) in pack.decoded_sentences() {
-        let literals = sentence.clone().without_readings().to_literals(
-            &pack.string_rodeo,
-            &pack.gram_rodeo,
-            Language::Japanese,
-        );
-        for (gram, literals) in sentence.grams.iter().zip(literals) {
-            let (SentenceGram::Learnable(gram) | SentenceGram::Obvious(gram)) = gram;
-            let (SentenceGram::Learnable((_, literals)) | SentenceGram::Obvious((_, literals))) =
-                literals;
-            if let Some(reading) = gram.reading {
-                let mut text: String = literals
-                    .iter()
-                    .flat_map(|l| [l.word.text.as_str(), l.whitespace.as_str()])
-                    .collect();
-                if let Some(last) = literals.last() {
-                    text.truncate(text.len() - last.whitespace.as_str().len());
-                }
-                pairs.insert((text, pack.string_rodeo.resolve(&reading).into()));
-            }
-        }
-    }
-    pairs
 }
 
 #[cfg(test)]
@@ -190,7 +142,7 @@ mod tests {
         for (text, reading) in [("食べる", "たべる"), ("取り消す", "とりけす")] {
             assert_eq!(
                 segmenter.segment(text, reading).unwrap(),
-                ruby_segments(text, reading, Language::Japanese)
+                language_utils::readings::ruby_segments(text, reading, Language::Japanese)
             );
         }
     }

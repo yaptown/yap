@@ -484,7 +484,12 @@ mod tests {
                 .resolved(lp)
                 .map(|(gram, frequency)| (gram, *frequency)),
         );
-        for (source_id, freq_list) in &lp.sentences.source_gram_frequencies {
+        for (source_id, freq_list) in lp.sentences.source_gram_frequencies.iter() {
+            let source_id = rkyv::deserialize::<
+                language_utils::FrequencySourceId,
+                rkyv::rancor::Error,
+            >(source_id)
+            .unwrap();
             let list_name = format!("source_gram_frequencies[{source_id:?}]");
             assert_frequency_list_sorted(lp, lang, &label, &list_name, freq_list.resolved(lp));
         }
@@ -664,6 +669,11 @@ mod tests {
             .source_gram_frequencies
             .keys()
         {
+            let source_id = rkyv::deserialize::<
+                language_utils::FrequencySourceId,
+                rkyv::rancor::Error,
+            >(source_id)
+            .unwrap();
             let selection = match source_id {
                 language_utils::FrequencySourceId::Movie(id) => {
                     SentenceListSelection::Movie { id: id.clone() }

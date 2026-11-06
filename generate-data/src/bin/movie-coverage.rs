@@ -73,7 +73,7 @@ async fn main() -> Result<()> {
     for sentence in pack.sentence_keys() {
         for id in pack.source_of(sentence).movie_ids() {
             in_pack
-                .entry(id.clone())
+                .entry(id.to_string())
                 .or_default()
                 .insert(pack.sentence_text(sentence));
         }

@@ -7,19 +7,20 @@
 
 use language_utils::language_pack::LanguagePack;
 
-fn size_of<T>(value: &T) -> usize
+fn size_of<P, T>(value: &rkyv::Archived<T>, _: fn(&P) -> &T) -> usize
 where
-    T: for<'a> rkyv::Serialize<
+    T: rkyv::Archive
+        + for<'a> rkyv::Serialize<
             rkyv::api::high::HighSerializer<
                 rkyv::util::AlignedVec,
                 rkyv::ser::allocator::ArenaHandle<'a>,
                 rkyv::rancor::Error,
             >,
         >,
+    rkyv::Archived<T>: rkyv::Deserialize<T, rkyv::api::high::HighDeserializer<rkyv::rancor::Error>>,
 {
-    rkyv::to_bytes::<rkyv::rancor::Error>(value)
-        .map(|b| b.len())
-        .unwrap_or(0)
+    let value = rkyv::deserialize::<T, rkyv::rancor::Error>(value).unwrap();
+    rkyv::to_bytes::<rkyv::rancor::Error>(&value).unwrap().len()
 }
 
 fn main() {
@@ -38,107 +39,35 @@ fn main() {
 
     let pack: LanguagePack = language_utils::language_pack::load_split_dir(&dir).unwrap();
 
-    // "sentence-side" = the fields that only exist to serve corpus sentences.
-    let mut rows: Vec<(&str, bool, usize)> = vec![
-        ("translations", true, size_of(&pack.sentences.translations)),
-        (
-            "encoded_sentences",
-            true,
-            size_of(&pack.sentences.encoded_sentences),
-        ),
-        (
-            "sentence_index",
-            true,
-            size_of(&pack.sentences.sentence_index),
-        ),
-        (
-            "sentence_sources",
-            true,
-            size_of(&pack.sentences.sentence_sources),
-        ),
-        ("movies", true, size_of(&pack.sentences.movies)),
-        ("books", true, size_of(&pack.sentences.books)),
-        ("human_audio", true, size_of(&pack.sentences.human_audio)),
-        (
-            "pronunciation_audio",
-            true,
-            size_of(&pack.sentences.pronunciation_audio),
-        ),
-        (
-            "words_to_heteronyms",
-            false,
-            size_of(&pack.words_to_heteronyms),
-        ),
-        (
-            "source_gram_frequencies",
-            false,
-            size_of(&pack.sentences.source_gram_frequencies),
-        ),
-        (
-            "word_to_pronunciation",
-            false,
-            size_of(&pack.word_to_pronunciation),
-        ),
-        (
-            "pronunciation_to_words",
-            false,
-            size_of(&pack.pronunciation_to_words),
-        ),
-        ("minimal_pairs", false, size_of(&pack.minimal_pairs)),
-        (
-            "pronunciation_data",
-            false,
-            size_of(&pack.pronunciation_data),
-        ),
-        (
-            "pattern_frequency_map",
-            false,
-            size_of(&pack.pattern_frequency_map),
-        ),
-        (
-            "homophone_practice",
-            false,
-            size_of(&pack.sentences.homophone_practice),
-        ),
-        (
-            "pronunciation_max_freq_cache",
-            false,
-            size_of(&pack.pronunciation_max_freq_cache),
-        ),
-        (
-            "proper_noun_definitions",
-            false,
-            size_of(&pack.proper_noun_definitions),
-        ),
-        ("gram_frequencies", false, size_of(&pack.gram_frequencies)),
-        ("gram_definitions", false, size_of(&pack.gram_definitions)),
-        ("definition_texts", false, size_of(&pack.definition_texts)),
-        ("definition_lists", false, size_of(&pack.definition_lists)),
-        (
-            "definition_morphology",
-            false,
-            size_of(&pack.definition_morphology),
-        ),
-        (
-            "definition_segments",
-            false,
-            size_of(&pack.definition_segments),
-        ),
-        (
-            "heteronym_to_grams",
-            false,
-            size_of(&pack.heteronym_to_grams),
-        ),
-        ("string_to_grams", false, size_of(&pack.string_to_grams)),
-        ("morphemes", false, size_of(&pack.morphemes)),
-    ];
+    println!(
+        "core: {} bytes; sentences: {} bytes",
+        pack.core.bytes().len(),
+        pack.sentences.bytes().len()
+    );
 
-    rows.push(("gram_rodeo", false, size_of(&pack.gram_rodeo)));
-    rows.push(("string_rodeo", false, size_of(&pack.string_rodeo)));
-    rows.push((
-        "translation_rodeo",
-        true,
-        size_of(&pack.sentences.translation_rodeo),
+    // The selector infers the native field type without reconstructing a whole pack.
+    macro_rules! rows {
+        ($native:ty, $part:expr, $sentence:expr; $($field:ident),* $(,)?) => {
+            vec![$((stringify!($field), $sentence, size_of(&$part.$field, |part: &$native| &part.$field))),*]
+        };
+    }
+    let mut rows: Vec<(&str, bool, usize)> = rows!(
+        language_utils::language_pack::LanguagePackCore, pack.core, false;
+        spur_space_fingerprint, string_rodeo, gram_rodeo, written_ease_order,
+        listening_ease_order, reading_keys, senses, words_to_heteronyms,
+        word_to_pronunciation, pronunciation_to_words, minimal_pairs,
+        pronunciation_data, pattern_frequency_map, pronunciation_max_freq_cache,
+        proper_noun_definitions, gram_frequencies, definition_texts, gram_definitions,
+        definition_lists, definition_morphology, definition_segments,
+        heteronym_to_grams, string_to_grams, morphemes,
+    );
+    rows.extend(rows!(
+        language_utils::language_pack::LanguagePackSentences, pack.sentences, true;
+        gram_readings, ruby_segmentations, redundant_senses, prefixed_text,
+        grams_with_prefixed_text, strokes, spur_space_fingerprint, target_language,
+        translation_rodeo, translations, source_gram_frequencies, homophone_practice,
+        movies, books, sentence_sources, encoded_sentences, sentence_index,
+        human_audio, pronunciation_audio,
     ));
     rows.sort_by_key(|&(_, _, n)| std::cmp::Reverse(n));
 

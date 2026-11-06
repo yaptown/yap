@@ -16,3 +16,4 @@ parse-display = "0.11.0"
 rustc-hash = "2.1"
 xxhash-rust.workspace = true
 unicode-normalization.workspace = true
+self_cell = "1.3.0"

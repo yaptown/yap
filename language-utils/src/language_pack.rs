@@ -4,9 +4,8 @@ use crate::sentence_codec::{self, GramKey, Symbol};
 use crate::{
     Atom, Audio, BookMetadata, Course, Frequency, Gram, GramDefinition, Heteronym,
     HomophonePractice, HomophoneWordPair, Lexeme, Literal, MorphemeInfo, MorphemeSegment,
-    MovieMetadata, PatternPosition, PronunciationClip, PronunciationData, PronunciationGuide,
-    ProperNounDefinition, SentenceGram, SentenceGrams, SpurGram, SpurReadingGram, TaggedGram,
-    VoiceActor, WordType,
+    MovieMetadata, PatternPosition, PronunciationClip, PronunciationData, ProperNounDefinition,
+    SentenceGram, SentenceGrams, SpurGram, SpurReadingGram, TaggedGram, VoiceActor, WordType,
 };
 use lasso::{Key, Spur};
 use rustc_hash::FxHashMap;
@@ -48,8 +47,8 @@ pub type StoredGramDefinition =
     GramDefinition<DefinitionTextSpur, DefinitionListSpur, MorphologyListSpur, SegmentListSpur>;
 pub type DefinitionMetadata<'a> = GramDefinition<
     DefinitionTextSpur,
-    &'a [crate::TargetToNativeWord<DefinitionTextSpur>],
-    &'a [crate::features::Morphology],
+    &'a [crate::ArchivedTargetToNativeWord<DefinitionTextSpur>],
+    &'a [crate::features::ArchivedMorphology],
     &'a [MorphemeSegment<DefinitionTextSpur>],
 >;
 
@@ -80,10 +79,12 @@ impl<T> SentenceLists<T> {
         }
         Self { starts, keys }
     }
+}
 
-    pub fn get(&self, sentence: SentenceSpur) -> &[T] {
+impl<T: rkyv::Archive> ArchivedSentenceLists<T> {
+    pub fn get(&self, sentence: SentenceSpur) -> &[rkyv::Archived<T>] {
         let i = sentence.into_usize();
-        &self.keys[self.starts[i] as usize..self.starts[i + 1] as usize]
+        &self.keys[self.starts[i].to_native() as usize..self.starts[i + 1].to_native() as usize]
     }
 }
 
@@ -95,12 +96,12 @@ pub struct SourceIds {
     pub sentences: SentenceLists<u16>,
 }
 
-impl SourceIds {
-    fn get(&self, sentence: SentenceSpur) -> impl Iterator<Item = &String> {
+impl ArchivedSourceIds {
+    fn get(&self, sentence: SentenceSpur) -> impl Iterator<Item = &str> {
         self.sentences
             .get(sentence)
             .iter()
-            .map(|&i| &self.ids[i as usize])
+            .map(|i| self.ids[i.to_native() as usize].as_str())
     }
 }
 
@@ -111,7 +112,7 @@ pub struct SentenceSources {
     pub books: SourceIds,
 }
 
-impl SentenceSources {
+impl ArchivedSentenceSources {
     fn get(&self, sentence: SentenceSpur) -> SentenceSourceRef<'_> {
         let flags = self.flags[sentence.into_usize()];
         SentenceSourceRef {
@@ -130,16 +131,16 @@ pub struct SentenceSourceRef<'a> {
     pub from_tatoeba: bool,
     pub from_manual: bool,
     pub from_song: bool,
-    sources: &'a SentenceSources,
+    sources: &'a ArchivedSentenceSources,
     sentence: SentenceSpur,
 }
 
 impl<'a> SentenceSourceRef<'a> {
-    pub fn movie_ids(&self) -> impl Iterator<Item = &'a String> {
+    pub fn movie_ids(&self) -> impl Iterator<Item = &'a str> {
         self.sources.movies.get(self.sentence)
     }
 
-    pub fn book_ids(&self) -> impl Iterator<Item = &'a String> {
+    pub fn book_ids(&self) -> impl Iterator<Item = &'a str> {
         self.sources.books.get(self.sentence)
     }
 }
@@ -152,9 +153,9 @@ pub struct EaseOrder<K: Eq + Hash> {
     pub ranks: FxHashMap<K, u32>,
 }
 
-impl<K: Copy + Eq + Hash> EaseOrder<K> {
+impl<K: Copy + Eq + Hash + rkyv::Archive<Archived = K>> ArchivedEaseOrder<K> {
     pub fn rank(&self, key: &K) -> Option<u32> {
-        self.ranks.get(key).copied()
+        self.ranks.get(key).map(|rank| rank.to_native())
     }
 
     pub fn len(&self) -> usize {
@@ -166,15 +167,18 @@ impl<K: Copy + Eq + Hash> EaseOrder<K> {
     }
 
     pub fn ease_at(&self, rank: u32) -> Option<f32> {
-        self.entries.get(rank as usize).map(|(_, ease)| *ease)
+        self.entries
+            .get(rank as usize)
+            .map(|entry| entry.1.to_native())
     }
 
     pub fn iter_from(&self, rank: u32) -> impl Iterator<Item = K> + '_ {
-        self.entries[rank as usize..].iter().map(|(key, _)| *key)
+        self.entries[rank as usize..].iter().map(|entry| entry.0)
     }
 
     pub fn partition_point(&self, mut predicate: impl FnMut(f32) -> bool) -> u32 {
-        self.entries.partition_point(|(_, ease)| predicate(*ease)) as u32
+        self.entries
+            .partition_point(|entry| predicate(entry.1.to_native())) as u32
     }
 }
 
@@ -224,7 +228,7 @@ pub struct SourceFrequencyList {
     pub total_count: u64,
 }
 
-impl SourceFrequencyList {
+impl ArchivedSourceFrequencyList {
     pub fn is_empty(&self) -> bool {
         self.keys.is_empty()
     }
@@ -233,15 +237,18 @@ impl SourceFrequencyList {
         &'a self,
         pack: &'a LanguagePack,
     ) -> impl DoubleEndedIterator<Item = (&'a SpurReadingGram, Frequency)> {
-        self.keys.iter().zip(&self.counts).map(|(key, &count)| {
-            (
-                pack.reading_gram(*key),
-                Frequency {
-                    count: u32::from(count),
-                    ..*pack.gram_frequencies.entries.get(key).unwrap()
-                },
-            )
-        })
+        self.keys
+            .iter()
+            .zip(self.counts.iter())
+            .map(|(key, &count)| {
+                (
+                    pack.reading_gram(*key),
+                    Frequency {
+                        count: u32::from(count),
+                        ..*pack.gram_frequencies.entries.get(key).unwrap()
+                    },
+                )
+            })
     }
 }
 
@@ -253,7 +260,7 @@ pub struct WrittenEaseOrder {
     pub ease: Vec<f32>,
 }
 
-impl WrittenEaseOrder {
+impl ArchivedWrittenEaseOrder {
     pub fn rank(&self, gram: &SpurReadingGram) -> Option<u32> {
         let key = self.grams.get(gram)?;
         (key.into_usize() < self.ease.len()).then_some(key.index())
@@ -265,18 +272,19 @@ impl WrittenEaseOrder {
         self.ease.is_empty()
     }
     pub fn ease_at(&self, rank: u32) -> Option<f32> {
-        self.ease.get(rank as usize).copied()
+        self.ease.get(rank as usize).map(|ease| ease.to_native())
     }
     pub fn iter_from(&self, rank: u32) -> impl Iterator<Item = SpurReadingGram> + '_ {
         (rank as usize..self.ease.len())
             .map(|i| *self.grams.resolve(&GramKey::try_from_usize(i).unwrap()))
     }
     pub fn partition_point(&self, mut predicate: impl FnMut(f32) -> bool) -> u32 {
-        self.ease.partition_point(|ease| predicate(*ease)) as u32
+        self.ease
+            .partition_point(|ease| predicate(ease.to_native())) as u32
     }
 }
 
-impl FrequencyList {
+impl ArchivedFrequencyList {
     pub fn resolved<'a>(
         &'a self,
         pack: &'a LanguagePack,
@@ -287,18 +295,98 @@ impl FrequencyList {
     }
 }
 
+type CoreArchive<'a> = &'a ArchivedLanguagePackCore;
+type SentencesArchive<'a> = &'a ArchivedLanguagePackSentences;
+
+self_cell::self_cell! {
+    pub struct CoreBytes {
+        owner: rkyv::util::AlignedVec,
+        #[covariant]
+        dependent: CoreArchive,
+    }
+}
+self_cell::self_cell! {
+    pub struct PackSentences {
+        owner: rkyv::util::AlignedVec,
+        #[covariant]
+        dependent: SentencesArchive,
+    }
+}
+
+macro_rules! pack_part {
+    ($owner:ty, $archive:ty) => {
+        impl $owner {
+            pub fn from_bytes(bytes: rkyv::util::AlignedVec) -> Result<Self, rkyv::rancor::Error> {
+                Self::try_new(bytes, |bytes| {
+                    rkyv::access::<$archive, rkyv::rancor::Error>(bytes)
+                })
+            }
+            pub fn bytes(&self) -> &[u8] {
+                self.borrow_owner()
+            }
+        }
+        impl std::ops::Deref for $owner {
+            type Target = $archive;
+            fn deref(&self) -> &Self::Target {
+                self.borrow_dependent()
+            }
+        }
+        impl std::fmt::Debug for $owner {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.debug_struct(stringify!($owner))
+                    .field("bytes", &self.bytes().len())
+                    .finish()
+            }
+        }
+    };
+}
+pack_part!(CoreBytes, ArchivedLanguagePackCore);
+pack_part!(PackSentences, ArchivedLanguagePackSentences);
+
+/// Validated core bytes and the frequency view derived once from that core.
+#[derive(Debug)]
+pub struct PackCore {
+    archive: CoreBytes,
+    pub sense_frequencies: IndexMap<TaggedGram<SpurGram>, Frequency>,
+}
+
+impl PackCore {
+    pub fn from_bytes(bytes: rkyv::util::AlignedVec) -> Result<Self, rkyv::rancor::Error> {
+        CoreBytes::from_bytes(bytes).map(Self::from)
+    }
+}
+
+impl From<CoreBytes> for PackCore {
+    fn from(archive: CoreBytes) -> Self {
+        let sense_frequencies =
+            FrequencyList::sense_entries(archive.gram_frequencies.entries.iter().map(
+                |(key, frequency)| (archive.written_ease_order.grams.resolve(key), frequency),
+            ));
+        Self {
+            archive,
+            sense_frequencies,
+        }
+    }
+}
+
+impl std::ops::Deref for PackCore {
+    type Target = CoreBytes;
+    fn deref(&self) -> &Self::Target {
+        &self.archive
+    }
+}
+
 /// The assembled runtime pack. Never serialized itself — the on-disk/wire
 /// format is the [`LanguagePackCore`] + [`LanguagePackSentences`] pair, put
 /// back together by [`LanguagePack::from_parts`].
 #[derive(Debug)]
 pub struct LanguagePack {
-    pub sense_frequencies: IndexMap<TaggedGram<SpurGram>, Frequency>,
-    pub core: Arc<LanguagePackCore>,
-    pub sentences: LanguagePackSentences,
+    pub core: Arc<PackCore>,
+    pub sentences: PackSentences,
 }
 
 impl std::ops::Deref for LanguagePack {
-    type Target = LanguagePackCore;
+    type Target = PackCore;
 
     fn deref(&self) -> &Self::Target {
         &self.core
@@ -338,21 +426,38 @@ impl LanguagePack {
 
     /// Resolve definition text only when a caller needs a display/UI value.
     pub fn gram_definition(&self, gram: &TaggedGram<SpurGram>) -> Option<GramDefinition<String>> {
-        self.definition_metadata(gram)
-            .map(|definition| definition.map_text(|text, _| self.definition_text(text)))
+        let definition: GramDefinition<DefinitionTextSpur> =
+            self.definition_metadata(gram)?.map_lists(
+                |definitions| {
+                    definitions
+                        .iter()
+                        .map(|value| rkyv::deserialize::<_, rkyv::rancor::Error>(value).unwrap())
+                        .collect()
+                },
+                |morphology| {
+                    morphology
+                        .iter()
+                        .map(|value| rkyv::deserialize::<_, rkyv::rancor::Error>(value).unwrap())
+                        .collect()
+                },
+                |segments| segments.to_vec(),
+            );
+        Some(definition.map_text(|text, _| self.definition_text(text)))
     }
 
-    /// Borrow inline flags and interned lists; this never decodes or allocates text.
+    /// Borrow archived lists without allocating or decoding their elements.
     pub fn definition_metadata(
         &self,
         gram: &TaggedGram<SpurGram>,
     ) -> Option<DefinitionMetadata<'_>> {
         self.gram_definitions.get(gram).map(|definition| {
-            definition.clone().map_lists(
-                |key| self.definition_lists.resolve(&key),
-                |key| self.definition_morphology.resolve(&key),
-                |key| self.definition_segments.resolve(&key),
-            )
+            rkyv::deserialize::<StoredGramDefinition, rkyv::rancor::Error>(definition)
+                .unwrap()
+                .map_lists(
+                    |key| self.definition_lists.resolve(&key),
+                    |key| self.definition_morphology.resolve(&key),
+                    |key| self.definition_segments.resolve(&key),
+                )
         })
     }
 
@@ -366,8 +471,14 @@ impl LanguagePack {
         gram: SpurGram,
         language: crate::Language,
     ) -> Option<crate::features::WordPrefix> {
-        let definition = self.definition_metadata(self.senses_of(gram).first()?)?;
-        crate::compute_word_prefix(&self.resolve_gram(&gram), &definition, language)
+        let morphology = match self.definition_metadata(self.senses_of(gram).first()?)? {
+            GramDefinition::Dictionary(entry) => entry.morphology.first().map(|value| {
+                rkyv::deserialize::<crate::features::Morphology, rkyv::rancor::Error>(value)
+                    .unwrap()
+            }),
+            GramDefinition::Phrasebook(_) => None,
+        };
+        crate::compute_word_prefix(&self.resolve_gram(&gram), morphology.as_ref(), language)
     }
 
     pub fn reading_gram(&self, key: GramKey) -> &SpurReadingGram {
@@ -377,7 +488,7 @@ impl LanguagePack {
     pub fn reading_keys(&self, sense: &TaggedGram<SpurGram>) -> &[GramKey] {
         self.reading_keys
             .get(sense)
-            .map(Vec::as_slice)
+            .map(|values| values.as_slice())
             .unwrap_or_default()
     }
 
@@ -452,7 +563,7 @@ impl LanguagePack {
     pub fn senses_of(&self, gram: SpurGram) -> &[TaggedGram<SpurGram>] {
         self.senses
             .get(&gram)
-            .map(Vec::as_slice)
+            .map(|values| values.as_slice())
             .unwrap_or_default()
     }
 
@@ -492,7 +603,7 @@ impl LanguagePack {
             && let Some(sets) = self.sentences.redundant_senses.get(text)
             && let Some(set) = sets.iter().find(|set| set.contains(&sense))
         {
-            return set.clone();
+            return set.to_vec();
         }
         vec![sense]
     }
@@ -505,7 +616,7 @@ impl LanguagePack {
         &self,
         pattern: Spur,
         position: PatternPosition,
-    ) -> Option<&PronunciationGuide> {
+    ) -> Option<&crate::ArchivedPronunciationGuide> {
         let pattern = self.string_rodeo.resolve(&pattern);
         self.pronunciation_data
             .guides
@@ -671,8 +782,9 @@ impl LanguagePack {
     ///
     /// Returns `None` if no gloss is available (e.g. a `Root` whose heteronym
     /// has no dictionary entry, or an affix with `meaning: None`).
-    pub fn morpheme_gloss(&self, info: &MorphemeInfo<Spur>) -> Option<String> {
-        match info {
+    pub fn morpheme_gloss(&self, info: &crate::ArchivedMorphemeInfo<Spur>) -> Option<String> {
+        let info = rkyv::deserialize::<MorphemeInfo<Spur>, rkyv::rancor::Error>(info).unwrap();
+        match &info {
             MorphemeInfo::Root { heteronym } => self.heteronym_gloss(heteronym),
             MorphemeInfo::Bound { meaning }
             | MorphemeInfo::Derivation { meaning }
@@ -759,7 +871,7 @@ impl LanguagePack {
             atoms => {
                 let is_compositional = matches!(
                     self.gram_definitions.get(self.senses_of(gram_spur).first()?),
-                    Some(GramDefinition::Phrasebook(entry)) if entry.compositional
+                    Some(crate::ArchivedGramDefinition::Phrasebook(entry)) if entry.compositional
                 );
                 if !is_compositional {
                     return None;
@@ -867,8 +979,28 @@ pub struct LanguagePackSentences {
     pub pronunciation_audio: FxHashMap<String, PronunciationClip>,
 }
 
+impl ArchivedLanguagePackSentences {
+    pub fn source_frequencies(
+        &self,
+        source: &crate::FrequencySourceId,
+    ) -> Option<&ArchivedSourceFrequencyList> {
+        self.source_gram_frequencies
+            .get_with(source, |native, archived| {
+                use crate::{ArchivedFrequencySourceId as A, FrequencySourceId as N};
+                match (native, archived) {
+                    (N::Movie(a), A::Movie(b)) => a.as_str() == b.as_str(),
+                    (N::PimsleurLesson(a), A::PimsleurLesson(b)) => {
+                        a.level == b.level.to_native() && a.lesson == b.lesson.to_native()
+                    }
+                    _ => false,
+                }
+            })
+    }
+}
+
 impl LanguagePackSentences {
-    fn empty(spur_space_fingerprint: u64) -> Self {
+    /// Construct an empty sentence half for a core with this key-space fingerprint.
+    pub fn empty(spur_space_fingerprint: u64) -> Self {
         Self {
             spur_space_fingerprint,
             target_language: crate::Language::English,
@@ -899,40 +1031,30 @@ impl LanguagePack {
             .gram_readings
             .get(&gram)
             .into_iter()
-            .flatten()
+            .flat_map(|readings| readings.iter())
             .map(|s| self.string_rodeo.resolve(s))
     }
 
     /// Assemble a runtime pack from its halves. With `sentences: None`, the
     /// result has empty sentence-side maps — enough for the placement test
     /// and dictionary lookups, but no comprehensible-sentence search.
-    pub fn from_parts(
-        core: impl Into<Arc<LanguagePackCore>>,
-        sentences: Option<LanguagePackSentences>,
-    ) -> Self {
+    pub fn from_parts(core: impl Into<Arc<PackCore>>, sentences: Option<PackSentences>) -> Self {
         let core = core.into();
-        let sentences =
-            sentences.unwrap_or_else(|| LanguagePackSentences::empty(core.spur_space_fingerprint));
+        let sentences = sentences.unwrap_or_else(|| {
+            let empty = LanguagePackSentences::empty(core.spur_space_fingerprint.to_native());
+            PackSentences::from_bytes(rkyv::to_bytes::<rkyv::rancor::Error>(&empty).unwrap())
+                .unwrap()
+        });
         assert_eq!(
             core.spur_space_fingerprint, sentences.spur_space_fingerprint,
             "language pack halves are from different builds (core spur-space fingerprint \
              doesn't match the one the sentences half was built against)"
         );
-        let sense_frequencies = FrequencyList::sense_entries(
-            core.gram_frequencies
-                .entries
-                .iter()
-                .map(|(key, frequency)| (core.written_ease_order.grams.resolve(key), frequency)),
-        );
-        Self {
-            core,
-            sentences,
-            sense_frequencies,
-        }
+        Self { core, sentences }
     }
 
-    /// Add the sentence half without deserializing the core again.
-    pub fn with_sentences(&self, sentences: LanguagePackSentences) -> Self {
+    /// Add the sentence half while sharing the core's validated archive bytes.
+    pub fn with_sentences(&self, sentences: PackSentences) -> Self {
         Self::from_parts(self.core.clone(), Some(sentences))
     }
 }
@@ -947,8 +1069,16 @@ pub const SENTENCES_FILENAME: &str = "language_data_sentences.rkyv";
 /// the split `language_data_core.rkyv` + `language_data_sentences.rkyv` pair.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn load_split_dir(dir: &std::path::Path) -> Result<LanguagePack, std::io::Error> {
+    use std::io::Read as _;
     let read = |filename: &str| {
-        std::fs::read(dir.join(filename)).map_err(|e| {
+        let read_file = || -> std::io::Result<rkyv::util::AlignedVec> {
+            let mut file = std::fs::File::open(dir.join(filename))?;
+            let mut bytes = rkyv::util::AlignedVec::new();
+            bytes.resize(usize::try_from(file.metadata()?.len()).unwrap(), 0);
+            file.read_exact(&mut bytes)?;
+            Ok(bytes)
+        };
+        read_file().map_err(|e| {
             std::io::Error::new(
                 e.kind(),
                 format!("failed to read {filename} in {}: {e}", dir.display()),
@@ -956,17 +1086,8 @@ pub fn load_split_dir(dir: &std::path::Path) -> Result<LanguagePack, std::io::Er
         })
     };
     let rkyv_err = |e: rkyv::rancor::Error| std::io::Error::other(e.to_string());
-    let core_bytes = read(CORE_FILENAME)?;
-    let sentences_bytes = read(SENTENCES_FILENAME)?;
-    let core = rkyv::access::<ArchivedLanguagePackCore, rkyv::rancor::Error>(&core_bytes)
-        .map_err(rkyv_err)?;
-    let core =
-        rkyv::deserialize::<LanguagePackCore, rkyv::rancor::Error>(core).map_err(rkyv_err)?;
-    let sentences =
-        rkyv::access::<ArchivedLanguagePackSentences, rkyv::rancor::Error>(&sentences_bytes)
-            .map_err(rkyv_err)?;
-    let sentences = rkyv::deserialize::<LanguagePackSentences, rkyv::rancor::Error>(sentences)
-        .map_err(rkyv_err)?;
+    let core = PackCore::from_bytes(read(CORE_FILENAME)?).map_err(rkyv_err)?;
+    let sentences = PackSentences::from_bytes(read(SENTENCES_FILENAME)?).map_err(rkyv_err)?;
     Ok(LanguagePack::from_parts(core, Some(sentences)))
 }
 
@@ -977,20 +1098,18 @@ pub fn load_split_dir(dir: &std::path::Path) -> Result<LanguagePack, std::io::Er
 pub fn write_split_dir(dir: &std::path::Path, pack: LanguagePack) -> Result<(), std::io::Error> {
     use xxhash_rust::const_xxh3::xxh3_64;
 
-    let core_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&*pack.core)
-        .expect("failed to serialize language pack core");
-    let sentences_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&pack.sentences)
-        .expect("failed to serialize language pack sentences");
+    let core_bytes = pack.core.bytes();
+    let sentences_bytes = pack.sentences.bytes();
 
-    std::fs::write(dir.join(CORE_FILENAME), &core_bytes)?;
-    std::fs::write(dir.join(SENTENCES_FILENAME), &sentences_bytes)?;
+    std::fs::write(dir.join(CORE_FILENAME), core_bytes)?;
+    std::fs::write(dir.join(SENTENCES_FILENAME), sentences_bytes)?;
     std::fs::write(
         dir.join("language_data.hash"),
         format!(
             "{};{}\n{};{}",
-            xxh3_64(&core_bytes),
+            xxh3_64(core_bytes),
             core_bytes.len(),
-            xxh3_64(&sentences_bytes),
+            xxh3_64(sentences_bytes),
             sentences_bytes.len()
         ),
     )?;

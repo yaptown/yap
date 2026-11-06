@@ -50,11 +50,13 @@ impl SentenceIndex {
             data,
         }
     }
+}
 
+impl ArchivedSentenceIndex {
     pub fn sentences(&self, key: GramKey) -> impl Iterator<Item = SentenceSpur> + '_ {
         let slot = key.index() as usize;
         let bytes = self.offsets.get(slot..slot + 2).map_or(&[][..], |range| {
-            &self.data[range[0] as usize..range[1] as usize]
+            &self.data[range[0].to_native() as usize..range[1].to_native() as usize]
         });
         let (count, bytes) = if bytes.is_empty() {
             (0, bytes)
@@ -64,7 +66,7 @@ impl SentenceIndex {
                 &bytes[4..],
             )
         };
-        let low = low_bits(self.universe, count);
+        let low = low_bits(self.universe.to_native(), count);
         let high_start = count as usize * low;
         let mut high_position = 0;
         (0..count as usize).map(move |i| {
@@ -116,7 +118,7 @@ mod tests {
         ] {
             let index = SentenceIndex::new(universe as usize, &lists);
             let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&index).unwrap();
-            let index: SentenceIndex = rkyv::from_bytes::<_, rkyv::rancor::Error>(&bytes).unwrap();
+            let index = rkyv::access::<ArchivedSentenceIndex, rkyv::rancor::Error>(&bytes).unwrap();
             for (key, expected) in lists.iter().enumerate() {
                 let actual: Vec<_> = index
                     .sentences(GramKey::try_from_usize(key).unwrap())

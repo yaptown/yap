@@ -82,9 +82,7 @@ pub use human_audio::{lookup as lookup_human_audio, register as register_human_a
 pub use utils::ai_server_url;
 
 use language_utils::Atom;
-use language_utils::HomophonePractice;
 use language_utils::HomophoneSentencePair;
-use language_utils::HomophoneWordPair;
 use language_utils::ProperNounDefinition;
 use language_utils::SentenceGrams;
 use language_utils::{SentenceSpur, SpurGram, TaggedGram, TranslationSpur};
@@ -1926,7 +1924,7 @@ impl weapon::AppState for Deck {
                                 }
                                 language_utils::Lexeme::Multiword { phrase } => {
                                     if let Some(grams) =
-                                        context.language_pack.string_to_grams.get(phrase)
+                                        context.language_pack.string_to_grams.get(phrase.as_str())
                                         && let Some(gram) = grams.first()
                                     {
                                         remembered_grams.insert(*gram);
@@ -1958,7 +1956,7 @@ impl weapon::AppState for Deck {
                                 }
                                 language_utils::Lexeme::Multiword { phrase } => {
                                     if let Some(grams) =
-                                        context.language_pack.string_to_grams.get(phrase)
+                                        context.language_pack.string_to_grams.get(phrase.as_str())
                                         && let Some(gram) = grams.first()
                                     {
                                         forgotten_grams.insert(*gram);
@@ -2745,12 +2743,12 @@ impl Deck {
     /// Locate Essential progress on the same coverage curve used by stats.
     fn essential_position_with(
         pack: &language_utils::language_pack::LanguagePack,
-        frequency_list: &language_utils::language_pack::FrequencyList,
+        frequency_list: &language_utils::language_pack::ArchivedFrequencyList,
         known_written: impl GramMembership,
         known_listening: impl GramMembership,
     ) -> tiers::EssentialPosition {
         let coverage = Self::percent_known_in(
-            frequency_list.total_count,
+            frequency_list.total_count.to_native(),
             frequency_list
                 .resolved(pack)
                 .map(|(gram, frequency)| (gram, *frequency)),
@@ -2796,11 +2794,10 @@ impl Deck {
                 self.context
                     .language_pack
                     .sentences
-                    .source_gram_frequencies
-                    .get(&source_id)
+                    .source_frequencies(&source_id)
                     .map(|fl| {
                         Self::percent_known_in(
-                            fl.total_count,
+                            fl.total_count.to_native(),
                             fl.resolved(&self.context.language_pack),
                             known_written,
                             known_listening,
@@ -3217,7 +3214,11 @@ impl Deck {
         let written = self.get_comprehensible_written_grams(true);
         let listening = self.get_comprehensible_listening_grams(true);
         Self::percent_known_in(
-            self.context.language_pack.gram_frequencies.total_count,
+            self.context
+                .language_pack
+                .gram_frequencies
+                .total_count
+                .to_native(),
             self.context
                 .language_pack
                 .gram_frequencies
@@ -3355,11 +3356,8 @@ impl Deck {
         let comprehensible_listening = self.get_comprehensible_listening_grams(true);
 
         for movie_id in language_pack.sentences.movies.keys() {
-            let source_id = language_utils::FrequencySourceId::Movie(movie_id.clone());
-            let Some(movie_frequencies) = language_pack
-                .sentences
-                .source_gram_frequencies
-                .get(&source_id)
+            let source_id = language_utils::FrequencySourceId::Movie(movie_id.to_string());
+            let Some(movie_frequencies) = language_pack.sentences.source_frequencies(&source_id)
             else {
                 continue;
             };
@@ -3368,7 +3366,7 @@ impl Deck {
                 continue;
             }
 
-            let total_word_count = movie_frequencies.total_count;
+            let total_word_count = movie_frequencies.total_count.to_native();
 
             if total_word_count == 0 {
                 continue;
@@ -3428,7 +3426,7 @@ impl Deck {
             };
 
             stats.push(MovieStats {
-                id: movie_id.clone(),
+                id: movie_id.to_string(),
                 percent_known,
                 all_available_learned: score.all_available_learned,
                 cards_to_next_milestone,
@@ -3449,8 +3447,9 @@ impl Deck {
         let comprehensible_written = self.get_comprehensible_written_grams(true);
         let comprehensible_listening = self.get_comprehensible_listening_grams(true);
 
-        for (source_id, freq_list) in &language_pack.sentences.source_gram_frequencies {
-            let language_utils::FrequencySourceId::PimsleurLesson(lesson) = source_id else {
+        for (source_id, freq_list) in language_pack.sentences.source_gram_frequencies.iter() {
+            let language_utils::ArchivedFrequencySourceId::PimsleurLesson(lesson) = source_id
+            else {
                 continue;
             };
 
@@ -3459,15 +3458,15 @@ impl Deck {
             }
 
             let score = Self::percent_known_in(
-                freq_list.total_count,
+                freq_list.total_count.to_native(),
                 freq_list.resolved(language_pack),
                 comprehensible_written,
                 comprehensible_listening,
             );
 
             stats.push(PimsleurStats {
-                level: lesson.level,
-                lesson: lesson.lesson,
+                level: lesson.level.to_native(),
+                lesson: lesson.lesson.to_native(),
                 percent_known: score.percent_known,
                 all_available_learned: score.all_available_learned,
             });
@@ -3495,13 +3494,17 @@ impl Deck {
                     .as_deref()
                     .is_some_and(|lang| normalize_original_language(lang) == target_iso)
             })
-            .filter_map(|(id, meta)| meta.rotten_tomatoes_score.map(|score| (id, score)))
+            .filter_map(|(id, meta)| {
+                meta.rotten_tomatoes_score
+                    .as_ref()
+                    .copied()
+                    .map(|score| (id, score))
+            })
             .filter(|(id, _)| {
                 self.context
                     .language_pack
                     .sentences
-                    .source_gram_frequencies
-                    .get(&language_utils::FrequencySourceId::Movie((*id).clone()))
+                    .source_frequencies(&language_utils::FrequencySourceId::Movie(id.to_string()))
                     .is_some_and(|frequencies| {
                         frequencies.total_count > 0
                             && frequencies
@@ -3512,7 +3515,7 @@ impl Deck {
                     })
             })
             .max_by_key(|(_, score)| *score)
-            .map(|(id, _)| SentenceListSelection::Movie { id: id.clone() })
+            .map(|(id, _)| SentenceListSelection::Movie { id: id.to_string() })
     }
 
     /// Returns the best Pimsleur lesson: the first incomplete one (by level/lesson).
@@ -3535,13 +3538,13 @@ impl Deck {
         let mut movies = Vec::new();
 
         for movie_id in movie_ids {
-            if let Some(movie_metadata) = language_pack.sentences.movies.get(&movie_id) {
+            if let Some(movie_metadata) = language_pack.sentences.movies.get(movie_id.as_str()) {
                 movies.push(MovieMetadataBasic {
-                    id: movie_metadata.id.clone(),
-                    title: movie_metadata.title.clone(),
+                    id: movie_metadata.id.to_string(),
+                    title: movie_metadata.title.to_string(),
                     poster_path: None,
                     localizations: Default::default(),
-                    year: movie_metadata.year,
+                    year: movie_metadata.year.as_ref().map(|year| year.to_native()),
                     // Normalized here as well as on ingest, so packs built
                     // before that existed still hand the frontend a code it
                     // can compare against `Language::iso_639_1`.
@@ -3549,8 +3552,8 @@ impl Deck {
                         .original_language
                         .as_deref()
                         .map(|code| normalize_original_language(code).to_owned()),
-                    variety: movie_metadata.variety.map(|v| v.code().to_owned()),
-                    rotten_tomatoes_score: movie_metadata.rotten_tomatoes_score,
+                    variety: movie_metadata.variety.as_ref().map(|v| v.code().to_owned()),
+                    rotten_tomatoes_score: movie_metadata.rotten_tomatoes_score.as_ref().copied(),
                 });
             }
         }
@@ -3577,8 +3580,8 @@ impl Deck {
             .language_pack
             .sentences
             .movies
-            .get(&movie_id)
-            .and_then(|m| m.poster_bytes.clone())
+            .get(movie_id.as_str())
+            .and_then(|m| m.poster_bytes.as_ref().map(|bytes| bytes.to_vec()))
     }
 
     #[bridgerton::stable]
@@ -3586,7 +3589,16 @@ impl Deck {
         let language_pack = &self.context.language_pack;
         book_ids
             .into_iter()
-            .filter_map(|book_id| language_pack.sentences.books.get(&book_id).cloned())
+            .filter_map(|book_id| {
+                language_pack
+                    .sentences
+                    .books
+                    .get(book_id.as_str())
+                    .map(|book| {
+                        rkyv::deserialize::<language_utils::BookMetadata, rkyv::rancor::Error>(book)
+                            .unwrap()
+                    })
+            })
             .collect()
     }
 
@@ -3715,7 +3727,7 @@ impl Deck {
             None => position.projected_percent(
                 freq_list,
                 Self::percent_known_in(
-                    freq_list.total_count,
+                    freq_list.total_count.to_native(),
                     freq_list
                         .resolved(&self.context.language_pack)
                         .map(|(gram, frequency)| (gram, *frequency)),
@@ -4306,7 +4318,7 @@ impl Context {
             CardIndicator::LetterPronunciation { pattern, position } => self
                 .language_pack
                 .pattern_frequency_map
-                .contains_key(&(*pattern, *position)),
+                .contains_key(&rkyv::tuple::ArchivedTuple2(*pattern, *position)),
         }
     }
 
@@ -4418,9 +4430,15 @@ impl Context {
             CardIndicator::LetterPronunciation { pattern, position } => {
                 let guide = self.language_pack.pronunciation_guide(*pattern, *position);
                 match guide.map(|g| &g.familiarity) {
-                    Some(language_utils::PronunciationFamiliarity::LikelyAlreadyKnows) => 0.85,
-                    Some(language_utils::PronunciationFamiliarity::MaybeAlreadyKnows) => 0.50,
-                    Some(language_utils::PronunciationFamiliarity::ProbablyDoesNotKnow) => 0.15,
+                    Some(language_utils::ArchivedPronunciationFamiliarity::LikelyAlreadyKnows) => {
+                        0.85
+                    }
+                    Some(language_utils::ArchivedPronunciationFamiliarity::MaybeAlreadyKnows) => {
+                        0.50
+                    }
+                    Some(language_utils::ArchivedPronunciationFamiliarity::ProbablyDoesNotKnow) => {
+                        0.15
+                    }
                     None => 0.0,
                 }
             }
@@ -4440,8 +4458,8 @@ impl Context {
                 let count = self
                     .language_pack
                     .pattern_frequency_map
-                    .get(&(*pattern, *position))
-                    .copied()
+                    .get(&rkyv::tuple::ArchivedTuple2(*pattern, *position))
+                    .map(|count| count.to_native())
                     .unwrap_or(0);
                 Some(Frequency {
                     count,
@@ -4459,19 +4477,18 @@ impl Context {
         &self,
         word1: Spur,
         word2: Spur,
-    ) -> Option<&HomophonePractice<SentenceSpur>> {
+    ) -> Option<&language_utils::ArchivedHomophonePractice<SentenceSpur>> {
         self.language_pack
             .sentences
             .homophone_practice
-            .get(&HomophoneWordPair { word1, word2 })
+            .get(&language_utils::ArchivedHomophoneWordPair { word1, word2 })
             .or_else(|| {
-                self.language_pack
-                    .sentences
-                    .homophone_practice
-                    .get(&HomophoneWordPair {
+                self.language_pack.sentences.homophone_practice.get(
+                    &language_utils::ArchivedHomophoneWordPair {
                         word1: word2,
                         word2: word1,
-                    })
+                    },
+                )
             })
     }
 
@@ -4484,7 +4501,7 @@ impl Context {
 
         // Try heteronyms - find the first one that has a gram in gram_frequencies
         if let Some(heteronyms) = words_to_heteronyms.get(&word_spur) {
-            for heteronym in heteronyms {
+            for heteronym in heteronyms.iter() {
                 if let Some(grams) = self.language_pack.heteronym_to_grams.get(heteronym)
                     && let Some(gram) = grams.first()
                     && let Some(gram) = self.language_pack.senses_of(*gram).first()
@@ -5661,7 +5678,7 @@ mod tests {
             target_language: Language::SpanishLatinAmerican,
             ..french
         };
-        let pack = Arc::new(pack_builder::build(Default::default(), french));
+        let pack = Arc::new(pack_builder::build(Default::default(), french, None));
         let weak = Arc::downgrade(&pack);
         RECENT_PACK.with(|recent| *recent.borrow_mut() = Some((french, true, weak.clone())));
         weapon.load_language_pack_core(french, None).await.unwrap();
@@ -5681,7 +5698,7 @@ mod tests {
         drop(weapon);
         drop(next_weapon.get_deck_state(french, 0).await.unwrap());
         assert!(next_weapon.deck_fold.borrow().is_some());
-        let spanish_pack = Arc::new(pack_builder::build(Default::default(), spanish));
+        let spanish_pack = Arc::new(pack_builder::build(Default::default(), spanish, None));
         RECENT_PACK.with(|recent| {
             *recent.borrow_mut() = Some((spanish, true, Arc::downgrade(&spanish_pack)))
         });
@@ -5703,7 +5720,7 @@ mod tests {
             native_language: Language::English,
             target_language: Language::French,
         };
-        let pack = Arc::new(pack_builder::build(Default::default(), course));
+        let pack = Arc::new(pack_builder::build(Default::default(), course, None));
         *weapon.language_pack.borrow_mut() = Some(LoadedLanguagePack {
             course,
             pack: pack.clone(),
@@ -5751,20 +5768,32 @@ mod tests {
         };
         let context = Context {
             study_goal,
-            language_pack: Arc::new(pack_builder::build(Default::default(), course)),
+            language_pack: Arc::new(pack_builder::build(Default::default(), course, None)),
             course,
             timezone: chrono::FixedOffset::east_opt(0).unwrap(),
         };
         Deck::finalize(DeckState::new(), &context)
     }
 
+    fn set_test_sentences(
+        deck: &mut Deck,
+        sentences: &language_utils::language_pack::LanguagePackSentences,
+    ) {
+        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(sentences).unwrap();
+        let sentences = language_utils::language_pack::PackSentences::from_bytes(bytes).unwrap();
+        deck.context.language_pack = Arc::new(deck.context.language_pack.with_sentences(sentences));
+    }
+
     #[test]
     fn sentence_posters_exclude_only_the_clip_and_preserve_order() {
         let mut deck = daily_review_target_deck(None);
-        let movies = &mut Arc::get_mut(&mut deck.context.language_pack)
-            .unwrap()
-            .sentences
-            .movies;
+        let mut sentences = language_utils::language_pack::LanguagePackSentences::empty(
+            deck.context
+                .language_pack
+                .spur_space_fingerprint
+                .to_native(),
+        );
+        let movies = &mut sentences.movies;
         for id in ["first", "clip", "last"] {
             movies.insert(
                 id.to_owned(),
@@ -5779,6 +5808,7 @@ mod tests {
                 },
             );
         }
+        set_test_sentences(&mut deck, &sentences);
         let ids = ["last", "missing", "clip", "first"]
             .map(str::to_owned)
             .to_vec();
@@ -5798,10 +5828,11 @@ mod tests {
     fn movie_selection_matches_full_stats_without_browser_milestones() {
         use language_utils::{FrequencySourceId, language_pack::SourceFrequencyList};
         let mut deck = Deck::default();
-        let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
+        let pack = &deck.context.language_pack;
         let (&gram, _) = pack.gram_frequencies.entries.get_index(0).unwrap();
-        pack.sentences.movies.clear();
-        pack.sentences.source_gram_frequencies.clear();
+        let mut sentences = language_utils::language_pack::LanguagePackSentences::empty(
+            pack.spur_space_fingerprint.to_native(),
+        );
         for (id, language, rating, total, populated) in [
             ("french-a", Some("fr"), Some(90), 100, true),
             ("french-b", Some("fra"), Some(90), 100, true),
@@ -5811,7 +5842,7 @@ mod tests {
             ("zero", Some("fr"), Some(100), 0, true),
             ("empty", Some("fr"), Some(100), 100, false),
         ] {
-            pack.sentences.movies.insert(
+            sentences.movies.insert(
                 id.into(),
                 language_utils::MovieMetadata {
                     id: id.into(),
@@ -5823,7 +5854,7 @@ mod tests {
                     poster_bytes: None,
                 },
             );
-            pack.sentences.source_gram_frequencies.insert(
+            sentences.source_gram_frequencies.insert(
                 FrequencySourceId::Movie(id.into()),
                 SourceFrequencyList {
                     keys: populated.then_some(gram).into_iter().collect(),
@@ -5832,6 +5863,7 @@ mod tests {
                 },
             );
         }
+        set_test_sentences(&mut deck, &sentences);
         let stats = deck.get_movie_stats();
         assert_eq!(stats.len(), 5);
         let expected = deck
@@ -5849,9 +5881,14 @@ mod tests {
                         .as_deref()
                         .is_some_and(|language| normalize_original_language(language) == "fr")
             })
-            .filter_map(|(id, meta)| meta.rotten_tomatoes_score.map(|score| (id, score)))
+            .filter_map(|(id, meta)| {
+                meta.rotten_tomatoes_score
+                    .as_ref()
+                    .copied()
+                    .map(|score| (id, score))
+            })
             .max_by_key(|(_, score)| *score)
-            .map(|(id, _)| SentenceListSelection::Movie { id: id.clone() });
+            .map(|(id, _)| SentenceListSelection::Movie { id: id.to_string() });
         assert!(expected.is_some());
         assert_eq!(deck.get_best_movie_sentence_list(), expected);
         let light = deck.movie_stats(false);
@@ -5889,14 +5926,10 @@ mod tests {
         assert_eq!(known.get_best_movie_sentence_list(), None);
         drop(known);
         // With no eligible original-language movie, preserve highest-comprehension fallback.
-        for meta in Arc::get_mut(&mut deck.context.language_pack)
-            .unwrap()
-            .sentences
-            .movies
-            .values_mut()
-        {
+        for meta in sentences.movies.values_mut() {
             meta.rotten_tomatoes_score = None;
         }
+        set_test_sentences(&mut deck, &sentences);
         assert_eq!(deck.get_best_movie_sentence_list(), None);
         assert_eq!(
             deck.get_sentence_list_for_category(SentenceListCategory::Movie),

@@ -1,10 +1,7 @@
 // The guest only exists as WebAssembly; its host imports have no native definitions.
 #![cfg(target_arch = "wasm32")]
 
-use language_utils::language_pack::{
-    ArchivedLanguagePackCore, ArchivedLanguagePackSentences, LanguagePack, LanguagePackCore,
-    LanguagePackSentences,
-};
+use language_utils::language_pack::{CoreBytes, LanguagePack, PackCore, PackSentences};
 use std::hint::black_box;
 
 #[link(wasm_import_module = "bench")]
@@ -31,23 +28,17 @@ pub extern "C" fn run() {
     phase("start");
     let bytes = read(0);
     phase("core: read");
-    let archived = rkyv::access::<ArchivedLanguagePackCore, rkyv::rancor::Error>(&bytes).unwrap();
-    let core = rkyv::deserialize::<LanguagePackCore, rkyv::rancor::Error>(archived).unwrap();
-    phase("core: deserialize");
-    drop(bytes);
-    phase("core: drop bytes");
+    let core = CoreBytes::from_bytes(bytes).unwrap();
+    phase("core: validate");
+    let core = PackCore::from(core);
+    phase("core: sense frequencies");
     let core = LanguagePack::from_parts(core, None);
     phase("core: assemble");
 
     let bytes = read(1);
     phase("sentences: read");
-    let archived =
-        rkyv::access::<ArchivedLanguagePackSentences, rkyv::rancor::Error>(&bytes).unwrap();
-    let sentences =
-        rkyv::deserialize::<LanguagePackSentences, rkyv::rancor::Error>(archived).unwrap();
-    phase("sentences: deserialize");
-    drop(bytes);
-    phase("sentences: drop bytes");
+    let sentences = PackSentences::from_bytes(bytes).unwrap();
+    phase("sentences: validate");
     let pack = core.with_sentences(sentences);
     drop(core);
     phase("assemble pack");

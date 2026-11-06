@@ -683,13 +683,13 @@ impl Deck {
         sentence_list: Option<SentenceListSelection>,
     ) -> SentenceListNavigation {
         let pack = &self.context.language_pack;
-        let available = |frequencies: &language_utils::language_pack::SourceFrequencyList| {
-            !frequencies.is_empty() && frequencies.total_count > 0
-        };
+        let available =
+            |frequencies: &language_utils::language_pack::ArchivedSourceFrequencyList| {
+                !frequencies.is_empty() && frequencies.total_count > 0
+            };
         let has_movies = pack.sentences.movies.keys().any(|id| {
             pack.sentences
-                .source_gram_frequencies
-                .get(&language_utils::FrequencySourceId::Movie(id.clone()))
+                .source_frequencies(&language_utils::FrequencySourceId::Movie(id.to_string()))
                 .is_some_and(available)
         });
         let has_pimsleur =
@@ -697,8 +697,10 @@ impl Deck {
                 .source_gram_frequencies
                 .iter()
                 .any(|(source, frequencies)| {
-                    matches!(source, language_utils::FrequencySourceId::PimsleurLesson(_))
-                        && available(frequencies)
+                    matches!(
+                        source,
+                        language_utils::ArchivedFrequencySourceId::PimsleurLesson(_)
+                    ) && available(frequencies)
                 });
         get_sentence_list_navigation(sentence_list, has_movies, has_pimsleur)
     }

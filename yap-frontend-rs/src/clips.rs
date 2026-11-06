@@ -239,12 +239,12 @@ pub(crate) fn clip_for_sentence_where(
 fn preferred_clip<'a>(
     language: Language,
     rows: impl IntoIterator<Item = &'a ClipRow>,
-    movies: Option<&rustc_hash::FxHashMap<String, language_utils::MovieMetadata>>,
+    movies: Option<&rkyv::Archived<rustc_hash::FxHashMap<String, language_utils::MovieMetadata>>>,
 ) -> Option<&'a ClipRow> {
     rows.into_iter().min_by_key(|row| {
         let variety = movies
             .and_then(|movies| movies.get(clip_film(&row.clip_id)))
-            .and_then(|movie| movie.variety);
+            .and_then(|movie| movie.variety.as_ref().copied());
         // A film's variety is always one of this corpus's dialects.
         (
             variety.is_some_and(|variety| variety != language),
@@ -381,23 +381,30 @@ mod tests {
             (Language::SpanishLatinAmerican, Language::SpanishPeninsular),
             (Language::PortugueseBrazilian, Language::PortugueseEuropean),
         ] {
-            let movies = [("a", Some(a)), ("b", Some(b)), ("unknown", None)]
-                .into_iter()
-                .map(|(id, variety)| {
-                    (
-                        id.to_owned(),
-                        language_utils::MovieMetadata {
-                            id: id.into(),
-                            title: id.into(),
-                            year: None,
-                            original_language: None,
-                            rotten_tomatoes_score: None,
-                            poster_bytes: None,
-                            variety,
-                        },
-                    )
-                })
-                .collect();
+            let movies: rustc_hash::FxHashMap<String, language_utils::MovieMetadata> =
+                [("a", Some(a)), ("b", Some(b)), ("unknown", None)]
+                    .into_iter()
+                    .map(|(id, variety)| {
+                        (
+                            id.to_owned(),
+                            language_utils::MovieMetadata {
+                                id: id.into(),
+                                title: id.into(),
+                                year: None,
+                                original_language: None,
+                                rotten_tomatoes_score: None,
+                                poster_bytes: None,
+                                variety,
+                            },
+                        )
+                    })
+                    .collect();
+            let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&movies).unwrap();
+            let movies = rkyv::access::<
+                rkyv::Archived<rustc_hash::FxHashMap<String, language_utils::MovieMetadata>>,
+                rkyv::rancor::Error,
+            >(&bytes)
+            .unwrap();
             let choose = |ids: &[&str], language| {
                 preferred_clip(
                     language,

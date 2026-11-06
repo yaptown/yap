@@ -24,28 +24,38 @@ pub struct RubySegment {
 /// A sentence occurrence's pronunciation, separate from its written-card identity.
 /// The reading is whole-gram text, never a frequency-dependent numeric index.
 #[derive(
-    Clone,
-    Copy,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize,
-    rkyv::Archive,
-    rkyv::Serialize,
-    rkyv::Deserialize,
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
 )]
+#[repr(C)]
 pub struct ReadingTaggedGram<G, S> {
     pub sense: crate::TaggedGram<G>,
     pub reading: Option<S>,
 }
 
+crate::archive_as_self!(crate::SpurReadingGram => sense, reading);
+
+// Option<Spur> uses its transparent NonZeroU32 niche; all reading bits are valid.
+unsafe impl<C: rkyv::rancor::Fallible + ?Sized> rkyv::bytecheck::CheckBytes<C>
+    for crate::SpurReadingGram
+where
+    C::Error: rkyv::rancor::Source,
+{
+    unsafe fn check_bytes(value: *const Self, context: &mut C) -> Result<(), C::Error> {
+        unsafe {
+            rkyv::bytecheck::CheckBytes::check_bytes(std::ptr::addr_of!((*value).sense), context)
+        }
+    }
+}
+
 impl AsRef<Self> for crate::SpurReadingGram {
     fn as_ref(&self) -> &Self {
         self
+    }
+}
+
+impl lasso::ArchivedValueEq<Self> for crate::SpurReadingGram {
+    fn archived_eq(&self, query: &Self) -> bool {
+        self == query
     }
 }
 
@@ -71,7 +81,7 @@ impl<G, S> ReadingTaggedGram<G, S> {
 impl ReadingTaggedGram<crate::SpurGram, lasso::Spur> {
     pub fn resolve(
         &self,
-        grams: &lasso::RodeoReader<crate::Gram<lasso::Spur>>,
+        grams: &impl lasso::Reader<crate::Gram<lasso::Spur>, crate::SpurGram>,
     ) -> ReadingTaggedGram<crate::Gram<lasso::Spur>, lasso::Spur> {
         ReadingTaggedGram {
             sense: self.sense.resolve(grams),
@@ -83,7 +93,7 @@ impl ReadingTaggedGram<crate::SpurGram, lasso::Spur> {
 impl ReadingTaggedGram<crate::Gram<String>, String> {
     pub fn get_interned(
         &self,
-        strings: &lasso::RodeoReader,
+        strings: &impl lasso::Reader<String>,
     ) -> Option<ReadingTaggedGram<crate::Gram<lasso::Spur>, lasso::Spur>> {
         Some(ReadingTaggedGram {
             sense: self.sense.get_interned(strings)?,
@@ -98,7 +108,7 @@ impl ReadingTaggedGram<crate::Gram<String>, String> {
 impl ReadingTaggedGram<crate::Gram<lasso::Spur>, lasso::Spur> {
     pub fn get_interned(
         &self,
-        grams: &lasso::RodeoReader<crate::Gram<lasso::Spur>>,
+        grams: &impl lasso::Reader<crate::Gram<lasso::Spur>, crate::SpurGram>,
     ) -> Option<ReadingTaggedGram<crate::SpurGram, lasso::Spur>> {
         Some(ReadingTaggedGram {
             sense: self.sense.get_interned(grams)?,
@@ -108,7 +118,7 @@ impl ReadingTaggedGram<crate::Gram<lasso::Spur>, lasso::Spur> {
 
     pub fn resolve(
         &self,
-        strings: &lasso::RodeoReader,
+        strings: &impl lasso::Reader<String>,
     ) -> ReadingTaggedGram<crate::Gram<String>, String> {
         ReadingTaggedGram {
             sense: self.sense.resolve(strings),

@@ -108,14 +108,15 @@ mod tests {
         let key = sequences.get_or_intern(symbols);
         let compressed = sequences.into_compressed_resolver();
         let grams = grams.into_reader();
-        assert_eq!(decode(compressed.resolve(&key).copied(), &grams), sentence);
         let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&(compressed, grams)).unwrap();
         type Stored = (
             lasso::CompressedRodeoResolver<SentenceSpur, Vec<Symbol>>,
             RodeoReader<SpurReadingGram, GramKey>,
         );
-        let (compressed, grams): Stored =
-            rkyv::from_bytes::<Stored, rkyv::rancor::Error>(&bytes).unwrap();
-        assert_eq!(decode(compressed.resolve(&key).copied(), &grams), sentence);
+        let archived = rkyv::access::<rkyv::Archived<Stored>, rkyv::rancor::Error>(&bytes).unwrap();
+        assert_eq!(
+            decode(archived.0.resolve(&key).copied(), &archived.1),
+            sentence
+        );
     }
 }

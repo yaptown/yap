@@ -8,13 +8,17 @@ pub(crate) fn word_ruby(
     text: &str,
     reading: Option<&str>,
     language: Language,
-    segmentations: &std::collections::BTreeMap<(String, String), Vec<RubySegment>>,
+    segmentations: &rkyv::Archived<std::collections::BTreeMap<(String, String), Vec<RubySegment>>>,
 ) -> Vec<RubySegment> {
     let segments = reading
         .map(|reading| {
             segmentations
-                .get(&(text.to_owned(), reading.to_owned()))
-                .cloned()
+                .get_key_value_with(&(text, reading), |q, k| {
+                    q.cmp(&(k.0.as_str(), k.1.as_str()))
+                })
+                .map(|(_, segments)| {
+                    rkyv::deserialize::<Vec<RubySegment>, rkyv::rancor::Error>(segments).unwrap()
+                })
                 .unwrap_or_else(|| language_utils::readings::ruby_segments(text, reading, language))
         })
         .unwrap_or_default();
@@ -148,7 +152,14 @@ fn distribute(words: &[(&str, &str)], segments: Vec<RubySegment>) -> Vec<Vec<Rub
 mod tests {
     use super::*;
     fn word_ruby(text: &str, reading: Option<&str>, language: Language) -> Vec<RubySegment> {
-        super::word_ruby(text, reading, language, &Default::default())
+        let table = std::collections::BTreeMap::<(String, String), Vec<RubySegment>>::new();
+        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&table).unwrap();
+        let table = rkyv::access::<
+            rkyv::Archived<std::collections::BTreeMap<(String, String), Vec<RubySegment>>>,
+            rkyv::rancor::Error,
+        >(&bytes)
+        .unwrap();
+        super::word_ruby(text, reading, language, table)
     }
     #[test]
     fn split_reading_survives_literal_projection() {
@@ -162,11 +173,18 @@ mod tests {
                 ruby: Some("きょう".into()),
             },
         ];
-        let lookup = std::collections::BTreeMap::from([(
-            ("東京".into(), "とうきょう".into()),
-            segments.clone(),
-        )]);
-        let ruby = super::word_ruby("東京", Some("とうきょう"), Language::Japanese, &lookup);
+        let lookup: std::collections::BTreeMap<(String, String), Vec<RubySegment>> =
+            std::collections::BTreeMap::from([(
+                ("東京".into(), "とうきょう".into()),
+                segments.clone(),
+            )]);
+        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&lookup).unwrap();
+        let lookup = rkyv::access::<
+            rkyv::Archived<std::collections::BTreeMap<(String, String), Vec<RubySegment>>>,
+            rkyv::rancor::Error,
+        >(&bytes)
+        .unwrap();
+        let ruby = super::word_ruby("東京", Some("とうきょう"), Language::Japanese, lookup);
         assert_eq!(
             distribute(&[("東", ""), ("京", "")], ruby),
             vec![vec![segments[0].clone()], vec![segments[1].clone()]]

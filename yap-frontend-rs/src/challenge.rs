@@ -147,11 +147,11 @@ impl ReviewInfo {
         let candidate_grams = pronunciation
             .into_iter()
             .flat_map(|pronunciation| language_pack.pronunciation_to_words.get(pronunciation))
-            .flatten()
+            .flat_map(|values| values.iter())
             .flat_map(|word| language_pack.words_to_heteronyms.get(word))
-            .flatten()
+            .flat_map(|values| values.iter())
             .flat_map(|heteronym| language_pack.heteronym_to_grams.get(heteronym))
-            .flatten()
+            .flat_map(|values| values.iter())
             .copied()
             // Include the target even if the pronunciation index has no candidates.
             .chain(std::iter::once(gram))
@@ -267,7 +267,7 @@ impl ReviewInfo {
             .get(&gram.gram)
             .and_then(|text| language_pack.sentences.grams_with_prefixed_text.get(text))
             .into_iter()
-            .flatten()
+            .flat_map(|values| values.iter())
             .copied()
             .filter(|member| {
                 *member == gram
@@ -450,7 +450,7 @@ impl Deck {
                     .sentences
                     .movies
                     .get(movie_id)
-                    .map(|metadata| (movie_id.clone(), metadata.title.clone()))
+                    .map(|metadata| (movie_id.to_string(), metadata.title.to_string()))
             })
             .collect();
 
@@ -470,7 +470,16 @@ impl Deck {
                     language_pack
                         .proper_noun_definitions
                         .get(&text_spur)
-                        .map(|def| (literal.word.text.clone(), def.clone()))
+                        .map(|def| {
+                            (
+                                literal.word.text.clone(),
+                                rkyv::deserialize::<
+                                    language_utils::ProperNounDefinition,
+                                    rkyv::rancor::Error,
+                                >(def)
+                                .unwrap(),
+                            )
+                        })
                 } else {
                     None
                 }
@@ -496,7 +505,7 @@ impl Deck {
             &literals,
             &part_gram_indices
                 .iter()
-                .flatten()
+                .flat_map(|values| values.iter())
                 .copied()
                 .collect::<Vec<_>>(),
         );
@@ -619,7 +628,7 @@ impl Deck {
                     .sentences
                     .movies
                     .get(movie_id)
-                    .map(|metadata| (movie_id.clone(), metadata.title.clone()))
+                    .map(|metadata| (movie_id.to_string(), metadata.title.to_string()))
             })
             .collect();
 
@@ -634,7 +643,16 @@ impl Deck {
                         return language_pack
                             .proper_noun_definitions
                             .get(&text_spur)
-                            .map(|def| (literal.word.text.clone(), def.clone()));
+                            .map(|def| {
+                                (
+                                    literal.word.text.clone(),
+                                    rkyv::deserialize::<
+                                        language_utils::ProperNounDefinition,
+                                        rkyv::rancor::Error,
+                                    >(def)
+                                    .unwrap(),
+                                )
+                            });
                     }
                     None
                 })
@@ -728,9 +746,10 @@ impl ReviewInfo {
         position: PatternPosition,
     ) -> Option<Challenge<Gram<String>>> {
         let language_pack = &deck.context.language_pack;
-        let guide = language_pack
-            .pronunciation_guide(pattern, position)?
-            .clone();
+        let guide = rkyv::deserialize::<language_utils::PronunciationGuide, rkyv::rancor::Error>(
+            language_pack.pronunciation_guide(pattern, position)?,
+        )
+        .unwrap();
         let pattern_str = guide.pattern.clone();
 
         let target_language = deck.context.course.target_language;
@@ -751,7 +770,10 @@ impl ReviewInfo {
                     .join(" ");
                 let segments = cue_segments(
                     segments,
-                    language_pack.sentences.pronunciation_audio.get(&spoken),
+                    language_pack
+                        .sentences
+                        .pronunciation_audio
+                        .get(spoken.as_str()),
                 );
                 crate::PronunciationCue {
                     audio: AudioRequest {
@@ -792,7 +814,7 @@ impl ReviewInfo {
 /// Alignment is all-or-nothing: stale pack segments must never time the wrong text.
 fn cue_segments(
     segments: Vec<language_utils::SpokenSegment>,
-    clip: Option<&language_utils::PronunciationClip>,
+    clip: Option<&language_utils::ArchivedPronunciationClip>,
 ) -> Vec<crate::CueSegment> {
     let timings = clip.filter(|clip| {
         if clip.segments.is_empty() {
@@ -814,7 +836,7 @@ fn cue_segments(
         .map(|(index, segment)| crate::CueSegment {
             text: segment.display,
             role: segment.role,
-            start_ms: timings.map(|clip| clip.segments[index].start_ms),
+            start_ms: timings.map(|clip| clip.segments[index].start_ms.to_native()),
         })
         .collect()
 }
@@ -840,7 +862,11 @@ mod cue_tests {
                 })
                 .collect(),
         };
-        let cue = cue_segments(segments, Some(&clip));
+        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&clip).unwrap();
+        let clip =
+            rkyv::access::<language_utils::ArchivedPronunciationClip, rkyv::rancor::Error>(&bytes)
+                .unwrap();
+        let cue = cue_segments(segments, Some(clip));
         assert_eq!(
             cue.iter()
                 .map(|s| (s.text.as_str(), s.role, s.start_ms))
@@ -870,7 +896,18 @@ mod cue_tests {
                 end_ms: 20,
             }],
         };
-        for clip in [None, Some(&empty), Some(&mismatch)] {
+        let empty_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&empty).unwrap();
+        let mismatch_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&mismatch).unwrap();
+        let empty = rkyv::access::<language_utils::ArchivedPronunciationClip, rkyv::rancor::Error>(
+            &empty_bytes,
+        )
+        .unwrap();
+        let mismatch =
+            rkyv::access::<language_utils::ArchivedPronunciationClip, rkyv::rancor::Error>(
+                &mismatch_bytes,
+            )
+            .unwrap();
+        for clip in [None, Some(empty), Some(mismatch)] {
             let cue = cue_segments(segments.clone(), clip);
             assert_eq!(cue.len(), segments.len());
             assert!(cue.iter().all(|s| s.start_ms.is_none()));

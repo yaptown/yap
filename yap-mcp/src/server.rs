@@ -507,7 +507,7 @@ impl YapState {
             .movie_ids()
             .filter_map(|id| pack.sentences.movies.get(id))
         {
-            match movie.year {
+            match movie.year.as_ref() {
                 Some(year) => out.push(format!("movie: {} ({year})", movie.title)),
                 None => out.push(format!("movie: {}", movie.title)),
             }

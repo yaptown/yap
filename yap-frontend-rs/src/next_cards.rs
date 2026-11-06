@@ -151,8 +151,7 @@ impl NextCardsIterator {
             context
                 .language_pack
                 .sentences
-                .source_gram_frequencies
-                .get(&source_id)
+                .source_frequencies(&source_id)
         });
 
         let gram_source = || match sentence_list_freq_list {

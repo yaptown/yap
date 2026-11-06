@@ -19,16 +19,20 @@ use language_utils::*;
 use lasso::{Key, Spur};
 use minimal_pairs::build_minimal_pairs_index;
 use rustc_hash::FxHashMap;
-use std::collections::BTreeMap;
-use std::sync::Arc;
 
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod word_prefix_tests;
 
+pub type RubySegmenter<'a> = dyn Fn(&str, &str) -> Option<Vec<RubySegment>> + 'a;
+
 /// Build a pack from generated corpus data. Runtime loaders use `LanguagePack::from_parts`.
-pub fn build(language_data: ConsolidatedLanguageData, course: Course) -> LanguagePack {
+pub fn build(
+    language_data: ConsolidatedLanguageData,
+    course: Course,
+    segment_ruby: Option<&RubySegmenter<'_>>,
+) -> LanguagePack {
     std::thread::scope(|scope| {
         let translation_texts = language_data
             .translations
@@ -367,7 +371,7 @@ pub fn build(language_data: ConsolidatedLanguageData, course: Course) -> Languag
                 .map(|term| &term.gram);
             for gram in learnable.chain(phrases) {
                 assert!(
-                    written_ease_order.rank(gram).is_some(),
+                    written_ease_order.ranks.contains_key(gram),
                     "Encoded gram has no written-ease rank: {:?}",
                     gram.resolve(&gram_rodeo).resolve(&rodeo)
                 );
@@ -531,7 +535,7 @@ pub fn build(language_data: ConsolidatedLanguageData, course: Course) -> Languag
         let gram_readings = derive_readings(encoded.iter().map(|(_, sentence)| sentence), &rodeo);
         let mut reading_grams = lasso::Rodeo::<SpurReadingGram, GramKey>::new();
         let mut reading_keys: FxHashMap<_, Vec<_>> = FxHashMap::default();
-        for reading in written_ease_order.iter_from(0) {
+        for &(reading, _) in &written_ease_order.entries {
             let key = reading_grams.get_or_intern(reading);
             reading_keys.entry(reading.sense).or_default().push(key);
         }
@@ -586,10 +590,101 @@ pub fn build(language_data: ConsolidatedLanguageData, course: Course) -> Languag
                 .map(|(_, ease)| ease)
                 .collect(),
         };
+        let definition_texts = definition_job.join().unwrap();
+        let definitions =
+            definition_text::intern_lists(gram_definitions.into_iter().map(|(key, definition)| {
+                (
+                    key,
+                    definition.map_text(|text, _| definition_texts.get(&(), text).unwrap()),
+                )
+            }));
+        let fingerprint = spur_space_fingerprint(&rodeo, &gram_rodeo, &written_ease_order);
+        let core = LanguagePackCore {
+            spur_space_fingerprint: fingerprint,
+            string_rodeo: rodeo,
+            gram_rodeo,
+            senses,
+            reading_keys,
+            written_ease_order,
+            listening_ease_order,
+            words_to_heteronyms,
+            word_to_pronunciation,
+            pronunciation_to_words,
+            minimal_pairs,
+            pronunciation_data,
+            pattern_frequency_map,
+            pronunciation_max_freq_cache,
+            proper_noun_definitions,
+            gram_frequencies,
+            definition_texts,
+            gram_definitions: definitions.entries,
+            definition_lists: definitions.definitions,
+            definition_morphology: definitions.morphology,
+            definition_segments: definitions.segments,
+            heteronym_to_grams,
+            string_to_grams,
+            morphemes,
+        };
+        let core_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&core).unwrap();
+        drop(core);
+        let core = PackCore::from_bytes(core_bytes).unwrap();
+        let rodeo = &core.string_rodeo;
+        let written_ease_order = &core.written_ease_order;
+        let reading_keys = &core.reading_keys;
+        let ruby_segmentations = segment_ruby
+            .map(|segment| {
+                let mut pairs = std::collections::BTreeSet::new();
+                for (gram, readings) in &gram_readings {
+                    let text = core
+                        .gram_rodeo
+                        .resolve(&gram.gram)
+                        .resolve(rodeo)
+                        .to_display_string(target_language);
+                    for reading in readings {
+                        pairs.insert((text.clone(), rodeo.resolve(reading).to_string()));
+                    }
+                }
+                for (_, sentence) in &encoded {
+                    let literals = sentence.clone().without_readings().to_literals(
+                        rodeo,
+                        &core.gram_rodeo,
+                        target_language,
+                    );
+                    for (gram, literals) in sentence.grams.iter().zip(literals) {
+                        let (SentenceGram::Learnable(gram) | SentenceGram::Obvious(gram)) = gram;
+                        let (SentenceGram::Learnable((_, literals))
+                        | SentenceGram::Obvious((_, literals))) = literals;
+                        if let Some(reading) = gram.reading {
+                            let mut text: String = literals
+                                .iter()
+                                .flat_map(|l| [l.word.text.as_str(), l.whitespace.as_str()])
+                                .collect();
+                            if let Some(last) = literals.last() {
+                                text.truncate(text.len() - last.whitespace.as_str().len());
+                            }
+                            pairs.insert((text, rodeo.resolve(&reading).to_string()));
+                        }
+                    }
+                }
+                pairs
+                    .into_iter()
+                    .filter_map(|(text, reading)| {
+                        let segments = segment(&text, &reading)?;
+                        (segments
+                            != language_utils::readings::ruby_segments(
+                                &text,
+                                &reading,
+                                target_language,
+                            ))
+                        .then_some(((text, reading), segments))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
         let cx = language_utils::sentence_text::RenderContext {
             grams: &written_ease_order.grams,
-            gram_rodeo: &gram_rodeo,
-            strings: &rodeo,
+            gram_rodeo: &core.gram_rodeo,
+            strings: rodeo,
             language: target_language,
         };
         let encoded_sentences =
@@ -613,15 +708,6 @@ pub fn build(language_data: ConsolidatedLanguageData, course: Course) -> Languag
                 .collect();
         }
         let translations = SentenceLists::new(translations);
-        for (text, _) in &encoded {
-            assert!(
-                translations
-                    .get(sentence_key(text))
-                    .iter()
-                    .any(|key| translation_rodeo.resolve(key).next().is_some()),
-                "encoded sentence {text:?} must have a nonempty translation"
-            );
-        }
         let mut sources = vec![SentenceSource::none(); encoded_sentences.len()];
         for (text, source) in &language_data.sentence_sources {
             sources[sentence_key(text).into_usize()] = source.clone();
@@ -653,7 +739,7 @@ pub fn build(language_data: ConsolidatedLanguageData, course: Course) -> Languag
         let mut needed = vec![false; written_ease_order.grams.len()];
         for sense in sense_frequencies.keys() {
             if let Some(keys) = reading_keys.get(sense) {
-                for key in keys {
+                for key in keys.iter() {
                     needed[key.index() as usize] = true;
                 }
             }
@@ -673,70 +759,45 @@ pub fn build(language_data: ConsolidatedLanguageData, course: Course) -> Languag
         }
         let sentence_index =
             language_utils::sentence_index::SentenceIndex::new(encoded_sentences.len(), &by_key);
-        let definition_texts = definition_job.join().unwrap();
-        let definitions =
-            definition_text::intern_lists(gram_definitions.into_iter().map(|(key, definition)| {
-                (
-                    key,
-                    definition.map_text(|text, _| definition_texts.get(&(), text).unwrap()),
-                )
-            }));
-        let fingerprint = spur_space_fingerprint(&rodeo, &gram_rodeo, &written_ease_order);
-        let pack = LanguagePack {
-            sense_frequencies,
-            core: Arc::new(LanguagePackCore {
-                spur_space_fingerprint: fingerprint,
-                string_rodeo: rodeo,
-                gram_rodeo,
-                senses,
-                reading_keys,
-                written_ease_order,
-                listening_ease_order,
-                words_to_heteronyms,
-                word_to_pronunciation,
-                pronunciation_to_words,
-                minimal_pairs,
-                pronunciation_data,
-                pattern_frequency_map,
-                pronunciation_max_freq_cache,
-                proper_noun_definitions,
-                gram_frequencies,
-                definition_texts,
-                gram_definitions: definitions.entries,
-                definition_lists: definitions.definitions,
-                definition_morphology: definitions.morphology,
-                definition_segments: definitions.segments,
-                heteronym_to_grams,
-                string_to_grams,
-                morphemes,
-            }),
-            sentences: LanguagePackSentences {
-                spur_space_fingerprint: fingerprint,
-                ruby_segmentations: BTreeMap::new(),
-                gram_readings,
-                prefixed_text,
-                grams_with_prefixed_text,
-                redundant_senses,
-                target_language: course.target_language,
-                translation_rodeo,
-                translations,
-                source_gram_frequencies,
-                homophone_practice,
-                movies,
-                books,
-                sentence_sources,
-                encoded_sentences,
-                sentence_index,
-                human_audio,
-                pronunciation_audio,
-                strokes: language_data.strokes,
-            },
+        let sentences = LanguagePackSentences {
+            spur_space_fingerprint: fingerprint,
+            ruby_segmentations,
+            gram_readings,
+            prefixed_text,
+            grams_with_prefixed_text,
+            redundant_senses,
+            target_language: course.target_language,
+            translation_rodeo,
+            translations,
+            source_gram_frequencies,
+            homophone_practice,
+            movies,
+            books,
+            sentence_sources,
+            encoded_sentences,
+            sentence_index,
+            human_audio,
+            pronunciation_audio,
+            strokes: language_data.strokes,
         };
+        let sentences =
+            PackSentences::from_bytes(rkyv::to_bytes::<rkyv::rancor::Error>(&sentences).unwrap())
+                .unwrap();
+        let pack = LanguagePack::from_parts(core, Some(sentences));
         assert_eq!(pack.sentences.encoded_sentences.len(), encoded.len());
         for (expected, _sentence) in &encoded {
             let key = pack
                 .sentence_key(expected)
                 .expect("sentence index must round-trip");
+            assert!(
+                pack.translations_of(key).iter().any(|key| pack
+                    .sentences
+                    .translation_rodeo
+                    .resolve(key)
+                    .next()
+                    .is_some()),
+                "encoded sentence {expected:?} must have a nonempty translation"
+            );
             let text = pack.sentence_text(key);
             assert_eq!(text, **expected, "decoded sentence text must round-trip");
             assert_eq!(
@@ -814,7 +875,7 @@ fn spur_space_fingerprint(
     written: &WrittenEaseOrder,
 ) -> u64 {
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-    hasher.update(b"sentence-expression-index-v6-elias-fano");
+    hasher.update(b"sentence-expression-index-v7-zero-copy");
     hasher.update(&(core_strings.len() as u64).to_le_bytes());
     hasher.update(&(core_grams.len() as u64).to_le_bytes());
     for (_, s) in core_strings.iter() {
@@ -830,7 +891,7 @@ fn spur_space_fingerprint(
         hasher.update(&bytes);
     }
     let reading_grams = &written.grams;
-    hasher.update(&(written.len() as u64).to_le_bytes());
+    hasher.update(&(written.ease.len() as u64).to_le_bytes());
     hasher.update(&(reading_grams.len() as u64).to_le_bytes());
     for (_, gram) in reading_grams.iter() {
         let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(gram).unwrap();
@@ -841,7 +902,7 @@ fn spur_space_fingerprint(
 
 fn derive_readings<'a>(
     sentences: impl Iterator<Item = &'a SentenceGrams<SpurReadingGram>>,
-    strings: &lasso::RodeoReader,
+    strings: &impl lasso::Reader<String>,
 ) -> FxHashMap<TaggedGram<SpurGram>, Vec<Spur>> {
     let mut counts: FxHashMap<_, FxHashMap<Spur, usize>> = FxHashMap::default();
     let mut phrases = FxHashMap::default();

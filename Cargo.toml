@@ -100,7 +100,7 @@ rev = "3639e126c26b6071dea12eeab8b6376196eb9f59"
 
 [workspace.dependencies.lasso]
 git = "https://github.com/anchpop/lasso.git"
-rev = "db1264c6cbfcbb53125d5cbceb5864f224748f18"
+rev = "f51309bda181364adff213cdc862d6cb751c7516"
 
 [workspace.dependencies.serde]
 version = "1.0"

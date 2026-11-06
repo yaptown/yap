@@ -312,6 +312,12 @@ mod tests {
 
     // Entirely synthetic: these tests must never load the regenerating packs on disk.
     fn deck() -> Deck {
+        deck_with_redundancies(BTreeMap::new())
+    }
+
+    fn deck_with_redundancies(
+        redundant_senses: BTreeMap<String, Vec<Vec<TaggedGram<Gram<String>>>>>,
+    ) -> Deck {
         let rows: &[(&str, u32, &[&str])] = &[
             ("bank", 3, &[]),
             ("bank", 2, &["finance", "credit", "lender"]),
@@ -341,7 +347,7 @@ mod tests {
         };
         let pack = pack_builder::build(
             ConsolidatedLanguageData {
-                redundant_senses: BTreeMap::new(),
+                redundant_senses,
                 strokes: Default::default(),
                 target_language_sentences: vec![],
                 translations: vec![],
@@ -414,6 +420,7 @@ mod tests {
                 pronunciation_audio: FxHashMap::default(),
             },
             course,
+            None,
         );
         let context = Context {
             study_goal: None,
@@ -486,18 +493,20 @@ mod tests {
     #[test]
     fn redundancy_filters_search_and_credits_hidden_cards() {
         let mut deck = deck();
-        let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
+        let pack = &deck.context.language_pack;
         let bare = pack.sense_frequencies.get_index(1).unwrap().0.gram;
-        pack.sentences.redundant_senses.insert(
-            pack.sentences.prefixed_text[&bare],
-            vec![
-                pack.senses_of(bare)
-                    .iter()
-                    .copied()
-                    .filter(|sense| sense.sense.is_some_and(|id| id.get() <= 2))
-                    .collect(),
-            ],
-        );
+        let members = pack
+            .senses_of(bare)
+            .iter()
+            .copied()
+            .filter(|sense| sense.sense.is_some_and(|id| id.get() <= 2))
+            .map(|sense| sense.map(|gram| pack.resolve_gram(&gram)))
+            .collect();
+        let text = pack
+            .string_rodeo
+            .resolve(&pack.sentences.prefixed_text[&bare])
+            .to_string();
+        deck = deck_with_redundancies(BTreeMap::from([(text, vec![members])]));
         assert!(
             deck.get_gram_dictionary_entries(Some("shore".into()), 10)
                 .is_empty()
@@ -564,7 +573,7 @@ mod translation_sense_tests {
         autograde::{LiteralGrades, Remembered},
     };
     use pack_builder::{ConsolidatedLanguageData, GramFrequencyList};
-    use std::{num::NonZeroU32, sync::Arc};
+    use std::{collections::BTreeMap, num::NonZeroU32, sync::Arc};
 
     fn gram(text: &str, sense: u32) -> TaggedGram<Gram<String>> {
         TaggedGram {
@@ -593,6 +602,12 @@ mod translation_sense_tests {
     }
 
     fn deck() -> Deck {
+        deck_with_redundancies(BTreeMap::new())
+    }
+
+    fn deck_with_redundancies(
+        redundant_senses: BTreeMap<String, Vec<Vec<TaggedGram<Gram<String>>>>>,
+    ) -> Deck {
         // Sense 1 is deliberately first in the inventory; sense 2 must never
         // silently become sense 1 when grading an occurrence or an inner word.
         let entries = [
@@ -602,10 +617,13 @@ mod translation_sense_tests {
             gram("river bank", 0),
             gram("river - bank", 0),
         ];
-        deck_with_entries(&entries)
+        deck_with_entries_and_redundancies(&entries, redundant_senses)
     }
 
-    fn deck_with_entries(entries: &[TaggedGram<Gram<String>>]) -> Deck {
+    fn deck_with_entries_and_redundancies(
+        entries: &[TaggedGram<Gram<String>>],
+        redundant_senses: BTreeMap<String, Vec<Vec<TaggedGram<Gram<String>>>>>,
+    ) -> Deck {
         let encoded = |grams, multiword_terms| SentenceGrams {
             grams,
             capitalize_first: true,
@@ -673,6 +691,7 @@ mod translation_sense_tests {
             native_language: Language::French,
         };
         let data = ConsolidatedLanguageData {
+            redundant_senses,
             target_language_sentences: sentences.iter().map(|(text, _)| text.clone()).collect(),
             translations: sentences
                 .iter()
@@ -732,7 +751,7 @@ mod translation_sense_tests {
         };
         let context = Context {
             study_goal: None,
-            language_pack: Arc::new(pack_builder::build(data, course)),
+            language_pack: Arc::new(pack_builder::build(data, course, None)),
             course,
             timezone: chrono::FixedOffset::east_opt(0).unwrap(),
         };
@@ -978,13 +997,12 @@ mod translation_sense_tests {
         assert_eq!(meanings.len(), 2);
         assert!(!meanings[0].is_new);
         assert!(meanings[1].is_new);
-        let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
-        let one = pack.resolve_entry(&gram("bank", 1)).unwrap();
-        let two = pack.resolve_entry(&gram("bank", 2)).unwrap();
-        pack.sentences.redundant_senses.insert(
-            pack.sentences.prefixed_text[&one.gram],
-            vec![vec![two, one]],
-        );
+        deck.context.language_pack = deck_with_redundancies(BTreeMap::from([(
+            "bank".into(),
+            vec![vec![gram("bank", 2), gram("bank", 1)]],
+        )]))
+        .context
+        .language_pack;
         let flash = deck
             .get_review_info(vec![], 0.0)
             .written_gram_flashcard(&deck, trigger);
@@ -1007,18 +1025,17 @@ mod translation_sense_tests {
             unreachable!()
         };
         h.pos = PartOfSpeech::Verb;
-        let mut deck = deck_with_entries(&[noun.clone(), verb.clone()]);
-        let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
+        let mut deck = deck_with_entries_and_redundancies(
+            &[noun.clone(), verb.clone()],
+            BTreeMap::from([("bank".into(), vec![vec![verb.clone(), noun.clone()]])]),
+        );
+        let pack = &deck.context.language_pack;
         let first = pack.resolve_entry(&noun).unwrap();
         let second = pack.resolve_entry(&verb).unwrap();
         assert_ne!(first.gram, second.gram);
         assert_eq!(
             pack.sentences.prefixed_text[&first.gram],
             pack.sentences.prefixed_text[&second.gram]
-        );
-        pack.sentences.redundant_senses.insert(
-            pack.sentences.prefixed_text[&first.gram],
-            vec![vec![second, first]],
         );
         let event = deck.add_gram_by_frequency_index(0).unwrap();
         deck = replay(deck, event);

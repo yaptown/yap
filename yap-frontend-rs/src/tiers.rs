@@ -1,4 +1,4 @@
-use language_utils::language_pack::FrequencyList;
+use language_utils::language_pack::ArchivedFrequencyList;
 use serde::{Deserialize, Serialize};
 
 /// Tier definitions for the frequency list. Each tier covers a range of the most frequent grams.
@@ -46,7 +46,11 @@ pub(crate) struct EssentialPosition {
 
 impl EssentialPosition {
     /// Project through the current level, not the projected position's next level.
-    pub(crate) fn projected_percent(&self, frequencies: &FrequencyList, coverage: f64) -> f64 {
+    pub(crate) fn projected_percent(
+        &self,
+        frequencies: &ArchivedFrequencyList,
+        coverage: f64,
+    ) -> f64 {
         level_percent(
             equivalent_words(frequencies, coverage),
             self.start,
@@ -64,10 +68,10 @@ fn level_percent(words: f64, start: usize, end: usize) -> f64 {
 
 /// Invert corpus coverage on the pack's descending-frequency curve. Keep the
 /// stats denominator: total_count includes corpus mass omitted from entries.
-fn equivalent_words(frequencies: &FrequencyList, coverage: f64) -> f64 {
+fn equivalent_words(frequencies: &ArchivedFrequencyList, coverage: f64) -> f64 {
     invert_counts(
         frequencies.entries.values().map(|f| f.count as f64),
-        coverage / 100.0 * frequencies.total_count as f64,
+        coverage / 100.0 * frequencies.total_count.to_native() as f64,
     )
 }
 
@@ -88,7 +92,7 @@ fn invert_counts(counts: impl Iterator<Item = f64>, mut mass: f64) -> f64 {
 
 /// All Essential displays use the same coverage-derived position. Levels retain
 /// their original word slices, including the short final level of each tier.
-pub(crate) fn position(frequencies: &FrequencyList, coverage: f64) -> EssentialPosition {
+pub(crate) fn position(frequencies: &ArchivedFrequencyList, coverage: f64) -> EssentialPosition {
     let words = equivalent_words(frequencies, coverage);
     let len = frequencies.entries.len();
     let mut start: usize = 0;
@@ -116,7 +120,7 @@ pub(crate) fn position(frequencies: &FrequencyList, coverage: f64) -> EssentialP
                     percent_of_usage: if frequencies.total_count == 0 {
                         0.0
                     } else {
-                        cumulative_mass as f64 / frequencies.total_count as f64 * 100.0
+                        cumulative_mass as f64 / frequencies.total_count.to_native() as f64 * 100.0
                     },
                 },
                 start: level_start,
@@ -149,7 +153,7 @@ mod tests {
     fn position_preserves_slices_and_the_corpus_denominator() {
         use language_utils::Frequency;
         use lasso::Key;
-        let frequencies = FrequencyList {
+        let frequencies = language_utils::language_pack::FrequencyList {
             entries: (0..250)
                 .map(|i| {
                     (
@@ -166,7 +170,10 @@ mod tests {
                 .collect(),
             total_count: 500,
         };
-        let zero = position(&frequencies, 0.0);
+        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&frequencies).unwrap();
+        let frequencies =
+            rkyv::access::<ArchivedFrequencyList, rkyv::rancor::Error>(&bytes).unwrap();
+        let zero = position(frequencies, 0.0);
         assert_eq!(
             (
                 zero.tier_info.tier,

@@ -130,8 +130,8 @@ impl CardIndicator<SpurGram, Spur> {
 
     pub fn resolve(
         &self,
-        string_rodeo: &lasso::RodeoReader,
-        gram_rodeo: &lasso::RodeoReader<Gram<Spur>>,
+        string_rodeo: &impl lasso::Reader<String>,
+        gram_rodeo: &impl lasso::Reader<Gram<Spur>, SpurGram>,
     ) -> CardIndicator<Gram<String>, String> {
         match self {
             CardIndicator::WrittenGram { gram } => {

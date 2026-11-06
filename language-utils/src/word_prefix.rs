@@ -2,9 +2,9 @@ use crate::features::{Morphology, WordPrefix};
 use crate::{Atom, Gram, GramDefinition, Language, WordType};
 
 /// Grammatical context displayed before a written gram.
-pub fn compute_word_prefix<S, D, M: AsRef<[Morphology]>, G>(
+pub fn compute_word_prefix(
     gram: &Gram<String>,
-    definition: &GramDefinition<S, D, M, G>,
+    morphology: Option<&Morphology>,
     language: Language,
 ) -> Option<WordPrefix> {
     match gram.atoms() {
@@ -12,13 +12,7 @@ pub fn compute_word_prefix<S, D, M: AsRef<[Morphology]>, G>(
             let WordType::Heteronym(h) = &word.word_type else {
                 return None;
             };
-            let GramDefinition::Dictionary(d) = definition else {
-                return None;
-            };
-            d.morphology
-                .as_ref()
-                .first()?
-                .get_prefix(&h.word, h.pos, language)
+            morphology?.get_prefix(&h.word, h.pos, language)
         }
         [] | [_] => None,
         _ => Morphology::get_multiword_prefix(gram, language),
@@ -32,7 +26,11 @@ pub fn prefixed_text(
     language: Language,
 ) -> String {
     let display = gram.to_display_string(language);
-    match compute_word_prefix(gram, definition, language) {
+    let morphology = match definition {
+        GramDefinition::Dictionary(entry) => entry.morphology.first(),
+        GramDefinition::Phrasebook(_) => None,
+    };
+    match compute_word_prefix(gram, morphology, language) {
         Some(prefix) => format!("{}{}{display}", prefix.prefix, prefix.separator),
         None => display,
     }

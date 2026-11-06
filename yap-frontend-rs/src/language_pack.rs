@@ -2,9 +2,9 @@ use futures::StreamExt as _;
 use language_utils::{
     Course, Language,
     language_pack::{
-        ArchivedLanguagePackCore, ArchivedLanguagePackSentences, LanguagePack, LanguagePackCore,
-        LanguagePackSentences, PackMetadata, PackPart, PartMeta, course_directory_slug,
-        language_data_chunk_count, language_data_chunk_len, pack_chunk_url, parse_hash_metadata,
+        LanguagePack, PackCore, PackMetadata, PackPart, PackSentences, PartMeta,
+        course_directory_slug, language_data_chunk_count, language_data_chunk_len, pack_chunk_url,
+        parse_hash_metadata,
     },
 };
 use opfs::{
@@ -258,7 +258,7 @@ pub(crate) async fn acquire_cache_lock(
     })
 }
 
-/// Prefetch chunks only. The real load verifies the whole-part hash before deserializing.
+/// Prefetch chunks only. The real load verifies the whole-part hash before archive validation.
 pub(crate) async fn cache_language_pack(
     data_directory_handle: &DirectoryHandle,
     course: Course,
@@ -293,7 +293,7 @@ pub(crate) async fn load_language_pack_core(
         PackPart::Core,
         core_meta,
         set_loading_state,
-        deserialize_core,
+        PackCore::from_bytes,
     )
     .await?;
 
@@ -325,7 +325,7 @@ pub(crate) async fn load_language_pack(
         PackPart::Sentences,
         sentences_meta,
         set_loading_state,
-        deserialize_sentences,
+        PackSentences::from_bytes,
     )
     .await?;
 
@@ -352,36 +352,26 @@ async fn course_data_directory(
         .map_err(LanguageDataError::Persistent)
 }
 
-fn deserialize_core(bytes: &[u8]) -> Result<LanguagePackCore, rkyv::rancor::Error> {
-    let archived = rkyv::access::<ArchivedLanguagePackCore, rkyv::rancor::Error>(bytes)?;
-    rkyv::deserialize::<LanguagePackCore, rkyv::rancor::Error>(archived)
-}
-
-fn deserialize_sentences(bytes: &[u8]) -> Result<LanguagePackSentences, rkyv::rancor::Error> {
-    let archived = rkyv::access::<ArchivedLanguagePackSentences, rkyv::rancor::Error>(bytes)?;
-    rkyv::deserialize::<LanguagePackSentences, rkyv::rancor::Error>(archived)
-}
-
-/// Get one part's bytes (cache or network) and deserialize them. A cached
-/// copy that fails to deserialize is discarded and re-downloaded once.
+/// Get one part's aligned bytes (cache or network) and validate its archive.
+/// A cached copy that fails validation is discarded and re-downloaded once.
 async fn load_part<T: Send + 'static>(
     language_directory: &mut DirectoryHandle,
     course: Course,
     part: PackPart,
     meta: PartMeta,
     set_loading_state: &impl Fn(&str, f32),
-    deserialize: fn(&[u8]) -> Result<T, rkyv::rancor::Error>,
+    validate: fn(rkyv::util::AlignedVec) -> Result<T, rkyv::rancor::Error>,
 ) -> Result<T, LanguageDataError> {
     let bytes =
         ensure_part_bytes(language_directory, course, part, meta, set_loading_state).await?;
 
     set_loading_state(&yap_i18n::tr!("loading-deserializing-language-data"), 100.0);
-    let _perf_timer = bridgerton::platform::PerfTimer::new("Deserializing language data part");
-    match deserialize_part(bytes, deserialize).await {
+    let _perf_timer = bridgerton::platform::PerfTimer::new("Validating language data part");
+    match validate_part(bytes, validate).await {
         Ok(value) => Ok(value),
         Err(LanguageDataError::Rkyv(e)) => {
             log::error!(
-                "Error deserializing language data part {}: {e}\nre-downloading",
+                "Error validating language data part {}: {e}\nre-downloading",
                 part.slug()
             );
             remove_language_data_files(
@@ -392,17 +382,17 @@ async fn load_part<T: Send + 'static>(
             let bytes =
                 ensure_part_bytes(language_directory, course, part, meta, set_loading_state)
                     .await?;
-            deserialize_part(bytes, deserialize).await
+            validate_part(bytes, validate).await
         }
         Err(error) => Err(error),
     }
 }
 
-async fn deserialize_part<T: Send + 'static>(
-    bytes: Vec<u8>,
-    deserialize: fn(&[u8]) -> Result<T, rkyv::rancor::Error>,
+async fn validate_part<T: Send + 'static>(
+    bytes: rkyv::util::AlignedVec,
+    validate: fn(rkyv::util::AlignedVec) -> Result<T, rkyv::rancor::Error>,
 ) -> Result<T, LanguageDataError> {
-    let result = bridgerton::platform::run_blocking(move || deserialize(&bytes)).await?;
+    let result = bridgerton::platform::run_blocking(move || validate(bytes)).await?;
     result.map_err(LanguageDataError::Rkyv)
 }
 
@@ -412,7 +402,7 @@ async fn ensure_part_bytes(
     part: PackPart,
     meta: PartMeta,
     set_loading_state: &impl Fn(&str, f32),
-) -> Result<Vec<u8>, LanguageDataError> {
+) -> Result<rkyv::util::AlignedVec, LanguageDataError> {
     if let Some(bytes) =
         read_cached_language_data(language_directory, part, meta, set_loading_state).await?
     {
@@ -513,7 +503,7 @@ async fn read_cached_language_data(
     part: PackPart,
     meta: PartMeta,
     set_loading_state: &impl Fn(&str, f32),
-) -> Result<Option<Vec<u8>>, LanguageDataError> {
+) -> Result<Option<rkyv::util::AlignedVec>, LanguageDataError> {
     let chunk_filenames = language_data_chunk_filenames(part, meta);
 
     for (chunk_index, filename) in chunk_filenames.iter().enumerate() {
@@ -529,7 +519,7 @@ async fn read_cached_language_data(
         }
     }
 
-    let mut bytes = Vec::with_capacity(meta.size);
+    let mut bytes = rkyv::util::AlignedVec::with_capacity(meta.size);
     for (chunk_index, filename) in chunk_filenames.iter().enumerate() {
         let chunk_file = match get_cached_chunk_file(
             language_directory_handle,
@@ -572,10 +562,11 @@ async fn download_and_cache_language_data(
     meta: PartMeta,
     set_loading_state: &impl Fn(&str, f32),
     collect_bytes: bool,
-) -> Result<Vec<u8>, LanguageDataError> {
+) -> Result<rkyv::util::AlignedVec, LanguageDataError> {
     let chunk_filenames = language_data_chunk_filenames(part, meta);
     let mut downloaded_bytes = 0usize;
-    let mut bytes = Vec::with_capacity(if collect_bytes { meta.size } else { 0 });
+    let mut bytes =
+        rkyv::util::AlignedVec::with_capacity(if collect_bytes { meta.size } else { 0 });
 
     for (chunk_index, filename) in chunk_filenames.iter().enumerate() {
         let expected_chunk_len = language_data_chunk_len(meta.size, chunk_index);

@@ -13,7 +13,7 @@ pub struct PlacementTestWord {
 /// Accept only single-atom grams so the word and its frequency describe the same unit.
 fn extract_heteronym(
     spur_gram: &language_utils::TaggedGram<language_utils::SpurGram>,
-    gram_rodeo: &lasso::RodeoReader<language_utils::Gram<Spur>>,
+    gram_rodeo: &impl lasso::Reader<language_utils::Gram<Spur>, language_utils::SpurGram>,
 ) -> Option<Heteronym<Spur>> {
     let gram = gram_rodeo.resolve(&spur_gram.gram);
     let [atom] = gram.atoms() else {

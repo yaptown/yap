@@ -10,9 +10,9 @@ use lasso::{Projection, ProjectionHasher, RodeoReader, Spur};
 
 /// Borrowed vocabulary behind a sentence's symbols. Never retained by the reader.
 pub struct RenderContext<'a> {
-    pub grams: &'a RodeoReader<SpurReadingGram, GramKey>,
-    pub gram_rodeo: &'a RodeoReader<Gram<Spur>>,
-    pub strings: &'a RodeoReader,
+    pub grams: &'a rkyv::Archived<RodeoReader<SpurReadingGram, GramKey>>,
+    pub gram_rodeo: &'a rkyv::Archived<RodeoReader<Gram<Spur>>>,
+    pub strings: &'a rkyv::Archived<RodeoReader>,
     pub language: Language,
 }
 
@@ -37,10 +37,40 @@ pub(crate) fn render(
             cx.gram_rodeo
                 .resolve(&cx.grams.resolve(&symbol.key()).sense.gram)
                 .iter()
-                .map(move |atom| (index, atom.resolve(cx.strings)))
+                .map(move |atom| {
+                    use crate::{Atom, Heteronym, Word, WordType};
+                    let text = |key: &Spur| std::borrow::Cow::Borrowed(cx.strings.resolve(key));
+                    let atom = match atom {
+                        Atom::Control(control) => Atom::Control(*control),
+                        Atom::Tok(word) => Atom::Tok(Word {
+                            text: text(&word.text),
+                            word_type: match &word.word_type {
+                                WordType::Other(other) => WordType::Other(*other),
+                                WordType::Heteronym(h) => WordType::Heteronym(Heteronym {
+                                    word: text(&h.word),
+                                    lemma: text(&h.lemma),
+                                    pos: h.pos,
+                                }),
+                            },
+                        }),
+                    };
+                    (index, atom)
+                })
         });
-    for (_, word, whitespace) in crate::render_words(atoms, capitalize, cx.language) {
-        emit(&word.text)?;
+    let mut capitalize = capitalize;
+    for (_, word, whitespace) in crate::render_words(atoms, false, cx.language) {
+        if capitalize {
+            capitalize = false;
+            let mut chars = word.text.chars();
+            if let Some(first) = chars.next() {
+                for c in first.to_uppercase() {
+                    emit(c.encode_utf8(&mut [0; 4]))?;
+                }
+            }
+            emit(chars.as_str())?;
+        } else {
+            emit(&word.text)?;
+        }
         emit(whitespace.as_str())?;
     }
     ControlFlow::Continue(())

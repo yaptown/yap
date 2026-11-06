@@ -6,21 +6,12 @@ use lasso::{Key, RodeoReader};
 use crate::{MultiwordTermMatch, SentenceGram, SentenceGrams, SpurReadingGram};
 
 /// A reading-tagged gram's index; learnable keys are also their ease ranks.
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    rkyv::Archive,
-    rkyv::Serialize,
-    rkyv::Deserialize,
-)]
-#[rkyv(derive(Clone, Copy, Debug, PartialEq, Eq, Hash))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, rkyv::bytecheck::CheckBytes)]
+#[repr(transparent)]
+#[bytecheck(crate = rkyv::bytecheck)]
 pub struct GramKey(u32);
+
+crate::archive_as_self!(GramKey => 0);
 
 impl GramKey {
     pub fn index(self) -> u32 {
@@ -35,14 +26,6 @@ unsafe impl Key for GramKey {
     }
     fn try_from_usize(index: usize) -> Option<Self> {
         u32::try_from(index).ok().map(Self)
-    }
-}
-unsafe impl Key for ArchivedGramKey {
-    fn into_usize(self) -> usize {
-        self.0.to_native() as usize
-    }
-    fn try_from_usize(index: usize) -> Option<Self> {
-        u32::try_from(index).ok().map(|index| Self(index.into()))
     }
 }
 
@@ -63,21 +46,16 @@ pub enum SymbolKind {
 
 /// Bit 31 marks learnable grams; bit 30 marks other grams. The payload is
 /// key + 1. Small reserved values encode separators, casing and phrase gaps.
-#[derive(
-    Clone, Copy, Debug, PartialEq, Eq, Hash, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize,
-)]
-#[rkyv(derive(Clone, Copy))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, rkyv::bytecheck::CheckBytes)]
+#[repr(transparent)]
+#[bytecheck(crate = rkyv::bytecheck)]
 pub struct Symbol(NonZeroU32);
+
+crate::archive_as_self!(Symbol => 0);
 
 impl From<&Symbol> for Symbol {
     fn from(symbol: &Symbol) -> Self {
         *symbol
-    }
-}
-
-impl From<&ArchivedSymbol> for Symbol {
-    fn from(symbol: &ArchivedSymbol) -> Self {
-        Self(symbol.0.to_native())
     }
 }
 
@@ -139,7 +117,7 @@ impl Symbol {
 
 pub fn decode(
     symbols: impl Iterator<Item = Symbol>,
-    grams: &RodeoReader<SpurReadingGram, GramKey>,
+    grams: &rkyv::Archived<RodeoReader<SpurReadingGram, GramKey>>,
 ) -> SentenceGrams<SpurReadingGram> {
     let mut sentence = SentenceGrams {
         grams: Vec::new(),

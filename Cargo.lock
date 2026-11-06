@@ -3738,6 +3738,7 @@ dependencies = [
  "rkyv 0.8.14",
  "rustc-hash 2.1.1",
  "schemars",
+ "self_cell",
  "serde",
  "serde_json",
  "unicode-normalization",
@@ -3747,7 +3748,7 @@ dependencies = [
 [[package]]
 name = "lasso"
 version = "0.7.3"
-source = "git+https://github.com/anchpop/lasso.git?rev=db1264c6cbfcbb53125d5cbceb5864f224748f18#db1264c6cbfcbb53125d5cbceb5864f224748f18"
+source = "git+https://github.com/anchpop/lasso.git?rev=f51309bda181364adff213cdc862d6cb751c7516#f51309bda181364adff213cdc862d6cb751c7516"
 dependencies = [
  "bytecheck",
  "hashbrown 0.14.5",
@@ -4758,8 +4759,11 @@ dependencies = [
 name = "pack-bench"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "language-utils",
  "rkyv 0.8.14",
+ "weapon",
+ "yap-frontend-rs",
 ]
 
 [[package]]

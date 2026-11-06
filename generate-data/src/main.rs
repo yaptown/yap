@@ -1941,12 +1941,20 @@ async fn main() -> anyhow::Result<()> {
             pronunciation_audio,
         };
 
-        let mut language_pack = pack_builder::build(consolidated_data, *course);
-        if course.target_language == language_utils::Language::Japanese {
-            generate_data::readings::furigana::Segmenter::load()
-                .await?
-                .populate(&mut language_pack);
-        }
+        let segmenter = if course.target_language == language_utils::Language::Japanese {
+            Some(generate_data::readings::furigana::Segmenter::load().await?)
+        } else {
+            None
+        };
+        let segment =
+            |text: &str, reading: &str| segmenter.as_ref().unwrap().segment(text, reading);
+        let language_pack = pack_builder::build(
+            consolidated_data,
+            *course,
+            segmenter
+                .as_ref()
+                .map(|_| &segment as &pack_builder::RubySegmenter<'_>),
+        );
 
         // Split into core/sentences halves and write both archives + the
         // hash metadata file.

@@ -603,7 +603,7 @@ fn clip_presentation(
         },
     });
     let imdb = clips::clip_film(&clip.clip_id).to_owned();
-    let movie = pack.sentences.movies.get(&imdb);
+    let movie = pack.sentences.movies.get(imdb.as_str());
     let poster = movie
         .and_then(|m| m.poster_bytes.as_ref())
         .map(|_| poster_filename(&imdb));
@@ -618,16 +618,16 @@ fn clip_presentation(
         });
     }
     if let Some(movie) = movie {
-        let title = match movie.year {
+        let title = match movie.year.as_ref().map(|year| year.to_native()) {
             Some(year) => format!("{} {year}", movie.title),
-            None => movie.title.clone(),
+            None => movie.title.to_string(),
         };
         tags.push(format!("yap::film::{}", tag_segment(&title)));
     }
     (
         movie.map(|movie| AnkiSource {
-            title: movie.title.clone(),
-            year: movie.year,
+            title: movie.title.to_string(),
+            year: movie.year.as_ref().map(|year| year.to_native()),
             imdb_id: imdb,
             poster_filename: poster,
         }),
@@ -823,7 +823,7 @@ impl Deck {
         let pack = &self.context.language_pack;
         let language = self.context.course.target_language;
         let known = Self::percent_known_in(
-            pack.gram_frequencies.total_count,
+            pack.gram_frequencies.total_count.to_native(),
             pack.gram_frequencies
                 .resolved(pack)
                 .map(|(gram, frequency)| (gram, *frequency)),
@@ -1641,7 +1641,7 @@ impl PlannerState {
                 taught,
             };
             Deck::percent_known_in(
-                pack.gram_frequencies.total_count,
+                pack.gram_frequencies.total_count.to_native(),
                 pack.gram_frequencies
                     .resolved(pack)
                     .map(|(gram, frequency)| (gram, *frequency)),
@@ -2120,7 +2120,7 @@ mod tests {
         edit(&mut data);
         let context = crate::Context {
             study_goal: None,
-            language_pack: Arc::new(pack_builder::build(data, course)),
+            language_pack: Arc::new(pack_builder::build(data, course, None)),
             course,
             timezone: chrono::FixedOffset::east_opt(0).unwrap(),
         };
@@ -2133,12 +2133,7 @@ mod tests {
             pack.sentence_keys()
                 .map(|s| {
                     let text = pack.sentence_text(s);
-                    let imdb = pack
-                        .source_of(s)
-                        .movie_ids()
-                        .next()
-                        .map(String::as_str)
-                        .unwrap_or("tt0000001");
+                    let imdb = pack.source_of(s).movie_ids().next().unwrap_or("tt0000001");
                     row(
                         text.clone(),
                         format!("{imdb}-{}-0", guid(course, "sentence", &text)),
@@ -2942,34 +2937,34 @@ mod tests {
 
     #[tokio::test]
     async fn anki_bundled_human_audio_and_poster() {
-        let mut deck = fixture();
-        let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
-        pack.sentences.human_audio.insert(
-            language_utils::VoiceActor {
-                name: "Fixture actor".into(),
-                compensation: language_utils::Compensation::Volunteer,
-            },
-            [(
-                "word00".into(),
-                language_utils::Audio {
-                    bytes: b"ID3fixture".to_vec(),
+        let deck = fixture_with_data(false, "word00", |data| {
+            data.human_audio.insert(
+                language_utils::VoiceActor {
+                    name: "Fixture actor".into(),
+                    compensation: language_utils::Compensation::Volunteer,
                 },
-            )]
-            .into_iter()
-            .collect(),
-        );
-        pack.sentences.movies.insert(
-            "tt0000001".into(),
-            language_utils::MovieMetadata {
-                id: "tt0000001".into(),
-                title: "Fixture movie".into(),
-                year: Some(2026),
-                original_language: Some("en".into()),
-                rotten_tomatoes_score: None,
-                variety: None,
-                poster_bytes: Some(vec![1, 2, 3]),
-            },
-        );
+                [(
+                    "word00".into(),
+                    language_utils::Audio {
+                        bytes: b"ID3fixture".to_vec(),
+                    },
+                )]
+                .into_iter()
+                .collect(),
+            );
+            data.movies.insert(
+                "tt0000001".into(),
+                language_utils::MovieMetadata {
+                    id: "tt0000001".into(),
+                    title: "Fixture movie".into(),
+                    year: Some(2026),
+                    original_language: Some("en".into()),
+                    rotten_tomatoes_score: None,
+                    variety: None,
+                    poster_bytes: Some(vec![1, 2, 3]),
+                },
+            );
+        });
         human_audio::register(Language::English, &deck.context.language_pack);
         publish(&deck.context.language_pack, deck.context.course);
         let plan = deck
@@ -3005,7 +3000,10 @@ mod tests {
 
     #[test]
     fn anki_advanced_means_all_available_not_all_unfiltered_words() {
-        let mut deck = fixture();
+        // The corpus denominator includes grams outside this pack's teachable inventory.
+        let mut deck = fixture_with_data(false, "word00", |data| {
+            data.gram_frequencies.total_count = 1_000_000
+        });
         let mut state = crate::DeckState::new();
         for gram in deck
             .context
@@ -3030,11 +3028,6 @@ mod tests {
             }
         }
         deck = Deck::finalize(state, &deck.context);
-        // The corpus denominator includes grams outside this pack's teachable inventory.
-        Arc::get_mut(&mut Arc::get_mut(&mut deck.context.language_pack).unwrap().core)
-            .unwrap()
-            .gram_frequencies
-            .total_count = 1_000_000;
         assert!(deck.get_percent_of_words_known() < 1.0);
         assert!(deck.anki_export_view(None).too_advanced);
         assert!(deck.anki_export_view(None).too_advanced_message.is_some());
@@ -3419,7 +3412,7 @@ mod tests {
         assert_eq!(
             pack.gram_frequencies
                 .entries
-                .get(&pack.written_ease_order.grams.get(rare).unwrap())
+                .get(&pack.written_ease_order.grams.get(&rare).unwrap())
                 .unwrap()
                 .ease,
             10_f32.ln()
@@ -3427,7 +3420,7 @@ mod tests {
         assert_eq!(
             pack.gram_frequencies
                 .entries
-                .get(&pack.written_ease_order.grams.get(common).unwrap())
+                .get(&pack.written_ease_order.grams.get(&common).unwrap())
                 .unwrap()
                 .ease,
             100_f32.ln()
@@ -3487,14 +3480,20 @@ mod tests {
             entries: [common, rare]
                 .into_iter()
                 .map(|r| {
-                    let key = pack.written_ease_order.grams.get(r).unwrap();
+                    let key = pack.written_ease_order.grams.get(&r).unwrap();
                     (key, *pack.gram_frequencies.entries.get(&key).unwrap())
                 })
                 .collect(),
             total_count: 110,
         };
+        let source_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&source).unwrap();
+        let source = rkyv::access::<
+            language_utils::language_pack::ArchivedFrequencyList,
+            rkyv::rancor::Error,
+        >(&source_bytes)
+        .unwrap();
         let score = Deck::percent_known_in(
-            source.total_count,
+            source.total_count.to_native(),
             source
                 .resolved(pack)
                 .map(|(gram, frequency)| (gram, *frequency)),

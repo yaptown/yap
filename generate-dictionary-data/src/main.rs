@@ -517,7 +517,7 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
             continue;
         };
         let mut seen_slugs: std::collections::HashSet<String> = std::collections::HashSet::new();
-        for neighbor_spur in neighbors {
+        for neighbor_spur in neighbors.iter() {
             let Some(slug) = word_spur_to_slug.get(neighbor_spur) else {
                 continue;
             };
@@ -752,10 +752,10 @@ fn resolve_sentence(
         .movie_ids()
         .find_map(|id| language_pack.sentences.movies.get(id))
         .map(|movie| {
-            if let Some(year) = movie.year {
+            if let Some(year) = movie.year.as_ref() {
                 format!("{} ({})", movie.title, year)
             } else {
-                movie.title.clone()
+                movie.title.to_string()
             }
         });
 
@@ -1143,6 +1143,7 @@ mod tests {
                 ..Default::default()
             },
             course,
+            None,
         );
         let key = pack.sentence_key(text).unwrap();
         let info = pack

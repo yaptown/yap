@@ -90,6 +90,7 @@ fn main() {
             target_language: Language::French,
             native_language: Language::English,
         },
+        None,
     );
     language_utils::language_pack::write_split_dir(std::path::Path::new(&directory), pack).unwrap();
     println!("synthetic pack: {directory}");
