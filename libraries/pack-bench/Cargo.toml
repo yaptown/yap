@@ -10,3 +10,12 @@ crate-type = ["cdylib"]
 [dependencies]
 language-utils = { path = "../../language-utils" }
 rkyv.workspace = true
+
+[dev-dependencies]
+yap-frontend-rs = { path = "../../yap-frontend-rs", default-features = false }
+chrono.workspace = true
+weapon = { path = "../weapon" }
+
+[[example]]
+name = "simulation"
+crate-type = ["cdylib"]

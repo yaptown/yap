@@ -8,9 +8,20 @@
 //! host I/O/copies and some bulk-memory work are not charged per byte. "Read"
 //! phases include guest allocation/zeroing and a host copy, not WASI filesystem work.
 //! Memory is linear-memory high-water size (MiB), not live allocations or host RSS.
-//! Browser imports retained by language-utils' bindings are traps, never emulated.
+//! Browser imports are traps except the fixed Date clock needed by simulation:
+//! DeckState::new → FSRS Seed::default, and NextCardsIterator's new FSRS cards.
+//! Date construction/getTime/drop are pinned to 2024-01-01 UTC, never host time.
 //! Smoke fixture (never writes out/):
 //! CARGO_TARGET_DIR=target-bench cargo run --release -p pack-bench-host --example fixture -- /tmp/pack-bench-fixture
+//!
+//! Whole-app deterministic 365-day simulation (directory basename selects the course):
+//! CARGO_TARGET_DIR=target-bench CARGO_PROFILE_RELEASE_LTO=true cargo build --release -p pack-bench --example simulation --target wasm32-unknown-unknown
+//! CARGO_TARGET_DIR=target-bench cargo run --release -p pack-bench-host -- target-bench/wasm32-unknown-unknown/release/examples/simulation.wasm out/fra_for_eng
+//! Run twice and compare fuel, memory and challenges (not wall time). Load includes
+//! guest allocation and validation; finalize includes context setup; 365 days uses
+//! 2024-01-01 UTC. Total includes all teardown: the explicit drop mark and the
+//! initial deck's implicit drop on return (simulate_usage borrows/clones it).
+//! Linear memory cannot shrink, so the final size captures its peak between marks.
 
 use language_utils::language_pack::{CORE_FILENAME, SENTENCES_FILENAME};
 use std::{path::Path, time::Instant};
@@ -88,6 +99,46 @@ fn main() -> wasmtime::Result<()> {
             state.previous_fuel = fuel;
             // Do not bill printing this row to the following phase's wall time.
             state.previous_time = Instant::now();
+            Ok(())
+        },
+    )?;
+    let course_index = language_utils::COURSES.iter().position(|course| {
+        let name = format!(
+            "{}_for_{}",
+            course.target_language.code(),
+            course.native_language.code()
+        );
+        Some(name.as_str()) == dir.file_name().and_then(|s| s.to_str())
+    });
+    linker.func_wrap("bench", "course_index", move || -> wasmtime::Result<u32> {
+        Ok(course_index
+            .ok_or_else(|| wasmtime::Error::msg("pack directory must be a course code"))?
+            as u32)
+    })?;
+    linker.func_wrap("bench", "challenges", |count: u32| {
+        println!("challenges: {count}");
+    })?;
+    // Exact imports for the pinned js-sys version, not a general JS emulator.
+    // Only our singleton Date handle may be read or dropped; other objects trap.
+    const DATE: u32 = 132;
+    linker.func_wrap(
+        "__wbindgen_placeholder__",
+        "__wbg_new_0_445c13a750296eb6",
+        || DATE,
+    )?;
+    linker.func_wrap(
+        "__wbindgen_placeholder__",
+        "__wbg_getTime_00b3f7db575e4ef5",
+        |date: u32| -> wasmtime::Result<f64> {
+            wasmtime::ensure!(date == DATE, "getTime called on an unknown JS object");
+            Ok(1_704_067_200_000.0)
+        },
+    )?;
+    linker.func_wrap(
+        "__wbindgen_placeholder__",
+        "__wbindgen_object_drop_ref",
+        |object: u32| -> wasmtime::Result<()> {
+            wasmtime::ensure!(object == DATE, "drop called on an unknown JS object");
             Ok(())
         },
     )?;
