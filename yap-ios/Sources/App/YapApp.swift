@@ -17,7 +17,7 @@ import SwiftUI
         WindowGroup {
             ZStack {
                 AnimatedBackground()
-                if auth.restoring { ProgressView(L("yap-app-restoring-your-session")) }
+                if auth.restoring { ProgressView(L("yap-app-restoring-your-session")).fadeIn(delay: 1) }
                 else if let session = sessions.session {
                     SessionRoot(session: session, auth: auth).id(session.userId ?? "anon")
                 } else if sessions.flushFailed {
@@ -26,7 +26,7 @@ import SwiftUI
                     } description: {
                         Text(L("yap-app-yap-couldn-t-finish-saving-your-reviews-to-this"))
                     } actions: { Button(L("common-try-again-sentence")) { sessions.retry(auth: auth) } }
-                } else { ProgressView() }
+                } else { ProgressView().fadeIn(delay: 1) }
             }
             .onChange(of: auth.restoring ? "restoring" : auth.userId ?? "anon", initial: true) { _, _ in
                 guard !auth.restoring else { return }
@@ -70,7 +70,8 @@ struct SessionRoot: View {
                 } else {
                     switch session.deckLoadView.phase {
                     case let .Loading(message, percent):
-                        VStack(spacing: 20) { ProgressView(value: Double(percent) / 100); Text(message) }.padding(32).frame(maxWidth: .readableColumn)
+                        // Hidden for the first second so a quick launch never flashes a loading bar.
+                        VStack(spacing: 20) { ProgressView(value: Double(percent) / 100); Text(message) }.padding(32).frame(maxWidth: .readableColumn).fadeIn(delay: 1)
                     case .NoLanguageSelected: NavigationStack { CoursePickerView(session: session) }
                     case let .Error(_, _, title, message, retryLabel):
                         ContentUnavailableView {
