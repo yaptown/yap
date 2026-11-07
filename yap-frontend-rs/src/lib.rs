@@ -4228,7 +4228,7 @@ impl Deck {
     /// Pick a comprehensible sentence matching the filter: sentences with a
     /// movie clip beat sentences without one, and within each group the
     /// least-reviewed wins. When no clip manifest has loaded yet,
-    /// `sentence_has_clip` is uniformly false and this degrades to plain
+    /// `sentence_key_has_clip` is uniformly false and this degrades to plain
     /// least-reviewed — clip knowledge improves selection but never gates it.
     fn pick_comprehensible_sentence(
         &self,
@@ -4239,16 +4239,15 @@ impl Deck {
     ) -> Option<SentenceSpur> {
         let language = self.context.course.target_language;
         let known = comprehensible_grams.rank_bitset();
-        let mut possible_sentences =
-            language_pack.comprehensible_sentences(required_gram, |rank| known.contains(rank));
-        possible_sentences.sort_by_cached_key(|sentence| {
-            let text = language_pack.sentence_text(*sentence);
-            (
-                !clips::sentence_has_clip(language, &text),
-                *sentences_reviewed.get(sentence).unwrap_or(&0),
-            )
-        });
-        possible_sentences.first().copied()
+        language_pack
+            .comprehensible_sentences(required_gram, |rank| known.contains(rank))
+            .into_iter()
+            .min_by_key(|sentence| {
+                (
+                    !clips::sentence_key_has_clip(language, language_pack, *sentence),
+                    *sentences_reviewed.get(sentence).unwrap_or(&0),
+                )
+            })
     }
 
     fn get_comprehensible_sentence_containing(
@@ -7156,6 +7155,29 @@ mod tests {
     }
 
     #[test]
+    fn clip_sentences_are_indexed_by_key_in_either_arrival_order() {
+        let pack = Arc::new(
+            language_utils::language_pack::load_split_dir(std::path::Path::new(
+                "../out/fra_for_eng",
+            ))
+            .unwrap(),
+        );
+        let keys: Vec<_> = pack.sentence_keys().take(3).collect();
+        let row = |key| -> clips::ClipRow {
+            serde_json::from_value(serde_json::json!({
+                "id": "tt0000001-0", "sentence": pack.sentence_text(key), "duration_ms": 1000,
+                "critical": {"start_ms": 0, "end_ms": 1000}
+            }))
+            .unwrap()
+        };
+        let has = |key| clips::sentence_key_has_clip(Language::French, &pack, key);
+        clips::publish_manifest(Language::French, vec![row(keys[0]), row(keys[1])]);
+        assert!(!has(keys[0]), "unknown until the pack is registered");
+        clips::register_pack(Language::French, &pack);
+        assert!(has(keys[0]) && has(keys[1]) && !has(keys[2]));
+    }
+
+    #[test]
     fn test_savoir_sentence_cleanup_and_lookup() {
         let language_pack: LanguagePack = language_utils::language_pack::load_split_dir(
             std::path::Path::new("../out/fra_for_eng"),
@@ -7728,6 +7750,7 @@ mod tests {
             "Clip manifest for {target}: {} course sentences with clips",
             rows.len()
         );
+        clips::register_pack(target, &deck.context.language_pack);
         clips::publish_manifest(target, rows);
 
         // Simulate the app-visible challenge sequence and report where clips

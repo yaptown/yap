@@ -159,6 +159,11 @@ thread_local! {
     static CLIP_PACKS: RefCell<BTreeMap<Language, Weak<LanguagePack>>> =
         const { RefCell::new(BTreeMap::new()) };
 
+    /// The manifest as one bit per sentence of the registered pack, so challenge
+    /// selection tests a bit instead of rendering every candidate's text.
+    static CLIP_SENTENCES: RefCell<BTreeMap<Language, ClipSentences>> =
+        const { RefCell::new(BTreeMap::new()) };
+
     /// Bumped whenever a manifest loads or refreshes. The frontend polls this
     /// to re-run challenge selection once clip knowledge arrives.
     static CLIP_MANIFEST_VERSION: Cell<u32> = const { Cell::new(0) };
@@ -172,6 +177,61 @@ thread_local! {
 
 pub(crate) fn register_pack(language: Language, pack: &Arc<LanguagePack>) {
     CLIP_PACKS.with(|packs| packs.borrow_mut().insert(language, Arc::downgrade(pack)));
+    index_clip_sentences(language);
+}
+
+struct ClipSentences {
+    pack: Weak<LanguagePack>,
+    bits: Vec<u64>,
+}
+
+/// Rebuilt when either side changes, since packs and manifests arrive in either
+/// order. Each manifest sentence is looked up once by its exact text.
+fn index_clip_sentences(language: Language) {
+    let Some(pack) = CLIP_PACKS.with(|packs| packs.borrow().get(&language).and_then(Weak::upgrade))
+    else {
+        return;
+    };
+    let Some(bits) = CLIP_MANIFESTS.with(|manifests| {
+        let manifests = manifests.borrow();
+        let mut bits = vec![0u64; pack.sentences.encoded_sentences.len().div_ceil(64)];
+        for key in manifests
+            .get(&language)?
+            .keys()
+            .filter_map(|text| pack.sentence_key(text))
+        {
+            let index = lasso::Key::into_usize(key);
+            bits[index / 64] |= 1 << (index % 64);
+        }
+        Some(bits)
+    }) else {
+        return;
+    };
+    let pack = Arc::downgrade(&pack);
+    CLIP_SENTENCES.with(|index| {
+        index
+            .borrow_mut()
+            .insert(language, ClipSentences { pack, bits })
+    });
+}
+
+/// Whether a sentence of `pack` has a published clip: false until both the
+/// manifest and this exact pack are known, so selection never waits on clips.
+pub(crate) fn sentence_key_has_clip(
+    language: Language,
+    pack: &LanguagePack,
+    sentence: language_utils::SentenceSpur,
+) -> bool {
+    CLIP_SENTENCES.with(|index| {
+        index.borrow().get(&language).is_some_and(|clips| {
+            let index = lasso::Key::into_usize(sentence);
+            std::ptr::eq(clips.pack.as_ptr(), pack)
+                && clips
+                    .bits
+                    .get(index / 64)
+                    .is_some_and(|word| word & (1 << (index % 64)) != 0)
+        })
+    })
 }
 
 // Apply at publication so disk seeds and network refreshes share the policy,
@@ -199,6 +259,7 @@ pub(crate) fn publish_manifest(language: Language, rows: Vec<ClipRow>) {
             .push(row);
     }
     CLIP_MANIFESTS.with(|m| m.borrow_mut().insert(language, by_sentence));
+    index_clip_sentences(language);
     CLIP_MANIFEST_VERSION.with(|v| v.set(v.get().wrapping_add(1)));
 }
 
@@ -253,12 +314,10 @@ fn preferred_clip<'a>(
     })
 }
 
-/// Whether a sentence has a published clip, per the loaded manifest. `false`
-/// both for "no clip" and "manifest not loaded yet" — selection should
-/// simply not prioritize when it doesn't know. Unlike `clip_for_sentence`
-/// this skips NFC normalization and the row clone: it sits in challenge
-/// selection's hot loop, and pack text is already NFC (both it and the
-/// manifest come from the same pipeline).
+/// Whether already-normalized sentence text has a published clip, per the
+/// loaded manifest; `false` until it loads. Selection uses the per-pack bitset
+/// in [`sentence_key_has_clip`] instead of rendering text.
+#[cfg(test)]
 pub(crate) fn sentence_has_clip(language: Language, text: &str) -> bool {
     CLIP_MANIFESTS.with(|m| {
         m.borrow()
