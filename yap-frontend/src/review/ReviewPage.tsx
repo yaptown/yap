@@ -36,7 +36,7 @@ function LoadingProgress({
   const smoothProgress = useZeno(progress);
   return (
     <div className="flex-1 flex items-center justify-center">
-      <div className="w-full max-w-md space-y-4">
+      <div className="w-full max-w-md space-y-4 animate-fade-in-after-1s">
         <p className="text-muted-foreground text-center">{message}</p>
         <Progress value={smoothProgress} className="w-full" disableTransition />
       </div>

@@ -138,6 +138,11 @@ ol {
   animation: fade-in 0.3s ease-out 1.5s forwards;
 }
 
+/* Loading indicators: hidden for the first second so a quick load never flashes one. */
+.animate-fade-in-after-1s {
+  animation: fade-in 0.6s ease-out 1s both;
+}
+
 .animate-fade-in-delay-1 {
   animation: fade-in 0.6s ease-out 0.1s both;
 }

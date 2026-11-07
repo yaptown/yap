@@ -96,7 +96,7 @@ export function DeckLoadStatus({
           </Button>
         </Card>
       ) : (
-        <div className="flex w-full max-w-md flex-col gap-4 text-center">
+        <div className="flex w-full max-w-md flex-col gap-4 text-center animate-fade-in-after-1s">
           <p className="text-muted-foreground">{phase.message}</p>
           <Progress value={phase.percent} />
         </div>
