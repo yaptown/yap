@@ -19,6 +19,11 @@ static CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         // Argon's lowest: no thinking budget at all.
         .with_reasoning_effort("none")
         .with_max_concurrent_requests(10)
+        .with_failover(
+            ChatClient::from_env("gpt-6-sol")
+                .unwrap()
+                .with_reasoning_effort("none"),
+        )
 });
 
 // Initialized and used only on the blocking pool; loading uses synchronous hf-hub.

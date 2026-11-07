@@ -4168,7 +4168,7 @@ dependencies = [
 [[package]]
 name = "model-prices"
 version = "0.1.1"
-source = "git+https://github.com/anchpop/tysm.git?rev=3b21a9b51d32b9c8d018787064cb7abd959887c0#3b21a9b51d32b9c8d018787064cb7abd959887c0"
+source = "git+https://github.com/anchpop/tysm.git?rev=0eae359c8f80f75c57249c3e9ff55a957c980a83#0eae359c8f80f75c57249c3e9ff55a957c980a83"
 
 [[package]]
 name = "movie-metadata"
@@ -7409,7 +7409,7 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 [[package]]
 name = "tysm"
 version = "0.22.0"
-source = "git+https://github.com/anchpop/tysm.git?rev=3b21a9b51d32b9c8d018787064cb7abd959887c0#3b21a9b51d32b9c8d018787064cb7abd959887c0"
+source = "git+https://github.com/anchpop/tysm.git?rev=0eae359c8f80f75c57249c3e9ff55a957c980a83#0eae359c8f80f75c57249c3e9ff55a957c980a83"
 dependencies = [
  "base64 0.22.1",
  "dashmap",

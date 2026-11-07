@@ -24,7 +24,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective October 27, 2026.</p>
+            <p className="text-sm">Effective November 6, 2026.</p>
           </div>
         </Card>
 
@@ -72,6 +72,8 @@ export function PrivacyPage() {
               and tapped word are sent through our server to Google Gemini for
               translation and explanation. Questions you type in the book tutor
               and the conversation so far are also sent to Gemini to answer you.
+              If Gemini fails, we may send the same answers, or book text and
+              conversation, to OpenAI instead.
               The iOS app also saves unfinished typed
               answers, tapped-word hints, and grading results locally on your
               device so you can resume an interrupted review. That pending

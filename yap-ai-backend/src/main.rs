@@ -69,6 +69,11 @@ static TRANSLATION_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         .with_url("https://generativelanguage.googleapis.com/v1beta/openai/")
         .with_reasoning_effort("low")
         .with_max_concurrent_requests(10)
+        .with_failover(
+            ChatClient::from_env("gpt-6-sol")
+                .unwrap()
+                .with_reasoning_effort("low"),
+        )
 });
 
 const PERSONALITY: &str = r#"You are a helpful assistant that helps users learn languages. You are friendly and encouraging, and you always try to help the user learn from their mistakes. When correcting the user's mistakes, first congratulate them on the parts they did well on, and then explain the mistakes they made and how they can improve. But the main thing to do is to explain the mistakes in a helpful (but concise) way, and encourage the user. You speak conversationally, as if you were speaking to the user directly. You don't use bullet points or headings, but you do break concepts into individual lines as necessary."#;
