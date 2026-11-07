@@ -160,23 +160,20 @@ export function AudioButton({
     };
   }, [stopTimeUpdates]);
 
-  const attachAnalyser = useCallback(async (audio: HTMLAudioElement) => {
+  // iOS Safari leaves AudioContext.resume() pending forever unless it is called
+  // inside a user gesture, so wake the context synchronously from the tap.
+  const wakeAudioContext = useCallback(() => {
+    if (temp || !visualizer) return;
+    audioCtxRef.current ??= new AudioContext();
+    void audioCtxRef.current.resume();
+  }, [temp, visualizer]);
+
+  const attachAnalyser = useCallback((audio: HTMLAudioElement) => {
+    // An element routed through a suspended context plays silence, so without
+    // a running context (e.g. autoplay before any tap) play it directly.
+    const ctx = audioCtxRef.current;
+    if (ctx?.state !== "running") return;
     try {
-      if (!audioCtxRef.current) {
-        const Ctx =
-          window.AudioContext ||
-          (window as unknown as { webkitAudioContext: typeof AudioContext })
-            .webkitAudioContext;
-        audioCtxRef.current = new Ctx();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === "suspended") {
-        try {
-          await ctx.resume();
-        } catch (err) {
-          console.warn("AudioContext resume failed:", err);
-        }
-      }
       const source = ctx.createMediaElementSource(audio);
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 256;
@@ -220,7 +217,7 @@ export function AudioButton({
         raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
-      if (!temp && visualizer) await attachAnalyser(audio);
+      if (!temp && visualizer) attachAnalyser(audio);
     },
     [attachAnalyser, stopTimeUpdates, temp, visualizer],
   );
@@ -422,6 +419,8 @@ export function AudioButton({
         if (!signal.aborted) onSuccessRef.current?.();
       } catch (error) {
         if (isAbort(error) || signal.aborted) return;
+        // Autoplay blocked by the browser: the clip is fine, a tap will play it.
+        if (error instanceof Error && error.name === "NotAllowedError") return;
         console.error("Failed to play audio:", error);
         onErrorRef.current?.();
       } finally {
@@ -496,6 +495,12 @@ export function AudioButton({
     setAutoplayed,
   ]);
 
+  const playFromGesture = () => {
+    clickedRef.current = true;
+    wakeAudioContext();
+    handlePlayAudio();
+  };
+
   const button = (
     <Button
       variant={variant}
@@ -503,8 +508,7 @@ export function AudioButton({
       className={className}
       onClick={(e) => {
         e.stopPropagation();
-        clickedRef.current = true;
-        handlePlayAudio();
+        playFromGesture();
       }}
       disabled={isPlaying}
       title={t("audio-button-play-pronunciation")}
@@ -522,14 +526,12 @@ export function AudioButton({
       role="button"
       tabIndex={0}
       onClick={() => {
-        clickedRef.current = true;
-        handlePlayAudio();
+        playFromGesture();
       }}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          clickedRef.current = true;
-          handlePlayAudio();
+          playFromGesture();
         }
       }}
       onMouseEnter={() => {
