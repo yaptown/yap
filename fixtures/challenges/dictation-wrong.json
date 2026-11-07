@@ -190,66 +190,6 @@
           "second_chance": false
         },
         "transcription": {
-          "parts": [
-            {
-              "type": "AskedToTranscribe",
-              "parts": [
-                {
-                  "word": {
-                    "text": "Merci",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "merci",
-                      "lemma": "merci",
-                      "pos": "NOUN"
-                    }
-                  },
-                  "whitespace": " "
-                },
-                {
-                  "word": {
-                    "text": "à",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "à",
-                      "lemma": "à",
-                      "pos": "ADP"
-                    }
-                  },
-                  "whitespace": " "
-                }
-              ]
-            },
-            {
-              "type": "Provided",
-              "part": {
-                "word": {
-                  "text": "Dieu",
-                  "word_type": {
-                    "type": "Other",
-                    "other_tag": "PROPN"
-                  }
-                },
-                "whitespace": " "
-              }
-            },
-            {
-              "type": "Provided",
-              "part": {
-                "word": {
-                  "text": "!",
-                  "word_type": {
-                    "type": "Other",
-                    "other_tag": "PUNCT"
-                  }
-                },
-                "whitespace": ""
-              }
-            }
-          ],
-          "inputs": {
-            "0": "banane"
-          },
           "phase": {
             "type": "Graded",
             "completed_at_ms": 1789904065595.0962,
@@ -332,7 +272,13 @@
               ],
               "autograding_error": null
             },
-            "translation_revealed": false
+            "translation_revealed": false,
+            "submission": [
+              {
+                "index": 0,
+                "text": "banane"
+              }
+            ]
           }
         },
         "translation": null

@@ -10,51 +10,7 @@ import { HomeScreen } from "../browse/HomeScreen";
 import { StatsScreen } from "../browse/StatsScreen";
 import { DueWordsScreen } from "../browse/DueWordsScreen";
 import { AssumedKnownScreen, YourCardsScreen } from "../browse/WordListScreens";
-import type {
-  ChallengeView,
-  Fixture,
-  TranscriptionState,
-  TranslationState,
-} from "../../../yap-frontend-rs/pkg";
-
-// Captures use serde JSON; only reducer inputs need a bridge representation.
-function parseFixture(json: string): Fixture {
-  const parsed = JSON.parse(json) as Fixture;
-  if (parsed.screen !== "Review" || parsed.view.step.type !== "Challenge")
-    return parsed;
-  const fixture = parsed.view.step.view as unknown as {
-    challenge: ChallengeView["challenge"];
-    translation?: TranslationState | null;
-    transcription:
-      | (Omit<TranscriptionState, "inputs"> & {
-          inputs: Record<string, string>;
-        })
-      | null;
-  };
-  return {
-    ...parsed,
-    view: {
-      ...parsed.view,
-      step: {
-        type: "Challenge",
-        view: {
-          challenge: fixture.challenge,
-          translation: fixture.translation ?? undefined,
-          transcription: fixture.transcription
-            ? {
-                ...fixture.transcription,
-                inputs: new Map(
-                  Object.entries(fixture.transcription.inputs).map(
-                    ([index, text]) => [Number(index), text],
-                  ),
-                ),
-              }
-            : undefined,
-        },
-      },
-    },
-  };
-}
+import type { Fixture } from "../../../yap-frontend-rs/pkg";
 
 const log = (...args: unknown[]) => console.log("fixture action", ...args);
 const rejectCompletion = (...args: unknown[]) => { log(...args); return false; };
@@ -77,7 +33,7 @@ export function FixturePage() {
       .then(async (response) => {
         if (!response.ok)
           throw new Error(`Fixture: ${response.status}`);
-        const fixture = parseFixture(await response.text());
+        const fixture = await response.json() as Fixture;
         if (!abort.signal.aborted) setLoaded({ name: name!, fixture });
       })
       .catch((error) => {

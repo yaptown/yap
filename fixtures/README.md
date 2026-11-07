@@ -22,7 +22,10 @@ progress, review/card counts, connectivity, engagement eligibility, and an adjac
 (`type` plus `view`). The step is `PlacementTest`, `ReviewPlan`, `SetDisplayName`,
 `Accomplishment`, `Challenge`, or `Idle`, in that priority order. Both hosts render
 the same screen component for live snapshots and fixtures. Challenge captures include optional live
-reducer state for dictation and translation. Screen captures contain the entire
+reducer state for dictation and translation. Typed-but-unsubmitted answers live in
+an optional `draft` on the challenge view: `{ "type": "Translation", "text": "…" }`
+or `{ "type": "Transcription", "inputs": [{ "index": 1, "text": "…" }] }`.
+Live review views omit `draft`; hosts own text until Submit. Screen captures contain the entire
 Rust view, including preview cards, progress, copy, and button events. They are
 intentional test inputs: commit them, not generated bindings or screenshots.
 
@@ -75,8 +78,8 @@ driver reviews append real, immutable events to that test account.
   `CARGO_PROFILE_RELEASE_LTO=true cargo bridgerton web --package yap-frontend-rs --release`,
   then `cd yap-frontend && pnpm dev`. Select French and open `/fixture/<name>`.
   The route and `/__fixtures/index.json` exist only in development. TypeScript
-  parses the fixture and converts dictation's numeric input keys into a `Map`;
-  production WASM does not include the fixture JSON codec. Screen text and data
+  parses the fixture directly; production WASM does not include the fixture JSON
+  codec. Screen text and data
   come from the capture, not the seeded web deck, including the target language.
 - **iOS:** launch the debug app with test credentials and
   `--fixture <absolute-path-to-json>`. The driver logs `fixture rendered <name>`.

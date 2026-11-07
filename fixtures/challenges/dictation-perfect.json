@@ -217,77 +217,6 @@
           "second_chance": false
         },
         "transcription": {
-          "parts": [
-            {
-              "type": "AskedToTranscribe",
-              "parts": [
-                {
-                  "word": {
-                    "text": "Pas",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "pas",
-                      "lemma": "pas",
-                      "pos": "ADV"
-                    }
-                  },
-                  "whitespace": " "
-                },
-                {
-                  "word": {
-                    "text": "pour",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "pour",
-                      "lemma": "pour",
-                      "pos": "ADP"
-                    }
-                  },
-                  "whitespace": " "
-                },
-                {
-                  "word": {
-                    "text": "ta",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "ta",
-                      "lemma": "ton",
-                      "pos": "DET"
-                    }
-                  },
-                  "whitespace": " "
-                },
-                {
-                  "word": {
-                    "text": "vie",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "vie",
-                      "lemma": "vie",
-                      "pos": "NOUN"
-                    }
-                  },
-                  "whitespace": ""
-                }
-              ]
-            },
-            {
-              "type": "Provided",
-              "part": {
-                "word": {
-                  "text": ".",
-                  "word_type": {
-                    "type": "Other",
-                    "other_tag": "PUNCT"
-                  }
-                },
-                "whitespace": ""
-              }
-            }
-          ],
-          "inputs": {
-            "0": "Pas pour ta vie"
-          },
           "phase": {
             "type": "Graded",
             "completed_at_ms": 1789904044461.196,
@@ -390,7 +319,13 @@
               "compare": [],
               "autograding_error": null
             },
-            "translation_revealed": false
+            "translation_revealed": false,
+            "submission": [
+              {
+                "index": 0,
+                "text": "Pas pour ta vie"
+              }
+            ]
           }
         },
         "translation": null

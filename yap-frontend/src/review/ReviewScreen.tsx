@@ -80,6 +80,7 @@ export function ReviewScreen({
                 nativeLanguage={view.native_language}
                 challenge={step.view.challenge}
                 initialState={step.view.transcription ?? undefined}
+                draft={step.view.draft ?? undefined}
                 translationState={step.view.translation ?? undefined}
                 targetLanguage={view.target_language}
                 totalReviewsCompleted={BigInt(view.total_reviews)}

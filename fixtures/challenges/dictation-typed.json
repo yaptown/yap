@@ -217,82 +217,20 @@
           "second_chance": false
         },
         "transcription": {
-          "parts": [
-            {
-              "type": "AskedToTranscribe",
-              "parts": [
-                {
-                  "word": {
-                    "text": "Pas",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "pas",
-                      "lemma": "pas",
-                      "pos": "ADV"
-                    }
-                  },
-                  "whitespace": " "
-                },
-                {
-                  "word": {
-                    "text": "pour",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "pour",
-                      "lemma": "pour",
-                      "pos": "ADP"
-                    }
-                  },
-                  "whitespace": " "
-                },
-                {
-                  "word": {
-                    "text": "ta",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "ta",
-                      "lemma": "ton",
-                      "pos": "DET"
-                    }
-                  },
-                  "whitespace": " "
-                },
-                {
-                  "word": {
-                    "text": "vie",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "vie",
-                      "lemma": "vie",
-                      "pos": "NOUN"
-                    }
-                  },
-                  "whitespace": ""
-                }
-              ]
-            },
-            {
-              "type": "Provided",
-              "part": {
-                "word": {
-                  "text": ".",
-                  "word_type": {
-                    "type": "Other",
-                    "other_tag": "PUNCT"
-                  }
-                },
-                "whitespace": ""
-              }
-            }
-          ],
-          "inputs": {
-            "0": "v"
-          },
           "phase": {
             "type": "Editing"
           }
         },
-        "translation": null
+        "translation": null,
+        "draft": {
+          "type": "Transcription",
+          "inputs": [
+            {
+              "index": 0,
+              "text": "v"
+            }
+          ]
+        }
       }
     },
     "progress": 0.0,

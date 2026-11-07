@@ -91,9 +91,9 @@ struct ReviewScreen: View {
         case let .PronunciationChallenge(indicator, pattern, guide, cues, isNew, timesSeen):
             PronunciationChallengeView(indicator: indicator, pattern: pattern, guide: guide, cues: cues, isNew: isNew, timesSeen: timesSeen)
         case let .TranslateComprehensibleSentence(sentence):
-            TranslationChallengeView(sentence: sentence, initialState: challenge.translation ?? translation_start(sentence: sentence, course: Course(native_language: view.native_language, target_language: view.target_language)))
+            TranslationChallengeView(sentence: sentence, course: Course(native_language: view.native_language, target_language: view.target_language), initialState: challenge.translation ?? translation_start(), draft: challenge.draft)
         case let .TranscribeComprehensibleSentence(sentence):
-            TranscriptionChallengeView(sentence: sentence, initialState: challenge.transcription)
+            TranscriptionChallengeView(sentence: sentence, language: view.target_language, initialState: challenge.transcription, draft: challenge.draft)
         }
     }
 }

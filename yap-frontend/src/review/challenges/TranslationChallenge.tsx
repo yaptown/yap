@@ -23,6 +23,7 @@ import {
   translation_resume,
   translation_transition,
   translation_view,
+  translation_can_submit,
   type TranslationState,
   type TranslationEvent,
   type TranslationStep,
@@ -69,6 +70,7 @@ import {
 interface SentenceChallengeProps {
   sentence: TranslateComprehensibleSentence;
   initialState?: TranslationState;
+  initialText?: string;
   onComplete: (
     grade: ManualTranslationGrade | { perfect: string | null },
     hintedLiteralIndices: number[],
@@ -366,6 +368,7 @@ export function GramDefinitionDisplay({
 export const TranslationChallenge = memo(function TranslationChallenge({
   sentence,
   initialState,
+  initialText,
   onComplete,
   accessToken,
   targetLanguage,
@@ -376,6 +379,10 @@ export const TranslationChallenge = memo(function TranslationChallenge({
   totalReviewsCompleted,
   pendingReviewScope,
 }: SentenceChallengeProps) {
+  const course = useMemo(
+    () => ({ targetLanguage, nativeLanguage }),
+    [targetLanguage, nativeLanguage],
+  );
   const [storage] = useState(() =>
     initialState
       ? undefined
@@ -386,19 +393,26 @@ export const TranslationChallenge = memo(function TranslationChallenge({
             get_app_version(),
             totalReviewsCompleted,
           ),
-          (payload) => translation_resume(payload as TranslationState).state,
+          (payload) =>
+            translation_resume(payload as TranslationState, sentence, course).state,
         ),
   );
   const [state, setState] = useState<TranslationState>(
     () =>
       initialState ??
       storage?.load() ??
-      translation_start(sentence, { targetLanguage, nativeLanguage }),
+      translation_start(),
   );
   const stateRef = useRef(state);
-  const view = useMemo(() => translation_view(state), [state]);
+  const view = useMemo(
+    () => translation_view(state, sentence, course),
+    [state, sentence, course],
+  );
   const editing = state.phase.type === "Editing";
-  const userTranslation = state.text;
+  const [userTranslation, setUserTranslation] = useState(
+    () => view.submission ?? initialText ?? "",
+  );
+  const canSubmit = translation_can_submit(userTranslation);
   const correctTranslation = view.correct_translation ?? "";
   const gradeItems = view.grade_section?.items ?? [];
   const canContinue = view.can_continue;
@@ -443,7 +457,7 @@ export const TranslationChallenge = memo(function TranslationChallenge({
               sentence.target_language_literals,
               sentence.unique_target_language_phrases,
               accessToken,
-              step.state.course,
+              course,
               sentence.gram_definitions_for_lookup,
               new Uint32Array(sentence.literal_gram_indices),
               sentence.phrase_definitions,
@@ -459,10 +473,12 @@ export const TranslationChallenge = memo(function TranslationChallenge({
                     response.autograding_error,
                   );
                 apply(
-                  translation_transition(stateRef.current, {
-                    type: "Graded",
-                    response,
-                  }),
+                  translation_transition(
+                    stateRef.current,
+                    { type: "Graded", response },
+                    sentence,
+                    course,
+                  ),
                 );
               })
               .catch((error) => {
@@ -473,10 +489,12 @@ export const TranslationChallenge = memo(function TranslationChallenge({
                     : t("translation-challenge-failed-to-grade-automatically");
                 reportAutogradeFailure("translation", message);
                 apply(
-                  translation_transition(stateRef.current, {
-                    type: "GradingFailed",
-                    message,
-                  }),
+                  translation_transition(
+                    stateRef.current,
+                    { type: "GradingFailed", message },
+                    sentence,
+                    course,
+                  ),
                 );
               });
             break;
@@ -505,19 +523,21 @@ export const TranslationChallenge = memo(function TranslationChallenge({
         }
       }
     },
-    [storage, sentence, accessToken, bumpBackground, onComplete],
+    [storage, sentence, course, accessToken, bumpBackground, onComplete],
   );
   const send = useCallback(
     (event: TranslationEvent) => {
       if (event.type === "CancelGrading") gradingGenerationRef.current++;
-      applyStep(translation_transition(stateRef.current, event));
+      applyStep(translation_transition(stateRef.current, event, sentence, course));
     },
-    [applyStep],
+    [applyStep, sentence, course],
   );
-  const resumeStep = useRef(applyStep);
+  const resumeStep = useRef(() =>
+    applyStep(translation_resume(stateRef.current, sentence, course)),
+  );
   useEffect(() => {
     const generation = gradingGenerationRef;
-    resumeStep.current(translation_resume(stateRef.current));
+    resumeStep.current();
     return () => {
       generation.current++;
     };
@@ -528,8 +548,8 @@ export const TranslationChallenge = memo(function TranslationChallenge({
   }, [sentence.target_language]);
   const handleWordTap = (index: number) => send({ type: "WordTapped", index });
   const handleCheckAnswer = useCallback(
-    () => send({ type: "Submit", now_ms: Date.now() }),
-    [send],
+    () => send({ type: "Submit", text: userTranslation, now_ms: Date.now() }),
+    [send, userTranslation],
   );
   const handleContinue = useCallback(() => send({ type: "Continue" }), [send]);
   const handleGradeSwipe = useCallback(
@@ -548,7 +568,7 @@ export const TranslationChallenge = memo(function TranslationChallenge({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Enter" && editing) {
         e.preventDefault();
-        if (userTranslation.trim()) {
+        if (canSubmit) {
           handleCheckAnswer();
         }
       } else if (e.key === "Enter" && view.verdict) {
@@ -609,7 +629,7 @@ export const TranslationChallenge = memo(function TranslationChallenge({
     selectedPhraseIndex,
     handleGradeSwipe,
     canContinue,
-    userTranslation,
+    canSubmit,
     handleCheckAnswer,
     editing,
     view.verdict,
@@ -657,14 +677,12 @@ export const TranslationChallenge = memo(function TranslationChallenge({
                   lang={languageToLangAttr(nativeLanguage)}
                   placeholder={view.placeholder}
                   value={userTranslation}
-                  onChange={(e) =>
-                    send({ type: "TextChanged", text: e.target.value })
-                  }
+                  onChange={(e) => setUserTranslation(e.target.value)}
                   className="block w-full resize-none bg-transparent outline-none placeholder:text-muted-foreground field-sizing-content"
                   rows={1}
                 />
               ) : (
-                <p>{userTranslation}</p>
+                <p>{view.submission}</p>
               )}
             </AnswerLine>
 
@@ -750,7 +768,7 @@ export const TranslationChallenge = memo(function TranslationChallenge({
             onClick={handleCheckAnswer}
             className="w-full mt-4 h-14 text-lg"
             size="lg"
-            disabled={!view.can_submit}
+            disabled={!canSubmit}
           >
             {view.submit_label}
           </Button>

@@ -1451,6 +1451,17 @@ pub struct ChallengeView {
     pub challenge: Challenge<Gram<String>>,
     pub transcription: Option<TranscriptionState>,
     pub translation: Option<TranslationState>,
+    /// Host-local text captured only for fixture rendering, never live review state.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub draft: Option<ChallengeDraft>,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum ChallengeDraft {
+    Translation { text: String },
+    Transcription { inputs: Vec<TranscriptionInput> },
 }
 
 #[bridgerton::bridge(transparent)]
@@ -1569,6 +1580,7 @@ impl Deck {
                 challenge,
                 transcription: None,
                 translation: None,
+                draft: None,
             }))
         } else {
             ReviewStep::Idle(Box::new(self.idle_screen_view_with_review(

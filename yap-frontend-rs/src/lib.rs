@@ -83,7 +83,6 @@ pub use utils::ai_server_url;
 
 use language_utils::Atom;
 use language_utils::HomophoneSentencePair;
-use language_utils::ProperNounDefinition;
 use language_utils::SentenceGrams;
 use language_utils::{SentenceSpur, SpurGram, TaggedGram, TranslationSpur};
 pub use simulation::{DailySimulationIterator, DayChallengeIterator};
@@ -106,8 +105,7 @@ use language_utils::text_cleanup::normalize_for_grading;
 use language_utils::transcription_challenge;
 use language_utils::{Course, Language};
 use language_utils::{
-    Gram, GramDefinition, Heteronym, MovieMetadataBasic, PronunciationGuide, WordType,
-    normalize_original_language,
+    Gram, Heteronym, MovieMetadataBasic, PronunciationGuide, WordType, normalize_original_language,
 };
 use lasso::Spur;
 use opfs::persistent::{self};
@@ -1063,32 +1061,6 @@ impl<'a> Drop for FlushLater<'a> {
     fn drop(&mut self) {
         self.weapon.flush_notifications();
     }
-}
-
-#[bridgerton::bridge(transparent)]
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-pub struct TranscribeComprehensibleSentence {
-    pub target_language: String,
-    pub audio: AudioRequest,
-    pub native_language: String,
-    /// Readings per literal in flattened `parts`, without literal whitespace.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub literal_ruby: Vec<Vec<language_utils::readings::RubySegment>>,
-    pub parts: Vec<transcription_challenge::Part>,
-    /// Parallel to `parts`. For each part, one gram-group index per literal
-    /// (length matches the literal count of the corresponding part). Lets the
-    /// frontend map a graded literal back to its gram definition/breakdown.
-    pub part_gram_indices: Vec<Vec<usize>>,
-    /// Gram definitions indexed by gram group.
-    pub gram_definitions_for_lookup: Vec<Option<GramDefinition>>,
-    /// Morpheme/word breakdowns indexed by gram group (parallel to
-    /// `gram_definitions_for_lookup`).
-    #[allow(clippy::type_complexity)]
-    pub gram_breakdowns_for_lookup: Vec<Option<Vec<(String, Option<String>, Option<String>)>>>,
-    pub movie_titles: Vec<(String, String)>,
-    pub proper_noun_definitions: Vec<(String, ProperNounDefinition)>,
-    /// True if the user recently got this sentence wrong in a transcription challenge.
-    pub second_chance: bool,
 }
 
 #[bridge(transparent)]

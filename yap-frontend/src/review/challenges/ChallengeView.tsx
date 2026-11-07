@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import {
   type Challenge,
+  type ChallengeDraft,
   type Gram,
   flashcard_view,
   pronunciation_view,
@@ -12,7 +13,7 @@ import { TranscriptionChallenge } from "./TranscriptionChallenge";
 
 type Props = Omit<
   ComponentProps<typeof TranscriptionChallenge>,
-  "challenge" | "onComplete"
+  "challenge" | "onComplete" | "initialInputs"
 > & {
   challenge: Challenge<Gram<string>>;
   onRating: NonNullable<ComponentProps<typeof FlashcardChallenge>["onRating"]>;
@@ -25,6 +26,7 @@ type Props = Omit<
     typeof TranscriptionChallenge
   >["onComplete"];
   reportIssue?: { label: string; onClick: () => void };
+  draft?: ChallengeDraft;
   translationState?: ComponentProps<typeof TranslationChallenge>["initialState"];
 };
 
@@ -46,6 +48,7 @@ export function ChallengeView({
   deck,
   reportIssue,
   initialState,
+  draft,
   translationState,
   pendingReviewScope,
 }: Props) {
@@ -90,6 +93,7 @@ export function ChallengeView({
   ) : currentChallenge.type === "TranslateComprehensibleSentence" ? (
     <TranslationChallenge
       initialState={translationState}
+      initialText={draft?.type === "Translation" ? draft.text : undefined}
       sentence={currentChallenge}
       onComplete={onTranslationComplete}
       accessToken={accessToken}
@@ -105,6 +109,7 @@ export function ChallengeView({
   ) : (
     <TranscriptionChallenge
       initialState={initialState}
+      initialInputs={draft?.type === "Transcription" ? draft.inputs : undefined}
       challenge={currentChallenge}
       onComplete={onTranscriptionComplete}
       keyboardTip={keyboardTip}

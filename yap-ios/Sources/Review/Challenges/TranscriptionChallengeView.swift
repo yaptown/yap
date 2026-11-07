@@ -7,6 +7,7 @@ struct TranscriptionChallengeView: View {
     @Environment(\.reviewHost!) private var host
     @Environment(\.reviewActions!) private var actions
     let sentence: TranscribeComprehensibleSentence
+    @State private var inputs: [Int: String]
     @State private var state: TranscriptionState
     // Recomputed once per step rather than on every access, since each call crosses the bridge.
     @State private var view: TranscriptionView
@@ -16,12 +17,15 @@ struct TranscriptionChallengeView: View {
     @AppStorage("mobile-keyboard-tip-dismissed") private var keyboardTipDismissed = false
     @State private var gradingTask: Task<Void, Never>?
     @FocusState private var focused: Int?
-    init(sentence: TranscribeComprehensibleSentence, initialState: TranscriptionState?) {
+    init(sentence: TranscribeComprehensibleSentence, language: Language, initialState: TranscriptionState?, draft: ChallengeDraft?) {
         self.sentence = sentence
-        let state = initialState ?? transcription_start(literal_ruby: sentence.literal_ruby, parts: sentence.parts, proper_noun_definitions: sentence.proper_noun_definitions)
+        let state = initialState ?? transcription_start()
         _state = State(initialValue: state)
-        let view = transcription_view(state: state)
+        let view = transcription_view(state: state, challenge: sentence, language: language)
         _view = State(initialValue: view)
+        let draftInputs: [TranscriptionInput]
+        if case let .Transcription(inputs) = draft { draftInputs = inputs } else { draftInputs = [] }
+        _inputs = State(initialValue: Dictionary(draftInputs.map { (Int($0.index), $0.text) }, uniquingKeysWith: { _, last in last }))
         _gradesExpanded = State(initialValue: view.verdict?.word_grades_open_by_default ?? false)
     }
     private var storage: PendingReview? {
@@ -41,7 +45,7 @@ struct TranscriptionChallengeView: View {
                     Text(view.instructions).font(.footnote).foregroundStyle(Color.yapMuted)
                 }.frame(maxWidth: .infinity)
                 SentenceFlow(spacing: 0, alignment: .center) {
-                    ForEach(Array(transcription_sentence_chunks(parts: sentence.parts, language: screen.target_language).enumerated()), id: \.offset) { _, chunk in
+                    ForEach(Array(view.chunks.enumerated()), id: \.offset) { _, chunk in
                         HStack(spacing: 0) {
                             ForEach(chunk.indices, id: \.self) { index in
                                 switch sentence.parts[Int(index)] {
@@ -78,7 +82,7 @@ struct TranscriptionChallengeView: View {
                     if !verdict.word_grades.isEmpty {
                         GradeSectionDisclosure(title: verdict.word_grades_title, isExpanded: $gradesExpanded) { wordGrades(verdict) }
                     }
-                    if case let .Graded(_, grade, _, _) = state.phase {
+                    if case let .Graded(_, _, grade, _, _) = state.phase {
                         ReviewDefinitionsView(definitions: get_transcription_review_definitions(challenge: sentence, results: grade.results)).equatable()
                     }
                 } else if view.is_grading {
@@ -102,7 +106,7 @@ struct TranscriptionChallengeView: View {
             if view.verdict == nil {
                 CantListenButton(label: view.cant_listen_label) { actions.cantListen() }.disabled(view.is_grading)
                 HStack {
-                    Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)
+                    Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!editing || !transcription_can_submit(texts: blanks.map { inputs[$0] ?? "" }))
                         .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
                     if view.is_grading { Button(L("common-cancel")) { send(.CancelGrading) } }
                 }
@@ -118,7 +122,10 @@ struct TranscriptionChallengeView: View {
                 state = saved
             }
             if editing { focused = blanks.first }
-            apply(transcription_resume(state: state))
+            apply(transcription_resume(state: state, challenge: sentence))
+            if !editing {
+                inputs = Dictionary(uniqueKeysWithValues: view.blanks.map { (Int($0.index), $0.text ?? "") })
+            }
         }
         .onDisappear { gradingTask?.cancel() }
         #if DEBUG
@@ -135,7 +142,7 @@ struct TranscriptionChallengeView: View {
     /// caret on iOS.
     private func blank(_ index: Int) -> some View {
         let blank = view.blanks.first { $0.index == UInt64(index) }!
-        let text = blank.text
+        let text = editing ? inputs[index] ?? "" : blank.text ?? ""
         let shape = RoundedRectangle(cornerRadius: 6)
         return Text(text.isEmpty ? view.placeholder : text).font(fieldFont)
             .foregroundStyle(Color.yapMuted).opacity(text.isEmpty ? 1 : 0)
@@ -145,7 +152,7 @@ struct TranscriptionChallengeView: View {
             // field needs a few points more than its text, and an unfocused
             // one that's even slightly too narrow shows "…" instead.
             .overlay {
-                TextField("", text: Binding(get: { text }, set: { send(.InputChanged(index: UInt64(index), text: $0)) }))
+                TextField("", text: Binding(get: { text }, set: { inputs[index] = $0 }))
                     .textFieldStyle(.plain).font(fieldFont).multilineTextAlignment(.center).focused($focused, equals: index)
                     .autocorrectionDisabled().textInputAutocapitalization(index == 0 ? .sentences : .never)
                     .submitLabel(index == blanks.last ? .done : .next).onSubmit { advance(index) }
@@ -213,12 +220,12 @@ struct TranscriptionChallengeView: View {
     }
     private func send(_ event: TranscriptionEvent) {
         if case .CancelGrading = event { gradingTask?.cancel() }
-        apply(transcription_transition(state: state, event: event, target_language: screen.target_language))
+        apply(transcription_transition(state: state, event: event, challenge: sentence, target_language: screen.target_language))
     }
     private func apply(_ step: TranscriptionStep) {
         let hadVerdict = view.verdict != nil
         state = step.state
-        view = transcription_view(state: state)
+        view = transcription_view(state: state, challenge: sentence, language: screen.target_language)
         if !hadVerdict { gradesExpanded = view.verdict?.word_grades_open_by_default ?? false }
         if let data = try? PendingReview.encode(state) { storage?.save(data) }
         for effect in step.effects {
@@ -246,19 +253,20 @@ struct TranscriptionChallengeView: View {
             }
         }
     }
-    private func submit() { send(.Submit(now_ms: Date().timeIntervalSince1970 * 1000)) }
+    private var submission: [TranscriptionInput] { blanks.map { TranscriptionInput(index: UInt64($0), text: inputs[$0] ?? "") } }
+    private func submit() { send(.Submit(inputs: submission, now_ms: Date().timeIntervalSince1970 * 1000)) }
     private func complete() { send(.Continue) }
     #if DEBUG
     private func debugCommand() {
         let command = DebugHarness.shared.command
         if command.hasPrefix("dump-fixture ") {
             var capture = screen
-            capture.step = .Challenge(ChallengeView(challenge: .TranscribeComprehensibleSentence(sentence), transcription: state, translation: nil))
+            capture.step = .Challenge(ChallengeView(challenge: .TranscribeComprehensibleSentence(sentence), transcription: state, translation: nil, draft: editing ? .Transcription(inputs: submission) : nil))
             DebugHarness.dumpFixture(.Review(capture), name: String(command.dropFirst(13)))
         }
-        if command.hasPrefix("type "), editing, let index = focused ?? blanks.first { send(.InputChanged(index: UInt64(index), text: String(command.dropFirst(5)))) }
+        if command.hasPrefix("type "), editing, let index = focused ?? blanks.first { inputs[index] = String(command.dropFirst(5)) }
         if command == "type-reference", editing {
-            for index in blanks { if case let .AskedToTranscribe(parts) = sentence.parts[index] { send(.InputChanged(index: UInt64(index), text: gramText(parts))) } }
+            for index in blanks { if case let .AskedToTranscribe(parts) = sentence.parts[index] { inputs[index] = gramText(parts) } }
         }
         if command == "submit" { submit() }
         if command == "continue" { complete() }

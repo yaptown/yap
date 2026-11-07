@@ -7,6 +7,8 @@ struct TranslationChallengeView: View {
     @Environment(\.reviewHost!) private var host
     @Environment(\.reviewActions!) private var actions
     let sentence: TranslateComprehensibleSentence
+    let course: Course
+    @State private var text: String
     @State private var state: TranslationState
     @State private var view: TranslationView
     @State private var hasClip: Bool?
@@ -15,11 +17,16 @@ struct TranslationChallengeView: View {
     @State private var focused = false
     @State private var gradesExpanded = false
 
-    init(sentence: TranslateComprehensibleSentence, initialState: TranslationState) {
+    init(sentence: TranslateComprehensibleSentence, course: Course, initialState: TranslationState, draft: ChallengeDraft?) {
         self.sentence = sentence
+        self.course = course
         let state = initialState
         _state = State(initialValue: state)
-        _view = State(initialValue: translation_view(state: state))
+        let view = translation_view(state: state, sentence: sentence, course: course)
+        _view = State(initialValue: view)
+        let draftText: String
+        if case let .Translation(text) = draft { draftText = text } else { draftText = "" }
+        _text = State(initialValue: view.submission ?? draftText)
     }
     private var storage: PendingReview? {
         guard let scope = actions.pendingReviewKey else { return nil }
@@ -84,7 +91,7 @@ struct TranslationChallengeView: View {
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             } else {
                 HStack {
-                    Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)
+                    Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!editing || !translation_can_submit(text: text))
                         .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
                     if view.is_grading { Button(L("common-cancel")) { send(.CancelGrading) } }
                 }
@@ -95,7 +102,8 @@ struct TranslationChallengeView: View {
         .onAppear {
             if let data = storage?.load(Data.self), let saved = try? PendingReview.decode(data, as: TranslationState.self) { state = saved }
             focused = editing
-            apply(translation_resume(state: state))
+            apply(translation_resume(state: state, sentence: sentence, course: course))
+            if let submission = view.submission { text = submission }
         }
         .onDisappear { gradingTask?.cancel() }
         #if DEBUG
@@ -111,12 +119,12 @@ struct TranslationChallengeView: View {
             SectionLabel(text: view.answer_label)
             Group {
                 if editing {
-                    SubmissionTextView(text: Binding(get: { state.text }, set: { send(.TextChanged(text: $0)) }), focused: $focused, onSubmit: submit)
+                    SubmissionTextView(text: $text, focused: $focused, onSubmit: submit)
                         .overlay(alignment: .topLeading) {
-                            if state.text.isEmpty { Text(view.placeholder).font(.title3).foregroundStyle(Color.yapMuted).allowsHitTesting(false) }
+                            if text.isEmpty { Text(view.placeholder).font(.title3).foregroundStyle(Color.yapMuted).allowsHitTesting(false) }
                         }
                 } else {
-                    Text(state.text).font(.title3).foregroundStyle(tone == .Perfect ? Color.yapPositiveForeground : Color.yapText)
+                    Text(view.submission ?? "").font(.title3).foregroundStyle(tone == .Perfect ? Color.yapPositiveForeground : Color.yapText)
                         .frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
                 }
             }.padding(.bottom, 4)
@@ -151,12 +159,12 @@ struct TranslationChallengeView: View {
     private func send(_ event: TranslationEvent) {
         if case .ItemGraded = event { background.bump(30) }
         if case .CancelGrading = event { gradingTask?.cancel() }
-        apply(translation_transition(state: state, event: event))
+        apply(translation_transition(state: state, event: event, sentence: sentence, course: course))
     }
     private func apply(_ step: TranslationStep) {
         let hadGradeSection = view.grade_section != nil
         state = step.state
-        view = translation_view(state: state)
+        view = translation_view(state: state, sentence: sentence, course: course)
         if !hadGradeSection { gradesExpanded = view.grade_section?.open_by_default ?? false }
         if let data = try? PendingReview.encode(state) { storage?.save(data) }
         for effect in step.effects {
@@ -165,7 +173,6 @@ struct TranslationChallengeView: View {
                 background.bump(30)
                 focused = false
                 gradingTask?.cancel()
-                let course = state.course
                 gradingTask = Task { @MainActor in
                     let response = await autograde_translation(challenge_sentence: sentence.target_language, user_sentence: submission,
                         native_translations: sentence.native_translations, literals: sentence.target_language_literals,
@@ -194,17 +201,17 @@ struct TranslationChallengeView: View {
             }
         }
     }
-    private func submit() { send(.Submit(now_ms: Date().timeIntervalSince1970 * 1000)) }
+    private func submit() { send(.Submit(text: text, now_ms: Date().timeIntervalSince1970 * 1000)) }
     #if DEBUG
     private func debugCommand() {
         let command = DebugHarness.shared.command
         if command.hasPrefix("dump-fixture ") {
             var capture = screen
-            capture.step = .Challenge(ChallengeView(challenge: .TranslateComprehensibleSentence(sentence), transcription: nil, translation: state))
+            capture.step = .Challenge(ChallengeView(challenge: .TranslateComprehensibleSentence(sentence), transcription: nil, translation: state, draft: editing ? .Translation(text: text) : nil))
             DebugHarness.dumpFixture(.Review(capture), name: String(command.dropFirst(13)))
         }
-        if command.hasPrefix("type ") { send(.TextChanged(text: String(command.dropFirst(5)))) }
-        if command == "type-reference" { send(.TextChanged(text: sentence.native_translations.first ?? "")) }
+        if command.hasPrefix("type "), editing { text = String(command.dropFirst(5)) }
+        if command == "type-reference", editing { text = sentence.native_translations.first ?? "" }
         if command == "submit" { submit() }
         if command == "continue" { send(.Continue) }
         if command == "cancel" { send(.CancelGrading) }

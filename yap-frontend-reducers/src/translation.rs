@@ -494,9 +494,6 @@ pub fn heuristic_grade_translation(
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct TranslationState {
-    pub sentence: TranslateComprehensibleSentence,
-    pub course: Course,
-    pub text: String,
     pub tapped: Vec<usize>,
     pub phase: TranslationPhase,
 }
@@ -507,10 +504,12 @@ pub struct TranslationState {
 pub enum TranslationPhase {
     Editing,
     Grading {
+        submission: String,
         completed_at_ms: f64,
         correct_translation: String,
     },
     Graded {
+        submission: String,
         completed_at_ms: f64,
         correct_translation: String,
         result: TranslationReviewResult,
@@ -523,13 +522,11 @@ pub enum TranslationPhase {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type")]
 pub enum TranslationEvent {
-    TextChanged {
-        text: String,
-    },
     WordTapped {
         index: usize,
     },
     Submit {
+        text: String,
         now_ms: f64,
     },
     CancelGrading,
@@ -676,7 +673,7 @@ pub struct TranslationView {
     pub verdict: Option<TranslationVerdictView>,
     pub correct_translation: Option<String>,
     pub is_grading: bool,
-    pub can_submit: bool,
+    pub submission: Option<String>,
     pub submit_label: String,
     pub grade_section: Option<TranslationGradeSection>,
     pub can_continue: bool,
@@ -686,33 +683,43 @@ pub struct TranslationView {
 }
 
 #[bridgerton::bridge]
-pub fn translation_start(
-    sentence: TranslateComprehensibleSentence,
-    course: Course,
-) -> TranslationState {
+pub fn translation_start() -> TranslationState {
     TranslationState {
-        sentence,
-        course,
-        text: String::new(),
         tapped: vec![],
         phase: TranslationPhase::Editing,
     }
 }
 
 #[bridgerton::bridge]
-pub fn translation_resume(state: TranslationState) -> TranslationStep {
-    let effects = if matches!(state.phase, TranslationPhase::Grading { .. }) {
+pub fn translation_resume(
+    state: TranslationState,
+    sentence: TranslateComprehensibleSentence,
+    course: Course,
+) -> TranslationStep {
+    let effects = if let TranslationPhase::Grading { submission, .. } = &state.phase {
         vec![TranslationEffect::Autograde {
-            submission: state.text.clone(),
+            submission: submission.clone(),
         }]
     } else {
-        translation_completion(&state).into_iter().collect()
+        translation_completion(&state, &sentence, course)
+            .into_iter()
+            .collect()
     };
     TranslationStep { state, effects }
 }
 
-fn translation_completion(state: &TranslationState) -> Option<TranslationEffect> {
+#[bridgerton::bridge]
+pub fn translation_can_submit(text: String) -> bool {
+    !text.trim().is_empty()
+}
+
+fn translation_completion(
+    state: &TranslationState,
+    sentence: &TranslateComprehensibleSentence,
+    course: Course,
+) -> Option<TranslationEffect> {
     let TranslationPhase::Graded {
+        submission,
         result,
         completed_at_ms,
         completing: true,
@@ -722,16 +729,16 @@ fn translation_completion(state: &TranslationState) -> Option<TranslationEffect>
         return None;
     };
     let feedback = get_translation_review_feedback(
-        state.sentence.clone(),
+        sentence.clone(),
         None,
         false,
         state.tapped.clone(),
-        state.course.target_language,
+        course.target_language,
     );
     Some(TranslationEffect::Complete {
         outcome: result.clone(),
         hinted_literal_indices: feedback.hinted_literal_indices,
-        submission: state.text.clone(),
+        submission: submission.clone(),
         completed_at_ms: *completed_at_ms,
     })
 }
@@ -740,9 +747,11 @@ fn translation_completion(state: &TranslationState) -> Option<TranslationEffect>
 pub fn translation_transition(
     mut state: TranslationState,
     event: TranslationEvent,
+    sentence: TranslateComprehensibleSentence,
+    course: Course,
 ) -> TranslationStep {
-    let can_continue =
-        matches!(event, TranslationEvent::Continue) && translation_view(state.clone()).can_continue;
+    let can_continue = matches!(event, TranslationEvent::Continue)
+        && translation_view(state.clone(), sentence.clone(), course).can_continue;
     let mut effects = vec![];
     match (&mut state.phase, event) {
         (
@@ -751,10 +760,8 @@ pub fn translation_transition(
             },
             _,
         ) => {}
-        (TranslationPhase::Editing, TranslationEvent::TextChanged { text }) => state.text = text,
         (TranslationPhase::Editing, TranslationEvent::WordTapped { index }) => {
-            if state
-                .sentence
+            if sentence
                 .target_language_literals
                 .get(index)
                 .is_some_and(|l| l.word.heteronym().is_some())
@@ -763,42 +770,41 @@ pub fn translation_transition(
                 state.tapped.push(index);
             }
         }
-        (TranslationPhase::Editing, TranslationEvent::Submit { now_ms })
-            if !state.text.trim().is_empty() =>
+        (TranslationPhase::Editing, TranslationEvent::Submit { text, now_ms })
+            if translation_can_submit(text.clone()) =>
         {
             let correct_translation = find_closest_translation(
-                state.text.clone(),
-                state.sentence.native_translations.clone(),
-                state.course.native_language,
+                text.clone(),
+                sentence.native_translations.clone(),
+                course.native_language,
             )
-            .or_else(|| state.sentence.native_translations.first().cloned())
+            .or_else(|| sentence.native_translations.first().cloned())
             .unwrap_or_default();
             state.phase = TranslationPhase::Grading {
+                submission: text.clone(),
                 completed_at_ms: now_ms,
                 correct_translation,
             };
-            effects.push(TranslationEffect::Autograde {
-                submission: state.text.clone(),
-            });
+            effects.push(TranslationEffect::Autograde { submission: text });
         }
         (TranslationPhase::Grading { .. }, TranslationEvent::CancelGrading) => {
             state.phase = TranslationPhase::Editing
         }
         (
             TranslationPhase::Grading {
+                submission,
                 completed_at_ms,
                 correct_translation,
             },
             event @ (TranslationEvent::Graded { .. } | TranslationEvent::GradingFailed { .. }),
         ) => {
             let result = match event {
-                TranslationEvent::Graded { response } => prepare_translation_review(
-                    state.sentence.target_language_literals.clone(),
-                    response,
-                ),
+                TranslationEvent::Graded { response } => {
+                    prepare_translation_review(sentence.target_language_literals.clone(), response)
+                }
                 TranslationEvent::GradingFailed { message } => TranslationReviewResult::Manual {
                     grade: failed_translation_review(
-                        state.sentence.target_language_literals.len(),
+                        sentence.target_language_literals.len(),
                         message,
                     ),
                 },
@@ -813,6 +819,7 @@ pub fn translation_transition(
                 });
             }
             state.phase = TranslationPhase::Graded {
+                submission: submission.clone(),
                 completed_at_ms: *completed_at_ms,
                 correct_translation: correct_translation.clone(),
                 result,
@@ -830,17 +837,17 @@ pub fn translation_transition(
             },
         ) => {
             let items = grade_items(
-                &state.sentence.target_language_literals,
-                &state.sentence.unique_target_language_phrases,
+                &sentence.target_language_literals,
+                &sentence.unique_target_language_phrases,
                 grade,
-                state.course.target_language,
+                course.target_language,
             );
             if let Some(item) = items.get(item_index) {
                 *grade = apply_translation_grade(
                     grade.clone(),
                     item.clone(),
                     remembered == Remembered::Remembered,
-                    state.sentence.target_language_literals.len(),
+                    sentence.target_language_literals.len(),
                 );
             }
         }
@@ -848,7 +855,7 @@ pub fn translation_transition(
             if can_continue =>
         {
             *completing = true;
-            effects.extend(translation_completion(&state));
+            effects.extend(translation_completion(&state, &sentence, course));
         }
         _ => {}
     }
@@ -857,7 +864,11 @@ pub fn translation_transition(
 
 #[bridgerton::bridge]
 #[bridgerton::stable]
-pub fn translation_view(state: TranslationState) -> TranslationView {
+pub fn translation_view(
+    state: TranslationState,
+    sentence: TranslateComprehensibleSentence,
+    course: Course,
+) -> TranslationView {
     let editing = matches!(state.phase, TranslationPhase::Editing);
     let is_grading = matches!(state.phase, TranslationPhase::Grading { .. });
     let (grade, perfect, verdict, correct_translation) = match &state.phase {
@@ -867,6 +878,7 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
             ..
         } => (None, false, None, Some(correct_translation.clone())),
         TranslationPhase::Graded {
+            submission,
             result,
             correct_translation,
             ..
@@ -894,7 +906,7 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
                         VerdictTone::Wrong
                     }
                     .into(),
-                    submission: state.text.clone(),
+                    submission: submission.clone(),
                     correct_translation: correct_translation.clone(),
                     perfect,
                     encouragement,
@@ -906,21 +918,20 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
         }
     };
     let feedback = get_translation_review_feedback(
-        state.sentence.clone(),
+        sentence.clone(),
         grade.cloned(),
         perfect,
         state.tapped.clone(),
-        state.course.target_language,
+        course.target_language,
     );
-    let literals = &state.sentence.target_language_literals;
-    let emphasis = literal_emphasis(literals, &state.sentence.literal_gram_indices);
+    let literals = &sentence.target_language_literals;
+    let emphasis = literal_emphasis(literals, &sentence.literal_gram_indices);
     let words = literals
         .iter()
         .enumerate()
         .map(|(i, literal)| {
             let heteronym = literal.word.heteronym().is_some();
-            let tapped = state
-                .sentence
+            let tapped = sentence
                 .literal_gram_indices
                 .get(i)
                 .is_some_and(|g| feedback.tapped_gram_groups.contains(g))
@@ -948,12 +959,7 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
             };
             TranslationWordView {
                 ruby: if correct_translation.is_some() {
-                    state
-                        .sentence
-                        .literal_ruby
-                        .get(i)
-                        .cloned()
-                        .unwrap_or_default()
+                    sentence.literal_ruby.get(i).cloned().unwrap_or_default()
                 } else {
                     vec![]
                 },
@@ -966,8 +972,7 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
         .collect();
     let autograde_error = grade.and_then(|g| g.autograding_error.clone());
     TranslationView {
-        badge: state
-            .sentence
+        badge: sentence
             .second_chance
             .then(|| yap_i18n::tr!("translation-second-chance")),
         answer_label: yap_i18n::tr!("translation-your-translation"),
@@ -975,23 +980,26 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
         placeholder: yap_i18n::tr!("translation-translation"),
         words,
         chunks: language_utils::sentence_chunks(
-            &state
-                .sentence
+            &sentence
                 .target_language_literals
                 .iter()
                 .map(|literal| (literal.word.text.as_str(), literal.whitespace))
                 .collect::<Vec<_>>(),
-            state.course.target_language,
+            course.target_language,
         ),
         proper_nouns: if editing {
-            proper_noun_groups(&state.sentence.proper_noun_definitions)
+            proper_noun_groups(&sentence.proper_noun_definitions)
         } else {
             vec![]
         },
         verdict,
         correct_translation,
         is_grading,
-        can_submit: editing && !state.text.trim().is_empty(),
+        submission: match &state.phase {
+            TranslationPhase::Editing => None,
+            TranslationPhase::Grading { submission, .. }
+            | TranslationPhase::Graded { submission, .. } => Some(submission.clone()),
+        },
         submit_label: if is_grading {
             yap_i18n::tr!("common-grading")
         } else {
@@ -1045,8 +1053,8 @@ mod reducer_tests {
     use super::*;
     use serde_json::json;
 
-    fn start() -> TranslationState {
-        let sentence = serde_json::from_value(json!({
+    fn sentence() -> TranslateComprehensibleSentence {
+        serde_json::from_value(json!({
             "audio": {"request": {"text":"chat !", "language":"French", "is_ssml":false, "instructions":null, "speed":1.0, "verification_hints":[]}, "provider":"Google"},
             "target_language":"chat !",
             "target_language_literals": [
@@ -1057,31 +1065,50 @@ mod reducer_tests {
             "unique_target_language_phrases":[], "phrase_definitions":[], "phrase_breakdowns":[],
             "native_translations":["cat", "a cat"], "movie_titles":[], "proper_noun_definitions":[],
             "primary_expression":{"gram":[],"sense":null}, "second_chance":true
-        })).unwrap();
-        translation_start(
-            sentence,
-            Course {
-                target_language: Language::French,
-                native_language: Language::English,
-            },
-        )
+        })).unwrap()
+    }
+    fn course() -> Course {
+        Course {
+            target_language: Language::French,
+            native_language: Language::English,
+        }
+    }
+    fn start() -> TranslationState {
+        translation_start()
+    }
+    fn translation_transition(state: TranslationState, event: TranslationEvent) -> TranslationStep {
+        super::translation_transition(state, event, sentence(), course())
+    }
+    fn translation_view(state: TranslationState) -> TranslationView {
+        super::translation_view(state, sentence(), course())
+    }
+    fn translation_resume(state: TranslationState) -> TranslationStep {
+        super::translation_resume(state, sentence(), course())
     }
     #[test]
     fn ruby_reveals_when_grading_starts_and_hides_on_cancel() {
-        let mut state = start();
-        state.sentence.target_language_literals[0].word.text = "猫".into();
-        state.sentence.literal_ruby = vec![
+        let state = start();
+        let mut sentence = sentence();
+        sentence.target_language_literals[0].word.text = "猫".into();
+        sentence.literal_ruby = vec![
             vec![language_utils::readings::RubySegment {
                 base: "猫".into(),
                 ruby: Some("ねこ".into()),
             }],
             vec![],
         ];
+        let translation_view = |state| super::translation_view(state, sentence.clone(), course());
         assert!(translation_view(state.clone()).words[0].ruby.is_empty());
-        state.text = "cat".into();
-        let state = translation_transition(state, TranslationEvent::Submit { now_ms: 1.0 }).state;
+        let state = translation_transition(
+            state,
+            TranslationEvent::Submit {
+                text: "a cat".into(),
+                now_ms: 1.0,
+            },
+        )
+        .state;
         let view = translation_view(state.clone());
-        assert_eq!(view.words[0].ruby, state.sentence.literal_ruby[0]);
+        assert_eq!(view.words[0].ruby, sentence.literal_ruby[0]);
         assert_eq!(
             view.words[0]
                 .ruby
@@ -1096,17 +1123,23 @@ mod reducer_tests {
 
     #[test]
     fn chunks_preserve_original_word_indices_and_tap_tints() {
-        let mut state = start();
-        let mut prefix = state.sentence.target_language_literals[0].clone();
+        let state = start();
+        let mut sentence = sentence();
+        let mut prefix = sentence.target_language_literals[0].clone();
         prefix.word.text = "qu'".into();
         prefix.whitespace = language_utils::Whitespace::None;
-        state.sentence.target_language_literals[0].word.text = "il".into();
-        state.sentence.target_language_literals[0].whitespace =
-            language_utils::Whitespace::NarrowNbsp;
-        state.sentence.target_language_literals.insert(0, prefix);
-        state.sentence.literal_gram_indices = vec![0, 1, 2];
-        let state = translation_transition(state, TranslationEvent::WordTapped { index: 1 }).state;
-        let view = translation_view(state);
+        sentence.target_language_literals[0].word.text = "il".into();
+        sentence.target_language_literals[0].whitespace = language_utils::Whitespace::NarrowNbsp;
+        sentence.target_language_literals.insert(0, prefix);
+        sentence.literal_gram_indices = vec![0, 1, 2];
+        let state = super::translation_transition(
+            state,
+            TranslationEvent::WordTapped { index: 1 },
+            sentence.clone(),
+            course(),
+        )
+        .state;
+        let view = super::translation_view(state, sentence, course());
         assert_eq!(view.chunks.len(), 1);
         assert_eq!(view.chunks[0].indices, vec![0, 1, 2]);
         assert!(matches!(view.words[0].tint, TranslationWordTint::Neutral));
@@ -1117,7 +1150,8 @@ mod reducer_tests {
 
     #[test]
     fn sole_learnable_word_is_highlighted_and_proper_nouns_are_obvious() {
-        let mut state = start();
+        let state = start();
+        let mut sentence = sentence();
         let view = translation_view(state.clone());
         assert!(matches!(
             view.words[0].tint,
@@ -1125,40 +1159,38 @@ mod reducer_tests {
         ));
         assert!(matches!(view.words[1].tint, TranslationWordTint::Neutral));
 
-        let mut name = state.sentence.target_language_literals[0].clone();
+        let mut name = sentence.target_language_literals[0].clone();
         name.word = serde_json::from_value(
             json!({"text":"Mei","word_type":{"type":"Other","other_tag":"PROPN"}}),
         )
         .unwrap();
-        state.sentence.target_language_literals.insert(0, name);
-        state.sentence.literal_gram_indices = vec![1, 0, 0];
-        let view = translation_view(state.clone());
+        sentence.target_language_literals.insert(0, name);
+        sentence.literal_gram_indices = vec![1, 0, 0];
+        let view = super::translation_view(state.clone(), sentence.clone(), course());
         assert!(matches!(view.words[0].tint, TranslationWordTint::Obvious));
         assert!(matches!(
             view.words[1].tint,
             TranslationWordTint::Highlighted
         ));
 
-        let mut second = state.sentence.target_language_literals[1].clone();
+        let mut second = sentence.target_language_literals[1].clone();
         second.word.text = "noir".into();
-        state.sentence.target_language_literals.insert(2, second);
-        state.sentence.literal_gram_indices = vec![1, 0, 2, 0];
-        let view = translation_view(state);
+        sentence.target_language_literals.insert(2, second);
+        sentence.literal_gram_indices = vec![1, 0, 2, 0];
+        let view = super::translation_view(state, sentence, course());
         assert!(matches!(view.words[1].tint, TranslationWordTint::Neutral));
         assert!(matches!(view.words[2].tint, TranslationWordTint::Neutral));
     }
 
-    fn editing() -> TranslationState {
+    fn submitted() -> TranslationState {
         translation_transition(
             start(),
-            TranslationEvent::TextChanged {
+            TranslationEvent::Submit {
                 text: "a cat".into(),
+                now_ms: 1234.0,
             },
         )
         .state
-    }
-    fn submitted() -> TranslationState {
-        translation_transition(editing(), TranslationEvent::Submit { now_ms: 1234.0 }).state
     }
     fn response() -> AutoGradeTranslationResponse {
         AutoGradeTranslationResponse {
@@ -1176,12 +1208,22 @@ mod reducer_tests {
 
     #[test]
     fn completion_keeps_the_tapped_occurrence_of_a_repeated_word() {
-        let mut state = editing();
-        let repeated = state.sentence.target_language_literals[0].clone();
-        state.sentence.target_language_literals.push(repeated);
-        state.sentence.literal_gram_indices.push(1);
+        let mut state = start();
+        let mut sentence = sentence();
+        let repeated = sentence.target_language_literals[0].clone();
+        sentence.target_language_literals.push(repeated);
+        sentence.literal_gram_indices.push(1);
+        let translation_transition =
+            |state, event| super::translation_transition(state, event, sentence.clone(), course());
         state = translation_transition(state, TranslationEvent::WordTapped { index: 2 }).state;
-        state = translation_transition(state, TranslationEvent::Submit { now_ms: 1234.0 }).state;
+        state = translation_transition(
+            state,
+            TranslationEvent::Submit {
+                text: "a cat".into(),
+                now_ms: 1234.0,
+            },
+        )
+        .state;
         let mut grades = response();
         grades.literal_grades.push(Some(Remembered::Remembered));
         state = translation_transition(state, TranslationEvent::Graded { response: grades }).state;
@@ -1207,34 +1249,43 @@ mod reducer_tests {
                 .iter()
                 .all(|w| w.tint == TranslationWordTint::Tapped)
         );
-        assert!(!view.can_submit);
+        assert!(view.submission.is_none());
         assert!(!view.can_continue);
     }
     #[test]
-    fn submit_is_single_shot_and_cancel_preserves_input() {
-        let empty = translation_transition(start(), TranslationEvent::Submit { now_ms: 1.0 });
-        assert!(empty.effects.is_empty());
-        let whitespace = translation_transition(
+    fn submit_is_single_shot_and_cancel_discards_submission() {
+        for text in ["", " \n"] {
+            assert!(!translation_can_submit(text.into()));
+            let empty = translation_transition(
+                start(),
+                TranslationEvent::Submit {
+                    text: text.into(),
+                    now_ms: 1.0,
+                },
+            );
+            assert!(empty.effects.is_empty());
+        }
+        let step = translation_transition(
             start(),
-            TranslationEvent::TextChanged { text: " \n".into() },
-        )
-        .state;
-        assert!(
-            translation_transition(whitespace, TranslationEvent::Submit { now_ms: 1.0 })
-                .effects
-                .is_empty()
+            TranslationEvent::Submit {
+                text: "a cat".into(),
+                now_ms: 1234.0,
+            },
         );
-        let step = translation_transition(editing(), TranslationEvent::Submit { now_ms: 1234.0 });
         assert!(
             matches!(&step.effects[..], [TranslationEffect::Autograde { submission }] if submission == "a cat")
         );
         assert!(
-            matches!(&step.state.phase, TranslationPhase::Grading { completed_at_ms: 1234.0, correct_translation } if correct_translation == "a cat")
+            matches!(&step.state.phase, TranslationPhase::Grading { completed_at_ms: 1234.0, correct_translation, .. } if correct_translation == "a cat")
+        );
+        assert_eq!(
+            translation_view(step.state.clone()).submission.as_deref(),
+            Some("a cat")
         );
         for event in [
-            TranslationEvent::Submit { now_ms: 9999.0 },
-            TranslationEvent::TextChanged {
-                text: "changed".into(),
+            TranslationEvent::Submit {
+                text: "a cat".into(),
+                now_ms: 9999.0,
             },
             TranslationEvent::WordTapped { index: 0 },
             TranslationEvent::Continue,
@@ -1244,7 +1295,7 @@ mod reducer_tests {
             assert!(ignored.effects.is_empty());
         }
         let cancel = translation_transition(step.state, TranslationEvent::CancelGrading);
-        assert_eq!(cancel.state.text, "a cat");
+        assert!(translation_view(cancel.state.clone()).submission.is_none());
         assert!(matches!(cancel.state.phase, TranslationPhase::Editing));
         let stale = translation_transition(
             cancel.state.clone(),
@@ -1285,9 +1336,15 @@ mod reducer_tests {
     #[test]
     fn network_failure_requires_manual_grade_then_completes_at_submit_time() {
         let state =
-            translation_transition(editing(), TranslationEvent::WordTapped { index: 0 }).state;
-        let state =
-            translation_transition(state, TranslationEvent::Submit { now_ms: 1234.0 }).state;
+            translation_transition(start(), TranslationEvent::WordTapped { index: 0 }).state;
+        let state = translation_transition(
+            state,
+            TranslationEvent::Submit {
+                text: "a cat".into(),
+                now_ms: 1234.0,
+            },
+        )
+        .state;
         let step = translation_transition(
             state,
             TranslationEvent::GradingFailed {
@@ -1406,8 +1463,9 @@ mod reducer_tests {
     }
     #[test]
     fn manual_view_drives_copy_grades_tints_and_deduplicated_definitions() {
-        let mut state = editing();
-        state.sentence.gram_definitions_for_lookup = vec![Some(GramDefinition::Dictionary(
+        let state = start();
+        let mut sentence = sentence();
+        sentence.gram_definitions_for_lookup = vec![Some(GramDefinition::Dictionary(
             language_utils::DictionaryEntry {
                 target_language_word: "chat".into(),
                 definitions: vec![],
@@ -1415,7 +1473,7 @@ mod reducer_tests {
                 segments: vec![],
             },
         ))];
-        state.sentence.proper_noun_definitions = vec![(
+        sentence.proper_noun_definitions = vec![(
             "Paris".into(),
             ProperNounDefinition {
                 is_person_name: false,
@@ -1426,6 +1484,9 @@ mod reducer_tests {
                 description: None,
             },
         )];
+        let translation_view = |state| super::translation_view(state, sentence.clone(), course());
+        let translation_transition =
+            |state, event| super::translation_transition(state, event, sentence.clone(), course());
         let view = translation_view(state.clone());
         assert_eq!(view.placeholder, "Translation...");
         assert_eq!(view.submit_label, "Check Answer");
@@ -1447,8 +1508,14 @@ mod reducer_tests {
         assert_eq!(view.words[0].tint, TranslationWordTint::Highlighted);
         let state = translation_transition(state, TranslationEvent::WordTapped { index: 0 }).state;
         assert_eq!(translation_view(state.clone()).definitions.len(), 1);
-        let state =
-            translation_transition(state, TranslationEvent::Submit { now_ms: 1234.0 }).state;
+        let state = translation_transition(
+            state,
+            TranslationEvent::Submit {
+                text: "a cat".into(),
+                now_ms: 1234.0,
+            },
+        )
+        .state;
         let view = translation_view(state.clone());
         assert!(view.is_grading);
         assert_eq!(view.submit_label, "AI is grading...");

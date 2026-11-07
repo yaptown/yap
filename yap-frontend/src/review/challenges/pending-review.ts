@@ -5,16 +5,13 @@ export class PendingReview<T> {
   private cleared = false;
   private readonly slot: PendingReviewSlot;
   private readonly decode: (payload: unknown) => T;
-  private readonly encode: (state: T) => unknown;
 
   constructor(
     slot: PendingReviewSlot,
     decode: (payload: unknown) => T,
-    encode: (state: T) => unknown = (state) => state,
   ) {
     this.slot = slot;
     this.decode = decode;
-    this.encode = encode;
   }
 
   load(): T | undefined {
@@ -35,7 +32,7 @@ export class PendingReview<T> {
     try {
       localStorage.setItem(this.slot.key, JSON.stringify({
         identity: this.slot.identity,
-        payload: this.encode(state),
+        payload: state,
       }));
     } catch { /* Storage full or unavailable: the review still works. */ }
   }

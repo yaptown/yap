@@ -14,7 +14,8 @@ import {
   transcription_resume,
   transcription_transition,
   transcription_view,
-  transcription_sentence_chunks,
+  transcription_can_submit,
+  type TranscriptionInput,
   type TranscriptionState,
   type TranscriptionEvent,
   type TranscriptionStep,
@@ -62,6 +63,7 @@ import { Ruby, TargetLanguageText } from "../../components/TargetLanguageText";
 interface TranscriptionChallengeProps {
   challenge: TranscribeComprehensibleSentence;
   initialState?: TranscriptionState;
+  initialInputs?: TranscriptionInput[];
   onComplete: (grade: PartGraded[], completedAtMs: number) => boolean;
   pendingReviewScope: string;
   keyboardTip: string | undefined;
@@ -78,6 +80,7 @@ interface TranscriptionChallengeProps {
 // Recursive reducer effects are not covered by React Compiler; compare every prop, including actions.
 export const TranscriptionChallenge = memo(function TranscriptionChallenge({
   initialState,
+  initialInputs,
   challenge,
   onComplete,
   keyboardTip,
@@ -101,34 +104,26 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
             get_app_version(),
             totalReviewsCompleted,
           ),
-          (payload) => {
-            const saved = payload as Omit<TranscriptionState, "inputs"> & {
-              inputs: [number, string][];
-            };
-            return transcription_resume({
-              ...saved,
-              inputs: new Map(saved.inputs),
-            }).state;
-          },
-          // The bridge exposes BTreeMap as a JS Map, which JSON cannot encode.
-          (state) => ({ ...state, inputs: [...state.inputs] }),
+          (payload) =>
+            transcription_resume(payload as TranscriptionState, challenge).state,
         ),
   );
   const [state, setState] = useState<TranscriptionState>(
     () =>
       initialState ??
       storage?.load() ??
-      transcription_start(
-        challenge.literal_ruby ?? [],
-        challenge.parts,
-        challenge.proper_noun_definitions,
-      ),
+      transcription_start(),
   );
   const stateRef = useRef(state);
-  const view = useMemo(() => transcription_view(state), [state]);
-  const userInputs = useMemo(
-    () => new Map(view.blanks.map((blank) => [blank.index, blank.text])),
-    [view.blanks],
+  const view = useMemo(
+    () => transcription_view(state, challenge, targetLanguage),
+    [state, challenge, targetLanguage],
+  );
+  const [userInputs, setUserInputs] = useState(
+    () => new Map(
+      (state.phase.type === "Editing" ? initialInputs ?? [] : state.phase.submission)
+        .map(({ index, text }) => [index, text]),
+    ),
   );
   const editing = state.phase.type === "Editing";
   const verdict = view.verdict;
@@ -196,6 +191,7 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
                 transcription_transition(
                   stateRef.current,
                   { type: "Graded", grade },
+                  challenge,
                   targetLanguage,
                 ),
               );
@@ -232,17 +228,21 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
     (event: TranscriptionEvent) => {
       if (event.type === "CancelGrading") gradingGenerationRef.current++;
       applyStep(
-        transcription_transition(stateRef.current, event, targetLanguage),
+        transcription_transition(
+          stateRef.current, event, challenge, targetLanguage,
+        ),
       );
     },
-    [applyStep, targetLanguage],
+    [applyStep, challenge, targetLanguage],
   );
 
   // The host keys this component by challenge; resume only its initial snapshot.
-  const resumeStep = useRef(applyStep);
+  const resumeStep = useRef(() =>
+    applyStep(transcription_resume(stateRef.current, challenge)),
+  );
   useEffect(() => {
     const generation = gradingGenerationRef;
-    resumeStep.current(transcription_resume(stateRef.current));
+    resumeStep.current();
     return () => {
       generation.current++;
     };
@@ -293,7 +293,7 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
   }, [shiftHeld, focusedInputIndex, blankIndices, userInputs]);
 
   const handleInputChange = (index: number, value: string) => {
-    send({ type: "InputChanged", index, text: value });
+    setUserInputs((inputs) => new Map(inputs).set(index, value));
   };
 
   const handleCharacterInsert = (char: string) => {
@@ -328,10 +328,16 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
     }
   };
 
-  const allBlanksFilledOut = view.can_submit;
+  const allBlanksFilledOut = transcription_can_submit(
+    blankIndices.map((index) => userInputs.get(index) ?? ""),
+  );
   const handleSubmit = useCallback(
-    () => send({ type: "Submit", now_ms: Date.now() }),
-    [send],
+    () => send({
+      type: "Submit",
+      inputs: blankIndices.map((index) => ({ index, text: userInputs.get(index) ?? "" })),
+      now_ms: Date.now(),
+    }),
+    [send, blankIndices, userInputs],
   );
   const handleTranscriptionContinue = useCallback(
     () => send({ type: "Continue" }),
@@ -402,12 +408,8 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
             part.part.word.word_type?.type !== "Heteronym"),
       );
 
-    const chunks = transcription_sentence_chunks(
-      challenge.parts,
-      targetLanguage,
-    );
     return (
-      <SentenceChunks chunks={chunks}>
+      <SentenceChunks chunks={view.chunks}>
         {(index, last) => {
           const item = challenge.parts[index];
           if (item.type === "AskedToTranscribe") {
@@ -423,7 +425,7 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
                   ref={(el) => {
                     inputRefs.current[index] = el;
                   }}
-                  value={blank.text}
+                  value={editing ? userInputs.get(index) ?? "" : blank.text ?? ""}
                   onChange={(e) => handleInputChange(index, e.target.value)}
                   onFocus={() => setFocusedInputIndex(index)}
                   onBlur={() => {
@@ -699,7 +701,7 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
           ) : (
             <Button
               onClick={verdict ? handleTranscriptionContinue : handleSubmit}
-              disabled={editing ? !view.can_submit : !view.can_continue}
+              disabled={editing ? !allBlanksFilledOut : !view.can_continue}
               className="w-full h-14 text-lg"
               size="lg"
             >

@@ -135,40 +135,6 @@
           "second_chance": false
         },
         "transcription": {
-          "literal_ruby": [
-            [
-              {
-                "base": "帰",
-                "ruby": "かえ"
-              },
-              {
-                "base": "って",
-                "ruby": null
-              }
-            ]
-          ],
-          "parts": [
-            {
-              "type": "AskedToTranscribe",
-              "parts": [
-                {
-                  "word": {
-                    "text": "帰って",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "帰って",
-                      "lemma": "帰る",
-                      "pos": "VERB"
-                    }
-                  },
-                  "whitespace": ""
-                }
-              ]
-            }
-          ],
-          "inputs": {
-            "0": "かえて"
-          },
           "phase": {
             "type": "Graded",
             "completed_at_ms": 1792332978689.322,
@@ -207,7 +173,13 @@
               ],
               "autograding_error": null
             },
-            "translation_revealed": false
+            "translation_revealed": false,
+            "submission": [
+              {
+                "index": 0,
+                "text": "かえて"
+              }
+            ]
           }
         },
         "translation": null
