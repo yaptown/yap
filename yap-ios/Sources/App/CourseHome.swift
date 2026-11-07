@@ -34,7 +34,7 @@ struct CourseHome: View {
                 .navigationDestination(for: CourseRoute.self) { route in
                     Group {
                         switch route {
-                        case .review: reviewScreen.id(ObjectIdentifier(review.deck))
+                        case .review: reviewScreen
                         case .stats: StatsScreen(review: review, open: navigate)
                         case let .dictionary(searching):
                             DictionaryScreen(session: session, searching: searching)
@@ -64,9 +64,9 @@ struct CourseHome: View {
         .onChange(of: session.online) { _, _ in review.refresh() }
         .onChange(of: historyKnown) { _, known in review.historyKnown = known }
         .onChange(of: ObjectIdentifier(deck)) { _, _ in
-            review.stop(); audio.stop()
-            review = ReviewModel(deck: deck, session: session, auth: auth, startingFresh: startingFresh, historyKnown: historyKnown)
-            review.start()
+            let before = review.currentChallenge
+            review.replace(deck: deck, startingFresh: startingFresh)
+            if review.currentChallenge != before { audio.stop() }
         }
         .overlay(alignment: .top) { VoiceActorBanner() }
         #if DEBUG

@@ -37,7 +37,9 @@ struct ReviewScreen: View {
                 if let error = host.authError { Text(error).font(.caption).foregroundStyle(Color.yapMuted) }
             }.padding(.horizontal, 12).frame(maxWidth: .readableColumn)
             switch view.step {
-            case let .Challenge(challenge): challengeView(challenge).id(challenge.challenge)
+            case let .Challenge(challenge):
+                // Keyed like web's challenge views: answering the same card again starts fresh.
+                challengeView(challenge).id([AnyHashable(view.total_reviews), AnyHashable(challenge.challenge)])
             case let .Accomplishment(accomplishment): AccomplishmentScreen(view: accomplishment, addEvent: actions.addEvent, onDismiss: actions.dismissAccomplishment)
             case let .ReviewPlan(plan): ReviewPlanScreen(plan: plan) { actions.addEvent(plan.event) }
             case let .Idle(idle): IdleScreen(view: idle)

@@ -2,10 +2,10 @@ import Foundation
 import Observation
 
 @Observable @MainActor final class ReviewModel {
-    let deck: Deck
+    private(set) var deck: Deck
     let session: YapSession
     let auth: AuthStore
-    let startingFresh: Bool?
+    private(set) var startingFresh: Bool?
     var historyKnown: Bool { didSet { refresh() } }
     private(set) var banned: [ChallengeRequirements] = []
     private(set) var view: ReviewScreenView?
@@ -18,6 +18,15 @@ import Observation
 
     init(deck: Deck, session: YapSession, auth: AuthStore, startingFresh: Bool?, historyKnown: Bool) {
         self.deck = deck; self.session = session; self.auth = auth; self.startingFresh = startingFresh; self.historyKnown = historyKnown
+    }
+    /// A rebuilt deck releases the held challenge, as web does, but keeps this
+    /// model and the screen on it: a rebuild that re-picks the same challenge
+    /// (the first sync of a launch, say) then changes nothing on screen.
+    func replace(deck: Deck, startingFresh: Bool?) {
+        stop()
+        self.deck = deck; self.startingFresh = startingFresh
+        currentChallenge = nil; submitting = false
+        start()
     }
     static var now: Double { Date().timeIntervalSince1970 * 1000 }
     #if DEBUG
