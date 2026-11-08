@@ -25,10 +25,6 @@ Sentry.init({
 
   integrations: [
     Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration({
-      maskAllText: false,
-      blockAllMedia: false,
-    }),
     // Backend failures (autograde, TTS, language-stats) are handled gracefully
     // in the app — a console.error and a fallback — so without this they never
     // reach Sentry and an unreachable backend is invisible to us.
@@ -123,8 +119,4 @@ Sentry.init({
 
   // Tracing
   tracesSampleRate: 0.2,
-
-  // Session Replay
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
 });

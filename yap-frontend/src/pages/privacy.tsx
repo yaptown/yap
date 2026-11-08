@@ -24,7 +24,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective November 6, 2026.</p>
+            <p className="text-sm">Effective November 7, 2026.</p>
           </div>
         </Card>
 
@@ -106,10 +106,8 @@ export function PrivacyPage() {
               <span className="text-foreground">Technical.</span> We use Sentry
               for error and performance monitoring on the site and in the iOS app
               so we can fix crashes. Error
-              reports can include your IP address and device information, and a
-              sample of website sessions is recorded as a session replay (a
-              reconstruction of what the app showed and where you clicked) to
-              help us debug. The iOS app does not record session replays.
+              reports can include your IP address and device information. Neither the
+              website nor the iOS app records session replays.
             </p>
           </div>
         </Card>
@@ -130,7 +128,7 @@ export function PrivacyPage() {
                 used to check that generated audio says what it should
               </li>
               <li>Fly.io — backend servers</li>
-              <li>Sentry — error tracking and session replay</li>
+              <li>Sentry — error and performance monitoring</li>
               <li>Resend — sending emails, such as notifications</li>
               <li>Amazon Web Services — some backend processing and storage</li>
               <li>
