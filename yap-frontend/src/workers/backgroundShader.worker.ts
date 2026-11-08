@@ -238,9 +238,10 @@ function initWebGL(
   let speed = 0.09; // Start with bump-like energy for initial lava-lamp effect
   let isAnimating = true;
 
-  // The decay still to come from speed s moves the scene by 2000·s time units,
+  // The decay still to come from speed s moves the scene by 500·s time units,
   // which below this is under one canvas pixel even on a 1.5x desktop canvas —
-  // drawing it would burn frames on motion nobody can see.
+  // drawing it would burn frames on motion nobody can see. With decay rate 2,
+  // a grading bump (s = 0.9) reaches the threshold in ln(0.9/0.005)/2 ≈ 2.6s.
   const SPEED_THRESHOLD = 0.005;
   const COLOR_THRESHOLD = 0.001;
 
@@ -264,7 +265,7 @@ function initWebGL(
     lastFrameTime = now;
 
     // Decay speed back to target using zeno
-    speed = zeno(speed, targetSpeed, deltaTime / 1000, 0.5);
+    speed = zeno(speed, targetSpeed, deltaTime / 1000, 2);
 
     // Interpolate colors towards target
     currentColors = zeno(currentColors, targetColors, deltaTime / 1000, 18.0);
