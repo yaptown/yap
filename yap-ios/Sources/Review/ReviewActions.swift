@@ -30,6 +30,7 @@ extension EnvironmentValues {
     var cantListen: () -> Void = { log("can't listen") }
     var cantSpeak: () -> Void = { log("can't speak") }
     var undoRestrictions: () -> Void = { log("undo restrictions") }
+    var manualAddOptions: (SentenceListSelection?) -> [ManualAddOption] = { _ in [] }
     var addEvent: (DeckEvent) -> Void = { _ in log("add event") }
     /// Browsing the curriculum only moves a draft selection; nothing is appended
     /// until `commitSentenceList` fires Rust's switch event. Both are kept

@@ -143,8 +143,8 @@ impl DayChallengeIterator {
                 deck.cards_to_event(&cards, &sentence_list)
             }
             None => {
-                deck.get_no_cards_ready_info(vec![], sentence_list)
-                    .smart_add_event
+                let (cards, _) = deck.smart_add_cards(vec![], &sentence_list);
+                deck.cards_to_event(&cards, &sentence_list)
             }
         };
         if let Some(event) = event {
@@ -689,29 +689,28 @@ mod tests {
         }
 
         for sentence_list in sentence_lists {
-            for count in [1, 5, 10, 50, 100] {
-                let result_a: Vec<_> = deck
-                    .next_unknown_cards(
-                        AllowedCards::BannedRequirements(Default::default()),
-                        &sentence_list,
-                        count,
-                    )
-                    .take(count)
-                    .collect();
+            for allowed in [
+                AllowedCards::All,
+                AllowedCards::Type(crate::CardType::TargetLanguage),
+                AllowedCards::Type(crate::CardType::Listening),
+                AllowedCards::Type(crate::CardType::LetterPronunciation),
+            ] {
+                for count in [1, 5, 10, 50, 100] {
+                    let result_a: Vec<_> = deck
+                        .next_unknown_cards(allowed.clone(), &sentence_list, count)
+                        .take(count)
+                        .collect();
 
-                let result_b: Vec<_> = deck
-                    .next_unknown_cards(
-                        AllowedCards::BannedRequirements(Default::default()),
-                        &sentence_list,
-                        usize::MAX / 4,
-                    )
-                    .take(count)
-                    .collect();
+                    let result_b: Vec<_> = deck
+                        .next_unknown_cards(allowed.clone(), &sentence_list, usize::MAX / 4)
+                        .take(count)
+                        .collect();
 
-                assert_eq!(
-                    result_a, result_b,
-                    "Results differ for sentence_list={sentence_list:?}, count={count}: early-terminated iterator produced different cards than unlimited iterator"
-                );
+                    assert_eq!(
+                        result_a, result_b,
+                        "Results differ for allowed={allowed:?}, sentence_list={sentence_list:?}, count={count}: early-terminated iterator produced different cards than unlimited iterator"
+                    );
+                }
             }
         }
     }

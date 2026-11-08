@@ -136,6 +136,7 @@ function Review({
   const currentChallenge =
     view.step.type === "Challenge" ? view.step.view.challenge : undefined;
   const [showReportModal, setShowReportModal] = useState(false);
+  const [issueCopy] = useState(report_issue_copy);
 
   return (
     <TopPageLayout
@@ -159,7 +160,7 @@ function Review({
           autoplayed,
           setAutoplayed,
           reportIssue: {
-            label: report_issue_copy().menu_label,
+            label: issueCopy.menu_label,
             onClick: () => setShowReportModal(true),
           },
         }}

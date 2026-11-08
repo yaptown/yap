@@ -63,64 +63,6 @@
           "recommend_more_cards": true
         },
         "manual_add_heading": "Choose cards to add",
-        "manual_add_options": [
-          {
-            "label": "Learn 1 Italian → English card",
-            "count": 1,
-            "card_type": "TargetLanguage",
-            "event": {
-              "type": "Language",
-              "target_language": "Italian",
-              "native_language": "English",
-              "content": {
-                "type": "AddCards",
-                "cards": [
-                  {
-                    "type": "WrittenGram",
-                    "gram": {
-                      "gram": [
-                        {
-                          "Tok": {
-                            "text": "probabilmente",
-                            "word_type": {
-                              "type": "Heteronym",
-                              "word": "probabilmente",
-                              "lemma": "probabilmente",
-                              "pos": "ADV"
-                            }
-                          }
-                        }
-                      ],
-                      "sense": null
-                    }
-                  }
-                ],
-                "sentence_list": null
-              }
-            }
-          },
-          {
-            "label": "Learn 1 Italian pronunciation card",
-            "count": 1,
-            "card_type": "LetterPronunciation",
-            "event": {
-              "type": "Language",
-              "target_language": "Italian",
-              "native_language": "English",
-              "content": {
-                "type": "AddCards",
-                "cards": [
-                  {
-                    "type": "LetterPronunciation",
-                    "pattern": "gli",
-                    "position": "Anywhere"
-                  }
-                ],
-                "sentence_list": null
-              }
-            }
-          }
-        ],
         "next_due": null,
         "curriculum_headline": {
           "before": "Keep up the momentum on",

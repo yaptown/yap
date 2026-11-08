@@ -1,6 +1,9 @@
 import { t } from "@/lib/i18n";
 import { SentenceChunks } from "@/components/SentenceChunks";
-import { memo, useState, useEffect, useRef, useMemo, useCallback } from "react";
+import {
+  createContext, useContext, type ReactNode, memo,
+  useState, useEffect, useRef, useMemo, useCallback,
+} from "react";
 import { PendingReview } from "@/review/challenges/pending-review";
 import { reportAutogradeFailure } from "@/core/instrument";
 import { MoviePosterGrid } from "./MoviePosterGrid";
@@ -119,40 +122,18 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
     () => transcription_view(state, challenge, targetLanguage),
     [state, challenge, targetLanguage],
   );
-  const [userInputs, setUserInputs] = useState(
-    () => new Map(
-      (state.phase.type === "Editing" ? initialInputs ?? [] : state.phase.submission)
-        .map(({ index, text }) => [index, text]),
-    ),
-  );
   const editing = state.phase.type === "Editing";
   const verdict = view.verdict;
   const [audioError, setAudioError] = useState(false);
 
   const [clipMovieId, setClipMovieId] = useState<string | null>(null);
-  const movieData = deck.sentence_posters(
-    challenge.movie_titles.map(([id]) => id),
-    clipMovieId ?? undefined,
-  );
+  const movieData = useMemo(() => deck.sentence_posters(
+    challenge.movie_titles.map(([id]) => id), clipMovieId ?? undefined,
+  ), [deck, challenge.movie_titles, clipMovieId]);
+  const issueCopy = useMemo(() => report_issue_copy(), []);
   const gradingGenerationRef = useRef(0);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [focusedInputIndex, setFocusedInputIndex] = useState<number | null>(
-    null,
-  );
-  const [shiftHeld, setShiftHeld] = useState(false);
-  const inputRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
   const { bumpBackground } = useBackground();
-
-  // Find indices of words that should be blanks
-  const blankIndices: number[] = useMemo(() => {
-    const blankIndices: number[] = [];
-    challenge.parts.forEach((item, index) => {
-      if (item.type === "AskedToTranscribe") {
-        blankIndices.push(index);
-      }
-    });
-    return blankIndices;
-  }, [challenge]);
 
   const wrongGramEntries = useMemo(() => {
     if (state.phase.type !== "Graded") return [];
@@ -248,6 +229,345 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
     };
   }, []);
 
+  const content = (
+    <div className="flex flex-col flex-1 justify-between">
+      <div className="flex flex-1 flex-col gap-2">
+        <Card animate className="p-5 relative gap-0">
+          {challenge.second_chance && (
+            <Badge className="absolute -top-2 -left-2 -rotate-12 z-10 shadow-sm text-sm">
+              {t("translation-second-chance")}
+            </Badge>
+          )}
+          <div className="space-y-6">
+            {/* Audio + sentence with blanks, grouped so they read as one unit */}
+            <div>
+              <div className="flex flex-col items-center gap-2">
+                <AudioButton
+                  audioRequest={challenge.audio}
+                  accessToken={accessToken}
+                  autoPlay={true}
+                  autoplayed={autoplayed}
+                  setAutoplayed={setAutoplayed}
+                  playPreAudio={true}
+                  onError={() => setAudioError(true)}
+                  onSuccess={() => setAudioError(false)}
+                  visualizer
+                />
+                <p className="text-sm text-muted-foreground">
+                  {view.instructions}
+                </p>
+              </div>
+              <div className="text-center pt-4">
+                <div className="text-2xl font-semibold leading-relaxed">
+                  <TranscriptionDraftBlanks />
+                </div>
+              </div>
+            </div>
+
+            {/* The clip sits under the answer area as secondary media.
+                Watchable before grading — hearing the line is the exercise —
+                but its caption elides the blanked words until grading, so
+                the subtitle can't give the answer away. */}
+            <VideoClipPlayer
+              language={targetLanguage}
+              text={challenge.target_language}
+              accessToken={accessToken}
+              deck={deck}
+              onClipChange={setClipMovieId}
+              maskedSentence={view.masked_sentence ?? undefined}
+            />
+
+            {editing && (
+              <ProperNounGroups
+                groups={view.proper_nouns}
+                targetLanguage={targetLanguage}
+              />
+            )}
+
+            {!editing && (
+              <div className="space-y-5">
+                <SentenceVerdict
+                  grading={view.is_grading}
+                  headline={verdict?.headline}
+                  correctLabel={view.correct_label}
+                  correct={
+                    <TargetLanguageText language={targetLanguage}>
+                      <Ruby segments={view.sentence_ruby}>
+                        {challenge.target_language}
+                      </Ruby>
+                    </TargetLanguageText>
+                  }
+                  encouragement={verdict?.encouragement}
+                  explanation={verdict?.explanation}
+                  autogradingError={verdict?.autograding_error}
+                  isPerfect={verdict?.perfect ?? false}
+                  correctHasReadings={view.sentence_ruby.length > 0}
+                  targetLanguage={targetLanguage}
+                />
+
+                {verdict && (
+                  <>
+                    {Array.isArray(verdict.compare) &&
+                      verdict.compare.length > 0 &&
+                      (() => {
+                        const words = verdict.compare;
+
+                        const ttsText = words.map((w) => `${w};`).join(" ");
+
+                        return (
+                          <div className="rounded-lg p-4 border">
+                            <div className="flex flex-row items-center gap-3">
+                              <p className="text-sm font-medium">
+                                {verdict.compare_label}
+                              </p>
+                              <AudioButton
+                                audioRequest={{
+                                  request: {
+                                    text: ttsText,
+                                    language: targetLanguage,
+                                    speed: 0.8,
+                                  },
+                                  provider: "Google",
+                                }}
+                                accessToken={accessToken}
+                                size="icon"
+                                variant="ghost"
+                                temp
+                              />
+                              <div className="flex flex-row flex-wrap justify-around items-center gap-3">
+                                {words.map((item, idx) => (
+                                  <span key={idx} className="font-medium">
+                                    <TargetLanguageText
+                                      language={targetLanguage}
+                                    >
+                                      {item}
+                                    </TargetLanguageText>
+                                    {idx < words.length - 1 && ","}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                    <div
+                      className="rounded-lg p-4 border cursor-pointer select-none"
+                      onClick={() => send({ type: "TranslationToggled" })}
+                    >
+                      <p className="text-sm font-medium mb-1">
+                        {verdict.translation_label}
+                      </p>
+                      <p
+                        className={`text-lg font-medium transition-all duration-100 ${
+                          verdict.translation_revealed ? "" : "blur-sm"
+                        }`}
+                      >
+                        {challenge.native_language}
+                      </p>
+                    </div>
+
+                    <WordGrades
+                      verdict={verdict}
+                      gradeOptions={view.grade_options}
+                      setGrade={(part_index, word_index, grade) =>
+                        send({
+                          type: "WordGradeChanged",
+                          part_index,
+                          word_index,
+                          grade,
+                        })
+                      }
+                      targetLanguage={targetLanguage}
+                    />
+
+                    {wrongGramEntries.length > 0 && (
+                      <div className="space-y-2">
+                        {wrongGramEntries.map((entry, i) => (
+                          <GramDefinitionDisplay
+                            key={i}
+                            definition={entry.definition}
+                            breakdown={entry.breakdown}
+                            targetLanguage={targetLanguage}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {audioError && onCantListen && editing && (
+          <AudioErrorBanner onSkip={onCantListen} />
+        )}
+
+        <TranscriptionDraftKeyboard />
+
+        {/* Mobile keyboard tip - show on small screens when conditions are met */}
+        {editing && keyboardTip && <MobileKeyboardTip tip={keyboardTip} />}
+
+        {/* Movie posters - hidden after grading */}
+        {editing && <MoviePosterGrid movieData={movieData} deck={deck} />}
+
+        <ReportIssueLink
+          label={issueCopy.menu_label}
+          onClick={() => setShowReportModal(true)}
+        />
+      </div>
+
+      <div className="mt-4 flex flex-col gap-2 sticky bottom-0">
+        {onCantListen && editing && (
+          <CantListenButton
+            onClick={onCantListen}
+            label={view.cant_listen_label}
+          />
+        )}
+
+        <TranscriptionDraftSubmit />
+      </div>
+
+      <ReportIssueModal
+        subject={{ Transcription: challenge }}
+        open={showReportModal}
+        onOpenChange={setShowReportModal}
+        targetLanguage={targetLanguage}
+      />
+    </div>
+  );
+  return (
+    <TranscriptionDraft
+      state={state}
+      initialInputs={initialInputs}
+      challenge={challenge}
+      view={view}
+      targetLanguage={targetLanguage}
+      send={send}
+    >
+      {content}
+    </TranscriptionDraft>
+  );
+});
+
+interface WordGradesProps {
+  verdict: VerdictView;
+  gradeOptions: GradeOptionView[];
+  setGrade: (partIndex: number, wordIndex: number, grade: WordGrade) => void;
+  targetLanguage: Language;
+}
+
+function WordGrades({
+  verdict,
+  gradeOptions,
+  setGrade,
+  targetLanguage,
+}: WordGradesProps) {
+  const [isOpen, setIsOpen] = useState(verdict.word_grades_open_by_default);
+  if (verdict.word_grades.length === 0) return null;
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" className="w-full justify-between p-0">
+          <span className="text-sm font-medium">
+            {verdict.word_grades_title}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {isOpen ? t("common-hide") : t("common-show")}
+          </span>
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="pt-3 space-y-3">
+          <div className="text-sm text-muted-foreground">
+            {verdict.submission_label}{" "}
+            <TargetLanguageText language={targetLanguage}>
+              {verdict.submission_text}
+            </TargetLanguageText>
+          </div>
+          {verdict.word_grades.map((word) => (
+            <div
+              key={`${word.part_index}-${word.word_index}`}
+              className="flex items-center gap-3 p-2 rounded-lg bg-muted/30"
+            >
+              <div className="flex-1 font-medium">
+                <TargetLanguageText language={targetLanguage}>
+                  {word.heard}
+                </TargetLanguageText>
+              </div>
+              <Select
+                value={String(word.selected)}
+                onValueChange={(value) =>
+                  setGrade(
+                    word.part_index,
+                    word.word_index,
+                    gradeOptions[Number(value)].grade,
+                  )
+                }
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {gradeOptions.map((option, index) => (
+                    <SelectItem key={index} value={String(index)}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+// Static challenge/media children do not subscribe to keystrokes. The draft's
+// three slots are the only context consumers, preserving the existing layout.
+const TranscriptionDraftContext = createContext<{
+  blanks: ReactNode;
+  keyboard: ReactNode;
+  submit: ReactNode;
+} | null>(null);
+
+/* eslint-disable react-hooks/preserve-manual-memoization -- The compiler cannot follow the ref callbacks stored in context slots; these explicit memos have complete dependencies. */
+function TranscriptionDraft({ state, initialInputs, challenge, view, targetLanguage, send, children }: {
+  state: TranscriptionState;
+  initialInputs?: TranscriptionInput[];
+  challenge: TranscribeComprehensibleSentence;
+  view: ReturnType<typeof transcription_view>;
+  targetLanguage: Language;
+  send: (event: TranscriptionEvent) => void;
+  children: ReactNode;
+}) {
+  "use no memo"; // Input refs and the three context slots are explicitly scoped here.
+  const editing = state.phase.type === "Editing";
+  const verdict = view.verdict;
+  const [userInputs, setUserInputs] = useState(
+    () => new Map(
+      (state.phase.type === "Editing" ? initialInputs ?? [] : state.phase.submission)
+        .map(({ index, text }) => [index, text]),
+    ),
+  );
+  const [focusedInputIndex, setFocusedInputIndex] = useState<number | null>(
+    null,
+  );
+  const [shiftHeld, setShiftHeld] = useState(false);
+  const inputRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
+  // Find indices of words that should be blanks
+  const blankIndices: number[] = useMemo(() => {
+    const blankIndices: number[] = [];
+    challenge.parts.forEach((item, index) => {
+      if (item.type === "AskedToTranscribe") {
+        blankIndices.push(index);
+      }
+    });
+    return blankIndices;
+  }, [challenge]);
+
   // Focus the first input on mount, and only on mount. `challenge` is a fresh
   // object every time the host recomputes its view (a clip landing, the
   // readiness tick), so depending on anything derived from it would steal the
@@ -287,9 +607,8 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
     const activeIndex = focusedInputIndex ?? firstBlank;
     if (activeIndex !== firstBlank || firstBlank !== 0) return false;
     const value = userInputs.get(activeIndex) || "";
-    const input = inputRefs.current[activeIndex];
-    const cursorPos = input?.selectionStart ?? 0;
-    return cursorPos === 0 && value === "";
+    // An empty input's cursor can only be at the start.
+    return value === "";
   }, [shiftHeld, focusedInputIndex, blankIndices, userInputs]);
 
   const handleInputChange = (index: number, value: string) => {
@@ -309,8 +628,8 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
         // Focus the input first to get correct selection
         input.focus();
 
-        const start = input.selectionStart || currentValue.length;
-        const end = input.selectionEnd || currentValue.length;
+        const start = input.selectionStart ?? currentValue.length;
+        const end = input.selectionEnd ?? currentValue.length;
         const newValue =
           currentValue.substring(0, start) + char + currentValue.substring(end);
 
@@ -472,181 +791,9 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
       Wrong: "border-negative bg-negative-field",
     })[view.blanks.find((blank) => blank.index === index)!.tint];
 
-  return (
-    <div className="flex flex-col flex-1 justify-between">
-      <div className="flex flex-1 flex-col gap-2">
-        <Card animate className="p-5 relative gap-0">
-          {challenge.second_chance && (
-            <Badge className="absolute -top-2 -left-2 -rotate-12 z-10 shadow-sm text-sm">
-              {t("translation-second-chance")}
-            </Badge>
-          )}
-          <div className="space-y-6">
-            {/* Audio + sentence with blanks, grouped so they read as one unit */}
-            <div>
-              <div className="flex flex-col items-center gap-2">
-                <AudioButton
-                  audioRequest={challenge.audio}
-                  accessToken={accessToken}
-                  autoPlay={true}
-                  autoplayed={autoplayed}
-                  setAutoplayed={setAutoplayed}
-                  playPreAudio={true}
-                  onError={() => setAudioError(true)}
-                  onSuccess={() => setAudioError(false)}
-                  visualizer
-                />
-                <p className="text-sm text-muted-foreground">
-                  {view.instructions}
-                </p>
-              </div>
-              <div className="text-center pt-4">
-                <div className="text-2xl font-semibold leading-relaxed">
-                  {renderSentenceWithBlanks()}
-                </div>
-              </div>
-            </div>
-
-            {/* The clip sits under the answer area as secondary media.
-                Watchable before grading — hearing the line is the exercise —
-                but its caption elides the blanked words until grading, so
-                the subtitle can't give the answer away. */}
-            <VideoClipPlayer
-              language={targetLanguage}
-              text={challenge.target_language}
-              accessToken={accessToken}
-              deck={deck}
-              onClipChange={setClipMovieId}
-              maskedSentence={view.masked_sentence ?? undefined}
-            />
-
-            {editing && (
-              <ProperNounGroups
-                groups={view.proper_nouns}
-                targetLanguage={targetLanguage}
-              />
-            )}
-
-            {!editing && (
-              <div className="space-y-5">
-                <SentenceVerdict
-                  grading={view.is_grading}
-                  headline={verdict?.headline}
-                  correctLabel={view.correct_label}
-                  correct={
-                    <TargetLanguageText language={targetLanguage}>
-                      <Ruby segments={view.sentence_ruby}>
-                        {challenge.target_language}
-                      </Ruby>
-                    </TargetLanguageText>
-                  }
-                  encouragement={verdict?.encouragement}
-                  explanation={verdict?.explanation}
-                  autogradingError={verdict?.autograding_error}
-                  isPerfect={verdict?.perfect ?? false}
-                  correctHasReadings={view.sentence_ruby.length > 0}
-                  targetLanguage={targetLanguage}
-                />
-
-                {verdict && (
-                  <>
-                    {Array.isArray(verdict.compare) &&
-                      verdict.compare.length > 0 &&
-                      (() => {
-                        const words = verdict.compare;
-
-                        const ttsText = words.map((w) => `${w};`).join(" ");
-
-                        return (
-                          <div className="rounded-lg p-4 border">
-                            <div className="flex flex-row items-center gap-3">
-                              <p className="text-sm font-medium">
-                                {verdict.compare_label}
-                              </p>
-                              <AudioButton
-                                audioRequest={{
-                                  request: {
-                                    text: ttsText,
-                                    language: targetLanguage,
-                                    speed: 0.8,
-                                  },
-                                  provider: "Google",
-                                }}
-                                accessToken={accessToken}
-                                size="icon"
-                                variant="ghost"
-                                temp
-                              />
-                              <div className="flex flex-row flex-wrap justify-around items-center gap-3">
-                                {words.map((item, idx) => (
-                                  <span key={idx} className="font-medium">
-                                    <TargetLanguageText
-                                      language={targetLanguage}
-                                    >
-                                      {item}
-                                    </TargetLanguageText>
-                                    {idx < words.length - 1 && ","}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                    <div
-                      className="rounded-lg p-4 border cursor-pointer select-none"
-                      onClick={() => send({ type: "TranslationToggled" })}
-                    >
-                      <p className="text-sm font-medium mb-1">
-                        {verdict.translation_label}
-                      </p>
-                      <p
-                        className={`text-lg font-medium transition-all duration-100 ${
-                          verdict.translation_revealed ? "" : "blur-sm"
-                        }`}
-                      >
-                        {challenge.native_language}
-                      </p>
-                    </div>
-
-                    <WordGrades
-                      verdict={verdict}
-                      gradeOptions={view.grade_options}
-                      setGrade={(part_index, word_index, grade) =>
-                        send({
-                          type: "WordGradeChanged",
-                          part_index,
-                          word_index,
-                          grade,
-                        })
-                      }
-                      targetLanguage={targetLanguage}
-                    />
-
-                    {wrongGramEntries.length > 0 && (
-                      <div className="space-y-2">
-                        {wrongGramEntries.map((entry, i) => (
-                          <GramDefinitionDisplay
-                            key={i}
-                            definition={entry.definition}
-                            breakdown={entry.breakdown}
-                            targetLanguage={targetLanguage}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {audioError && onCantListen && editing && (
-          <AudioErrorBanner onSkip={onCantListen} />
-        )}
-
+  return <TranscriptionDraftContext.Provider value={{
+    blanks: renderSentenceWithBlanks(),
+    keyboard: <>
         {/* Accented character keyboard - show when not graded, language supports it, and not on small screens */}
         {editing &&
           (targetLanguage === "French" ||
@@ -661,26 +808,8 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
             />
           )}
 
-        {/* Mobile keyboard tip - show on small screens when conditions are met */}
-        {editing && keyboardTip && <MobileKeyboardTip tip={keyboardTip} />}
-
-        {/* Movie posters - hidden after grading */}
-        {editing && <MoviePosterGrid movieData={movieData} deck={deck} />}
-
-        <ReportIssueLink
-          label={report_issue_copy().menu_label}
-          onClick={() => setShowReportModal(true)}
-        />
-      </div>
-
-      <div className="mt-4 flex flex-col gap-2 sticky bottom-0">
-        {onCantListen && editing && (
-          <CantListenButton
-            onClick={onCantListen}
-            label={view.cant_listen_label}
-          />
-        )}
-
+    </>,
+    submit: (
         <div>
           {view.is_grading ? (
             <div className="flex gap-2">
@@ -723,88 +852,17 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
             </Button>
           )}
         </div>
-      </div>
-
-      <ReportIssueModal
-        subject={{ Transcription: challenge }}
-        open={showReportModal}
-        onOpenChange={setShowReportModal}
-        targetLanguage={targetLanguage}
-      />
-    </div>
-  );
-});
-
-interface WordGradesProps {
-  verdict: VerdictView;
-  gradeOptions: GradeOptionView[];
-  setGrade: (partIndex: number, wordIndex: number, grade: WordGrade) => void;
-  targetLanguage: Language;
+    ),
+  }}>{children}</TranscriptionDraftContext.Provider>;
 }
 
-function WordGrades({
-  verdict,
-  gradeOptions,
-  setGrade,
-  targetLanguage,
-}: WordGradesProps) {
-  const [isOpen, setIsOpen] = useState(verdict.word_grades_open_by_default);
-  if (verdict.word_grades.length === 0) return null;
-  return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger asChild>
-        <Button variant="ghost" className="w-full justify-between p-0">
-          <span className="text-sm font-medium">
-            {verdict.word_grades_title}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {isOpen ? t("common-hide") : t("common-show")}
-          </span>
-        </Button>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="pt-3 space-y-3">
-          <div className="text-sm text-muted-foreground">
-            {verdict.submission_label}{" "}
-            <TargetLanguageText language={targetLanguage}>
-              {verdict.submission_text}
-            </TargetLanguageText>
-          </div>
-          {verdict.word_grades.map((word) => (
-            <div
-              key={`${word.part_index}-${word.word_index}`}
-              className="flex items-center gap-3 p-2 rounded-lg bg-muted/30"
-            >
-              <div className="flex-1 font-medium">
-                <TargetLanguageText language={targetLanguage}>
-                  {word.heard}
-                </TargetLanguageText>
-              </div>
-              <Select
-                value={String(word.selected)}
-                onValueChange={(value) =>
-                  setGrade(
-                    word.part_index,
-                    word.word_index,
-                    gradeOptions[Number(value)].grade,
-                  )
-                }
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {gradeOptions.map((option, index) => (
-                    <SelectItem key={index} value={String(index)}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ))}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
+/* eslint-enable react-hooks/preserve-manual-memoization */
+function TranscriptionDraftBlanks() {
+  return useContext(TranscriptionDraftContext)!.blanks;
+}
+function TranscriptionDraftKeyboard() {
+  return useContext(TranscriptionDraftContext)!.keyboard;
+}
+function TranscriptionDraftSubmit() {
+  return useContext(TranscriptionDraftContext)!.submit;
 }

@@ -50,6 +50,14 @@ test("capture screen and challenge fixtures", async ({ page, request }) => {
         page.getByRole("heading", { name: /Goal Reached!/ }),
       ).toBeVisible();
     }
+    if (fixture?.type === "Challenge") {
+      const draft = fixture.view.draft;
+      if (draft?.type === "Translation") {
+        await expect(page.locator("textarea").first()).toHaveValue(draft.text);
+      } else if (draft?.type === "Transcription" && draft.inputs.length === 1) {
+        await expect(page.locator("textarea").first()).toHaveValue(draft.inputs[0].text);
+      }
+    }
     if (name === "pronunciation") {
       const highlight = page.locator('span[class~="bg-caution/30"]').first();
       await expect(highlight).toBeVisible();
@@ -70,6 +78,12 @@ test("capture screen and challenge fixtures", async ({ page, request }) => {
     await page.screenshot({
       path: path.resolve("screenshots-out/fixtures", `${name}-web.png`),
     });
+    if (name === "idle-all-caught-up" && fixture?.type === "Idle" && fixture.view.type === "Idle") {
+      await expect(page.getByRole("menuitem")).toHaveCount(0);
+      await page.getByRole("button", { name: fixture.view.manual_add_heading, exact: true }).click();
+      await expect(page.getByRole("menuitem").first()).toBeVisible();
+      await page.keyboard.press("Escape");
+    }
     if (name === "dictation-empty") {
       // A long answer must wrap inside the field rather than push its
       // unbreakable run (field + attached ".") past the sentence's edge.
@@ -82,5 +96,44 @@ test("capture screen and challenge fixtures", async ({ page, request }) => {
       const line = await chunk.locator("xpath=..").boundingBox();
       expect(run!.x + run!.width).toBeLessThanOrEqual(line!.x + line!.width + 0.5);
     }
+  }
+});
+
+test("typed drafts preserve focus, accents, Enter submission and cancellation", async ({ page }) => {
+  await page.setViewportSize({ width: 1100, height: 900 });
+  await fakeLogin(page);
+  await page.goto("/");
+  await seedFrenchDeck(page);
+  await page.waitForTimeout(4000);
+
+  for (const name of ["translation-empty", "dictation-empty"]) {
+    let pending: import("@playwright/test").Route | undefined;
+    await page.route("**/autograde-*", (route) => { pending = route; });
+    await page.goto(`/fixture/${name}`);
+    await expect(page.locator(`[data-fixture-rendered="${name}"]`)).toBeVisible();
+    const input = page.locator("textarea").first();
+    await expect(input).toBeFocused();
+    await input.fill("ab");
+    let answer = "ab";
+    if (name === "dictation-empty") {
+      await input.evaluate((element: HTMLTextAreaElement) => element.setSelectionRange(0, 0));
+      await page.getByRole("button", { name: "é", exact: true }).click();
+      await expect(input).toHaveValue("éab");
+      await expect(input).toBeFocused();
+      await page.keyboard.down("Shift");
+      await page.getByRole("button", { name: "É", exact: true }).click();
+      await page.keyboard.up("Shift");
+      answer = "éÉab";
+      await expect(input).toHaveValue(answer);
+    }
+    await input.press("Enter");
+    await expect.poll(() => pending !== undefined).toBe(true);
+    // Hold the grading response so cancellation is deterministic and no
+    // fixture answer is sent to the real autograder.
+    await page.locator(".sticky button").last().click();
+    await expect(input).toBeEnabled();
+    await expect(input).toHaveValue(answer);
+    await pending!.abort();
+    await page.unroute("**/autograde-*");
   }
 });

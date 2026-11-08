@@ -41,7 +41,7 @@ import Observation
         guard !active else { return }; active = true
         let next = restrictions().banned
         if next != banned { currentChallenge = nil }
-        banned = next; refresh()
+        banned = next; refresh(); restartPrefetch()
         tasks.append(Task { [weak self] in
             var audioVersion = get_audio_cache_version()
             var clipVersion = get_clip_manifest_version()
@@ -53,6 +53,8 @@ import Observation
                 let audio = get_audio_cache_version(), clip = get_clip_manifest_version()
                 self.refreshRestrictions(preservingChallenge: true)
                 if audio != audioVersion || clip != clipVersion || ticks % 30 == 0 { self.refresh() }
+                // The prefetch skips failed downloads, so retry them each minute.
+                if clip != clipVersion || ticks % 30 == 0 { self.restartPrefetch() }
                 audioVersion = audio; clipVersion = clip
             }
         })
@@ -85,7 +87,7 @@ import Observation
             banned = next
             // Expiry updates the hub's inputs without discarding an in-progress review.
             if !preservingChallenge { currentChallenge = nil }
-            refresh()
+            refresh(); restartPrefetch()
         }
     }
     func refresh() {
@@ -98,17 +100,21 @@ import Observation
         self.view = view
         // Non-nil challenges are held for this Deck's lifetime, even as caches change.
         if case let .Challenge(challenge) = view.step { currentChallenge = challenge.challenge }
-        prefetch?.cancel()
-        prefetch = Task { [deck, banned, session] in
-            guard session.online else { return }
-            await deck.cache_challenge_audio(banned_challenge_types: banned, access_token: session.accessToken())
-        }
         dueTask?.cancel()
         if let due = deck.get_all_cards_summary().map(\.due_timestamp_ms).filter({ $0 > now }).min(), due - now < 86_400_000 {
             dueTask = Task { [weak self] in
                 do { try await Task.sleep(for: .milliseconds(due - now + 1)) } catch { return }
                 self?.refresh()
             }
+        }
+    }
+    /// As on web, the audio the prefetch caches itself must not restart it.
+    func restartPrefetch() {
+        guard active else { return }
+        prefetch?.cancel()
+        prefetch = Task { [deck, banned, session] in
+            guard session.online else { return }
+            await deck.cache_challenge_audio(banned_challenge_types: banned, access_token: session.accessToken())
         }
     }
     func cantListen() { setRestriction("yap-cant-listen-timestamp") }
@@ -175,6 +181,7 @@ import Observation
         actions.completeTranslationWrong = { self.completeTranslationWrong($0, submission: $1, grade: $2, tapped: $3, completedAtMs: $4) }
         actions.completeTranscription = { self.completeTranscription($0, completedAtMs: $1) }
         actions.cantListen = cantListen; actions.cantSpeak = cantSpeak; actions.undoRestrictions = undoRestrictions
+        actions.manualAddOptions = { self.deck.get_manual_add_options(sentence_list: $0, is_signed_in: self.auth.userId != nil) }
         actions.addEvent = session.addDeckEvent
         actions.setSentenceList = { self.session.curriculumDraft = CurriculumDraft(selection: $0); self.refresh() }
         actions.commitSentenceList = { self.session.addDeckEvent($0); self.session.curriculumDraft = nil; self.refresh() }

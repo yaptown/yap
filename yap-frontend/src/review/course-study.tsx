@@ -110,13 +110,14 @@ export function useStudyReviewView(sentenceList: SentenceListSelection | undefin
 
 // Mount only on screens that need study audio; unmounting cancels prefetch.
 export function CourseAudioPrefetch() {
-  const { deck, accessToken, banned, readiness, online } = useCourseStudy().audioPrefetch;
+  const { deck, accessToken, banned, clips, minute, online } = useCourseStudy().audioPrefetch;
+  // The prefetch skips failed downloads, so the minute tick retries them.
   useEffect(() => {
     if (!deck) return;
     const controller = new AbortController();
     deck.cache_challenge_audio(banned, accessToken, controller.signal);
     return () => controller.abort();
-  }, [deck, accessToken, banned, readiness, online]);
+  }, [deck, accessToken, banned, clips, minute, online]);
   return null;
 }
 
@@ -153,11 +154,18 @@ function useStudyController(
     audio: get_audio_cache_version(),
     clips: get_clip_manifest_version(),
   }));
-  // A new immutable deck needs a fresh clock, not a render-phase state update.
+  // A new immutable deck gets a fresh clock; audio arrivals do not advance it.
+  const snapshot = useMemo(
+    // eslint-disable-next-line react-hooks/purity -- Sample once per immutable deck, not per audio cache update.
+    () => ({ deck, timestamp_ms: Date.now() }),
+    [deck],
+  );
   const readiness = useMemo(
-    // eslint-disable-next-line react-hooks/purity -- Sample once per immutable snapshot/readiness change, without a second render.
-    () => ({ ...polledReadiness, deck, timestamp_ms: Date.now() }),
-    [deck, polledReadiness],
+    () => ({
+      ...polledReadiness,
+      timestamp_ms: Math.max(snapshot.timestamp_ms, polledReadiness.timestamp_ms),
+    }),
+    [snapshot, polledReadiness],
   );
   // Retain the interned root, not just its array: weak stability lasts while
   // this snapshot is held, and React can skip equal polling results directly.
@@ -181,7 +189,11 @@ function useStudyController(
       previous.audio !== audio ||
       previous.clips !== clips ||
       timestamp_ms - previous.timestamp_ms >= 60_000
-        ? { ...previous, timestamp_ms, audio, clips }
+        ? {
+            timestamp_ms: timestamp_ms - previous.timestamp_ms >= 60_000 ? timestamp_ms : previous.timestamp_ms,
+            audio,
+            clips,
+          }
         : previous,
     );
   }, 2000);
@@ -251,8 +263,18 @@ function useStudyController(
   const heldChallenge = useRef<{
     deck: Deck;
     revision: number;
+    audio: number;
+    clips: number;
     challenge: Challenge<Gram<string>>;
   }>(undefined);
+  const held = heldChallenge.current;
+  const holdingChallenge = held?.deck === deck && held?.revision === restrictionRevision;
+  const screenAudio = holdingChallenge && held ? held.audio : readiness.audio;
+  const screenClips = holdingChallenge && held ? held.clips : readiness.clips;
+  const screenReadiness = useMemo(
+    () => ({ timestamp_ms: readiness.timestamp_ms, audio: screenAudio, clips: screenClips }),
+    [readiness.timestamp_ms, screenAudio, screenClips],
+  );
   const { inputs, getReviewView, getHomeView } = useMemo(() => {
     // Read the last committed selection; only a new deck or an explicit ban
     // releases it. Capturing a new selection happens after commit, without a
@@ -265,7 +287,7 @@ function useStudyController(
       sentence_list: sentenceList,
       online: network.online === true,
       is_signed_in: userInfo !== undefined,
-      timestamp_ms: readiness.timestamp_ms,
+      timestamp_ms: screenReadiness.timestamp_ms,
       needs_display_name: userInfo?.displayName === null,
       display_name_dismissed: dismissedSetDisplayName,
       has_access_token: accessToken !== undefined,
@@ -326,7 +348,7 @@ function useStudyController(
     banned,
     network.online,
     userInfo,
-    readiness,
+    screenReadiness,
     dismissedSetDisplayName,
     accessToken,
     startingFresh,
@@ -337,9 +359,9 @@ function useStudyController(
   ]);
   const commitChallenge = useCallback((challenge: Challenge<Gram<string>> | undefined) => {
     if (deck && challenge) {
-      heldChallenge.current = { deck, revision: restrictionRevision, challenge };
+      heldChallenge.current = { deck, revision: restrictionRevision, challenge, audio: screenAudio, clips: screenClips };
     }
-  }, [deck, restrictionRevision]);
+  }, [deck, restrictionRevision, screenAudio, screenClips]);
   // Actions read the committed selection, never force a screen projection.
   // Old snapshot/restriction callbacks cannot submit a replacement challenge.
   const getCurrentChallenge = useCallback(() => {
@@ -479,7 +501,7 @@ function useStudyController(
   const onCantSpeak = useCallback(() => restrict("speak"), [restrict]);
 
   return {
-    audioPrefetch: { deck, accessToken, banned, readiness, online: network.online },
+    audioPrefetch: { deck, accessToken, banned, clips: readiness.clips, minute: readiness.timestamp_ms, online: network.online },
     inputs,
     getReviewView,
     getHomeView,

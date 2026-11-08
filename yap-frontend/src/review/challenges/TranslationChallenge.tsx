@@ -1,6 +1,9 @@
 import { t } from "@/lib/i18n";
 import {
   memo,
+  createContext,
+  useContext,
+  type ReactNode,
   useState,
   useEffect,
   useRef,
@@ -409,10 +412,6 @@ export const TranslationChallenge = memo(function TranslationChallenge({
     [state, sentence, course],
   );
   const editing = state.phase.type === "Editing";
-  const [userTranslation, setUserTranslation] = useState(
-    () => view.submission ?? initialText ?? "",
-  );
-  const canSubmit = translation_can_submit(userTranslation);
   const correctTranslation = view.correct_translation ?? "";
   const gradeItems = view.grade_section?.items ?? [];
   const canContinue = view.can_continue;
@@ -430,14 +429,13 @@ export const TranslationChallenge = memo(function TranslationChallenge({
     : null;
   const [clipMovieId, setClipMovieId] = useState<string | null>(null);
   const hasClip = clipMovieId !== null;
-  const movieData = deck.sentence_posters(
-    sentence.movie_titles.map(([id]) => id),
-    clipMovieId ?? undefined,
-  );
+  const movieData = useMemo(() => deck.sentence_posters(
+    sentence.movie_titles.map(([id]) => id), clipMovieId ?? undefined,
+  ), [deck, sentence.movie_titles, clipMovieId]);
+  const issueCopy = useMemo(() => report_issue_copy(), []);
   const [selectedPhraseIndex, setSelectedPhraseIndex] = useState(-1);
   const [showReportModal, setShowReportModal] = useState(false);
   const gradingGenerationRef = useRef(0);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const phraseRefs = useRef<Map<number, SwipeableWordHandle>>(new Map());
   const { bumpBackground } = useBackground();
   const applyStep = useCallback(
@@ -542,15 +540,7 @@ export const TranslationChallenge = memo(function TranslationChallenge({
       generation.current++;
     };
   }, []);
-  useEffect(() => {
-    const timer = setTimeout(() => inputRef.current?.focus(), 100);
-    return () => clearTimeout(timer);
-  }, [sentence.target_language]);
   const handleWordTap = (index: number) => send({ type: "WordTapped", index });
-  const handleCheckAnswer = useCallback(
-    () => send({ type: "Submit", text: userTranslation, now_ms: Date.now() }),
-    [send, userTranslation],
-  );
   const handleContinue = useCallback(() => send({ type: "Continue" }), [send]);
   const handleGradeSwipe = useCallback(
     (index: number, remembered: boolean) => {
@@ -566,12 +556,7 @@ export const TranslationChallenge = memo(function TranslationChallenge({
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && editing) {
-        e.preventDefault();
-        if (canSubmit) {
-          handleCheckAnswer();
-        }
-      } else if (e.key === "Enter" && view.verdict) {
+      if (e.key === "Enter" && view.verdict) {
         e.preventDefault();
         handleContinue();
       } else if (e.key === "ArrowRight" && view.verdict && canContinue) {
@@ -629,15 +614,12 @@ export const TranslationChallenge = memo(function TranslationChallenge({
     selectedPhraseIndex,
     handleGradeSwipe,
     canContinue,
-    canSubmit,
-    handleCheckAnswer,
-    editing,
     view.verdict,
     view.grade_section,
     gradeItems.length,
   ]);
 
-  return (
+  const content = (
     <div className="flex flex-col flex-1 justify-between">
       <div className="flex flex-1 flex-col gap-2">
         <Card animate className="p-5 relative gap-2">
@@ -672,15 +654,7 @@ export const TranslationChallenge = memo(function TranslationChallenge({
               tone={view.verdict?.headline.tone}
             >
               {editing ? (
-                <textarea
-                  ref={inputRef}
-                  lang={languageToLangAttr(nativeLanguage)}
-                  placeholder={view.placeholder}
-                  value={userTranslation}
-                  onChange={(e) => setUserTranslation(e.target.value)}
-                  className="block w-full resize-none bg-transparent outline-none placeholder:text-muted-foreground field-sizing-content"
-                  rows={1}
-                />
+                <TranslationDraftInput />
               ) : (
                 <p>{view.submission}</p>
               )}
@@ -757,21 +731,14 @@ export const TranslationChallenge = memo(function TranslationChallenge({
         {editing && <MoviePosterGrid movieData={movieData} deck={deck} />}
 
         <ReportIssueLink
-          label={report_issue_copy().menu_label}
+          label={issueCopy.menu_label}
           onClick={() => setShowReportModal(true)}
         />
       </div>
 
       <div className="sticky bottom-0">
         {editing ? (
-          <Button
-            onClick={handleCheckAnswer}
-            className="w-full mt-4 h-14 text-lg"
-            size="lg"
-            disabled={!canSubmit}
-          >
-            {view.submit_label}
-          </Button>
+          <TranslationDraftSubmit />
         ) : view.is_grading ? (
           <div className="flex gap-2">
             <Button className="flex-1 h-14 text-lg" size="lg" disabled>
@@ -813,4 +780,70 @@ export const TranslationChallenge = memo(function TranslationChallenge({
       />
     </div>
   );
+  return (
+    <TranslationDraft
+      initialText={view.submission ?? initialText ?? ""}
+      editing={editing}
+      nativeLanguage={nativeLanguage}
+      placeholder={view.placeholder}
+      submitLabel={view.submit_label}
+      send={send}
+    >
+      {content}
+    </TranslationDraft>
+  );
 });
+
+// The parent projects the challenge once; only these small consumers subscribe
+// to the local draft. Keeping the provider mounted also retains cancelled drafts.
+const TranslationDraftContext = createContext<{
+  input: ReactNode;
+  submit: ReactNode;
+} | null>(null);
+
+function TranslationDraft({ initialText, editing, nativeLanguage, placeholder, submitLabel, send, children }: {
+  initialText: string;
+  editing: boolean;
+  nativeLanguage: Language;
+  placeholder: string;
+  submitLabel: string;
+  send: (event: TranslationEvent) => void;
+  children: ReactNode;
+}) {
+  const [userTranslation, setUserTranslation] = useState(initialText);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const canSubmit = translation_can_submit(userTranslation);
+  const handleCheckAnswer = useCallback(
+    () => send({ type: "Submit", text: userTranslation, now_ms: Date.now() }),
+    [send, userTranslation],
+  );
+  useEffect(() => {
+    const timer = setTimeout(() => inputRef.current?.focus(), 100);
+    return () => clearTimeout(timer);
+  }, []);
+  useEffect(() => {
+    if (!editing) return;
+    const key = (event: KeyboardEvent) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      if (canSubmit) handleCheckAnswer();
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [editing, canSubmit, handleCheckAnswer]);
+  return <TranslationDraftContext.Provider value={{
+    input: <textarea ref={inputRef} lang={languageToLangAttr(nativeLanguage)}
+      placeholder={placeholder} value={userTranslation}
+      onChange={(event) => setUserTranslation(event.target.value)}
+      className="block w-full resize-none bg-transparent outline-none placeholder:text-muted-foreground field-sizing-content" rows={1} />,
+    submit: <Button onClick={handleCheckAnswer} className="w-full mt-4 h-14 text-lg"
+      size="lg" disabled={!canSubmit}>{submitLabel}</Button>,
+  }}>{children}</TranslationDraftContext.Provider>;
+}
+
+function TranslationDraftInput() {
+  return useContext(TranslationDraftContext)!.input;
+}
+function TranslationDraftSubmit() {
+  return useContext(TranslationDraftContext)!.submit;
+}

@@ -1,5 +1,5 @@
 import { t } from "@/lib/i18n";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +35,7 @@ export function ReportIssueModal({
   const [issueText, setIssueText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [failed, setFailed] = useState(false);
-  const copy = report_issue_copy();
+  const copy = useMemo(() => report_issue_copy(), []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

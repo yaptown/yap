@@ -1,3 +1,5 @@
+import { useOutletContext } from "react-router-dom";
+import type { AppContextType } from "@/app/context";
 import { t } from "@/lib/i18n";
 import { next_review_line } from "../../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button";
@@ -6,6 +8,7 @@ import type {
   CardSummary,
   IdleScreenView,
   IdleView,
+  ManualAddOption,
   DeckEvent,
   Deck,
   Language,
@@ -182,7 +185,8 @@ function IdleContent({
   );
   const targetLanguage = view.target_language;
   const info = view.info;
-  const manualAddOptions = view.manual_add_options;
+  const { userInfo } = useOutletContext<AppContextType>();
+  const [manualAddOptions, setManualAddOptions] = useState<ManualAddOption[]>([]);
   // Adding cards from a browsed curriculum is what commits it.
   const commit = view.commit_curriculum;
   const add = useCallback(
@@ -406,7 +410,13 @@ function IdleContent({
                             </TooltipContent>
                           )}
                         </Tooltip>
-                        <DropdownMenu>
+                        <DropdownMenu
+                          onOpenChange={(open) => {
+                            if (open) setManualAddOptions(
+                              deck.get_manual_add_options(view.navigation.selection, userInfo !== undefined),
+                            );
+                          }}
+                        >
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="default"

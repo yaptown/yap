@@ -60,8 +60,8 @@ struct CourseHome: View {
         .onChange(of: path) { _, _ in audio.stop(); session.curriculumDraft = nil; review.refresh() }
         .onDisappear { review.stop(); audio.stop() }
         .onChange(of: auth.needsDisplayName) { _, _ in review.refresh() }
-        .onChange(of: auth.accessToken) { _, _ in review.refresh() }
-        .onChange(of: session.online) { _, _ in review.refresh() }
+        .onChange(of: auth.accessToken) { _, _ in review.refresh(); review.restartPrefetch() }
+        .onChange(of: session.online) { _, _ in review.refresh(); review.restartPrefetch() }
         .onChange(of: historyKnown) { _, known in review.historyKnown = known }
         .onChange(of: ObjectIdentifier(deck)) { _, _ in
             let before = review.currentChallenge

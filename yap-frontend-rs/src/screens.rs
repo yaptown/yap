@@ -176,7 +176,6 @@ pub struct IdleView {
     pub body: String,
     pub info: NoCardsReadyInfo,
     pub manual_add_heading: String,
-    pub manual_add_options: Vec<ManualAddOption>,
     /// Feeds `next_review_line` on the hosts' own tick when `body` is empty.
     pub next_due: Option<CardSummary>,
     /// "Soon you'll hit 10% on <CURRICULUM>!" atop the sentence-list panel.
@@ -437,25 +436,15 @@ impl Deck {
         ))
     }
 
-    /// `is_signed_in` is distinct from connectivity: offline signed-in learners
-    /// retain their listening options, just as they do elsewhere in the app.
     pub fn idle_screen_view(
         &self,
         banned: Vec<ChallengeRequirements>,
         sentence_list: Option<SentenceListSelection>,
         online: bool,
-        is_signed_in: bool,
         timestamp_ms: f64,
     ) -> IdleScreenView {
         let review = self.get_review_info(banned.clone(), timestamp_ms);
-        self.idle_screen_view_with_review(
-            banned,
-            sentence_list,
-            online,
-            is_signed_in,
-            timestamp_ms,
-            &review,
-        )
+        self.idle_screen_view_with_review(banned, sentence_list, online, timestamp_ms, &review)
     }
 
     fn idle_screen_view_with_review(
@@ -463,7 +452,6 @@ impl Deck {
         banned: Vec<ChallengeRequirements>,
         sentence_list: Option<SentenceListSelection>,
         online: bool,
-        is_signed_in: bool,
         timestamp_ms: f64,
         review: &ReviewInfo,
     ) -> IdleScreenView {
@@ -515,8 +503,6 @@ impl Deck {
             next_sentence_list,
             commit_curriculum,
         } = curriculum;
-        let manual_add_options =
-            self.get_manual_add_options(navigation.selection.clone(), is_signed_in);
         let idle = get_idle_study_state(
             next_due.is_some(),
             self.num_cards_added(),
@@ -580,7 +566,6 @@ impl Deck {
             title,
             body,
             manual_add_heading: manual_add_heading(),
-            manual_add_options,
             info,
             next_due,
             curriculum_headline,
@@ -1587,7 +1572,6 @@ impl Deck {
                 inputs.banned,
                 inputs.sentence_list,
                 inputs.online,
-                inputs.is_signed_in,
                 inputs.timestamp_ms,
                 &review,
             )))
@@ -1943,7 +1927,7 @@ mod tests {
             }
         }
         let IdleScreenView::Idle(idle) =
-            deck.idle_screen_view(vec![], None, true, true, inputs().timestamp_ms)
+            deck.idle_screen_view(vec![], None, true, inputs().timestamp_ms)
         else {
             panic!("new deck should be idle");
         };
@@ -2039,10 +2023,6 @@ mod tests {
                 assert_eq!(
                     idle.commit_curriculum.is_some(),
                     idle.navigation.selection != deck.get_sentence_list()
-                );
-                assert_eq!(
-                    json(deck.get_manual_add_options(idle.navigation.selection.clone(), signed_in)),
-                    json(idle.manual_add_options)
                 );
             }
         }

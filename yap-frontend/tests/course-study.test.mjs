@@ -42,6 +42,12 @@ function harness() {
   let accomplishment = false;
   let placement = false;
   let session;
+  let route;
+  let restrictions = { banned: [] };
+  const weapon = {
+    add_deck_event: (event) => events.push(event),
+    add_deck_event_at: (event, at) => events.push({ event, at }),
+  };
   let eventAvailable = true;
   let reviewCalls = 0;
   let summaryCalls = 0;
@@ -122,7 +128,7 @@ function harness() {
     translate_sentence_perfect: (tapped, sentence) => eventAvailable ? { sentence, tapped } : undefined,
     translate_sentence_wrong: (sentence, submission) => eventAvailable ? { sentence, submission } : undefined,
     transcribe_sentence: (grade) => eventAvailable ? { grade } : undefined,
-    review_card: (indicator, rating) => eventAvailable ? { indicator, rating } : undefined,
+    review_cards: (reviews) => eventAvailable ? { reviews } : undefined,
   });
   let state = {
     view: { phase: { type: "Ready" } },
@@ -176,11 +182,12 @@ function harness() {
         };
       if (path === "@/core/weapon")
         return {
-          useWeapon: () => ({
-            add_deck_event: (event) => events.push(event),
-            add_deck_event_at: (event, at) => events.push({ event, at }),
-          }),
+          useWeapon: () => weapon,
+          useWeaponState: () => ({ type: "ready", switching: false }),
         };
+      if (path === "./challenges/flashcardReviews") return {
+        flashcardReviews: (_content, card, rating) => [{ card, rating }],
+      };
       if (path === "@/lib/sound-effects") return { playSoundEffect() {} };
       if (path === "@/lib/challenge-restrictions")
         return {
@@ -196,7 +203,8 @@ function harness() {
                 banned.push(requirement);
               else storage.delete(key);
             }
-            return { banned };
+            if (JSON.stringify(banned) !== JSON.stringify(restrictions.banned)) restrictions = { banned };
+            return restrictions;
           },
         };
       assert.ok(path.endsWith("/pkg"), path);
@@ -216,7 +224,10 @@ function harness() {
       dirty = false;
       cursor = 0;
       pendingEffects = [];
-      session = exports.useStudyController(state, context, exports.CourseRoutes().props.pendingReviewScope);
+      route = exports.CourseRoutes();
+      session = exports.useStudyController(state, context, route.props.pendingReviewScope);
+      const view = exports.useStudyReviewView(session.inputs.sentence_list);
+      session.currentChallenge = view.step.type === "Challenge" ? view.step.view.challenge : undefined;
       // Home and Review mount this separate effect owner beside the controller.
       exports.CourseAudioPrefetch();
     } while (dirty);
@@ -242,7 +253,7 @@ function harness() {
     get timerTimes() {
       return [...timers.values()].map((timer) => timer.at);
     },
-    routeKey: () => exports.CourseRoutes().key,
+    routeKey: () => { render(); return route.key; },
     setEventAvailable: (value) => { eventAvailable = value; },
     setUser: (id) => {
       context.userInfo = id === undefined ? undefined : { id, displayName: "Learner" };
@@ -345,9 +356,9 @@ test("idle never sticks, and a distant due timer arms after a minute poll", () =
   h.setDue(1_125_000);
   h.render();
   assert.equal(h.session.currentChallenge, undefined);
-  assert.equal(h.timerTimes.length, 0);
+  assert.ok(!h.timerTimes.includes(1_125_001));
   h.tick(60_000);
-  assert.equal(h.timerTimes.length, 0);
+  assert.ok(!h.timerTimes.includes(1_125_001));
   h.tick(60_000);
   assert.ok(h.timerTimes.includes(1_125_001));
   h.select(challenge("newly due"));
@@ -411,7 +422,7 @@ for (const [kind, complete] of [
 ]) {
   test(`${kind} acknowledges once per deck snapshot and rejects stale callbacks`, () => {
     const h = harness();
-    h.select({ type: kind, target_language: "sentence", indicator: "card" });
+    h.select({ type: kind, target_language: "sentence", indicator: "card", flashcard: { content: { type: "Other" } } });
     const oldActions = h.render().actions;
     h.setEventAvailable(false);
     assert.equal(complete(oldActions), false);
@@ -431,18 +442,26 @@ for (const [kind, complete] of [
   });
 }
 
-test("Home owns prefetch too; readiness/reconnect abort superseded work and unmount cleans up", () => {
+test("Home prefetch survives audio updates; minute/manifest/reconnect restart it", () => {
   const h = harness();
   h.render();
   assert.equal(h.manifestRefreshes, 1);
   assert.equal(h.prefetches.length, 1);
   h.tick(2000);
+  h.tick(2000, { audioChanged: true });
   assert.equal(h.prefetches.length, 1);
-  h.tick(2000, { clipsChanged: true });
+  assert.equal(h.prefetches[0].signal.aborted, false);
+  h.tick(60_000);
+  assert.equal(h.prefetches.length, 2);
   assert.ok(h.prefetches[0].signal.aborted);
+  h.tick(2000, { clipsChanged: true });
+  assert.ok(h.prefetches[1].signal.aborted);
   const previous = h.prefetches.at(-1);
   h.reconnect();
   assert.ok(previous.signal.aborted);
+  const count = h.prefetches.length;
+  h.reconnect();
+  assert.equal(h.prefetches.length, count + 1);
   h.unmount();
   assert.ok(h.prefetches.at(-1).signal.aborted);
 });
@@ -463,7 +482,9 @@ test("each new deck computes review and card summaries only once", () => {
   assert.equal(h.summaryCalls, 2);
   assert.equal(h.session.inputs.timestamp_ms, 1002000);
   h.tick(2000, { audioChanged: true });
-  assert.equal(h.reviewCalls, 3);
+  assert.equal(h.reviewCalls, 2);
+  h.tick(2000, { audioChanged: true, clipsChanged: true });
+  assert.equal(h.reviewCalls, 2);
   assert.equal(h.summaryCalls, 2);
 });
 
@@ -487,4 +508,17 @@ test("Home previews the first selected challenge before another render", () => {
   const view = h.session.getHomeView({ type: "Movie", id: "persisted" });
   assert.equal(view.inputs.current_challenge, selected);
   assert.equal(h.reviewCalls, 1);
+});
+
+test("idle observes arriving audio without restarting its own prefetch", () => {
+  const h = harness();
+  h.render();
+  assert.equal(h.session.currentChallenge, undefined);
+  const ready = challenge("audio ready");
+  h.select(ready);
+  h.tick(2000, { audioChanged: true });
+  assert.equal(h.session.currentChallenge, ready);
+  assert.equal(h.reviewCalls, 2);
+  assert.equal(h.prefetches.length, 1);
+  assert.equal(h.prefetches[0].signal.aborted, false);
 });

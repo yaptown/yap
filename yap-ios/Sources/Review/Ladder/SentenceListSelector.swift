@@ -37,7 +37,7 @@ struct SentenceListSelector: View {
                         } else if let note = view.all_learned_note {
                             Text(note).font(.subheadline)
                         } else if let label = view.curriculum_learn_label, let event = view.info.smart_add_event {
-                            LearnButton(label: label, heading: view.manual_add_heading, options: view.manual_add_options,
+                            LearnButton(label: label, heading: view.manual_add_heading, loadOptions: { actions.manualAddOptions(navigation.selection) },
                                         learn: { add(event) }, add: add)
                         }
                         LabeledProgressBar(percent: view.progress.percent_known, label: view.progress.bar_label,
@@ -97,7 +97,7 @@ struct SentenceListSelector: View {
 private struct LearnButton: View {
     let label: String
     let heading: String
-    let options: [ManualAddOption]
+    let loadOptions: () -> [ManualAddOption]
     let learn: () -> Void
     let add: (DeckEvent) -> Void
     var body: some View {
@@ -106,18 +106,39 @@ private struct LearnButton: View {
                 Label(label, systemImage: "sparkles").lineLimit(1).minimumScaleFactor(0.7).padding(.horizontal, 14).frame(minHeight: 50)
             }
             Rectangle().fill(Tokens.palette.primary_foreground.color.opacity(0.2)).frame(width: 1, height: 50)
-            Menu {
-                ForEach(Array(options.enumerated()), id: \.offset) { _, option in
-                    Button(option.label) { add(option.event) }
-                }
-            } label: {
-                Image(systemName: "chevron.down").frame(width: 48, height: 50).contentShape(Rectangle())
-            }.accessibilityLabel(heading)
+            ManualAddMenu(heading: heading, loadOptions: loadOptions, add: add)
+                .frame(width: 48, height: 50)
         }
         .font(.headline).foregroundStyle(Tokens.palette.primary_foreground.color)
         .background(Tokens.palette.primary.color.opacity(0.85))
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+/// SwiftUI evaluates Menu content during body projection. UIKit's deferred menu
+/// fetches the options only when opened, without changing the native menu UI.
+private struct ManualAddMenu: UIViewRepresentable {
+    let heading: String
+    let loadOptions: () -> [ManualAddOption]
+    let add: (DeckEvent) -> Void
+
+    func makeUIView(context: Context) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: "chevron.down"), for: .normal)
+        button.setPreferredSymbolConfiguration(UIImage.SymbolConfiguration(textStyle: .headline), forImageIn: .normal)
+        button.showsMenuAsPrimaryAction = true
+        return button
+    }
+
+    func updateUIView(_ button: UIButton, context: Context) {
+        button.accessibilityLabel = heading
+        button.tintColor = UIColor(Tokens.palette.primary_foreground.color)
+        button.menu = UIMenu(children: [UIDeferredMenuElement.uncached { completion in
+            completion(loadOptions().map { option in
+                UIAction(title: option.label) { _ in add(option.event) }
+            })
+        }])
     }
 }
 

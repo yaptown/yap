@@ -3621,14 +3621,12 @@ impl Deck {
         }))
     }
 
-    /// Compute everything the NoCardsReady screen needs in a single call.
-    /// This calls next_unknown_cards only once.
-    #[bridgerton::stable]
-    pub fn get_no_cards_ready_info(
+    /// Select the smart-add batch without computing screen projections.
+    pub(crate) fn smart_add_cards(
         &self,
         banned_challenge_types: Vec<ChallengeRequirements>,
-        sentence_list: Option<SentenceListSelection>,
-    ) -> NoCardsReadyInfo {
+        sentence_list: &Option<SentenceListSelection>,
+    ) -> (Vec<CardIndicator<SpurGram, Spur>>, SmartAddRegime) {
         let banned_types_set: std::collections::BTreeSet<_> =
             banned_challenge_types.into_iter().collect();
         let max_cards_to_add = self.max_cards_to_add();
@@ -3637,11 +3635,25 @@ impl Deck {
         // before consuming the iterator so the UI can describe the batch.
         let next_cards_iter = self.next_unknown_cards(
             AllowedCards::BannedRequirements(banned_types_set),
-            &sentence_list,
+            sentence_list,
             max_cards_to_add,
         );
         let smart_add_regime = next_cards_iter.smart_add_regime();
         let smart_add_cards: Vec<_> = next_cards_iter.take(max_cards_to_add).collect();
+
+        (smart_add_cards, smart_add_regime)
+    }
+
+    /// Compute everything the NoCardsReady screen needs in a single call.
+    /// This calls next_unknown_cards only once.
+    #[bridgerton::stable]
+    pub fn get_no_cards_ready_info(
+        &self,
+        banned_challenge_types: Vec<ChallengeRequirements>,
+        sentence_list: Option<SentenceListSelection>,
+    ) -> NoCardsReadyInfo {
+        let (smart_add_cards, smart_add_regime) =
+            self.smart_add_cards(banned_challenge_types, &sentence_list);
 
         let mut projected_written = self
             .get_comprehensible_written_grams(true)
@@ -4192,7 +4204,7 @@ impl Deck {
         allowed_cards: AllowedCards,
         sentence_list: &Option<SentenceListSelection>,
         limit: usize,
-    ) -> NextCardsIterator {
+    ) -> NextCardsIterator<'_> {
         log::info!("next_unknown_cards called");
         NextCardsIterator::new(self, allowed_cards, sentence_list, limit)
     }
@@ -6058,7 +6070,7 @@ mod tests {
         let deck = apply_deck_event(deck, lock.lock_event(), t0);
         let title = |deck: &Deck, time| {
             let screens::IdleScreenView::ReviewPlanOffer(plan) =
-                deck.idle_screen_view(vec![], None, true, true, ms(time))
+                deck.idle_screen_view(vec![], None, true, ms(time))
             else {
                 panic!("expected a release plan")
             };
@@ -6296,14 +6308,13 @@ mod tests {
         let now = Utc::now();
         let timestamp = now.timestamp_millis() as f64;
         let deck = Deck::default();
-        let IdleScreenView::Idle(first) =
-            deck.idle_screen_view(vec![], None, true, true, timestamp)
+        let IdleScreenView::Idle(first) = deck.idle_screen_view(vec![], None, true, timestamp)
         else {
             panic!("expected idle")
         };
         assert_eq!(first.kind, IdleKind::FirstRun);
         assert!(first.info.smart_add_event.is_some());
-        assert!(!first.manual_add_options.is_empty());
+        assert!(!deck.get_manual_add_options(None, true).is_empty());
         let IdleScreenView::Idle(exhausted) = deck.idle_screen_view(
             vec![
                 ChallengeRequirements::Text,
@@ -6311,7 +6322,6 @@ mod tests {
                 ChallengeRequirements::Speaking,
             ],
             None,
-            false,
             false,
             timestamp,
         ) else {
@@ -6325,7 +6335,7 @@ mod tests {
         let future =
             review_cards_to_future(deck.clone(), &cards, now - chrono::Duration::minutes(10));
         let IdleScreenView::Idle(caught_up) =
-            future.idle_screen_view(vec![], None, true, true, timestamp)
+            future.idle_screen_view(vec![], None, true, timestamp)
         else {
             panic!("expected idle")
         };
@@ -6342,8 +6352,7 @@ mod tests {
             }])
             .unwrap();
         let known = apply_deck_event(deck, event, now);
-        let IdleScreenView::Idle(more) =
-            known.idle_screen_view(vec![], None, true, true, timestamp)
+        let IdleScreenView::Idle(more) = known.idle_screen_view(vec![], None, true, timestamp)
         else {
             panic!("expected idle")
         };
@@ -6546,13 +6555,13 @@ mod tests {
             now - chrono::Duration::minutes(20),
         );
         assert!(matches!(
-            deck.idle_screen_view(vec![], None, true, true, timestamp),
+            deck.idle_screen_view(vec![], None, true, timestamp),
             IdleScreenView::ReviewPlanOffer(_)
         ));
         let cards = deck.get_review_info(vec![], timestamp).due_cards;
         let deck = review_cards_to_future(deck, &cards, now - chrono::Duration::minutes(10));
         let IdleScreenView::StudyPlanComplete { title, plan, .. } =
-            deck.idle_screen_view(vec![], None, true, true, timestamp)
+            deck.idle_screen_view(vec![], None, true, timestamp)
         else {
             panic!("expected completed plan")
         };
@@ -6569,7 +6578,7 @@ mod tests {
         assert_eq!(released.locked_count(), 0);
         let old_plan = (now + chrono::Duration::hours(37)).timestamp_millis() as f64;
         assert!(matches!(
-            deck.idle_screen_view(vec![], None, true, true, old_plan),
+            deck.idle_screen_view(vec![], None, true, old_plan),
             IdleScreenView::ReviewPlanOffer(_)
         ));
     }
