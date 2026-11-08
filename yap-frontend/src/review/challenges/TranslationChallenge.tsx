@@ -427,11 +427,10 @@ export const TranslationChallenge = memo(function TranslationChallenge({
         correctLabel: view.correct_label,
       }
     : null;
-  const [clipMovieId, setClipMovieId] = useState<string | null>(null);
-  const hasClip = clipMovieId !== null;
+  const [hasClip, setHasClip] = useState(false);
   const movieData = useMemo(() => deck.sentence_posters(
-    sentence.movie_titles.map(([id]) => id), clipMovieId ?? undefined,
-  ), [deck, sentence.movie_titles, clipMovieId]);
+    sentence.movie_titles.map(([id]) => id), sentence.target_language,
+  ), [deck, sentence.movie_titles, sentence.target_language]);
   const issueCopy = useMemo(() => report_issue_copy(), []);
   const [selectedPhraseIndex, setSelectedPhraseIndex] = useState(-1);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -709,7 +708,7 @@ export const TranslationChallenge = memo(function TranslationChallenge({
               autoPlay={!editing}
               autoplayed={autoplayed}
               setAutoplayed={setAutoplayed}
-              onClipChange={setClipMovieId}
+              onClipChange={setHasClip}
               deck={deck}
             />
           </div>

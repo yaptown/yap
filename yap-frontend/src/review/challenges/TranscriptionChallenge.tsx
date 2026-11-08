@@ -126,10 +126,9 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
   const verdict = view.verdict;
   const [audioError, setAudioError] = useState(false);
 
-  const [clipMovieId, setClipMovieId] = useState<string | null>(null);
   const movieData = useMemo(() => deck.sentence_posters(
-    challenge.movie_titles.map(([id]) => id), clipMovieId ?? undefined,
-  ), [deck, challenge.movie_titles, clipMovieId]);
+    challenge.movie_titles.map(([id]) => id), challenge.target_language,
+  ), [deck, challenge.movie_titles, challenge.target_language]);
   const issueCopy = useMemo(() => report_issue_copy(), []);
   const gradingGenerationRef = useRef(0);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -273,7 +272,6 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
               text={challenge.target_language}
               accessToken={accessToken}
               deck={deck}
-              onClipChange={setClipMovieId}
               maskedSentence={view.masked_sentence ?? undefined}
             />
 

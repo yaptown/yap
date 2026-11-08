@@ -12,7 +12,6 @@ struct TranscriptionChallengeView: View {
     // Recomputed once per step rather than on every access, since each call crosses the bridge.
     @State private var view: TranscriptionView
     @State private var hasClip: Bool?
-    @State private var clipMovieId: String?
     @State private var gradesExpanded = false
     @AppStorage("mobile-keyboard-tip-dismissed") private var keyboardTipDismissed = false
     @State private var gradingTask: Task<Void, Never>?
@@ -61,7 +60,7 @@ struct TranscriptionChallengeView: View {
                 if editing { ProperNounGroupsView(groups: view.proper_nouns).equatable() }
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
                     reviewCount: screen.total_reviews,
-                    maskedSentence: view.masked_sentence, available: $hasClip, movieId: $clipMovieId)
+                    maskedSentence: view.masked_sentence, available: $hasClip)
                 if let verdict = view.verdict {
                     // The typed answer is already inline in the sentence above, so
                     // only the grading list repeats it.
@@ -100,7 +99,7 @@ struct TranscriptionChallengeView: View {
                     .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color(uiColor: .separator)) }
             }
             if editing {
-                MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId)).equatable()
+                MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, sentence: sentence.target_language)).equatable()
             }
         } actions: {
             if view.verdict == nil {

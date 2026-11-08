@@ -3534,15 +3534,29 @@ impl Deck {
     }
 
     /// Keep sentence attribution without repeating the film already shown in the clip header.
+    /// The clip's film comes from the manifest rather than from the loaded clip, so the
+    /// posters are right from the first render instead of losing one when the video arrives.
     #[bridgerton::stable]
     pub fn sentence_posters(
         &self,
         movie_ids: Vec<String>,
-        shown_in_clip: Option<String>,
+        sentence: String,
+    ) -> Vec<MovieMetadataBasic> {
+        let clip = clips::clip_for_sentence(self.context.course.target_language, &sentence);
+        self.posters_except(
+            movie_ids,
+            clip.as_ref().map(|row| clips::clip_film(&row.clip_id)),
+        )
+    }
+
+    fn posters_except(
+        &self,
+        movie_ids: Vec<String>,
+        shown_in_clip: Option<&str>,
     ) -> Vec<MovieMetadataBasic> {
         self.get_movie_metadata(movie_ids)
             .into_iter()
-            .filter(|movie| Some(&movie.id) != shown_in_clip.as_ref())
+            .filter(|movie| Some(movie.id.as_str()) != shown_in_clip)
             .collect()
     }
 
@@ -5768,7 +5782,7 @@ mod tests {
     }
 
     #[test]
-    fn sentence_posters_exclude_only_the_clip_and_preserve_order() {
+    fn posters_exclude_only_the_clip_and_preserve_order() {
         let mut deck = daily_review_target_deck(None);
         let mut sentences = language_utils::language_pack::LanguagePackSentences::empty(
             deck.context
@@ -5796,13 +5810,10 @@ mod tests {
             .map(str::to_owned)
             .to_vec();
         let all = deck.get_movie_metadata(ids.clone());
-        assert_eq!(deck.sentence_posters(ids.clone(), None), all);
+        assert_eq!(deck.posters_except(ids.clone(), None), all);
+        assert_eq!(deck.posters_except(ids.clone(), Some("other")), all);
         assert_eq!(
-            deck.sentence_posters(ids.clone(), Some("other".into())),
-            all
-        );
-        assert_eq!(
-            deck.sentence_posters(ids, Some("clip".into())),
+            deck.posters_except(ids, Some("clip")),
             vec![all[0].clone(), all[2].clone()]
         );
     }

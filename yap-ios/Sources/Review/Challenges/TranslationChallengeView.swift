@@ -12,7 +12,6 @@ struct TranslationChallengeView: View {
     @State private var state: TranslationState
     @State private var view: TranslationView
     @State private var hasClip: Bool?
-    @State private var clipMovieId: String?
     @State private var gradingTask: Task<Void, Never>?
     @State private var focused = false
     @State private var gradesExpanded = false
@@ -78,11 +77,11 @@ struct TranslationChallengeView: View {
                     SentenceVerdictView(headline: nil, correctLabel: view.correct_label, correct: view.correct_translation ?? "").equatable()
                 }
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
-                    reviewCount: screen.total_reviews, autoplay: !editing, available: $hasClip, movieId: $clipMovieId)
+                    reviewCount: screen.total_reviews, autoplay: !editing, available: $hasClip)
                 ReviewDefinitionsView(definitions: view.definitions).equatable()
             }
             if editing {
-                MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId)).equatable()
+                MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, sentence: sentence.target_language)).equatable()
             }
         } actions: {
             if view.verdict != nil {

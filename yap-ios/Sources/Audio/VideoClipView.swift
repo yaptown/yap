@@ -14,7 +14,6 @@ struct VideoClipView: View {
     var autoplay = false
     var maskedSentence: String?
     @Binding var available: Bool?
-    @Binding var movieId: String?
     @State private var movie: MovieMetadataBasic?
     @State private var player: AVPlayer?
     @State private var cues: [ClipSubtitleCue] = []
@@ -93,11 +92,11 @@ struct VideoClipView: View {
         catch { playbackFailed = true }
     }
     private func watch() async {
-        movieId = nil; movie = nil; available = nil; playbackFailed = false
+        movie = nil; available = nil; playbackFailed = false
         var file: URL?
         defer {
             if let player { audio.stopVideo(player); player.replaceCurrentItem(with: nil) }
-            player = nil; playing = false; movieId = nil; movie = nil
+            player = nil; playing = false; movie = nil
             if let file { try? FileManager.default.removeItem(at: file) }
         }
         var version: UInt32?
@@ -121,18 +120,18 @@ struct VideoClipView: View {
                         let next = AVPlayer(url: url)
                         await next.seek(to: CMTime(seconds: Double(result.critical_start_ms) / 1000, preferredTimescale: 1000))
                         try Task.checkCancellation()
-                        player = next; available = true; movieId = result.movie_id
-                    } else { available = false; movieId = nil }
+                        player = next; available = true
+                    } else { available = false }
                 } catch {
                     if Task.isCancelled { return }
-                    available = false; movieId = nil
+                    available = false
                     print("Yap clip lookup failed: \(error)")
                 }
             }
             if let player {
                 if playbackFailed || player.status == .failed || player.currentItem?.status == .failed {
                     audio.stopVideo(player)
-                    self.player = nil; available = false; movieId = nil
+                    self.player = nil; available = false
                     // Release the shared autoplay claim so the TTS fallback runs.
                     if autoplay { host.autoplay.reviewCount = nil }
                     do { try await invalidate_clip_cache(language: language, text: text) }

@@ -25,10 +25,10 @@ interface VideoClipPlayerProps {
   autoplayed?: boolean;
   setAutoplayed?: () => void;
   /**
-   * Reports the clip’s film (or null), so the parent can avoid duplicate posters and
-   * decide who owns autoplay (video when available, AudioButton otherwise).
+   * Reports whether there is a clip, so the parent can decide who owns
+   * autoplay (video when available, AudioButton otherwise).
    */
-  onClipChange?: (movieId: string | null) => void;
+  onClipChange?: (hasClip: boolean) => void;
   /**
    * Masks the sentence cue while editing; context cues stay verbatim.
    */
@@ -74,6 +74,10 @@ export function VideoClipPlayer({
   const [clip, setClip] = useState<ClipState>({ status: "loading" });
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
+  // The clip whose poster frame has been painted. Until then the player
+  // stays invisible: revealing it as soon as the bytes arrive showed an
+  // empty box, then frame zero, then the jump to the poster frame.
+  const [revealedUrl, setRevealedUrl] = useState<string>();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const unregisterRef = useRef<(() => void) | undefined>(undefined);
   const hasPlayedRef = useRef(false);
@@ -108,7 +112,7 @@ export function VideoClipPlayer({
         if (cancelled) return;
         if (result === undefined || result === null) {
           setClip({ status: "unavailable" });
-          onClipChangeRef.current?.(null);
+          onClipChangeRef.current?.(false);
           return;
         }
         // Copy into a fresh Uint8Array: the wasm-bindgen bytes are typed
@@ -123,12 +127,12 @@ export function VideoClipPlayer({
           subtitles: result.subtitles,
           movieId: result.movie_id,
         });
-        onClipChangeRef.current?.(result.movie_id);
+        onClipChangeRef.current?.(true);
       } catch (error) {
         console.error("Failed to fetch movie clip:", error);
         if (!cancelled) {
           setClip({ status: "unavailable" });
-          onClipChangeRef.current?.(null);
+          onClipChangeRef.current?.(false);
         }
       }
     })();
@@ -194,9 +198,18 @@ export function VideoClipPlayer({
   );
 
   const movie = deck ? deck.get_movie_metadata([clip.movieId])[0] : undefined;
+  // Playing counts too, in case a browser never reports the poster seek.
+  const revealed = revealedUrl === clip.url || isPlaying;
 
   return (
-    <div className="relative animate-feedback-in">
+    <div
+      className={
+        revealed
+          ? "relative animate-feedback-in"
+          : // Out of flow, so the hidden player takes no space while it loads.
+            "pointer-events-none absolute inset-x-0 translate-y-2.5 opacity-0"
+      }
+    >
       <div className="relative w-full overflow-hidden rounded-lg">
         <video
           ref={videoRef}
@@ -217,6 +230,7 @@ export function VideoClipPlayer({
               video.currentTime = clip.criticalStartMs / 1000;
             }
           }}
+          onSeeked={() => setRevealedUrl(clip.url)}
           onTimeUpdate={() => {
             const video = videoRef.current;
             if (video) setCurrentTimeMs(video.currentTime * 1000);
@@ -231,7 +245,7 @@ export function VideoClipPlayer({
             // Cached bytes the element can't decode: forget them so the next
             // load refetches, and drop back to the audio-only layout.
             setClip({ status: "unavailable" });
-            onClipChangeRef.current?.(null);
+            onClipChangeRef.current?.(false);
             void invalidate_clip_cache(language, text).catch((error) => {
               console.error("Failed to invalidate clip cache:", error);
             });
