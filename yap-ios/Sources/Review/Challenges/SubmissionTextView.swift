@@ -24,8 +24,15 @@ struct SubmissionTextView: UIViewRepresentable {
     func updateUIView(_ view: UITextView, context: Context) {
         context.coordinator.parent = self
         if view.text != text { view.text = text }
-        if focused && !view.isFirstResponder { view.becomeFirstResponder() }
-        if !focused && view.isFirstResponder { view.resignFirstResponder() }
+        // Change the responder after this update, not during it: doing it here
+        // makes UIKit query the hosting view's graph mid-update and fires the
+        // delegate that writes `focused`, a cycle SwiftUI can hang on (a
+        // watchdog kill seen in 1.0.3 as the app went to the background).
+        guard focused != view.isFirstResponder else { return }
+        DispatchQueue.main.async { [focused] in
+            if focused && !view.isFirstResponder { view.becomeFirstResponder() }
+            if !focused && view.isFirstResponder { view.resignFirstResponder() }
+        }
     }
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
         let width = proposal.width ?? 260
