@@ -20,7 +20,9 @@ struct SenseRedundancyResponse {
     redundancy_sets: Vec<Vec<usize>>,
 }
 
-fn validate_sets(sets: Vec<Vec<usize>>, members: &[Entry]) -> Vec<Vec<Entry>> {
+/// Resolves the model's member indices to entries, dropping out-of-range and
+/// already-claimed indices and any set left with fewer than two members.
+fn resolve_redundancy_sets(sets: Vec<Vec<usize>>, members: &[Entry]) -> Vec<Vec<Entry>> {
     let mut seen = BTreeSet::new();
     sets.into_iter()
         .filter_map(|set| {
@@ -166,7 +168,7 @@ pub async fn find_redundant_senses(
                 .inspect_err(|error| eprintln!("sense redundancy failed for '{text}': {error}"))
                 .ok()?;
             let members: Vec<_> = members.iter().map(|(gram, _)| gram.clone()).collect();
-            let sets = validate_sets(response.redundancy_sets, &members);
+            let sets = resolve_redundancy_sets(response.redundancy_sets, &members);
             (!sets.is_empty()).then(|| (text.clone(), sets))
         })
         .collect();
@@ -203,7 +205,7 @@ mod tests {
     }
 
     #[test]
-    fn validates_cross_gram_disjoint_sets() {
+    fn resolves_cross_gram_disjoint_sets() {
         let member = |word: &str| TaggedGram {
             gram: Gram(
                 word.split_whitespace()
@@ -227,7 +229,7 @@ mod tests {
         let b = member("il est");
         let members = vec![a.clone(), b.clone(), a.clone()];
         assert_eq!(
-            validate_sets(vec![vec![0, 0, 99, 3], vec![0, 1, 2], vec![1, 2]], &members),
+            resolve_redundancy_sets(vec![vec![0, 0, 99, 3], vec![0, 1, 2], vec![1, 2]], &members),
             vec![vec![a, b]]
         );
     }
