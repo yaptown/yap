@@ -391,7 +391,9 @@ export function AudioButton({
             }
           } catch (error) {
             if (isAbort(error)) throw error;
-            console.error("Failed to play pre-audio:", error);
+            // The wake-up clip is best-effort and the real clip still plays,
+            // so this isn't an error worth reporting.
+            console.warn("Failed to play pre-audio:", error);
           }
         }
 

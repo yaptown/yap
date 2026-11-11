@@ -68,12 +68,17 @@ let dpr = 1;
 let frame: number | null = null;
 let lastTime = 0;
 
-function compile(type: number, src: string): WebGLShader {
-  const shader = gl!.createShader(type)!;
+/** Null when the context is lost (createShader returns null then), in which
+ *  case the grid just isn't drawn. */
+function compile(type: number, src: string): WebGLShader | null {
+  const shader = gl!.createShader(type);
+  if (!shader) return null;
   gl!.shaderSource(shader, src);
   gl!.compileShader(shader);
-  if (!gl!.getShaderParameter(shader, gl!.COMPILE_STATUS))
+  if (!gl!.getShaderParameter(shader, gl!.COMPILE_STATUS)) {
+    if (gl!.isContextLost()) return null;
     throw new Error(gl!.getShaderInfoLog(shader) ?? "shader");
+  }
   return shader;
 }
 
@@ -109,12 +114,24 @@ function init(
     powerPreference: "low-power",
   });
   if (!gl) return;
-  program = gl.createProgram()!;
-  gl.attachShader(program, compile(gl.VERTEX_SHADER, VERT));
-  gl.attachShader(program, compile(gl.FRAGMENT_SHADER, FRAG));
-  gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-    throw new Error(gl.getProgramInfoLog(program) ?? "program");
+  const vert = compile(gl.VERTEX_SHADER, VERT);
+  const frag = compile(gl.FRAGMENT_SHADER, FRAG);
+  const linked = gl.createProgram();
+  if (!vert || !frag || !linked) {
+    gl = null;
+    return;
+  }
+  gl.attachShader(linked, vert);
+  gl.attachShader(linked, frag);
+  gl.linkProgram(linked);
+  if (!gl.getProgramParameter(linked, gl.LINK_STATUS)) {
+    if (gl.isContextLost()) {
+      gl = null;
+      return;
+    }
+    throw new Error(gl.getProgramInfoLog(linked) ?? "program");
+  }
+  program = linked;
   posBuffer = gl.createBuffer();
   velBuffer = gl.createBuffer();
   gl.enable(gl.BLEND);
