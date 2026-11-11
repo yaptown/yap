@@ -1,13 +1,13 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-dire quelque chose	filled	10399	10	12	0.83	yes	"Au pas de course", ça veut dire "cours".	dire … cours
-dire quelque chose	clitic	2660	10	12	0.83	yes	Je croyais t'avoir dit de ne pas venir ici.	t' … dit
+dire quelque chose	filled	10390	10	12	0.83	yes	"Au pas de course", ça veut dire "cours".	dire … cours
+dire quelque chose	clitic	2658	10	12	0.83	yes	Je croyais t'avoir dit de ne pas venir ici.	t' … dit
 sa mère	clitic	2390	12	12	1.00	yes		
-sortir quelque chose	filled	789	9	12	0.75	yes	Je croyais que j'allais m'en sortir tout seul.	m' … sortir
-arriver à quelqu'un	filled	691	7	12	0.58	no	Hier, je suis arrivé à Tokyo.	arrivé … à … Tokyo
-arriver à quelqu'un	clitic	615	12	12	1.00	yes		
-sortir quelque chose	clitic	397	8	12	0.67	yes	Comment vas-tu t'en sortir sans boulot ?	t' … sortir
+sortir quelque chose	filled	786	9	12	0.75	yes	Je croyais que j'allais m'en sortir tout seul.	m' … sortir
+arriver à quelqu'un	filled	688	7	12	0.58	no	Hier, je suis arrivé à Tokyo.	arrivé … à … Tokyo
+arriver à quelqu'un	clitic	612	12	12	1.00	yes		
+sortir quelque chose	clitic	395	8	12	0.67	yes	Comment vas-tu t'en sortir sans boulot ?	t' … sortir
 désolé de faire quelque chose	infinitive	264	12	12	1.00	yes		
-ravi de faire quelque chose	infinitive	227	12	12	1.00	yes		
+ravi de faire quelque chose	infinitive	226	12	12	1.00	yes		
 faire de son mieux	clitic	161	12	12	1.00	yes		
 sa mère	filled	148	10	12	0.83	yes	J'ai la meilleure mère du monde !	mère … monde
 bien dans ses baskets	clitic	96	0	12	0.00	no	C'est la seconde fois que je te reprends mon bien.	mon … bien
@@ -40,8 +40,8 @@ perdre son chemin	clitic	12	12	12	1.00	yes
 prendre son parti	clitic	11	4	11	0.36	no	J'ai décidé de prendre son parti contre les autres.	prendre … son … parti
 être victime de son succès	filled	11	0	11	0.00	no	Ce criminel est une victime de ses gènes.	est … victime … de … gènes
 avoir son compte	clitic	10	9	9	1.00	yes		
-de son choix	clitic	10	5	9	0.56	no	Elle veut être libre de ses choix.	de … ses … choix
 dans son coin	filled	9	0	9	0.00	no	Aujourd'hui, je veux te baiser dans chaque coin de cette pièce.	dans … coin … pièce
+de son choix	clitic	9	5	9	0.56	no	Elle veut être libre de ses choix.	de … ses … choix
 en croire ses yeux	clitic	9	9	9	1.00	yes		
 faire son possible	filled	9	9	9	1.00	yes		
 heureux de faire quelque chose	infinitive	9	7	7	1.00	yes		

@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 5395519
-Total errors: 3714
+Total predictions: 5378756
+Total errors: 3708
 Accuracy: 99.93%
 
 ## Error Patterns (sorted by frequency)
@@ -1651,13 +1651,6 @@ Accuracy: 99.93%
 - Examples:
   - C'est-- Tu sais.
   - J'appelle parce que-- Tu sais ce qui est arrivé au collège ?
-
-### "--" + "qui" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Leur pouvoir vient de leur leader-- qui est en quelque sorte leur cerveau.
-  - Monsieur, je me demandais-- simple curiosité-- qui auriez-vous choisi pour Eve ?
 
 ### "--" + "un" (2 occurrences)
 - Predicted: None
@@ -3380,18 +3373,6 @@ Accuracy: 99.93%
 - Examples:
   - Je veux faire un élevage moderne-- En plein air !
 
-### "--" + "Facteur" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Distorsion-- Facteur sept.
-
-### "--" + "Il" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Une guerre-- Il y a des milliers de siècles.
-
 ### "--" + "Kirill Matféevitch" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3428,12 +3409,6 @@ Accuracy: 99.93%
 - Examples:
   - Je pense que c'est-- Super.
 
-### "--" + "images" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Pouvez-vous lire ces pensées-- images de haine, de meurtre ?
-
 ### "--" + "je" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3452,23 +3427,17 @@ Accuracy: 99.93%
 - Examples:
   - Les filets-- quels filets ?
 
-### "--" + "simple" (1 occurrences)
+### "--" + "qui" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Monsieur, je me demandais-- simple curiosité-- qui auriez-vous choisi pour Eve ?
+  - Leur pouvoir vient de leur leader-- qui est en quelque sorte leur cerveau.
 
 ### "--" + "thérapie" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Je te jetterais dans l'océan-- thérapie de choc.
-
-### "--" + "une" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Cette arme est en surchauffe et va provoquer-- une immense explosion.
 
 ### ";" + """ (1 occurrences)
 - Predicted: None
