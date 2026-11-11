@@ -116,6 +116,7 @@ impl TmdbMovie {
 #[derive(Debug, Deserialize)]
 struct TmdbFindResponse {
     movie_results: Vec<TmdbMovie>,
+    tv_episode_results: Vec<serde::de::IgnoredAny>,
 }
 
 pub struct TmdbClient {
@@ -152,6 +153,12 @@ impl TmdbClient {
         let response_text = response.text().await.map_err(reqwest::Error::without_url)?;
         let find_response: TmdbFindResponse = serde_json::from_str(&response_text)?;
 
+        // TMDB also lists some episodes (pilots, finales shown in cinemas) as
+        // movies. Episodes stay out of the movie corpus until shows have their
+        // own pack format, so they get no metadata row.
+        if !find_response.tv_episode_results.is_empty() {
+            return Err(anyhow!("IMDB ID {imdb_id} is a TV episode"));
+        }
         if find_response.movie_results.is_empty() {
             return Err(anyhow!("No movie found for IMDB ID {imdb_id}"));
         }
