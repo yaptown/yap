@@ -588,12 +588,12 @@ pub async fn create_sense_definitions(
         .map(|entry| {
             let gram = &entry.gram;
             let usage = &inventories[&gram.gram].usages[gram.sense.unwrap().get() as usize - 1];
-            // The inventory is shared by a language's dialects and outlives
-            // bans, so keep only anchors still in this course's corpus.
+            // The inventory outlives corpus filtering. Generated anchors must
+            // still be in this course; handwritten manual examples need not be.
             let mut anchors: Vec<_> = usage
                 .anchors
                 .iter()
-                .filter(|anchor| corpus.contains(&anchor.sentence))
+                .filter(|anchor| usage.is_manual() || corpus.contains(&anchor.sentence))
                 .collect();
             anchors.sort_by_key(|anchor| !anchor.gold);
             let preferred: Vec<_> = anchors.iter().map(|a| a.sentence.clone()).collect();

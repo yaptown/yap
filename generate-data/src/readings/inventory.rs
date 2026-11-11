@@ -11,8 +11,7 @@ fn leaf(sense: u32, reading: &str) -> Choice {
 fn count(counts: &Counts, sense: u32, reading: &str) -> usize {
     counts.get(&leaf(sense, reading)).copied().unwrap_or(0)
 }
-/// First choices a meaning needs, summed across every reading variant.
-pub(super) const MIN_ATTESTATIONS: usize = 3;
+pub(super) use crate::sense_labels::MIN_ATTESTATIONS;
 
 /// This map changes only retained identities (temporary -> implicit/durable).
 /// A missing ID means reject the sentence, never choose a different meaning.
@@ -259,7 +258,10 @@ fn materialize(
             row.retire_usages();
         }
     }
-    assert!(rows.iter().all(|r| r.usages.len() >= 2));
+    assert!(
+        rows.iter()
+            .all(|r| r.usages.len() >= 2 || r.usages.iter().any(UsageEntry::is_manual))
+    );
     println!(
         "readings[{}]: attestation new_senses_before={new_before}, new_senses_after={new_after}, appended_slots={appended_slots}, pruned_senses={pruned_senses}, dropped_sentences={}, monosemous_grams={monosemous}",
         language.code(),
@@ -302,7 +304,10 @@ pub(super) fn finish(
         }
     }
     file.flush()?;
-    assert!(rows.iter().all(|r| r.usages.len() >= 2));
+    assert!(
+        rows.iter()
+            .all(|r| r.usages.len() >= 2 || r.usages.iter().any(UsageEntry::is_manual))
+    );
     write_inventories(
         &format!(
             "generate-data/data/{}/usage_inventories.jsonl",
@@ -782,6 +787,30 @@ mod tests {
         row.retire_usages();
         let matched = stable_ids(&row, &senses, Language::Japanese, &evidence);
         assert_eq!(matched, BTreeMap::from([(1, 3), (2, 4)]));
+
+        // A manual-only ledger survives absent corpus evidence unchanged,
+        // and reading reconciliation cannot reclaim its slot.
+        row.usages = vec![usage(None, Some("manual"), "handwritten")];
+        row.usages[0].n_assigned = 0;
+        let original = serde_json::to_string(&row).unwrap();
+        let mut rows = vec![row];
+        materialize(
+            &mut CorpusReadings::default(),
+            &mut rows,
+            &BTreeMap::new(),
+            Language::Japanese,
+            &BTreeMap::new(),
+        );
+        assert_eq!(serde_json::to_string(&rows[0]).unwrap(), original);
+        assert_eq!(
+            stable_ids(
+                &rows[0],
+                &[s(1, &["あ"])],
+                Language::Japanese,
+                &BTreeMap::new()
+            ),
+            BTreeMap::from([(1, 2)])
+        );
     }
     #[test]
     fn every_old_slot_retires_and_new_senses_land_past_the_high_water_mark() {

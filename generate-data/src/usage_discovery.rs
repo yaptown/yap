@@ -1472,6 +1472,14 @@ pub struct UsageAnchor {
     pub gold: bool,
 }
 
+/// One persistent, one-based sense slot in `UsageInventory::usages`.
+/// Manual additions append (never reorder or replace slots) with `source: "manual"`,
+/// `kind` (meaning/construction/formula), a target-language `gloss`, and `anchors`.
+/// Handwritten anchors contain `sentence`, Unicode character `spans` (end-exclusive),
+/// and `gold: true`; they may be outside the corpus and remain dictionary examples.
+/// Set `n_gold`, `n_assigned`, and `loo_correct` to zero; omit `readings` for meaning
+/// labels. Manual slots remain live and untouched by automated reconciliation.
+/// See `generate-data/data/usage-inventories.md` and the `manual_senses` CLI.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UsageEntry {
     /// Reading-created slots are an output ledger, not semantic input to B.
@@ -1498,6 +1506,14 @@ pub struct UsageEntry {
 }
 
 impl UsageEntry {
+    pub fn is_manual(&self) -> bool {
+        self.source.as_deref() == Some("manual")
+    }
+
+    pub fn is_live(&self) -> bool {
+        self.n_assigned > 0 || self.is_manual()
+    }
+
     pub(crate) fn is_reading_split(&self) -> bool {
         self.source
             .as_deref()
@@ -1537,6 +1553,9 @@ pub struct UsageInventory {
 impl UsageInventory {
     pub(crate) fn retire_usages(&mut self) {
         for usage in &mut self.usages {
+            if usage.is_manual() {
+                continue;
+            }
             if !usage.is_reading_split() {
                 usage.readings = None;
             }
@@ -1555,7 +1574,7 @@ impl UsageInventory {
                 .usages
                 .iter()
                 .zip(1..)
-                .filter(|(u, _)| !u.is_reading_split())
+                .filter(|(u, _)| !u.is_reading_split() && !u.is_manual())
                 .map(|(u, id)| {
                     (
                         id,
@@ -2983,9 +3002,33 @@ pub async fn assign_senses(
                 .collect::<Result<Vec<UsageInventory>, _>>()?
         }
     };
+    let labels = if language_utils::readings::supports_readings(language) {
+        readings.sense_labels()
+    } else {
+        crate::sense_labels::generate(
+            language,
+            app,
+            restricted,
+            interners,
+            &rows,
+            None,
+            &Path::new("out").join(language.corpus_code()),
+        )
+        .await?
+    };
+    // Freeze direct evidence before ranked alternatives or frequency fallbacks
+    // can inflate a sense's support. The readings pipeline already pruned CJK.
+    let mut first_choices = HashMap::<_, usize>::new();
+    for (text, info) in app.iter().chain(restricted.iter()) {
+        for (index, token) in info.sentence.tokens.iter().enumerate() {
+            if let Some(crate::sense_labels::Label::Ranked(senses)) = labels.get(text, index) {
+                *first_choices.entry((token.gram, senses[0])).or_default() += 1;
+            }
+        }
+    }
     let mut inventories = BTreeMap::new();
     struct Classifier {
-        has_readings: Vec<bool>,
+        available: Vec<bool>,
         centroids: Vec<(NonZeroU32, Vec<f32>)>,
         counts: Vec<u32>,
         historical: Vec<usize>,
@@ -3005,31 +3048,50 @@ pub async fn assign_senses(
             );
             continue;
         };
-        let has_readings: Vec<_> = (1..=inventory.usages.len())
-            .map(|i| readings.has_observed_sense(&inventory.gram, i as u32))
+        let available: Vec<_> = (1..=inventory.usages.len())
+            .map(|i| {
+                readings.has_observed_sense(&inventory.gram, i as u32)
+                    || (!language_utils::readings::supports_readings(language)
+                        && first_choices
+                            .get(&(gram, NonZeroU32::new(i as u32).unwrap()))
+                            .copied()
+                            .unwrap_or(0)
+                            >= crate::sense_labels::MIN_ATTESTATIONS)
+            })
             .collect();
+        // Like an absent inventory, a monosemous gram uses the implicit entry.
+        if !language_utils::readings::supports_readings(language)
+            && available.iter().filter(|&&attested| attested).count() <= 1
+        {
+            continue;
+        }
         let mut centroids = Vec::new();
         for (index, usage) in inventory.usages.iter_mut().enumerate() {
-            usage.anchors.retain(|anchor| {
-                app.contains_key(&anchor.sentence) || restricted.contains_key(&anchor.sentence)
-            });
+            if !language_utils::readings::supports_readings(language) && !available[index] {
+                continue;
+            }
+            if !usage.is_manual() {
+                usage.anchors.retain(|anchor| {
+                    app.contains_key(&anchor.sentence) || restricted.contains_key(&anchor.sentence)
+                });
+            }
             match entry_centroid(store, language, &inventory.key, usage).await {
                 Ok(vector) => {
                     centroids.push((NonZeroU32::new(u32::try_from(index + 1)?).unwrap(), vector))
                 }
                 Err(_) => {
-                    if !has_readings[index] {
+                    if !available[index] && !usage.is_manual() {
                         usage.anchors.clear();
                     }
                     skipped += 1;
                 }
             }
         }
-        if !centroids.is_empty() || has_readings.iter().any(|&observed| observed) {
+        if !centroids.is_empty() || available.iter().any(|&observed| observed) {
             classifiers.insert(
                 gram,
                 Classifier {
-                    has_readings,
+                    available,
                     centroids,
                     counts: vec![0; inventory.usages.len()],
                     historical: inventory
@@ -3067,15 +3129,29 @@ pub async fn assign_senses(
                 .collect();
             word_index += word_count;
             let Some(Classifier {
-                centroids, counts, ..
+                available,
+                centroids,
+                counts,
+                ..
             }) = classifiers.get_mut(&token.gram)
             else {
                 continue;
             };
-            if let Some(sense) = readings.sense(text, gram_index) {
-                token.sense = Some(sense);
-                counts[sense.get() as usize - 1] += 1;
-                tagged += 1;
+            if let Some(label) = labels.get(text, gram_index) {
+                match label {
+                    crate::sense_labels::Label::Ranked(senses) => {
+                        token.sense = senses
+                            .iter()
+                            .copied()
+                            .find(|sense| available[sense.get() as usize - 1]);
+                        if let Some(sense) = token.sense {
+                            counts[sense.get() as usize - 1] += 1;
+                            tagged += 1;
+                        }
+                    }
+                    // Defer to the frozen frequency choice below, not a centroid.
+                    crate::sense_labels::Label::FrequencyFallback => token.sense = None,
+                }
                 continue;
             }
             if spans.is_empty() {
@@ -3104,7 +3180,7 @@ pub async fn assign_senses(
         .map(|(gram, classifier)| {
             let index = (0..classifier.counts.len())
                 .filter(|&i| {
-                    classifier.has_readings[i]
+                    classifier.available[i]
                         || classifier
                             .centroids
                             .iter()
@@ -3458,6 +3534,20 @@ mod tests {
         let mut again = inventory(&["combined", "third"]);
         again.keep_sense_ids(merged, &evidence(&again));
         assert_eq!(serde_json::to_string(&again).unwrap(), bytes);
+
+        // Manual slots are never candidates for discovery matching, even
+        // when their gloss and evidence match a newly discovered usage.
+        let mut manual = inventory(&["again"]);
+        manual.usages[0].source = Some("manual".into());
+        manual.usages[0].n_assigned = 0;
+        let saved = serde_json::to_string(&manual.usages[0]).unwrap();
+        assert!(manual.usages[0].is_live());
+        let mut discovered = inventory(&["again"]);
+        discovered.keep_sense_ids(manual, &evidence(&discovered));
+        assert_eq!(discovered.usages.len(), 2);
+        discovered.retire_usages();
+        assert_eq!(serde_json::to_string(&discovered.usages[0]).unwrap(), saved);
+        assert!(!discovered.usages[1].is_live());
     }
 
     fn vec2(x: f32, y: f32) -> Vec<f32> {

@@ -2086,12 +2086,8 @@ impl Args {
                 "--readings-sample conflicts with --sync-cache and --pronunciation-audio-only"
             );
             anyhow::ensure!(
-                !parsed.lang_filter.is_empty()
-                    && parsed
-                        .lang_filter
-                        .iter()
-                        .all(|code| matches!(code.as_str(), "jpn" | "zho-hans")),
-                "--readings-sample requires explicit jpn and/or zho-hans language codes"
+                !parsed.lang_filter.is_empty(),
+                "--readings-sample requires explicit language codes"
             );
         }
         let known: BTreeSet<&str> = COURSES.iter().map(|c| c.target_language.code()).collect();
@@ -2191,7 +2187,6 @@ mod args_tests {
             vec!["--readings-sample", "-1", "jpn"],
             vec!["--readings-sample", "inf", "jpn"],
             vec!["--readings-sample", "5"],
-            vec!["--readings-sample", "5", "fra"],
             vec!["--readings-sample", "5", "jpn", "--sync-cache"],
             vec![
                 "--readings-sample",

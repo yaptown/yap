@@ -44,6 +44,27 @@ pub async fn run(sample: Sample, languages: &BTreeSet<String>) -> Result<()> {
         let sentences = sentences.context("sample source loading requires warm subtitle caches")?;
         let segmented =
             crate::pipeline::segment_corpus(course, &sentences, Some(scratch.path())).await?;
+        if !supports_readings(course.target_language) {
+            let path = format!(
+                "generate-data/data/{}/usage_inventories.jsonl",
+                course.target_language.corpus_code()
+            );
+            let rows = std::fs::read_to_string(path)?
+                .lines()
+                .map(serde_json::from_str)
+                .collect::<Result<Vec<UsageInventory>, _>>()?;
+            crate::sense_labels::generate(
+                course.target_language,
+                &segmented.nlp_sentences,
+                &segmented.restricted_nlp_sentences,
+                &segmented.interners,
+                &rows,
+                Some(sample.percent),
+                &root.join(course.target_language.corpus_code()),
+            )
+            .await?;
+            continue;
+        }
         let store = crate::cache_remote::store();
         crate::token_embeddings::ensure_token_embeddings(
             course.target_language,

@@ -202,6 +202,7 @@ pub mod reader_book_sentences;
 pub mod reader_books;
 pub mod readings;
 mod sense_identity;
+pub mod sense_labels;
 pub mod sense_redundancy;
 pub mod slot_analysis;
 pub mod strokes;

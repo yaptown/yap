@@ -26,6 +26,7 @@ mod kanjidic;
 mod occurrence;
 mod phrases;
 mod prompts;
+pub(crate) use prompts::FRAGMENT_NOTE;
 mod repair_samples;
 mod review;
 mod sample;
@@ -91,7 +92,7 @@ fn model_answer_or_fatal<T>(
 }
 
 /// One item per request. All provider-sized jobs are submitted together.
-async fn batch<'a, I, T: serde::de::DeserializeOwned + JsonSchema>(
+pub(crate) async fn batch<'a, I, T: serde::de::DeserializeOwned + JsonSchema>(
     client: &ChatClient,
     system: &str,
     items: &'a [I],
@@ -1224,7 +1225,10 @@ impl CorpusReadings {
             .lines()
             .map(serde_json::from_str)
             .collect::<Result<_, _>>()?;
-        assert!(rows.iter().all(|r| r.usages.len() >= 2));
+        assert!(
+            rows.iter()
+                .all(|r| r.usages.len() >= 2 || r.usages.iter().any(UsageEntry::is_manual))
+        );
         inventory::finish(self, &mut rows, groups, language)?;
         self.inventories = Some(rows);
         if !tysm::measurement::enabled() {
@@ -1237,6 +1241,13 @@ impl CorpusReadings {
         self.hierarchies
             .get(gram)
             .is_some_and(|senses| senses.iter().any(|s| s.index == sense))
+    }
+
+    pub(crate) fn sense_labels(&self) -> crate::sense_labels::SenseLabels {
+        self.labels
+            .iter()
+            .filter_map(|(key, label)| Some((key.clone(), NonZeroU32::new(label.first()?.sense)?)))
+            .collect()
     }
 
     pub fn sense(&self, text: &str, gram_index: usize) -> Option<NonZeroU32> {
