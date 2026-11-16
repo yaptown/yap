@@ -3028,7 +3028,7 @@ mod tests {
             }
         }
         deck = Deck::finalize(state, &deck.context);
-        assert!(deck.get_percent_of_words_known() < 1.0);
+        assert!(deck.get_fraction_of_words_known() < 1.0);
         assert!(deck.anki_export_view(None).too_advanced);
         assert!(deck.anki_export_view(None).too_advanced_message.is_some());
     }

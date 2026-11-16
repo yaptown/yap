@@ -3182,7 +3182,9 @@ impl Deck {
         }
     }
 
-    pub fn get_percent_of_words_known(&self) -> f64 {
+    /// Frequency-weighted share of the language the learner knows, as a
+    /// fraction in 0.0..=1.0 (multiply by 100 for a percentage).
+    pub fn get_fraction_of_words_known(&self) -> f64 {
         let written = self.get_comprehensible_written_grams(true);
         let listening = self.get_comprehensible_listening_grams(true);
         Self::percent_known_in(

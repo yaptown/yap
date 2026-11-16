@@ -370,7 +370,7 @@ impl DeckSimulation {
             samples.push(SimulationSample {
                 day: self.day.get(),
                 goal_percent,
-                overall_percent: deck.get_percent_of_words_known() * 100.0,
+                overall_percent: deck.get_fraction_of_words_known() * 100.0,
                 reviews,
                 total_reviews: deck.get_total_reviews() as u32,
                 new_cards: total_cards.saturating_sub(cards_before) as u32,

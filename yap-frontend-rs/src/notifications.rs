@@ -319,7 +319,7 @@ impl Deck {
 
         let xp = self.stats.xp;
 
-        let percent_known = self.get_percent_of_words_known() * 100.0;
+        let percent_known = self.get_fraction_of_words_known() * 100.0;
 
         let language = self.context.course.target_language;
 
