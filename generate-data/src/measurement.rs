@@ -328,7 +328,7 @@ async fn later_stages(
     readings: &mut crate::readings::CorpusReadings,
     stages: &mut std::fs::File,
 ) -> Result<()> {
-    use language_utils::{Atom, Gram, SentenceGram};
+    use language_utils::{Atom, Gram};
     use std::collections::{BTreeMap, HashSet};
     let lang = course.target_language;
     let overlays_complete = segmented.measurement.overlays_ready();
@@ -383,32 +383,21 @@ async fn later_stages(
     {
         return Ok(());
     }
-    let initial = crate::pipeline::initial_gram_frequencies(&segmented.gram_vocabulary);
-    let allowed: HashSet<_> = initial
-        .iter()
-        .filter(|entry| entry.count > 3)
-        .map(|entry| entry.gram.gram.clone())
-        .collect();
     let encoded: Vec<_> = segmented
         .nlp_sentences
         .iter()
         .map(|(text, info)| (text.clone(), info.sentence.clone()))
         .collect();
-    let sentences: Vec<_> = crate::pipeline::sentence_grams(
-        &encoded,
-        &segmented.nlp_sentences,
+    let sentences = crate::pipeline::drop_sentences_with_rare_grams(
+        crate::pipeline::sentence_grams(
+            &encoded,
+            &segmented.nlp_sentences,
+            &segmented.gram_vocabulary,
+            readings,
+            &readings.canonical_phrases(&segmented.nlp_sentences),
+        ),
         &segmented.gram_vocabulary,
-        readings,
-        &readings.canonical_phrases(&segmented.nlp_sentences),
-    )
-    .into_iter()
-    .filter(|(_, sentence)| {
-        sentence.grams.iter().all(|gram| match gram {
-            SentenceGram::Learnable(gram) => allowed.contains(&gram.sense.gram),
-            SentenceGram::Obvious(_) => true,
-        })
-    })
-    .collect();
+    );
     let frequencies = pack_builder::aggregate_sense_frequencies(
         &crate::frequencies::compute_reading_gram_frequencies(
             &sentences,

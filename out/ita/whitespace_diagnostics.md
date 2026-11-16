@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 3604202
-Total errors: 6389
+Total predictions: 3604476
+Total errors: 6385
 Accuracy: 99.82%
 
 ## Error Patterns (sorted by frequency)
@@ -22,7 +22,7 @@ Accuracy: 99.82%
   - "Cara Elsa, "volevo solo farti sapere che ora non voglio rompere con te.
   - "Caravan", "Whiplash".
 
-### """ + "in" (72 occurrences)
+### """ + "in" (73 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -86,13 +86,13 @@ Accuracy: 99.82%
   - "Ben fatto" è meglio di "ben detto".
   - "Cavalli" è il plurale di "cavallo".
 
-### "chiama" + """ (50 occurrences)
+### "chiama" + """ (51 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
+  - Ah, si chiama "day for night" in inglese.
   - Allora si chiama "Juri", non "Yuri".
   - C'è una canzone che si chiama "L'amore muore all'alba".
-  - Cipro si chiama "Kıbrıs" in turco.
 
 ### "dire" + """ (50 occurrences)
 - Predicted: None
@@ -2686,14 +2686,6 @@ Accuracy: 99.82%
   - «Fermi tutti», annunciò infine Vickisdotr da prua.
   - «Quasi tutti» rispose.
 
-### "un" + "'" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Io prego ogni sera prima di dormire, è un'abitudine che ho fin da bambino.
-  - Non credo che stia scherzando, ha un'aria molto seria.
-  - Quella francese bionda che lavora in ambasciata è un'amica di mia cugina.
-
 ### "vede" + "?" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2976,6 +2968,13 @@ Accuracy: 99.82%
 - Examples:
   - Esperanto - perché lei capisca il mondo.
   - Esperanto - perché tu capisca il mondo.
+
+### "--" + "No" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Rabbia -- No.
+  - Sì-- No.
 
 ### "." + """ (2 occurrences)
 - Predicted: None
@@ -5840,12 +5839,6 @@ Accuracy: 99.82%
 - Examples:
   - Lo so- Lo so- Sento quello che stai dicendo.
 
-### "-" + "No" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Sì-- No.
-
 ### "-" + "Oltre" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6007,12 +6000,6 @@ Accuracy: 99.82%
 - Actual: Space
 - Examples:
   - Non sono una-- Hai capito?
-
-### "--" + "No" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Rabbia -- No.
 
 ### "--" + "Va" (1 occurrences)
 - Predicted: None
@@ -9146,12 +9133,6 @@ Accuracy: 99.82%
 - Examples:
   - Ululando "Booon, boooon!"
 
-### "Un" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Un'occhiata veloce al telefono e poi usciamo subito di casa.
-
 ### "Una" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -10604,12 +10585,6 @@ Accuracy: 99.82%
 - Examples:
   - Quando ti decidi a buttarla ?
 
-### "c" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Sì, ho capito perfettamente, non c'è bisogno di ripetere.
-
 ### "cacciato" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -11269,12 +11244,6 @@ Accuracy: 99.82%
 - Actual: Space
 - Examples:
   - E abbiamo due nuovi colleghi "scollegati".
-
-### "com" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Avanti, racconta, sono curioso di sapere com'è andata la serata.
 
 ### "come" + "?" (1 occurrences)
 - Predicted: None

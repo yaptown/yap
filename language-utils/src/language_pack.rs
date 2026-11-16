@@ -551,6 +551,10 @@ impl LanguagePack {
     }
 
     pub fn sentence_grams(&self, sentence: SentenceSpur) -> Option<SentenceGrams<SpurReadingGram>> {
+        Some(self.decode_sentence(sentence)?.sentence)
+    }
+
+    fn decode_sentence(&self, sentence: SentenceSpur) -> Option<sentence_codec::DecodedSentence> {
         Some(sentence_codec::decode(
             self.sentences
                 .encoded_sentences
@@ -558,6 +562,23 @@ impl LanguagePack {
                 .copied(),
             &self.written_ease_order.grams,
         ))
+    }
+
+    /// The sentence's grams and, when the pack has them, each word gram's
+    /// phoneme sequence (parallel to `grams`; format in [`crate::sentence_phonemes`]).
+    pub fn sentence_grams_with_phonemes(
+        &self,
+        sentence: SentenceSpur,
+    ) -> Option<(SentenceGrams<SpurReadingGram>, Option<Vec<String>>)> {
+        let decoded = self.decode_sentence(sentence)?;
+        let table = &self.sentences.gram_phonemes;
+        let phonemes = decoded.phoneme_variants.map(|variants| {
+            variants
+                .into_iter()
+                .map(|(key, variant)| table.text(&table.sequence(key, variant)))
+                .collect()
+        });
+        Some((decoded.sentence, phonemes))
     }
 
     pub fn senses_of(&self, gram: SpurGram) -> &[TaggedGram<SpurGram>] {
@@ -974,6 +995,8 @@ pub struct LanguagePackSentences {
     pub books: FxHashMap<String, BookMetadata>,
     pub sentence_sources: SentenceSources,
     pub encoded_sentences: lasso::CompressedRodeoReader<SentenceSpur, Vec<Symbol>, SentenceText>,
+    /// Each gram's phoneme sequences, which `encoded_sentences` pick from.
+    pub gram_phonemes: crate::sentence_phonemes::GramPhonemes,
     pub sentence_index: crate::sentence_index::SentenceIndex,
     pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
     pub pronunciation_audio: FxHashMap<String, PronunciationClip>,
@@ -1018,6 +1041,7 @@ impl LanguagePackSentences {
             books: FxHashMap::default(),
             sentence_sources: SentenceSources::default(),
             encoded_sentences: lasso::CompressedRodeoReader::default(),
+            gram_phonemes: Default::default(),
             sentence_index: crate::sentence_index::SentenceIndex::default(),
             human_audio: FxHashMap::default(),
             pronunciation_audio: FxHashMap::default(),

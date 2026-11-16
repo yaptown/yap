@@ -2,8 +2,11 @@ use language_utils::sentence_codec::{GramKey, SentencePlacement, Symbol};
 use language_utils::{SentenceGram, SentenceGrams, SpurReadingGram};
 use lasso::Key;
 
+/// `phoneme_variants`: each gram's phoneme sequence index, parallel to its
+/// grams, or `None` when the sentence has no phonemes.
 pub(crate) fn encode(
     sentence: &SentenceGrams<SpurReadingGram>,
+    phoneme_variants: Option<&[u32]>,
     grams: &mut lasso::Rodeo<SpurReadingGram, GramKey>,
     learnable_count: usize,
 ) -> Vec<Symbol> {
@@ -11,7 +14,10 @@ pub(crate) fn encode(
     if !sentence.capitalize_first {
         out.push(Symbol::lowercase());
     }
-    for gram in &sentence.grams {
+    if phoneme_variants.is_none() {
+        out.push(Symbol::no_phonemes());
+    }
+    for (i, gram) in sentence.grams.iter().enumerate() {
         let (gram, learnable) = match gram {
             SentenceGram::Learnable(gram) => (gram, true),
             SentenceGram::Obvious(gram) => (gram, false),
@@ -22,6 +28,11 @@ pub(crate) fn encode(
             "learnable gram has no ease rank"
         );
         out.push(Symbol::gram(key, learnable));
+        if let Some(variants) = phoneme_variants
+            && variants[i] > 0
+        {
+            out.push(Symbol::phoneme_variant(variants[i]));
+        }
     }
     for (terms, marker) in [
         (&sentence.multiword_terms, SentencePlacement::Phrases),
@@ -54,7 +65,7 @@ pub(crate) fn encode(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use language_utils::sentence_codec::decode;
+    use language_utils::sentence_codec::{DecodedSentence, decode};
     use language_utils::{
         MultiwordTermMatch, ReadingTaggedGram, SentenceSpur, SpurGram, TaggedGram,
     };
@@ -90,7 +101,9 @@ mod tests {
                 matched_word_indices: vec![1, 3],
             }],
         };
-        let symbols = encode(&sentence, &mut grams, 1);
+        // A variant past the gap range, one past a byte, and the common one.
+        let variants = [7_000_000, 0];
+        let symbols = encode(&sentence, Some(&variants), &mut grams, 1);
         assert_eq!(
             symbols
                 .iter()
@@ -104,8 +117,13 @@ mod tests {
                 .filter(|symbol| symbol.is_learnable())
                 .all(|symbol| symbol.key().index() == 0)
         );
+        let unphonemized = SentenceGrams {
+            capitalize_first: true,
+            ..sentence.clone()
+        };
         let mut sequences = lasso::Rodeo::<Vec<Symbol>, SentenceSpur>::new();
         let key = sequences.get_or_intern(symbols);
+        let unphonemized_key = sequences.get_or_intern(encode(&unphonemized, None, &mut grams, 1));
         let compressed = sequences.into_compressed_resolver();
         let grams = grams.into_reader();
         let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&(compressed, grams)).unwrap();
@@ -114,9 +132,23 @@ mod tests {
             RodeoReader<SpurReadingGram, GramKey>,
         );
         let archived = rkyv::access::<rkyv::Archived<Stored>, rkyv::rancor::Error>(&bytes).unwrap();
+        let keys = [
+            GramKey::try_from_usize(0).unwrap(),
+            GramKey::try_from_usize(1).unwrap(),
+        ];
         assert_eq!(
             decode(archived.0.resolve(&key).copied(), &archived.1),
-            sentence
+            DecodedSentence {
+                sentence,
+                phoneme_variants: Some(keys.into_iter().zip(variants).collect()),
+            }
+        );
+        assert_eq!(
+            decode(archived.0.resolve(&unphonemized_key).copied(), &archived.1),
+            DecodedSentence {
+                sentence: unphonemized,
+                phoneme_variants: None,
+            }
         );
     }
 }

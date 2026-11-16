@@ -204,6 +204,7 @@ pub mod readings;
 mod sense_identity;
 pub mod sense_labels;
 pub mod sense_redundancy;
+pub mod sentence_phonemes;
 pub mod slot_analysis;
 pub mod strokes;
 pub mod target_sentences;

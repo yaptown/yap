@@ -2349,13 +2349,15 @@ dependencies = [
 
 [[package]]
 name = "g2p"
-version = "0.6.1"
-source = "git+https://github.com/anchpop/g2p?rev=ef90533979a537469a2dc03546cb5d5c5d208c77#ef90533979a537469a2dc03546cb5d5c5d208c77"
+version = "0.8.0"
+source = "git+https://github.com/anchpop/g2p?rev=ee4e3494cb78c8e84825995bf56d2b4109935f46#ee4e3494cb78c8e84825995bf56d2b4109935f46"
 dependencies = [
  "cmake",
  "dirs",
  "g2p-types",
  "jpreprocess",
+ "jpreprocess-core",
+ "jpreprocess-dictionary",
  "libc",
  "serde",
  "serde_json",
@@ -2368,8 +2370,8 @@ dependencies = [
 
 [[package]]
 name = "g2p-types"
-version = "0.4.0"
-source = "git+https://github.com/anchpop/g2p?rev=ef90533979a537469a2dc03546cb5d5c5d208c77#ef90533979a537469a2dc03546cb5d5c5d208c77"
+version = "0.5.0"
+source = "git+https://github.com/anchpop/g2p?rev=ee4e3494cb78c8e84825995bf56d2b4109935f46#ee4e3494cb78c8e84825995bf56d2b4109935f46"
 dependencies = [
  "serde",
  "unicode-normalization",
@@ -2413,6 +2415,7 @@ dependencies = [
  "dotenvy",
  "env_logger",
  "futures",
+ "g2p",
  "gcp_auth",
  "google-speech",
  "half",
@@ -3779,8 +3782,8 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 
 [[package]]
 name = "lexide"
-version = "0.4.1"
-source = "git+https://github.com/anchpop/lexide.git?rev=65818d30c2fb53e696f692f33262f9f2e4645f31#65818d30c2fb53e696f692f33262f9f2e4645f31"
+version = "0.5.0"
+source = "git+https://github.com/anchpop/lexide.git?rev=7122564f3f4c85c80fa9ec0b1818920bf0df98f2#7122564f3f4c85c80fa9ec0b1818920bf0df98f2"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3807,7 +3810,7 @@ dependencies = [
 [[package]]
 name = "lexide-types"
 version = "0.1.1"
-source = "git+https://github.com/anchpop/lexide.git?rev=65818d30c2fb53e696f692f33262f9f2e4645f31#65818d30c2fb53e696f692f33262f9f2e4645f31"
+source = "git+https://github.com/anchpop/lexide.git?rev=7122564f3f4c85c80fa9ec0b1818920bf0df98f2#7122564f3f4c85c80fa9ec0b1818920bf0df98f2"
 dependencies = [
  "serde",
  "serde_plain",

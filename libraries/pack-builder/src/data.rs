@@ -48,6 +48,10 @@ pub struct ConsolidatedLanguageData {
     pub gram_frequencies: GramFrequencyList,
     /// Encoded sentences: sentence text -> grams with learnability and capitalize_first
     pub encoded_sentences: Vec<(String, ReadingSentence<Gram<String>, String>)>,
+    /// Each sentence's phoneme sequence per gram (format in
+    /// `language_utils::sentence_phonemes`), parallel to its encoded grams.
+    /// Sentences missing here are stored without phonemes.
+    pub sentence_phonemes: FxHashMap<String, Vec<String>>,
     /// Gram dictionary: definitions for grams (keyed by Gram for correct surface-form matching)
     pub gram_dictionary: BTreeMap<TaggedGram<Gram<String>>, DictionaryEntry>,
     /// Morpheme classification + info, keyed by (surface, canonical) pair.

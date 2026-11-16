@@ -31,11 +31,16 @@ pub(crate) fn render(
         symbols.next();
     }
     let atoms = symbols
-        .take_while(|symbol| matches!(symbol.kind(), SymbolKind::Gram(_)))
+        .map_while(|symbol| match symbol.kind() {
+            SymbolKind::Gram(key) => Some(Some(key)),
+            SymbolKind::NoPhonemes | SymbolKind::PhonemeVariant(_) => Some(None),
+            _ => None,
+        })
+        .flatten()
         .enumerate()
-        .flat_map(|(index, symbol)| {
+        .flat_map(|(index, key)| {
             cx.gram_rodeo
-                .resolve(&cx.grams.resolve(&symbol.key()).sense.gram)
+                .resolve(&cx.grams.resolve(&key).sense.gram)
                 .iter()
                 .map(move |atom| {
                     use crate::{Atom, Heteronym, Word, WordType};

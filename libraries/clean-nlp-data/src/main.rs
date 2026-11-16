@@ -12,7 +12,7 @@ use generate_data::target_sentences;
 use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{Course, Language, NlpAnalyzedSentence};
 use rand::prelude::IndexedRandom;
-use sentence_sampler::sample_to_target;
+use sentence_sampler::take_lowest_draws;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write as _};
@@ -22,25 +22,10 @@ use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
 use utils::{ValidationResult, normalize_and_validate_tokens};
 
-static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
-    ChatClient::from_env("gpt-5.4")
-        .unwrap()
-        .with_cache_directory("./.cache")
-        .with_service_tier("flex")
-});
-
 static CHAT_CLIENT_MINI: LazyLock<ChatClient> = LazyLock::new(|| {
     ChatClient::from_env("gpt-5.4-mini")
         .unwrap()
         .with_cache_directory("./.cache")
-});
-
-static CHAT_CLIENT_LOW_REASONING: LazyLock<ChatClient> = LazyLock::new(|| {
-    ChatClient::from_env("gpt-5.4")
-        .unwrap()
-        .with_cache_directory("./.cache")
-        .with_reasoning_effort("low")
-        .with_service_tier("flex")
 });
 
 static CHAT_CLIENT_NANO: LazyLock<ChatClient> = LazyLock::new(|| {
@@ -49,50 +34,32 @@ static CHAT_CLIENT_NANO: LazyLock<ChatClient> = LazyLock::new(|| {
         .with_cache_directory("./.cache")
 });
 
-/// Japanese is the language whose tokenization policy we are actively fixing, and the one
-/// with no analyzer proposing tokens for it — the LLM does the morphology from scratch. It
-/// gets the stronger model. Scoped to Japanese on purpose: the response cache is keyed by
-/// model, so pointing another language here would silently invalidate its entire cache.
+/// Cleaning and the double-check run on gpt-6-luna in every language. The double-check
+/// reads the same tokenization policy and may rewrite tokens, so it must not be weaker than
+/// the cleaner, or it can overrule a better analysis with a worse one.
 ///
-/// gpt-5.6-family prompt caching needs a `prompt_cache_key` for dependable prefix
-/// matching, one key per stable prefix. tysm excludes the key from its on-disk
-/// response-cache key (like service_tier), so it can be set or renamed without
-/// invalidating anything. Throughput past OpenAI's ~15 requests/minute/key guidance
-/// overflows to machines that then warm the same prefix themselves, so the hit rate
-/// degrades gracefully — one key is enough. The gpt-5.4 clients set no key on purpose:
-/// their family still does longest-prefix matching without one.
+/// Before calling the model, a request checks the caches of the clients that did these
+/// jobs before: gpt-5.6-luna (Japanese), gpt-5.4 (cleaning) and gpt-5.4 at low reasoning
+/// (the double-check). Their cache keys are model and settings, so the switch only pays
+/// for sentences none of them saw. Service tier and `prompt_cache_key` aren't part of
+/// tysm's cache key, so those fallbacks needn't set them.
+///
+/// gpt-5.6+ prompt caching needs a `prompt_cache_key` for dependable prefix matching.
+/// Throughput past OpenAI's ~15 requests/minute/key guidance overflows to machines that
+/// then warm the same prefix themselves, so the hit rate degrades gracefully: one key is
+/// enough.
 static CHAT_CLIENT_LUNA: LazyLock<ChatClient> = LazyLock::new(|| {
-    ChatClient::from_env("gpt-5.6-luna")
-        .unwrap()
-        .with_cache_directory("./.cache")
-        .with_prompt_cache_key("yap-clean-nlp-jpn")
+    let previous = |model: &str| {
+        ChatClient::from_env(model)
+            .unwrap()
+            .with_cache_directory("./.cache")
+    };
+    previous("gpt-6-luna")
+        .with_prompt_cache_key("yap-clean-nlp")
+        .with_cache_fallback(previous("gpt-5.6-luna"))
+        .with_cache_fallback(previous("gpt-5.4"))
+        .with_cache_fallback(previous("gpt-5.4").with_reasoning_effort("low"))
 });
-
-/// The model that does first-pass tokenization/POS/lemma for a language without an analyzer.
-fn nlp_client(language: Language) -> &'static ChatClient {
-    match language {
-        Language::Japanese => &CHAT_CLIENT_LUNA,
-        _ => &CHAT_CLIENT_NANO,
-    }
-}
-
-/// The model that reviews and repairs a suspicious analysis.
-fn cleaning_client(language: Language) -> &'static ChatClient {
-    match language {
-        Language::Japanese => &CHAT_CLIENT_LUNA,
-        _ => &CHAT_CLIENT,
-    }
-}
-
-/// The model for the double-check pass. It reads the same tokenization policy and may
-/// rewrite tokens, so it must not be weaker than the model that produced them — otherwise
-/// it can overrule a better analysis with a worse one.
-fn double_check_client(language: Language) -> &'static ChatClient {
-    match language {
-        Language::Japanese => &CHAT_CLIENT_LUNA,
-        _ => &CHAT_CLIENT_LOW_REASONING,
-    }
-}
 
 /// Languages with no analyzer proposing tokens, where the LLM does the morphology from
 /// scratch. Only Hindi now: Japanese moved to Sudachi (see generate-data/nlp/main.py),
@@ -488,11 +455,11 @@ The lemma should be the form a learner would look up in a dictionary.{tips}"#,
                 let pb = pb.clone();
                 async move {
                     let user_prompt = format!("Sentence: \"{sentence}\"");
-                    let result: Result<LlmNlpResponse, _> = nlp_client(language)
+                    let result: Result<LlmNlpResponse, _> = CHAT_CLIENT_NANO
                         .chat_with_system_prompt(&system_prompt, user_prompt)
                         .await;
 
-                    pb.set_message(format!("{:.2}", nlp_client(language).cost().unwrap_or(0.0)));
+                    pb.set_message(format!("{:.2}", CHAT_CLIENT_NANO.cost().unwrap_or(0.0)));
                     pb.inc(1);
 
                     (sentence, result)
@@ -502,7 +469,7 @@ The lemma should be the form a learner would look up in a dictionary.{tips}"#,
             .collect::<Vec<_>>()
             .await;
 
-        pb.finish_with_message(format!("{:.2}", nlp_client(language).cost().unwrap_or(0.0)));
+        pb.finish_with_message(format!("{:.2}", CHAT_CLIENT_NANO.cost().unwrap_or(0.0)));
 
         // Convert LLM responses to NlpAnalyzedSentence and add to cache
         let mut success_count = 0;
@@ -865,9 +832,7 @@ fn set_status(base_dir: &std::path::Path, msg: &str) {
 
 /// Total LLM spend so far in this process, across all clients.
 fn total_llm_cost() -> f64 {
-    CHAT_CLIENT.cost().unwrap_or(0.0)
-        + CHAT_CLIENT_MINI.cost().unwrap_or(0.0)
-        + CHAT_CLIENT_LOW_REASONING.cost().unwrap_or(0.0)
+    CHAT_CLIENT_MINI.cost().unwrap_or(0.0)
         + CHAT_CLIENT_NANO.cost().unwrap_or(0.0)
         + CHAT_CLIENT_LUNA.cost().unwrap_or(0.0)
 }
@@ -928,6 +893,36 @@ fn bail_if_cost_capped() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// The selection rule for sentences and terms alike: everything already labelled stays,
+/// and the pool fills the rest up to `target` in its fixed per-item draw order. A rerun
+/// therefore labels nothing new unless `target` grows or kept items leave the pool.
+fn select(
+    what: &str,
+    kept: impl IntoIterator<Item = String>,
+    pool: Vec<String>,
+    target: usize,
+) -> Vec<String> {
+    let mut selected: Vec<String> = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+    for s in kept {
+        if seen.insert(s.clone()) {
+            selected.push(s);
+        }
+    }
+    let kept_count = selected.len();
+    selected.extend(take_lowest_draws(
+        pool.into_iter().filter(|s| !seen.contains(s)).collect(),
+        target.saturating_sub(kept_count),
+        |s: &String| s.clone(),
+    ));
+    println!(
+        "Selected {} {what}: {kept_count} already labelled, {} new (target {target})",
+        selected.len(),
+        selected.len() - kept_count
+    );
+    selected
+}
+
 async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     // Load manual sentences that should never be filtered
     let mut manual_sentences = load_manual_sentences(language)?;
@@ -948,6 +943,10 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         // lemma types are absent from the entire app corpus), and the default
         // sample only admits ~1.2k newcomers per run.
         20_000
+    } else if language == Language::French {
+        // Prior gold already exceeded the 8k default but predates the apostrophe fix (no
+        // c'est, j'ai or l'ami), so this adds ~1k from today's pool.
+        10_500
     } else {
         8_000
     };
@@ -1041,35 +1040,57 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         cached_sentences.len()
     );
 
-    // Sentences already in the published gold output stay selected forever (as long as
-    // they're still in the pool). The nlp_cache union below only protects reruns on the
-    // SAME machine — the gold file travels in git, so this keeps the gold set monotone
-    // across machines too, and their LLM responses are (osmo-synced) cache hits anyway.
-    // The fresh sample then only controls how many NEW sentences each run adds.
+    let term_strings =
+        generate_data::wiktionary_terms::ensure_multiword_terms_file(&course, &base_dir)
+            .await
+            .context("Failed to ensure multiword terms file")?;
+    println!("Loaded {} multiword terms", term_strings.len());
+
+    // Sentences and terms already in the published gold output stay selected for as
+    // long as they're anywhere in the corpus (see `select`). A rerun then pays only for
+    // manual sentences and whatever a larger target asks for. The gold file
+    // travels in git, so this keeps gold monotone across machines too, and its LLM
+    // responses are (osmo-synced) cache hits.
+    //
+    // "Anywhere in the corpus" includes Tatoeba rows the pool's Tatoeba cap no longer
+    // draws. The cap's keep probability falls whenever the usable Tatoeba set grows (it
+    // did when apostrophes stopped being rejected), and that must not throw away labels
+    // we already paid for.
+    let tatoeba_targets: std::collections::HashSet<String> =
+        generate_data::tatoeba::get_tatoeba_pairs(Path::new(""), course, usize::MAX)
+            .into_iter()
+            .map(|pair| language_utils::text_cleanup::cleanup_sentence(pair.target, language))
+            .collect();
+    let term_pool: std::collections::HashSet<&String> = term_strings.iter().collect();
     let prior_gold_file =
         PathBuf::from("./out").join(format!("cleaned_{}.jsonl", course.target_language.code()));
-    let prior_gold_sentences: Vec<String> = if prior_gold_file.exists() {
+    let prior_gold: Vec<String> = if prior_gold_file.exists() {
         let file = File::open(&prior_gold_file).context("Failed to open prior gold output")?;
         BufReader::new(file)
             .lines()
-            .filter_map(|line| {
-                let line = line.ok()?;
-                let value: serde_json::Value = serde_json::from_str(&line).ok()?;
-                let sentence = value.get("sentence")?.as_str()?.to_string();
-                (other_set.contains(&sentence) && !manual_sentences.contains(sentence.as_str()))
-                    .then_some(sentence)
+            .map(|line| {
+                let value: serde_json::Value = serde_json::from_str(&line.unwrap()).unwrap();
+                value["sentence"].as_str().unwrap().to_owned()
             })
+            .filter(|sentence| !manual_sentences.contains(sentence.as_str()))
             .collect()
     } else {
         Vec::new()
     };
+    let (prior_gold_terms, prior_gold_sentences): (Vec<String>, Vec<String>) =
+        prior_gold.into_iter().partition(|s| term_pool.contains(s));
+    let prior_gold_sentences: Vec<String> = prior_gold_sentences
+        .into_iter()
+        .filter(|s| other_set.contains(s) || tatoeba_targets.contains(s))
+        .collect();
     println!(
-        "{} prior gold sentences are still in the current sentence pool",
-        prior_gold_sentences.len()
+        "{} prior gold sentences and {} prior gold terms are still in the corpus",
+        prior_gold_sentences.len(),
+        prior_gold_terms.len()
     );
 
-    // From-book quota, same scheme as the other source caps (deterministic
-    // sample_to_target): book prose is the pool's only source of quoted dialogue and
+    // From-book quota, drawn in the same fixed per-sentence order as everything else
+    // (take_lowest_draws): book prose is the pool's only source of quoted dialogue and
     // long multi-clause sentences, but it's a small slice, so the plain 8k sample
     // admits only ~90/run — guarantee ~BOOK_QUOTA per book in the selection. The
     // sampler is content-deterministic, so this is a stable subset across runs
@@ -1087,7 +1108,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     }
     let mut book_quota_texts: Vec<String> = Vec::new();
     for (book_id, pool) in pool_by_book {
-        let picked = sample_to_target(pool, BOOK_QUOTA, |s: &String| s.clone());
+        let picked = take_lowest_draws(pool, BOOK_QUOTA, |s: &String| s.clone());
         println!(
             "Book quota: {book_id}: including {} sentences (quota {BOOK_QUOTA})",
             picked.len()
@@ -1095,36 +1116,21 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         book_quota_texts.extend(picked);
     }
 
-    let sampled_texts = sample_to_target(other_texts, sample_size, |s: &String| s.clone());
-    println!("Sampled {} sentences", sampled_texts.len());
-
-    // Union of sampled + previously cached + prior gold + book quota (deduplicated)
-    let mut seen: std::collections::HashSet<String> = sampled_texts.iter().cloned().collect();
-    let mut combined_texts = sampled_texts;
-    for s in cached_sentences
-        .into_iter()
-        .chain(prior_gold_sentences)
-        .chain(book_quota_texts)
-    {
-        if seen.insert(s.clone()) {
-            combined_texts.push(s);
-        }
-    }
-    println!(
-        "Combined {} sentences (sampled + previously cached + prior gold + book quota)",
-        combined_texts.len()
+    let sampled_texts = select(
+        "sentences",
+        prior_gold_sentences
+            .into_iter()
+            .chain(cached_sentences)
+            .chain(book_quota_texts),
+        other_texts,
+        sample_size,
     );
-    let sampled_texts = combined_texts;
-
-    let term_strings =
-        generate_data::wiktionary_terms::ensure_multiword_terms_file(&course, &base_dir)
-            .await
-            .context("Failed to ensure multiword terms file")?;
-    println!("Loaded {} multiword terms", term_strings.len());
-
-    let sampled_term_strings =
-        sample_to_target(term_strings, term_sample_size, |s: &String| s.clone());
-    println!("Sampled {} multiword terms", sampled_term_strings.len());
+    let sampled_term_strings = select(
+        "multiword terms",
+        prior_gold_terms,
+        term_strings,
+        term_sample_size,
+    );
 
     // Kept for the post-cleaning reconciliation pass, which identifies term entries in
     // the cleaned results by exact text match.
@@ -1240,7 +1246,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                         language,
                         &sentence,
                         suspicious_reasons,
-                        cleaning_client(language),
+                        &CHAT_CLIENT_LUNA,
                     )
                     .await
                     .map(|mut tokens| {
@@ -1250,7 +1256,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                     })
                 };
 
-                pb.set_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
+                pb.set_message(format!("{:.2}", CHAT_CLIENT_LUNA.cost().unwrap_or(0.0)));
                 pb.inc(1);
                 if pb.position().is_multiple_of(200) {
                     set_status(
@@ -1258,7 +1264,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                         &format!(
                             "LLM cleaning pass: {}/{sample_count} (${:.2})",
                             pb.position(),
-                            CHAT_CLIENT.cost().unwrap_or(0.0)
+                            CHAT_CLIENT_LUNA.cost().unwrap_or(0.0)
                         ),
                     );
                     trip_cost_cap_if_exceeded(&status_dir);
@@ -1271,7 +1277,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         .collect::<Vec<_>>()
         .await;
 
-    pb.finish_with_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
+    pb.finish_with_message(format!("{:.2}", CHAT_CLIENT_LUNA.cost().unwrap_or(0.0)));
     // The cap check happens *after* validation below, not here: the stream drains rather
     // than aborting, so whatever finished before the breaker tripped is real output worth
     // keeping. Bailing at this point threw it away and left a 0-byte gold .tmp, which made
@@ -1412,10 +1418,10 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                         &sentence_text,
                         &tokens,
                         reasons,
-                        double_check_client(language),
+                        &CHAT_CLIENT_LUNA,
                     )
                     .await;
-                    pb_dc.set_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
+                    pb_dc.set_message(format!("{:.2}", CHAT_CLIENT_LUNA.cost().unwrap_or(0.0)));
                     pb_dc.inc(1);
                     if pb_dc.position().is_multiple_of(200) {
                         trip_cost_cap_if_exceeded(&status_dir_dc);
@@ -1427,7 +1433,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
             .collect::<Vec<_>>()
             .await;
 
-        pb_dc.finish_with_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
+        pb_dc.finish_with_message(format!("{:.2}", CHAT_CLIENT_LUNA.cost().unwrap_or(0.0)));
         bail_if_cost_capped()?;
 
         // Apply double-check results back

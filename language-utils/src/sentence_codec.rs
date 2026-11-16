@@ -42,10 +42,18 @@ pub enum SymbolKind {
     Placement(SentencePlacement),
     Lowercase,
     Gap(u8),
+    /// The sentence stores no phonemes (g2p refused it or could not
+    /// attribute them). Follows the lowercase marker, before any gram.
+    NoPhonemes,
+    /// The preceding gram is spoken as its n-th most common phoneme
+    /// sequence (n ≥ 1, counting from 0). Grams spoken as their most common
+    /// sequence have no marker.
+    PhonemeVariant(u32),
 }
 
 /// Bit 31 marks learnable grams; bit 30 marks other grams. The payload is
-/// key + 1. Small reserved values encode separators, casing and phrase gaps.
+/// key + 1. Small reserved values encode separators, casing and phrase gaps;
+/// every other value below bit 30 is a phoneme marker.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, rkyv::bytecheck::CheckBytes)]
 #[repr(transparent)]
 #[bytecheck(crate = rkyv::bytecheck)]
@@ -95,6 +103,22 @@ impl Symbol {
         Self::new(u32::from(gap) + 4)
     }
 
+    const NO_PHONEMES: u32 = 260;
+
+    pub fn no_phonemes() -> Self {
+        Self::new(Self::NO_PHONEMES)
+    }
+
+    pub fn phoneme_variant(variant: u32) -> Self {
+        assert!(variant >= 1, "the most common sequence has no marker");
+        let value = Self::NO_PHONEMES.checked_add(variant).unwrap();
+        assert!(
+            value < Self::OBVIOUS,
+            "phoneme variant {variant} out of range"
+        );
+        Self::new(value)
+    }
+
     pub fn is_learnable(self) -> bool {
         self.0.get() & Self::LEARNABLE != 0
     }
@@ -110,34 +134,54 @@ impl Symbol {
             2 => SymbolKind::Placement(SentencePlacement::LowConfidencePhrases),
             3 => SymbolKind::Lowercase,
             value @ 4..=259 => SymbolKind::Gap((value - 4) as u8),
+            Self::NO_PHONEMES => SymbolKind::NoPhonemes,
+            value if value < Self::OBVIOUS => SymbolKind::PhonemeVariant(value - Self::NO_PHONEMES),
             _ => SymbolKind::Gram(self.key()),
         }
     }
 }
 
+/// A sentence's grams, plus which of each word gram's phoneme sequences it
+/// is spoken with.
+#[derive(Debug, PartialEq)]
+pub struct DecodedSentence {
+    pub sentence: SentenceGrams<SpurReadingGram>,
+    /// Parallel to `sentence.grams`: each gram's key and the index of its
+    /// sequence in [`crate::sentence_phonemes::GramPhonemes`]. `None` when
+    /// the sentence stores no phonemes.
+    pub phoneme_variants: Option<Vec<(GramKey, u32)>>,
+}
+
 pub fn decode(
     symbols: impl Iterator<Item = Symbol>,
     grams: &rkyv::Archived<RodeoReader<SpurReadingGram, GramKey>>,
-) -> SentenceGrams<SpurReadingGram> {
+) -> DecodedSentence {
     let mut sentence = SentenceGrams {
         grams: Vec::new(),
         capitalize_first: true,
         multiword_terms: Vec::new(),
         low_confidence_multiword_terms: Vec::new(),
     };
+    let mut variants: Vec<(GramKey, u32)> = Vec::new();
+    let mut has_phonemes = true;
     let mut placement = SentencePlacement::Words;
     for symbol in symbols {
         match symbol.kind() {
             SymbolKind::Lowercase => sentence.capitalize_first = false,
             SymbolKind::Placement(next) => placement = next,
+            SymbolKind::NoPhonemes => has_phonemes = false,
+            SymbolKind::PhonemeVariant(variant) => variants.last_mut().unwrap().1 = variant,
             SymbolKind::Gram(key) => {
                 let gram = *grams.resolve(&key);
                 match placement {
-                    SentencePlacement::Words => sentence.grams.push(if symbol.is_learnable() {
-                        SentenceGram::Learnable(gram)
-                    } else {
-                        SentenceGram::Obvious(gram)
-                    }),
+                    SentencePlacement::Words => {
+                        variants.push((key, 0));
+                        sentence.grams.push(if symbol.is_learnable() {
+                            SentenceGram::Learnable(gram)
+                        } else {
+                            SentenceGram::Obvious(gram)
+                        })
+                    }
                     SentencePlacement::Phrases => {
                         sentence.multiword_terms.push(MultiwordTermMatch {
                             gram,
@@ -172,5 +216,8 @@ pub fn decode(
             }
         }
     }
-    sentence
+    DecodedSentence {
+        sentence,
+        phoneme_variants: has_phonemes.then_some(variants),
+    }
 }

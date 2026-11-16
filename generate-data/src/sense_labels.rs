@@ -151,7 +151,8 @@ pub async fn generate(
             }
             let (left, right) = (starts[start].0, starts[word - 1].1);
             requests.push(Request {
-                language: language.code(),
+                // Dialects share their parent's corpus and menus, so they reuse its labels.
+                language: language.corpus_code(),
                 gram: &row.gram,
                 marked_sentence: format!(
                     "{}«{}»{}",

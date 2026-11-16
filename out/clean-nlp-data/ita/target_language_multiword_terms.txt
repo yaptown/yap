@@ -1,4 +1,3 @@
-
 'sti cazzi
 'sto cazzo
 'sto qua
@@ -26,7 +25,10 @@ Addis Abebà
 Adolf Hitler
 Agente Arancio
 Agenzia delle Entrate
+Ah ah
+Ah già
 Ah però
+Ah, già
 Al Chambers
 Ala d'Acciaio
 Albania caucasica
@@ -65,9 +67,11 @@ Ascoli Piceno
 Asia meridionale
 Asia occidentale
 Asia orientale
+Attenzione, prego
 Augusto Borba
 Austria-Ungheria
 Autostrada del Sole
+Avanti, coraggio
 Babbo Natale
 Baby Perfidia
 Baden-Württemberg
@@ -103,6 +107,7 @@ Bosnia ed Erzegovina
 Bosnia-Erzegovina
 Brett McBain
 Brigate Rosse
+Brutto idiota
 Bryan Adams
 Bud Light
 Buon Dio
@@ -585,6 +590,8 @@ E tu invece
 Eagle Eye
 East Coast
 Eberarth lsak Borg
+Eh già
+Eh, già
 El Salvador
 Elettorato del Palatinato
 Emilia-Romagna
@@ -604,6 +611,7 @@ Fiamme Gialle
 Figline Valdarno
 Figlio dell'Uomo
 Figlio di Dio
+Figurati se
 Finale Ligure
 Fiume Azzurro
 Fiume Giallo
@@ -787,7 +795,6 @@ Lo Cascio
 Lo Conte
 Lo Deserto
 Lo Duca
-Lo Faso
 Lo Gatto
 Lo Gioco
 Lo Giudice
@@ -805,11 +812,15 @@ Lord Grey
 Lord Scroop
 Los Angeles
 Lucile, Lady Duff-Gordon
+Ma dai
+Ma figurati
+Ma insomma
 Macedonia del Nord
 Madre Russia
 Madre Terra
 Madre di Dio
 Madre mia
+Mai stato meglio
 Mamma mia
 Man-superman
 Mani pulite
@@ -845,6 +856,7 @@ Meat Loaf
 Meclemburgo-Pomerania Anteriore
 Medio Campidano
 Medio Oriente
+Meglio ancora
 Meglio non sapere
 Mercoledì Santo
 Mercoledì delle Ceneri
@@ -881,7 +893,9 @@ Nico Lasarte
 Niki Lauda
 Nizza Monferrato
 Nižnij Novgorod
+No, figurati
 Nobuhiko Takada
+Nome completo
 Nord America
 Nostra Signora
 Nuova Caledonia
@@ -1046,6 +1060,7 @@ Rhode Island
 Rick Dalton
 Rio de Janeiro
 Rio delle Amazzoni
+Riso fritto
 Rivoluzione Industriale
 Robin Hood
 Roccabruna-Capo Martino
@@ -1148,6 +1163,7 @@ Striscia di Gaza
 Studio Band
 Studio Band del Conservatorio Shaffer
 Studio Ovale
+Su, coraggio
 Sua Santità
 Sud Sudan
 Sud Tirolo
@@ -1203,6 +1219,7 @@ Unione Europea
 Unione Sovietica
 Università Tecnica del Québec
 Uomo Ragno
+Vai alla grande
 Val Gardena
 Val di Sole
 Valentina Allegra de Fontaine
@@ -1240,6 +1257,7 @@ a Carnevale ogni scherzo vale
 a Dio piacendo
 a babbo morto
 a bardosso
+a base di
 a bella posta
 a bem dizer
 a bestia
@@ -1331,6 +1349,7 @@ a dispetto di
 a disposizione
 a distanza
 a distesa
+a domani
 a domicilio
 a dopo
 a doppio taglio
@@ -1384,6 +1403,8 @@ a lato di
 a le tacche a le tacche
 a lei
 a letto
+a livello nazionale
+a livello professionale
 a longo prazo
 a lume di candela
 a lume di naso
@@ -1433,6 +1454,7 @@ a morsi
 a morte
 a muso duro
 a nessuno
+a nome
 a nome di
 a norma
 a nove zeri
@@ -1452,6 +1474,7 @@ a parità di
 a parte
 a parte gli scherzi
 a parteddietro
+a partire
 a partire da
 a passi da giraffa
 a passo d'elefante
@@ -1467,6 +1490,7 @@ a perdifiato
 a perdita d'occhio
 a perfezione
 a perpendicolo
+a pesca
 a pesci in faccia
 a peso d'oro
 a petto nudo
@@ -1529,6 +1553,7 @@ a quer mifò
 a raffica
 a ragion veduta
 a ragione
+a rapporto
 a regola d'arte
 a respeito de
 a retro
@@ -2020,6 +2045,7 @@ al da sezzo
 al dassezzo
 al dente
 al dettaglio
+al di fuori
 al di fuori di
 al di là
 al di là di
@@ -2035,6 +2061,7 @@ al forno
 al fresco
 al fuoco
 al giorno d'oggi
+al giudizio di qualcuno
 al ladro
 al lavoro
 al limite
@@ -2050,14 +2077,17 @@ al più presto
 al posto di
 al posto mio
 al postutto
+al potere
 al primo colpo
 al proprio posto
 al rallentatore
 al riverso
 al sacco
 al sangue
+al servizio
 al sicuro
 al solito
+al suo giudizio
 al telefono
 al tempo stesso
 al tuo posto
@@ -2172,6 +2202,7 @@ alla mano
 alla matriciana
 alla meglio
 alla meno peggio
+alla mia salute
 alla moda
 alla mugnaia
 alla napoletana
@@ -2193,6 +2224,7 @@ alla rinfusa
 alla romana
 alla rovescia
 alla salute
+alla salute di qualcuno
 alla scudiera
 alla settimana prossima
 alla siracusana
@@ -2201,10 +2233,13 @@ alla spina
 alla sprovvista
 alla stazione
 alla stregua di
+alla sua salute
 alla svelta
+alla tua salute
 alla via così
 alla volta
 alla volta di
+alla vostra salute
 allargare il cuore
 alle Hawaii
 alle Poste
@@ -2274,6 +2309,7 @@ ambra grigia
 amburghese al formaggio
 amica del cuore
 amica di letto
+amica di penna
 amica per la pelle
 amico del cuore
 amico di letto
@@ -2359,6 +2395,7 @@ andare al lavoro
 andare al posto di
 andare al sodo
 andare all'altro mondo
+andare alla grande
 andare alle Hawaii
 andare alle superiori
 andare allora
@@ -2430,6 +2467,7 @@ andare su Instagram
 andare tutto bene
 andare via
 andarsene
+andato a male
 anello debole
 anello di fidanzamento
 anello nuziale
@@ -2821,6 +2859,7 @@ avere nelle mani
 avere orecchio per
 avere paura
 avere paura di
+avere pazienza
 avere per le mani
 avere più di
 avere presente
@@ -3347,6 +3386,7 @@ cambiamento climatico
 cambiamento di paradigma
 cambiare
 cambiare argomento
+cambiare aria
 cambiare casacca
 cambiare di mano
 cambiare idea
@@ -3761,6 +3801,7 @@ che cazzata
 che cazzo
 che cazzo fare
 che che
+che ci fare?
 che ci vuole
 che classe
 che cos'è
@@ -3776,7 +3817,9 @@ che domanda
 che due coglioni
 che due palle
 che fare
+che fine fare
 che fine ha fatto
+che fine hai fatto
 che fortuna
 che fortunato
 che giornata
@@ -3917,8 +3960,12 @@ chiurlo maggiore
 chiurlo piccolo
 chiurlotto mezzano
 chiuso ermeticamente
+chiuso occhio
 ci corre quanto dal cielo alla terra
 ci essere
+ci fa lei
+ci fa lui
+ci fai tu
 ci mancherebbe
 ci mancherebbe altro
 ci penso io
@@ -4156,6 +4203,7 @@ come da copione
 come dire
 come dire io
 come fare
+come fosse ieri
 come già sapere
 come il pane
 come le api sul miele
@@ -4169,6 +4217,7 @@ come non mai
 come non vedere
 come nuovo
 come osi
+come pare e piace
 come pensare
 come prima
 come saperlo
@@ -4222,6 +4271,8 @@ compagno di strada
 competir a
 complemento assoluto
 complemento relativo
+comportarsi male
+comportato male
 composto chimico
 composto di Grignard
 composto organico
@@ -4257,6 +4308,7 @@ con le spalle al muro
 con le unghie e con i denti
 con lo scopo di
 con molto piacere
+con permesso
 con piacere
 con rispetto parlando
 con tutto il cuore
@@ -4603,7 +4655,9 @@ da zero
 dacci dentro
 dacci sotto
 dado que
+dal basso
 dal canto proprio
+dal cuore
 dal cuore tenero
 dal dottore
 dal momento che
@@ -4622,6 +4676,7 @@ dalla propria
 dalla propria parte
 dalla scorsa settimana
 dalla sera alla mattina
+dalla stessa parte
 dalla testa ai piedi
 dalla tua parte
 dalle stalle alle stelle
@@ -5021,6 +5076,7 @@ di sottecchi
 di sottinsù
 di sotto
 di spicco
+di stagione
 di straforo
 di stretta misura
 di striscio
@@ -5057,6 +5113,7 @@ diamante mandarino
 diavoletto di Cartesio
 diavoletto di Maxwell
 diavolo nero
+dice il vero
 dich-dich
 dichiarazione di guerra
 diciamo
@@ -5088,6 +5145,8 @@ dimenticato da Dio
 dimenticato da dio
 dimmi con chi vai e ti dirò chi sei
 dinanzi a
+dio sia con qualcuno
+dio sia con te
 diodo organico a emissione di luce
 diossido di azoto
 diossido di carbonio
@@ -5107,6 +5166,7 @@ dire di fare
 dire di no
 dire di più
 dire grazie
+dire il vero
 dire la propria
 dire la verità
 dire peste e corna
@@ -5577,6 +5637,7 @@ essere fuori città
 essere giocoforza
 essere giù
 essere grato a
+essere il secondo nome di qualcuno
 essere impegnato
 essere impegnato a
 essere in condizione di
@@ -5674,6 +5735,7 @@ essere su questa terra
 essere sul mercato
 essere sul punto di
 essere sé stessi
+essere tempo che
 essere tempo di
 essere tenuto a
 essere troppo per
@@ -5684,6 +5746,7 @@ essere umano
 essere un amore
 essere un cane
 essere un sacco di merda
+essere un tesoro
 essere una merda
 essere uopo
 essere utile
@@ -6239,6 +6302,7 @@ figlio unico
 figura di merito
 figura retorica
 figurarsi
+figurarsi se
 figuriamoci
 fil di ferro
 fila indiana
@@ -6266,6 +6330,7 @@ finanza pubblica
 finché avrò fiato
 fine a sé stesso
 fine della storia
+fine hai fatto
 fine settimana
 fine-settimana
 finire
@@ -6454,6 +6519,7 @@ fronte di temporali
 fronte freddo
 fronte meteorologico
 fronte occluso
+fronte orientale
 fronte stazionario
 fru fru
 frutta a guscio
@@ -6555,6 +6621,7 @@ fuori strada
 fuori tempo massimo
 fuori testo
 fuori tiro
+fuori tono
 furgone ambulante
 furia omicida
 fusione fredda
@@ -6855,6 +6922,7 @@ gruppo d'assalto
 gruppo di continuità
 gruppo di discussione
 gruppo di pressione
+gruppo di studio
 gruppo elettrogeno
 gruppo etnico
 gruppo musicale
@@ -6966,6 +7034,7 @@ il lupo perde il pelo ma non il vizio
 il mattino ha l'oro in bocca
 il meglio è nemico del bene
 il meno possibile
+il mio secondo nome
 il nemico del mio nemico è mio amico
 il perché
 il più possibile
@@ -7125,6 +7194,7 @@ in forze
 in francese
 in fretta
 in fretta e furia
+in fuga
 in funzione di
 in fuori
 in gamba
@@ -7155,6 +7225,7 @@ in malo modo
 in mancanza di
 in maniche di camicia
 in mano
+in marcia
 in massa
 in materia
 in materia di
@@ -8285,6 +8356,7 @@ mezzi termini
 mezzo antincendio
 mezzo corazzato
 mezzo di contrasto
+mezzo di trasporto
 mezzo fratello
 mezzo mondo
 mezzo pacchero
@@ -8292,9 +8364,11 @@ mezzo sangue
 mi bemolle maggiore
 mi chiamo
 mi manchi
+mi permetto
 mi piaci
 mi sa
 mi scusi
+mi sono permesso
 mica
 mica male
 microcebo di Madame Berthe
@@ -8658,6 +8732,7 @@ nient'altro che
 niente di fatto
 niente di meno
 niente di niente
+niente in comune
 niente male
 niente niente
 niente paura
@@ -8764,6 +8839,7 @@ non capacitarsi
 non capire
 non capisco
 non che
+non chiudere occhio
 non ci piove
 non cielo dikono
 non davvero
@@ -8773,6 +8849,7 @@ non dire né ai né bai
 non dovere dire
 non entrarci niente
 non entrarci per niente
+non era male
 non esattamente
 non esiste
 non esserci più
@@ -8861,6 +8938,7 @@ non so che
 non solamente
 non solo
 non solo ma anche
+non sono male
 non stare nella pelle
 non stare né in cielo né in terra
 non stuzzicare il can che dorme
@@ -8892,6 +8970,7 @@ non voler sapere
 non volere più sentire
 non volere vedere
 non è detto
+non è male
 non è tutto oro quello che luccica
 non è tutto oro quello che riluce
 non-io
@@ -8927,6 +9006,7 @@ nucleo interno
 nude-look
 nudo bruco
 nudo e crudo
+nulla in comune
 nulla osta
 numero abbondante
 numero algebrico
@@ -9008,6 +9088,7 @@ não é à toa
 né capo né coda
 né carne né pesce
 né così né cosà
+né né
 né più né meno
 o così o cosà
 o la va o la spacca
@@ -9143,6 +9224,7 @@ ordine del tempio
 ordine sparso
 ore piccole
 orecchio assoluto
+orecchio per la musica
 organetto artico
 organi sessuali
 organismo geneticamente modificato
@@ -9355,6 +9437,7 @@ parco cittadino
 parco divertimenti
 parco giochi
 pare che
+pare e piace
 parecchie volte
 pareggiare i conti
 parental control
@@ -9546,6 +9629,7 @@ pecora blu
 pecorino romano
 pecorino sardo
 pedagogia speciale
+peggio ancora
 peggio per te
 pel di carota
 pelle d'oca
@@ -9611,8 +9695,11 @@ per causa di
 per cento
 per ciò che concerne
 per conseguenza
+per conto
 per conto di
+per conto proprio
 per conto suo
+per conto tuo
 per converso
 per cosa
 per così dire
@@ -9639,11 +9726,14 @@ per forza di cose
 per gioco
 per giunta
 per gradi
+per il bene di qualcuno
+per il loro bene
 per il meglio
 per il momento
 per il pranzo
 per il resto
 per il rotto della cuffia
+per il suo bene
 per il verso giusto
 per inciso
 per inerzia
@@ -9667,6 +9757,7 @@ per me
 per meglio dire
 per mezzo di
 per niente
+per nome
 per non dimenticare
 per non parlare di
 per nulla
@@ -9685,6 +9776,7 @@ per quanto riguarda
 per quanto si sa
 per quel che riguarda
 per questo
+per rispetto
 per sbaglio
 per scaramanzia
 per scherzo
@@ -9702,6 +9794,7 @@ per ultima cosa
 per ultimo
 per un pelo
 per un verso
+per via
 per via di
 per vivere
 per volta
@@ -9750,6 +9843,7 @@ perdersi
 perdersi d'animo
 perdersi il Natale
 periodo di dimezzamento
+periodo di prova
 permanganato di potassio
 permesso di dimora
 permesso di soggiorno
@@ -10343,6 +10437,7 @@ presunzione di innocenza
 previdenza sociale
 prezzo battuto
 prezzo di listino
+prima ancora di
 prima ballerina
 prima base
 prima che
@@ -10508,6 +10603,7 @@ purché
 pure io
 pure pure
 pure tu
+puro caso
 puro sangue
 purè di patate
 pussa via
@@ -10930,6 +11026,7 @@ sala giochi
 sala macchine
 sala nautica
 sala operatoria
+sala riunioni
 sala stampa
 saldare i conti
 sale ammoniaco
@@ -11187,6 +11284,7 @@ secondo cui
 secondo fine
 secondo intercalare
 secondo me
+secondo nome
 secondo piano
 secondo piatto
 sedano rapa
@@ -11240,6 +11338,7 @@ segreto di pulcinella
 segreto professionale
 seguire la legge
 seguire le orme
+sei un tesoro
 seja como for
 selenito di sodio
 selezione artificiale
@@ -11275,6 +11374,7 @@ sempre a + [infinitive]
 sempre assieme
 sempre che
 sempre così
+sempre dritto
 sempre e comunque
 sempre lo stesso
 sempre meno
@@ -11434,11 +11534,16 @@ si dice che
 si fa per dire
 si fa presto
 si maggiore
+si permette
 si potere fare
+si sente male
+si sentiva male
 si vede
 si vis pacem, para bellum
 sia che
 sia come sia
+sia con te
+sia con voi
 sia lodato
 sia quel che sia
 siamo alle solite
@@ -11574,6 +11679,7 @@ sotto l'ala protettrice
 sotto l'egida
 sotto le stelle
 sotto pena di
+sotto sorveglianza
 sotto sotto
 sotto terra
 sotto tiro
@@ -12185,6 +12291,8 @@ tetto di cristallo
 thai jasmine
 ti amo
 ti andare
+ti permetti
+ti senti male
 ti voglio bene
 ti voglio tanto bene
 tic tac
@@ -12251,6 +12359,7 @@ titoli di testa
 titolo di Stato
 titolo di prim'ordine
 titolo di studio
+titolo mondiale
 titolo spazzatura
 toc toc
 tocca a
@@ -12463,6 +12572,7 @@ tunnel dell'amore
 tunnel della Manica
 tunnel sotto la Manica
 turismo di prossimità
+turno di notte
 tuta spaziale
 tutt'a un tratto
 tutt'al più
@@ -12475,6 +12585,7 @@ tutti e
 tutti fuori
 tutti i giorni
 tutti i nodi vengono al pettine
+tutti indietro
 tutti insieme
 tutti per uno, uno per tutti
 tutti quanti
@@ -12519,11 +12630,13 @@ ultimo classificato
 ultimo quarto
 uma vez que
 umiliazione da sgualdrina
+un altro giro
 un altro paio di maniche
 un amore
 un attimo
 un attimo solo
 un bel niente
+un buon cuore
 un buon numero di
 un cazzo
 un certo numero di
@@ -12692,6 +12805,7 @@ veccia selvatica
 vedere
 vedere + lo
 vedere arrivare
+vedere di
 vedere di buon occhio
 vedere di persona
 vedere doppio
@@ -12708,10 +12822,14 @@ vedere un dottore
 vedersi
 vedersi in giro
 vedi Napoli e poi muori
+vedi di
 vedi infra
+vediamo di
+vedo di
 vedova bianca
 vedova nera
 vedova nobile
+vedrò di
 vedute grette
 vedute ristrette
 vedute strette
@@ -12734,6 +12852,7 @@ vena porta
 vena safena
 vena varicosa
 vendere cara la pelle
+venga un colpo
 venirci
 venire
 venire a
@@ -12775,6 +12894,7 @@ venire qua
 venire qui
 venire qui un momento
 venire su
+venire un colpo a qualcuno
 venire via
 venite
 vento favorevole
@@ -12975,6 +13095,7 @@ vu cumprà
 vu doppia
 vu' cumprà
 vuoi anche una fetta di culo?
+vuoi ancora bene
 vuoi che
 vuotare il sacco
 vuoto a rendere
@@ -13032,12 +13153,14 @@ zucchero grezzo
 zucchero semolato
 zuppa inglese
 « »
+È tempo che
 à la page
 à letra
 à risca
 è chiaro che
 è da tanto
 è evidente che
+è il mio secondo nome
 è la morte sua
 è ovvio che
 è possibile che

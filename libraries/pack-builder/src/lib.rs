@@ -2,6 +2,7 @@ mod data;
 mod definition_text;
 mod frequencies;
 pub mod minimal_pairs;
+mod phonemes;
 mod sentence_codec;
 mod sources;
 mod unigram_splitter;
@@ -571,12 +572,37 @@ pub fn build(
                 )
             })
             .collect();
-        let sequences: std::collections::HashSet<_> = encoded
+        let sentence_phonemes: Vec<_> = encoded
             .iter()
-            .map(|(_, sentence)| {
-                sentence_codec::encode(sentence, &mut reading_grams, learnable_count)
+            .map(|(text, _)| {
+                language_data
+                    .sentence_phonemes
+                    .get(text.as_str())
+                    .map(Vec::as_slice)
             })
             .collect();
+        let ranked_phonemes = phonemes::rank(
+            encoded
+                .iter()
+                .map(|(_, sentence)| sentence)
+                .zip(sentence_phonemes.iter().copied()),
+            &mut reading_grams,
+        );
+        let sequences: std::collections::HashSet<_> = encoded
+            .iter()
+            .zip(&sentence_phonemes)
+            .map(|((_, sentence), phonemes)| {
+                let variants =
+                    phonemes.map(|p| ranked_phonemes.variants(sentence, p, &reading_grams));
+                sentence_codec::encode(
+                    sentence,
+                    variants.as_deref(),
+                    &mut reading_grams,
+                    learnable_count,
+                )
+            })
+            .collect();
+        let gram_phonemes = ranked_phonemes.into_table(reading_grams.len());
         assert_eq!(
             sequences.len(),
             encoded.len(),
@@ -775,6 +801,7 @@ pub fn build(
             books,
             sentence_sources,
             encoded_sentences,
+            gram_phonemes,
             sentence_index,
             human_audio,
             pronunciation_audio,
@@ -800,6 +827,14 @@ pub fn build(
             );
             let text = pack.sentence_text(key);
             assert_eq!(text, **expected, "decoded sentence text must round-trip");
+            assert_eq!(
+                pack.sentence_grams_with_phonemes(key).unwrap().1.as_deref(),
+                language_data
+                    .sentence_phonemes
+                    .get(expected.as_str())
+                    .map(Vec::as_slice),
+                "sentence phonemes must round-trip"
+            );
             assert_eq!(
                 language_utils::literals_to_text(
                     &pack.sentence_to_literals(&key, target_language).unwrap()

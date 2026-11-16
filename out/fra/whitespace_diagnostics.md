@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 5378756
-Total errors: 3708
+Total predictions: 5381747
+Total errors: 3706
 Accuracy: 99.93%
 
 ## Error Patterns (sorted by frequency)
@@ -1294,14 +1294,6 @@ Accuracy: 99.93%
   - Je ne l'ai jamais vu quelque chose .
   - Patientez, encore une chose .
 
-### "d" + "'" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Ce tableau est considéré comme un chef-d'œuvre.
-  - Je me casse d'ici.
-  - Je veux que tu sortes d'ici.
-
 ### "disait" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1890,6 +1882,13 @@ Accuracy: 99.93%
   - Cette connasse, c'est la célèbre "Sorcière".
   - Et voici la plus célèbre "débutante" que je voudrais épouser.
 
+### "d" + "'" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Je me casse d'ici.
+  - Je veux que tu sortes d'ici.
+
 ### "diffuser" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2015,13 +2014,6 @@ Accuracy: 99.93%
 - Examples:
   - Emploie plus jamais "baiser" quand tu parles de nos femmes !
   - Je lui ai dit mille fois "Je t'aime" mais jamais "Je suis désolé".
-
-### "l" + "'" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Il a fait un sans-faute à l'examen.
-  - On a fini les travaux juste avant l'hiver.
 
 ### "lettre" + """ (2 occurrences)
 - Predicted: None
@@ -3229,12 +3221,6 @@ Accuracy: 99.93%
 - Examples:
   - Je-Je voulais dire avec- avec l'assaisonnement.
 
-### "-" + "bien" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Je ne suis pas illettré, mais cependant-- bien, alors.
-
 ### "-" + "c'" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3409,6 +3395,12 @@ Accuracy: 99.93%
 - Examples:
   - Je pense que c'est-- Super.
 
+### "--" + "bien" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Je ne suis pas illettré, mais cependant-- bien, alors.
+
 ### "--" + "je" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3438,6 +3430,12 @@ Accuracy: 99.93%
 - Actual: Space
 - Examples:
   - Je te jetterais dans l'océan-- thérapie de choc.
+
+### "." + "Retry" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - La durée moyenne d'un appel, soit sept minutes.Retry
 
 ### ";" + """ (1 occurrences)
 - Predicted: None
@@ -4489,6 +4487,12 @@ Accuracy: 99.93%
 - Examples:
   - Voyons ce que nous nous attendent .
 
+### "attraction" + "»" (1 occurrences)
+- Predicted: NarrowNbsp
+- Actual: None
+- Examples:
+  - Ce «great attraction» de la représentation devait clore la série des exercices.
+
 ### "au" + ""Coliseum" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4627,12 +4631,6 @@ Accuracy: 99.93%
 - Examples:
   - Les appels qui ont été faits du 'Boeuf bleu'.
 
-### "bon" + "homme" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Allez, mon petit bonhomme.
-
 ### "bonbon" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -4656,12 +4654,6 @@ Accuracy: 99.93%
 - Actual: Space
 - Examples:
   - Je résous en un instant, bébé .
-
-### "c" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Le mieux que tu puisses faire, c'est essayer.
 
 ### "ca" + """ (1 occurrences)
 - Predicted: None
@@ -5929,6 +5921,12 @@ Accuracy: 99.93%
 - Examples:
   - Il chante dans des soirées karaoké , où il chante mal.
 
+### "l" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Tu veux aller à l'hôpital ?
+
 ### "la" + ""Pensione Fiorini" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6900,12 +6898,6 @@ Accuracy: 99.93%
 - Actual: None
 - Examples:
   - C'est pas facile, les rapports père—fille.
-
-### "qu" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Un bonjour sincère vaut mieux qu'un long discours.
 
 ### "quantité" + "." (1 occurrences)
 - Predicted: None
@@ -8094,6 +8086,12 @@ Accuracy: 99.93%
 - Actual: None
 - Examples:
   - Mon mot préféré en allemand est le mot pour «gant».
+
+### "«" + "great" (1 occurrences)
+- Predicted: NarrowNbsp
+- Actual: None
+- Examples:
+  - Ce «great attraction» de la représentation devait clore la série des exercices.
 
 ### "«" + "ha" (1 occurrences)
 - Predicted: NarrowNbsp

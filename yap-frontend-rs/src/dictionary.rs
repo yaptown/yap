@@ -389,6 +389,7 @@ mod tests {
                     total_count: 70,
                 },
                 encoded_sentences: vec![],
+                sentence_phonemes: Default::default(),
                 gram_dictionary: rows
                     .iter()
                     .filter(|(_, _, meanings)| !meanings.is_empty())

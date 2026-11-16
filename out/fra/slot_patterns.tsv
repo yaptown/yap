@@ -1,20 +1,18 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-dire quelque chose	filled	10390	10	12	0.83	yes	"Au pas de course", ça veut dire "cours".	dire … cours
-dire quelque chose	clitic	2658	10	12	0.83	yes	Je croyais t'avoir dit de ne pas venir ici.	t' … dit
-sa mère	clitic	2390	12	12	1.00	yes		
-sortir quelque chose	filled	786	9	12	0.75	yes	Je croyais que j'allais m'en sortir tout seul.	m' … sortir
-arriver à quelqu'un	filled	688	7	12	0.58	no	Hier, je suis arrivé à Tokyo.	arrivé … à … Tokyo
-arriver à quelqu'un	clitic	612	12	12	1.00	yes		
-sortir quelque chose	clitic	395	8	12	0.67	yes	Comment vas-tu t'en sortir sans boulot ?	t' … sortir
-désolé de faire quelque chose	infinitive	264	12	12	1.00	yes		
+dire quelque chose	filled	10397	10	12	0.83	yes	"Au pas de course", ça veut dire "cours".	dire … cours
+dire quelque chose	clitic	2659	10	12	0.83	yes	Je croyais t'avoir dit de ne pas venir ici.	t' … dit
+sa mère	clitic	2406	12	12	1.00	yes		
+sortir quelque chose	filled	788	9	12	0.75	yes	Je croyais que j'allais m'en sortir tout seul.	m' … sortir
+sortir quelque chose	clitic	397	8	12	0.67	yes	Comment vas-tu t'en sortir sans boulot ?	t' … sortir
+désolé de faire quelque chose	infinitive	263	12	12	1.00	yes		
 ravi de faire quelque chose	infinitive	226	12	12	1.00	yes		
 faire de son mieux	clitic	161	12	12	1.00	yes		
-sa mère	filled	148	10	12	0.83	yes	J'ai la meilleure mère du monde !	mère … monde
+sa mère	filled	147	10	12	0.83	yes	J'ai la meilleure mère du monde !	mère … monde
 bien dans ses baskets	clitic	96	0	12	0.00	no	C'est la seconde fois que je te reprends mon bien.	mon … bien
 but contre son camp	clitic	75	0	12	0.00	no	Ainsi c'est là votre but, entrer dans la montagne.	votre … but
 prendre son temps	clitic	65	12	12	1.00	yes		
 faire son possible	clitic	49	12	12	1.00	yes		
-y être pour quelque chose	filled	42	10	12	0.83	yes	Je n'y suis pour personne.	y … suis … pour … personne
+y être pour quelque chose	filled	43	10	12	0.83	yes	Je n'y suis pour personne.	y … suis … pour … personne
 enchanté de faire quelque chose	infinitive	36	12	12	1.00	yes		
 donner sa parole	clitic	34	12	12	1.00	yes		
 faire ses valises	clitic	32	12	12	1.00	yes		
@@ -31,8 +29,8 @@ sur ses gardes	clitic	19	12	12	1.00	yes
 lever son verre	clitic	15	12	12	1.00	yes		
 tirer quelque chose au clair	filled	15	12	12	1.00	yes		
 dans son coin	clitic	14	9	12	0.75	yes	Pas dans mon coin.	dans … mon … coin
+avoir ses règles	filled	13	0	11	0.00	no	Avec ce qu'il avait bu, il était excité.	ce … avait
 faire son affaire	clitic	13	4	12	0.33	no	Alors comme ça au premier coup d’œil Vous faites pas mon affaire.	faites … mon … affaire
-avoir ses règles	filled	12	0	11	0.00	no	Avec ce qu'il avait bu, il était excité.	ce … avait
 faire sa B.A.	filled	12	0	11	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
 faire son apparition	filled	12	0	11	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
 faire son entrée	filled	12	0	11	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
@@ -113,7 +111,6 @@ tisser sa toile	clitic	2	0	2	0.00	no	As-tu déjà vu une araignée tisser sa toi
 aller son chemin	clitic	1	1	1	1.00	yes		
 attendre son heure	filled	1	0	1	0.00	no	Là, elle passera la nuit en attendant l'heure du sacrifice.	attendant … heure … sacrifice
 avoir plus d'une corde à son arc	clitic	1	1	1	1.00	yes		
-avoir quelqu'un dans le nez	filled	1	0	1	0.00	no	Vous aviez des serviettes de papier dans le nez.	aviez … serviettes … dans … le … nez
 avoir ses entrées	clitic	1	1	1	1.00	yes		
 cacher son jeu	clitic	1	1	1	1.00	yes		
 calmer sa joie	clitic	1	1	1	1.00	yes		
@@ -137,6 +134,7 @@ mettre sa main au feu	filled	1	0	1	0.00	no	J'ai envie de tous leur mettre des dr
 mettre sa main à couper	clitic	1	1	1	1.00	yes		
 montrer son vrai visage	filled	1	1	1	1.00	yes		
 ne pas avoir dit son dernier mot	clitic	1	1	1	1.00	yes		
+ne pas avoir son pareil	filled	1	0	1	0.00	no	Ce jeu n'a pas de but.	n' … a … pas … but
 paix à son âme	clitic	1	0	1	0.00	no	Si nous ne découvrons pas la vérité, c'en est fait de notre paix à tous.	notre … paix
 pointer le bout de son nez	filled	1	1	1	1.00	yes		
 prendre dans ses filets	clitic	1	1	1	1.00	yes		

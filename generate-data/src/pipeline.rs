@@ -20,8 +20,7 @@
 use anyhow::Context;
 use indexmap::IndexSet;
 use language_utils::{
-    Course, Gram, GramFrequencyEntry, GramVocabEntry, MultiwordTermMatch, MultiwordTerms,
-    SentenceInfo, SentenceSource,
+    Course, Gram, GramVocabEntry, MultiwordTermMatch, MultiwordTerms, SentenceInfo, SentenceSource,
 };
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::fs::File;
@@ -197,24 +196,35 @@ pub fn load_banned_words(
 
 /// Initial gram frequencies from the vocabulary, for filtering (the full
 /// gram+phrase frequencies are computed after filtering).
-pub fn initial_gram_frequencies(
+/// Keep only sentences whose every learnable reading-tagged gram (gram, sense
+/// and reading) occurs in more than three sentences. Each one becomes a card
+/// and a dictionary entry, and rarer ones are often not real words.
+pub fn drop_sentences_with_rare_grams(
+    sentences: Vec<(
+        String,
+        language_utils::ReadingSentence<Gram<String>, String>,
+    )>,
     gram_vocabulary: &[GramVocabEntry<String>],
-) -> Vec<GramFrequencyEntry<String>> {
-    let mut frequencies: Vec<GramFrequencyEntry<String>> = gram_vocabulary
-        .iter()
-        .filter(|entry| entry.atoms.is_learnable())
-        .map(|entry| GramFrequencyEntry {
-            count: entry.frequency,
-            direct_count: entry.frequency,
-            disambiguation_key: entry.atoms.disambiguation_key(),
-            gram: language_utils::TaggedGram {
-                gram: entry.atoms.clone(),
-                sense: None,
-            },
+) -> Vec<(
+    String,
+    language_utils::ReadingSentence<Gram<String>, String>,
+)> {
+    use language_utils::SentenceGram;
+    let common: HashSet<_> =
+        crate::frequencies::compute_reading_gram_frequencies(&sentences, gram_vocabulary)
+            .into_iter()
+            .filter(|entry| entry.count > 3)
+            .map(|entry| entry.gram)
+            .collect();
+    sentences
+        .into_iter()
+        .filter(|(_, sentence)| {
+            sentence.grams.iter().all(|gram| match gram {
+                SentenceGram::Learnable(gram) => common.contains(gram),
+                SentenceGram::Obvious(_) => true,
+            })
         })
-        .collect();
-    frequencies.sort_by_key(|entry| std::cmp::Reverse(entry.clone()));
-    frequencies
+        .collect()
 }
 
 /// Decode sentence grams identically for pack generation and cache measurement.

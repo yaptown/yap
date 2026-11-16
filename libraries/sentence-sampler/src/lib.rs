@@ -65,23 +65,37 @@ where
         return items;
     }
 
-    // Calculate the probability of keeping each item
     let keep_probability = target_count as f64 / items.len() as f64;
-
     items
         .into_iter()
-        .filter(|item| {
-            // Create a deterministic seed based on the item's key
-            let mut hasher = DefaultHasher::new();
-            key_fn(item).hash(&mut hasher);
-            let seed = hasher.finish();
+        .filter(|item| draw(key_fn(item)) < keep_probability)
+        .collect()
+}
 
-            // Create RNG with this seed
-            let mut rng = ChaCha8Rng::seed_from_u64(seed);
+/// An item's fixed draw in [0, 1), derived from its key alone.
+fn draw(key: impl Hash) -> f64 {
+    let mut hasher = DefaultHasher::new();
+    key.hash(&mut hasher);
+    ChaCha8Rng::seed_from_u64(hasher.finish()).random::<f64>()
+}
 
-            // Keep this item with probability keep_probability
-            rng.random::<f64>() < keep_probability
-        })
+/// Exactly `count` items (or all of them, if there are fewer): the ones with the lowest
+/// draws. It's the same draw `sample_to_target` thresholds, so every earlier
+/// `sample_to_target` pick over the same items ranks ahead of every item it left out.
+pub fn take_lowest_draws<T, K, F>(items: Vec<T>, count: usize, key_fn: F) -> Vec<T>
+where
+    K: Hash,
+    F: Fn(&T) -> K,
+{
+    let mut ranked: Vec<(f64, T)> = items
+        .into_iter()
+        .map(|item| (draw(key_fn(&item)), item))
+        .collect();
+    ranked.sort_by(|a, b| a.0.total_cmp(&b.0));
+    ranked
+        .into_iter()
+        .take(count)
+        .map(|(_, item)| item)
         .collect()
 }
 
@@ -128,13 +142,7 @@ where
 
     let sampled: Vec<T> = items
         .into_iter()
-        .filter(|item| {
-            let mut hasher = DefaultHasher::new();
-            key_fn(item).hash(&mut hasher);
-            let seed = hasher.finish();
-            let mut rng = ChaCha8Rng::seed_from_u64(seed);
-            rng.random::<f64>() < keep_probability
-        })
+        .filter(|item| draw(key_fn(item)) < keep_probability)
         .collect();
 
     let final_count = sampled.len();

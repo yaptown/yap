@@ -2262,9 +2262,9 @@ mod tests {
 
     #[test]
     fn spanish_variety_labels_match_pre_upgrade_fixture() {
-        // Captured from g2p 3ae99aa's phonemize(text, "es-419") before the API bump.
+        // Captured from g2p 3ae99aa's phonemize(text, "es-419") before the API bump; cinco updated for g2p 0.8.0's nasal place assimilation (ŋ before k).
         for (text, expected) in [
-            ("cinco", vec!["s", "i", "n", "k", "o"]),
+            ("cinco", vec!["s", "i", "ŋ", "k", "o"]),
             ("caza", vec!["k", "a", "s", "a"]),
             (
                 "Gracias por la cerveza.",
@@ -2295,7 +2295,7 @@ mod tests {
                 .unwrap()
                 .unwrap()
                 .phonemes,
-            word(&["θ", "i", "n", "k", "o"])
+            word(&["θ", "i", "ŋ", "k", "o"])
         );
         assert_eq!(
             normalize_phonemes(Phoneme::Theta, Language::SpanishLatinAmerican),
@@ -2310,8 +2310,8 @@ mod tests {
         assert_eq!(
             variants,
             vec![
-                word(&["θ", "i", "n", "k", "o"]),
-                word(&["s", "i", "n", "k", "o"])
+                word(&["θ", "i", "ŋ", "k", "o"]),
+                word(&["s", "i", "ŋ", "k", "o"])
             ]
         );
         // Latin American per-word g2p also combines with dictionary-only
@@ -2327,7 +2327,7 @@ mod tests {
             assert!(
                 readings
                     .iter()
-                    .any(|r| r.phonemes == word(&["s", "i", "n", "k", "o", "ʘ"])
+                    .any(|r| r.phonemes == word(&["s", "i", "ŋ", "k", "o", "ʘ"])
                         && r.word_spans == [(0, 5), (5, 6)])
             );
         }
@@ -2338,7 +2338,7 @@ mod tests {
             ground_truth_phoneme_variants(&text, &empty, Language::SpanishLatinAmerican).unwrap();
         assert_eq!(readings.len(), MAX_VARIANT_COMBINATIONS + 1);
         assert!(readings.iter().any(|r| r.phonemes
-            == vec![word(&["s", "i", "n", "k", "o"]); 6].concat()
+            == vec![word(&["s", "i", "ŋ", "k", "o"]); 6].concat()
             && r.word_spans.len() == 6));
         assert_eq!(
             flat_variants("niño", &empty, Language::SpanishLatinAmerican)
@@ -2483,8 +2483,9 @@ mod tests {
         let target = model_target("你好", Language::ChineseSimplified)
             .expect("Mandarin is g2p-labeled")
             .expect("mandarin chain runs");
-        assert_eq!(target.phonemes, word(&["n", "i", "x", "au̯"]));
-        assert_eq!(target.tone, [None, Some(3), None, Some(3)]);
+        assert_eq!(target.phonemes, word(&["n", "i", "x", "aʊ"]));
+        // Third-tone sandhi: 你 rises before 好.
+        assert_eq!(target.tone, [None, Some(2), None, Some(3)]);
         // Digits would be spoken but unlabeled: refused, not silently cut.
         assert!(matches!(
             model_target("我有2个", Language::ChineseSimplified),
@@ -2560,7 +2561,7 @@ mod letter_name_tests {
         );
         assert_eq!(
             phonemes(Language::Russian, "щ", "борщ"),
-            "ɕ ɑ k ɑ k v b o r ɕ"
+            "ɕ ɑ k ɑ k v b o rʲ ɕ"
         );
         // Bare letters that espeak would read as words: Portuguese "e" is
         // the conjunction /i/ and "o" the article /u/; a bare Russian "о"
@@ -2577,14 +2578,14 @@ mod letter_name_tests {
             phonemes(Language::Russian, "о", "окно"),
             "o k ɑ k v ʌ k n o"
         );
-        // The `^` espeak leaves on царь is stripped, not scored.
+        // царь ends in a soft r (g2p 0.8.0), not r plus a vowel.
         assert_eq!(
             phonemes(Language::Russian, "ц", "царь"),
-            "ts ɛ k ɑ k f ts ɑ r ɪ"
+            "ts ɛ k ɑ k f ts ɑ rʲ"
         );
         assert_eq!(
             phonemes(Language::Russian, "ь", "соль"),
-            "mʲ ɑ x kʲ i j z n ɑ k k ɑ k f s o ɫ"
+            "mʲ ɑ x kʲ i j z n ɑ k k ɑ k f s o ɫʲ"
         );
         assert_eq!(
             phonemes(Language::French, "ç", "garçon"),

@@ -667,6 +667,9 @@ mod sense_tests {
                     .collect(),
                 },
             )],
+            sentence_phonemes: [(surface.into(), vec!["% b aꜜ ŋ k ɯ".into()])]
+                .into_iter()
+                .collect(),
             gram_dictionary: BTreeMap::new(),
             morphemes: BTreeMap::new(),
             human_audio: FxHashMap::default(),

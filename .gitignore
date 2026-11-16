@@ -67,6 +67,8 @@ out/*/gram_dictionary.jsonl
 out/*/gram_frequencies.jsonl
 out/*/gram_phrasebook.jsonl
 out/*/redundant_senses.jsonl
+out/*/sense_labels.jsonl
+out/*/missing_senses.jsonl
 out/*/phrasebook.jsonl
 out/*/proper_noun_definitions.jsonl
 out/*/encoded_sentences.jsonl
@@ -95,3 +97,12 @@ experiments/
 
 # Generated reader editions (published separately).
 books/*/build/
+
+# opensubtitles-downloader's per-film record of rejected candidates, so a rerun
+# doesn't spend quota re-fetching them; local to whoever ran the download
+generate-data/data/*/sentence-sources/movies/fetch-failures/
+
+# Cleaned-subtitle cache derived from subtitles-raw/<imdb>.srt at load time.
+# The JSONLs already tracked are the only copy for films downloaded before raw
+# SRTs were kept, so they stay checked in; new ones are just cache.
+generate-data/data/*/sentence-sources/movies/subtitles/*.jsonl
