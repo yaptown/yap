@@ -17,8 +17,9 @@ use crate::server::card_kind;
 #[derive(Serialize, JsonSchema)]
 pub struct CardSummaryOut {
     pub language: Language,
-    /// Opaque card object — pass back verbatim to log_review / present_card
-    /// / present_translation.
+    /// The card's identity, which log_review, present_card and
+    /// present_translation take back as is: it names the exact card the
+    /// scheduler tracks, so a copied card always lands on the right one.
     pub card: serde_json::Value,
     /// The card's display text (the word, or the pronunciation pattern).
     pub text: String,
@@ -206,8 +207,9 @@ pub struct DictionaryMatchOut {
 
 #[derive(Serialize, JsonSchema)]
 pub struct DictionarySenseMatchOut {
-    /// The exact sense-tagged gram — pass verbatim with the word's language
-    /// to add_cards, get_sentences, or log_review.
+    /// The exact sense-tagged gram. Together with the word's language it
+    /// works directly with add_cards and get_sentences, since it's the key
+    /// the deck uses for this entry.
     pub gram: TaggedGram<Gram<String>>,
     pub gloss: String,
     /// 1 is the most common sense in the course.
@@ -236,7 +238,8 @@ pub struct SentenceOut {
 pub struct GetSentencesOut {
     /// Display text of the requested gram.
     pub word: String,
-    /// Sentences composed only of words the user already knows.
+    /// Sentences where every other word is one the user already knows: the
+    /// best ones for quizzing, since the gram is the only new thing.
     pub comprehensible_sentences: Vec<SentenceOut>,
     pub total_comprehensible: usize,
     /// Sampled from everything containing the word; may include unknown
@@ -345,7 +348,7 @@ pub struct GetAudioOut {
 /// One search hit, per the standard search/fetch contract.
 #[derive(Serialize, JsonSchema)]
 pub struct SearchResultOut {
-    /// Pass to fetch for the full entry.
+    /// fetch takes this id and returns the full entry.
     pub id: String,
     pub title: String,
     /// Citable public dictionary URL.
@@ -370,8 +373,9 @@ pub struct FetchMetadataOut {
 
 #[derive(Serialize, JsonSchema)]
 pub struct FetchSenseOut {
-    /// The exact sense-tagged gram — pass verbatim with metadata.language
-    /// to add_cards, get_sentences, or log_review.
+    /// The exact sense-tagged gram. Together with metadata.language it
+    /// works directly with add_cards and get_sentences, since it's the key
+    /// the deck uses for this entry.
     pub gram: TaggedGram<Gram<String>>,
     pub gloss: String,
     pub frequency_rank: usize,

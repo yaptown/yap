@@ -35,14 +35,15 @@ pub type DocumentId = String;
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "op", rename_all = "snake_case")]
 pub enum KnowledgeEvent {
-    /// Create a concept. `id` is a permanent lowercase slug (a-z, 0-9, '-'),
-    /// never reused, even after the concept is retired.
+    /// Create a concept. `id` is a permanent lowercase slug (a-z, 0-9, '-').
+    /// Reviews and links refer to it forever, so it's never reused, even
+    /// after the concept is retired; the title can change freely.
     AddConcept {
         id: ConceptId,
         title: String,
-        /// The one thing the user can do once they know this, stated so a
-        /// single question can test it. If it takes "and" to say, it is two
-        /// concepts.
+        /// The one thing the user can do once they know this, phrased so a
+        /// single question could test it. A description that needs an "and"
+        /// is often two concepts.
         #[serde(default)]
         description: String,
     },
@@ -54,10 +55,13 @@ pub enum KnowledgeEvent {
         #[serde(default)]
         description: Option<String>,
     },
-    /// Set (or, with prerequisite false and encompassing 0, remove) the link
-    /// between two concepts. `prerequisite`: `basic` must be learned before
-    /// `advanced`. `encompassing` (0..=1): roughly the chance that practicing
-    /// `advanced` exercises `basic`; review credit flows along it.
+    /// Set the link between two concepts (prerequisite false with
+    /// encompassing 0 removes it). `prerequisite` means `basic` is learned
+    /// before `advanced` can appear on the frontier. `encompassing` (0 to 1)
+    /// is roughly the chance that practicing `advanced` exercises `basic`:
+    /// passing reviews send that share of credit down, and failures send a
+    /// penalty up. The two are independent, since needing something first
+    /// doesn't mean practicing the advanced concept exercises it.
     SetLink {
         advanced: ConceptId,
         basic: ConceptId,
@@ -65,21 +69,27 @@ pub enum KnowledgeEvent {
         #[schemars(with = "f64")]
         encompassing: OrderedFloat<f64>,
     },
-    /// Split a concept into new, finer parts. The concept stays as a
-    /// composite that fully encompasses each part, so reviewing it still
-    /// credits them all. Split when one question can't test the concept.
+    /// Split a concept into new, finer parts, which helps once one question
+    /// can't test the concept. The concept stays as a composite that fully
+    /// encompasses each part (and the parts become its prerequisites), so
+    /// reviewing it still credits them all. Parts also take on the
+    /// concept's own prerequisites and linked documents.
     SplitConcept {
         id: ConceptId,
         into: Vec<NewConcept>,
     },
     /// Mark a concept as already known: it satisfies prerequisites and never
-    /// comes due. `known: false` reverses this.
+    /// comes due, which suits things the user has told you they know.
+    /// `known: false` puts it back on the schedule.
     SetKnown { id: ConceptId, known: bool },
-    /// An explicit review: one question about one concept. `score` is in
-    /// 0..=1 (0.5 and above passes) and measures how well the user recalled
-    /// that one thing. It is not the share of several things they got right;
-    /// if the question covered several, split the concept and review each
-    /// part.
+    /// An explicit review: one question about one concept. `score` (0 to 1,
+    /// with 0.5 and up passing) is how well the user recalled that one thing;
+    /// a pass moves the concept forward roughly in proportion, and a fail
+    /// sets it back. When a question ends up covering several things, a
+    /// partial score blurs them together, and splitting the concept usually
+    /// gives the scheduler a cleaner signal. A concept's first pass is what
+    /// starts its schedule; a failed first attempt is recorded but leaves it
+    /// unlearned.
     Review {
         id: ConceptId,
         #[schemars(with = "f64")]
@@ -115,9 +125,9 @@ pub struct NewConcept {
     /// As for add_concept: the one thing, testable by one question.
     #[serde(default)]
     pub description: String,
-    /// Whether this part starts with the split concept's memory (its review
-    /// history counts for the part). Set false for a part the past reviews
-    /// never actually tested; it then starts unlearned. Defaults to true.
+    /// Whether this part starts with the split concept's memory, so its past
+    /// reviews count for the part. False suits a part those reviews never
+    /// really tested, which then starts unlearned. Defaults to true.
     #[serde(default = "inherit_by_default")]
     pub inherit_memory: bool,
 }

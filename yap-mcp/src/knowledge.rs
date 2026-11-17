@@ -77,7 +77,9 @@ pub struct ConceptSummaryOut {
     memory: Option<f64>,
     /// RFC 3339 time the concept is (or was) due.
     due: Option<String>,
-    /// The last review failed, so only a direct review clears it.
+    /// The last review failed. Implicit credit skips the concept until a
+    /// direct review passes, since a failure is the clearest sign it needs
+    /// practice of its own.
     needs_explicit_review: bool,
     reviews: usize,
 }
@@ -142,6 +144,9 @@ pub struct ApplyOut {
     /// Reviews with a middling score, which often means the question tested
     /// more than one thing.
     split_hints: Vec<String>,
+    /// For passing reviews: the linked concepts the answer may also have
+    /// shown the user understands.
+    credit_hints: Vec<String>,
     synced: bool,
 }
 
@@ -199,7 +204,8 @@ pub struct StudyConceptOut {
     summary: ConceptSummaryOut,
     description: String,
     /// The most recent questions asked about it, newest first (all of them
-    /// are in knowledge_concept). Ask something new.
+    /// are in knowledge_concept). A fresh angle each time tests understanding
+    /// rather than memory of a familiar question.
     recent_questions: Vec<PastQuestionOut>,
     /// Linked documents (read them with knowledge_document).
     documents: Vec<DocumentLinkOut>,
@@ -408,7 +414,7 @@ impl YapMcp {
     #[tool(
         title = "Change the knowledge graph",
         output_schema = rmcp::handler::server::common::schema_for_type::<ApplyOut>(),
-        description = "Apply a batch of changes to the user's knowledge graph, all or nothing: add/edit/split/retire concepts, set links, mark concepts known, record reviews, and link documents. Links: `prerequisite` means basic must be learned before advanced; `encompassing` (0..1) is roughly the chance that practicing advanced exercises basic. Passing a review sends credit down encompassing links, failing sends a penalty up, Math Academy-style. Most prerequisites should have encompassing 0; set it only when advanced really practices basic. Keep concepts atomic: each should be testable by a single question, so if describing one takes \"and\", make it two concepts. Example: rather than one concept \"Loss functions\" (which invites \"what is it, and what makes a good one?\"), make two. `loss-function`: \"Say what a loss function is: a number scoring how far the model's output is from the target, which training minimizes.\" Quiz: \"What does a loss function compute?\" `loss-needs-informative-gradient`: \"Explain why a loss must have an informative gradient: the optimizer only follows the gradient, so where it's flat or zero there's no direction to improve.\" Quiz: \"Why is 0/1 accuracy a bad training loss?\" Prerequisite: `loss-function`. If reviewing them together is still useful, keep \"Loss functions\" as a composite by splitting it into the two, with inherit_memory false on any part its past reviews never tested. Reviews: one question tests one concept. Ask it (check past questions so you ask something new), then record the score (0..1, 0.5+ passes) for how well the user recalled that one thing, along with the question, the user's answer, and your notes. If you find yourself wanting to ask two questions, or a score would mean \"one of two parts\", split the concept first and review each part separately. Only mark a concept known when the user says they know it.",
+        description = "Apply a batch of changes to the user's knowledge graph: add, edit, split or retire concepts, set links, mark concepts known, record reviews, and link documents. The batch is all or nothing, and later ops can refer to concepts added earlier in it.\n\nHow the graph works, Math Academy-style: concepts are linked in two ways. A prerequisite link means the basic concept is learned before the advanced one appears on the frontier. An encompassing link (0 to 1) is roughly the chance that practicing the advanced concept exercises the basic one. When a review passes, credit flows down encompassing links, and when one fails, a penalty flows up. That credit is discounted while the receiving concept's memory is still fresh, so practice right after learning adds little. Many prerequisites have encompassing 0, since needing one thing first doesn't mean practicing the other exercises it.\n\nScheduling works best when a single question can test each concept, and a description that needs an \"and\" is often two concepts in disguise. For example, \"Loss functions\" tends to invite a two-part question (what is it, and what makes a good one?), so it works better as two: `loss-function`, \"Say what a loss function is: a number scoring how far the model's output is from the target, which training minimizes\" (quiz: \"What does a loss function compute?\"), and `loss-needs-informative-gradient`, \"Explain why a loss must have an informative gradient: the optimizer only follows the gradient, so where it's flat or zero there's no direction to improve\" (quiz: \"Why is 0/1 accuracy a bad training loss?\"), with `loss-function` as its prerequisite. If reviewing the two together is still useful, splitting \"Loss functions\" into them keeps it as a composite.\n\nA review records one question about one concept. The score (0 to 1, with 0.5 and up passing) is how well the user recalled that one thing, stored with the question, their answer and your notes. Past questions come back from knowledge_next and knowledge_concept, which makes it easy to ask something fresh. If a question wants to be two, or a score would really mean \"one of two parts\", that's usually a sign the concept is ready to split so each part gets its own schedule. Marking a concept known takes it off the schedule entirely, so it fits things the user has told you they already know.",
         annotations(
             title = "Change the knowledge graph",
             read_only_hint = false,
@@ -454,7 +460,8 @@ impl YapMcp {
                 .collect();
             if !missing.is_empty() {
                 return error(format!(
-                    "nothing was applied: no document {}; save it with knowledge_save_document first",
+                    "nothing was applied: there's no document {} yet. Links point at saved \
+                     documents, so knowledge_save_document comes first",
                     missing.join(", ")
                 ));
             }
@@ -519,12 +526,38 @@ impl YapMcp {
             .filter(|review| MIDDLING_SCORE.contains(&review.score))
             .map(|review| {
                 format!(
-                    "'{}' scored {}: if part of the answer was right and part wrong, the \
-                     question tested more than one thing. Split the concept (with \
-                     inherit_memory false on parts the reviews never tested) and review \
-                     each part on its own.",
+                    "'{}' scored {}. A middling score sometimes means the question covered \
+                     two things, one recalled and one not, and the scheduler can't tell that \
+                     apart from shaky recall of a single thing. If that's what happened, \
+                     splitting the concept lets each part keep its own schedule; \
+                     inherit_memory false suits any part these reviews never really tested.",
                     review.concept, review.score
                 )
+            })
+            .collect();
+        let reviewed_here: BTreeSet<&str> = reviews.iter().map(|r| r.concept.as_str()).collect();
+        let credit_hints = reviews
+            .iter()
+            .filter(|review| review.score >= PASSING_SCORE)
+            .filter_map(|review| {
+                let linked: BTreeSet<&str> = graph
+                    .links_down(&review.concept)
+                    .chain(graph.links_up(&review.concept))
+                    .map(|(id, _)| id.as_str())
+                    .filter(|id| !reviewed_here.contains(id) && !graph.concepts[*id].known)
+                    .collect();
+                (!linked.is_empty()).then(|| {
+                    format!(
+                        "'{}' passed. If the answer also clearly showed the user understands \
+                         some linked concepts, they've earned credit there too: a review for \
+                         each (same question and answer, scored on what the answer showed about \
+                         that concept) records it. Credit for a concept reviewed recently is \
+                         discounted automatically, so this won't over-count. Linked concepts: \
+                         {}.",
+                        review.concept,
+                        linked.into_iter().collect::<Vec<_>>().join(", ")
+                    )
+                })
             })
             .collect();
 
@@ -536,6 +569,7 @@ impl YapMcp {
             reviews,
             remediation,
             split_hints,
+            credit_hints,
             synced: synced == SyncStatus::Synced,
         })
     }
@@ -599,7 +633,7 @@ impl YapMcp {
     #[tool(
         title = "Inspect a concept",
         output_schema = rmcp::handler::server::common::schema_for_type::<ConceptOut>(),
-        description = "Everything about one concept: description, learning state, what it builds on and what builds on it, its linked documents in full, and its whole review history (questions asked, answers, notes). Check the history before quizzing so you ask something new.",
+        description = "Everything about one concept: description, learning state, what it builds on and what builds on it, its linked documents in full, and its whole review history (questions asked, answers, notes). The history shows what has been asked before, which helps when picking a new question.",
         annotations(
             title = "Inspect a concept",
             read_only_hint = true,
@@ -662,7 +696,7 @@ impl YapMcp {
     #[tool(
         title = "What to study next",
         output_schema = rmcp::handler::server::common::schema_for_type::<NextOut>(),
-        description = "Plan the next study session: the fewest tasks that cover every due review (reviewing an advanced concept implicitly reviews what it encompasses), the frontier of concepts ready to learn, and what comes due soon. Each task and frontier concept carries its description, its most recent questions (with answers and notes, so you can ask something new), and its linked documents, which is usually enough to run the session without knowledge_concept.",
+        description = "Plan the next study session. Following Math Academy, the plan keeps reviews few so more of the user's time goes to learning: since practicing an advanced concept gives credit to what it encompasses, one well-chosen task can cover several due reviews, and the plan picks the fewest tasks that cover them all. A task is either a review of a learned concept or a lesson, which teaches a frontier concept for the first time and happens to cover due reviews along the way. Concepts whose last review failed always get a task of their own. Alongside the tasks come the frontier (concepts whose prerequisites are all learned, so they're ready to teach) and what comes due soon. Each task and frontier concept carries its description, its most recent questions with answers and notes, and its linked documents, which is usually enough to run the whole session without knowledge_concept.",
         annotations(
             title = "What to study next",
             read_only_hint = true,
@@ -783,7 +817,7 @@ impl YapMcp {
     #[tool(
         title = "Save a knowledge document",
         output_schema = rmcp::handler::server::common::schema_for_type::<SaveDocumentOut>(),
-        description = "Create or replace a plain-text document (notes, an article, a chapter) the user wants to learn from. Link it to concepts with a set_document_link op in knowledge_apply; linked documents show up when inspecting a concept.",
+        description = "Create or replace a plain-text document (notes, an article, a chapter) the user wants to learn from. Documents are source material for the knowledge graph: once linked to concepts (a set_document_link op in knowledge_apply), they show up in full when inspecting those concepts, so you can teach and quiz from what the user is actually reading. Unlike the graph, documents are ordinary editable records, and saving an existing id replaces it.",
         annotations(
             title = "Save a knowledge document",
             read_only_hint = false,
@@ -825,7 +859,7 @@ impl YapMcp {
     #[tool(
         title = "Delete a knowledge document",
         output_schema = rmcp::handler::server::common::schema_for_type::<DeleteDocumentOut>(),
-        description = "Delete a document and unlink it from every concept. Confirm with the user first.",
+        description = "Delete a document and unlink it from every concept. Documents aren't kept in the event history, so a deletion can't be undone, which makes it worth checking with the user first.",
         annotations(
             title = "Delete a knowledge document",
             read_only_hint = false,

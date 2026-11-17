@@ -105,8 +105,8 @@ const IDEMPOTENCY_CACHE_MAX: usize = 256;
 
 /// Returned when a nonce is reused for a different card/sentence — the real
 /// widget never does this (each presentation mints its own nonce).
-const IDEMPOTENCY_CONFLICT_MSG: &str = "that idempotency token was already used for a different card — pass the token from the \
-     current challenge, or omit it";
+const IDEMPOTENCY_CONFLICT_MSG: &str = "that idempotency token was already used for a different card. Each token belongs \
+     to one challenge, so the token from the current challenge works, or it can be left out";
 
 pub struct YapState {
     pub(crate) supabase: SupabaseAuth,
@@ -449,7 +449,8 @@ impl YapState {
         if parsed != Some(expected) {
             return Err(format!(
                 "this server is connected to a {expected} course, but got language '{language}'. \
-                 Pass the language exactly as returned by search_dictionary or get_due_cards."
+                 The language field returned by search_dictionary and get_due_cards is the one \
+                 that matches."
             ));
         }
         Ok(())
@@ -465,9 +466,10 @@ impl YapState {
         match self.pack().resolve_entry(gram) {
             Some(interned) => Ok(interned),
             None => Err(format!(
-                "no dictionary entry in this course matches that gram for '{}' — the full \
-                 word/lemma/part-of-speech sequence must match; absent or stale sense numbers select the most frequent sense. Use search_dictionary \
-                 to find real entries.",
+                "no dictionary entry in this course matches that gram for '{}'. Entries are \
+                 keyed by the full word/lemma/part-of-speech sequence, so a gram only matches \
+                 when every token does (a missing or stale sense number just selects the most \
+                 frequent sense). search_dictionary returns the exact grams of real entries.",
                 gram.to_display_string(self.context.course.target_language)
             )),
         }
@@ -485,8 +487,8 @@ impl YapState {
     ) -> Result<(SentenceSpur, TranslateComprehensibleSentence), String> {
         let CardIndicator::WrittenGram { gram } = card else {
             return Err(
-                "translation challenges quiz written gram cards — present listening and \
-                 pronunciation cards with present_card instead"
+                "translation challenges are built for written gram cards; listening and \
+                 pronunciation cards have their own exercise in present_card"
                     .to_string(),
             );
         };
@@ -500,8 +502,9 @@ impl YapState {
                 let pack = self.pack();
                 let Some(spur) = pack.sentence_key(&text) else {
                     return Err(
-                        "that sentence isn't in yap's corpus — pass one exactly as returned by \
-                         get_sentences, or omit it to let the server pick"
+                        "that sentence isn't in yap's corpus. Grading needs a real corpus \
+                         sentence (for its word links and reference translation), so one copied \
+                         from get_sentences works, or leaving it out lets the server pick"
                             .to_string(),
                     );
                 };
@@ -510,8 +513,8 @@ impl YapState {
                     .any(|candidate| candidate == spur);
                 if !contains {
                     return Err(format!(
-                        "that sentence doesn't contain «{display}» — pick one from get_sentences \
-                         for this word, or omit it"
+                        "that sentence doesn't contain «{display}». get_sentences for this word \
+                         lists ones that do, or leaving it out lets the server pick"
                     ));
                 }
                 spur
@@ -520,8 +523,9 @@ impl YapState {
                 Some(spur) => spur,
                 None => {
                     return Err(format!(
-                        "no comprehensible sentence contains «{display}» yet — quiz it with \
-                         present_card instead"
+                        "no comprehensible sentence contains «{display}» yet: every sentence \
+                         with it still has other words the user hasn't learned. present_card \
+                         works well for it in the meantime."
                     ));
                 }
             },
@@ -798,8 +802,9 @@ pub struct SearchDictionaryParams {
 
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct AddCardsParams {
-    /// The target language the grams belong to, e.g. "French". Must match the
-    /// course this server is connected to.
+    /// The target language the grams belong to, e.g. "French". The server is
+    /// connected to one course, so this is that course's language; it's
+    /// there as a check that the grams came from the right dictionary.
     language: String,
     /// The grams (words/phrases) to add, each the exact gram JSON returned by
     /// search_dictionary: a sequence of tokens with word, lemma, and part of
@@ -830,12 +835,14 @@ pub struct ReviewInput {
 pub struct LogReviewParams {
     /// The target language of the cards, e.g. "French".
     language: String,
-    /// All explicitly reviewed cards and their ratings. Expand the presented meaning rows' cards.
+    /// Every card the user was actually tested on, with its rating. A
+    /// written front can carry several meanings, each its own card, so this
+    /// lists one entry per meaning row the quiz covered.
     reviews: Vec<ReviewInput>,
     /// Optional idempotency key for one review. Supplied by the review
     /// widget so that a retried submit (or a call whose response was lost
-    /// after the event was recorded) records the review only once. Omit for
-    /// conversational reviews — a fresh key each call.
+    /// after the event was recorded) records the review only once.
+    /// Conversational reviews can leave it out.
     #[serde(default)]
     idempotency_token: Option<String>,
 }
@@ -867,11 +874,12 @@ pub struct PresentTranslationParams {
     /// get_due_cards or unlock_cards.
     card: Verbatim<Card>,
     /// Optional: the exact text of a corpus sentence containing this card's
-    /// gram, chosen from get_sentences — prefer comprehensible_sentences,
+    /// gram, chosen from get_sentences. comprehensible_sentences fit best,
     /// since the grade reviews every word in the sentence, not just this
-    /// card's. Omit to let the server pick the least-reviewed comprehensible
-    /// sentence, the same selection the yap app uses. Sentences the model
-    /// writes itself are rejected.
+    /// card's, and the user should already know the others. Left out, the
+    /// server picks the least-reviewed comprehensible sentence, as the yap
+    /// app does. Only real corpus sentences work here, because grading needs
+    /// each word's dictionary entry and the sentence's reference translation.
     #[serde(default)]
     sentence: Option<String>,
 }
@@ -1085,7 +1093,7 @@ impl YapMcp {
     #[tool(
         title = "Search the dictionary",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::SearchDictionaryOut>(),
-        description = "Search the yap dictionary for words and phrases, grouped by word with nested senses. Each sense includes its exact gram — the token sequence (word + lemma + part of speech) plus sense number. Pass the word's language and the chosen sense's gram verbatim to deck tools; search first rather than constructing grams by hand.",
+        description = "Search the yap dictionary for words and phrases, in the target language or by native-language meaning. Results are grouped by word, with each sense listed separately, because yap schedules senses independently: \"bank\" the river edge and \"bank\" the institution are different things to learn. Each sense carries its exact gram (token sequence of word + lemma + part of speech, plus sense number), which is what the deck tools use to find the entry, its sentences and its audio. Copying the gram straight from here is the reliable way to get one; a hand-built gram rarely matches an entry.",
         annotations(
             title = "Search the dictionary",
             read_only_hint = true,
@@ -1138,14 +1146,14 @@ impl YapMcp {
         ok_typed(&SearchDictionaryOut {
             query,
             results,
-            note: "frequency_rank 1 is the most common sense in the course. Pass the word's language + a chosen sense's gram verbatim to add_cards or get_sentences.".to_string(),
+            note: "frequency_rank 1 is the most common sense in the course; common senses are usually the most useful to learn first. A sense's gram, together with the word's language, works directly with add_cards and get_sentences.".to_string(),
         })
     }
 
     #[tool(
         title = "Add flashcards",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::AddCardsOut>(),
-        description = "Add words/phrases to the user's yap deck as new flashcards. Takes (language, gram) pairs, normally obtained from search_dictionary; anything that doesn't name a real dictionary entry is rejected. Confirm with the user before adding.",
+        description = "Add words or phrases to the user's yap deck as new flashcards, from (language, gram) pairs as returned by search_dictionary. A gram that doesn't name a real dictionary entry is turned away, and the whole call is rejected so nothing half-adds. Each new card becomes part of the user's daily reviews from then on, in the app as well as here, so it's worth checking with the user which words they want before adding.",
         annotations(
             title = "Add flashcards",
             read_only_hint = false,
@@ -1231,7 +1239,7 @@ impl YapMcp {
     #[tool(
         title = "List due flashcards",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::GetDueCardsOut>(),
-        description = "List the user's currently-due yap flashcards, most overdue first, with the due cards broken down by kind and FSRS state and a breakdown of lockup (how many locked cards are due now vs not yet due). Each entry carries its language and card object; pass the language and a reviews list of card/rating pairs to log_review after quizzing the user. Gram cards can be quizzed with example sentences from get_sentences. Set include_locked to also list the locked cards that are due.",
+        description = "List the user's due yap flashcards, most overdue first, with the due cards broken down by kind and FSRS state, and how many locked cards are due now versus later. Each entry carries its language and card object, which present_card, present_translation and log_review take as they are. A gram card can also be quizzed in conversation using a sentence from get_sentences. Lockup is yap's way of keeping a big backlog manageable: when more than 20 cards are due, the 15 most overdue stay active and the rest are set aside, so the user isn't faced with a wall of reviews. include_locked also lists the locked cards that are due.",
         annotations(
             title = "List due flashcards",
             read_only_hint = true,
@@ -1274,14 +1282,14 @@ impl YapMcp {
             cards,
             due_breakdown: breakdown.due_now_active,
             lockup: breakdown.lockup,
-            note: "kind 'written' = recognize the written word; 'listening' = normally an audio card (quiz in text as best you can); 'pronunciation' = a letter-sound pattern. A card's gram field can be passed to get_sentences. Locked cards due now are a backlog the user hasn't reached; unlock_cards releases the next batch and reviewing a locked card also unlocks it.".to_string(),
+            note: "kind 'written' means recognizing the written word; 'listening' is normally an audio card (present_card plays it, and in plain text you can quiz it as best you can); 'pronunciation' is a letter-sound pattern. A card's gram works with get_sentences. Locked cards that are due are a backlog the user hasn't reached yet; unlock_cards brings back the next batch when they want more, and reviewing a locked card unlocks it too.".to_string(),
         })
     }
 
     #[tool(
         title = "Unlock cards",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::UnlockCardsOut>(),
-        description = "Release the next batch of set-aside cards from lockup, putting them back in the due queue. Lockup is how yap keeps sessions manageable: when a big backlog is due at once, it keeps a handful of cards active and sets the rest aside to be practiced later. Reviewing a locked card also unlocks it. Confirm with the user before calling.",
+        description = "Release the next batch of set-aside cards from lockup, putting them back in the due queue. Lockup is how yap keeps sessions manageable: when a big backlog is due at once, it keeps a handful of the most overdue cards active and sets the rest aside for later, so the user can work through it at their own pace. Unlocking adds to today's workload, which is the user's call, so it's good to ask whether they'd like more before calling. Reviewing a locked card also unlocks it.",
         annotations(
             title = "Unlock cards",
             read_only_hint = false,
@@ -1334,7 +1342,7 @@ impl YapMcp {
         ok_typed(&UnlockCardsOut {
             unlocked,
             lockup: DeckBreakdownOut::new(state.deck(), Utc::now()).lockup,
-            note: "these cards are back in the due queue and will show up in get_due_cards."
+            note: "These cards are back in the due queue and now show up in get_due_cards."
                 .to_string(),
             synced: Some(synced == SyncStatus::Synced),
         })
@@ -1343,7 +1351,7 @@ impl YapMcp {
     #[tool(
         title = "Present a card",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::PresentOut>(),
-        description = "Present one card to the user as an interactive widget: a written card quizzes all added meanings sharing its prefixed text; a listening card quizzes the spoken gram, with audio (a human recording when the course has one) and a reveal; a pronunciation card shows the letter-sound pattern with example words and their audio. The widget records the user's own grade via log_review — so after presenting, do NOT log a review for this card yourself; the outcome is reported back to you. For a written card the user has seen before, prefer present_translation instead, like the yap app does.",
+        description = "Present one card to the user as an interactive widget: a written card quizzes all added meanings sharing its prefixed text; a listening card quizzes the spoken gram, with audio (a human recording when the course has one) and a reveal; a pronunciation card shows the letter-sound pattern with example words and their audio. The user grades themselves in the widget, and the widget records that review on their account and reports the outcome back to you; since it's already counted, logging it again would review the card twice. For a written card the user has seen before, present_translation usually makes the better exercise (it's what the yap app does), because translating a whole sentence practices every word in it, not just this one.",
         annotations(
             title = "Present a card",
             read_only_hint = true,
@@ -1516,7 +1524,7 @@ impl YapMcp {
     #[tool(
         title = "Present a translation challenge",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::PresentOut>(),
-        description = "Present a sentence-translation challenge for a written-gram card, as an interactive widget: the user reads a corpus sentence containing the word, types a translation, and the server autogrades it and logs the review — every word in the sentence gets reviewed, exactly like translation challenges in the yap app. Prefer this over present_card for written cards the user has seen before (not new). After presenting, do NOT call log_review or grade_translation yourself; the outcome is reported back to you. Optionally pass the exact text of a sentence from get_sentences (prefer comprehensible_sentences — every word in it gets reviewed) to control which sentence is used; omit it to let the server pick the way the app does.",
+        description = "Present a sentence-translation challenge for a written-gram card, as an interactive widget. The user reads a real sentence containing the word and types a translation, and the server grades it and logs the review, just like translation challenges in the yap app. This is yap's core exercise for words the user has already met: understanding a whole sentence is the skill being built, and every word in it gets reviewed, so one challenge does the work of several flashcards. For a brand-new word, present_card is the gentler first exposure. The widget records the review and reports the outcome back to you, so there's nothing further to log (log_review or grade_translation would count it a second time). You can choose the sentence by passing the exact text of one from get_sentences; comprehensible_sentences fit best, since the user should know every other word in it. If you leave it out, the server picks the least-reviewed comprehensible sentence, as the app does.",
         annotations(
             title = "Present a translation challenge",
             read_only_hint = true,
@@ -1597,7 +1605,7 @@ impl YapMcp {
     #[tool(
         title = "Grade a translation",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::GradeTranslationOut>(),
-        description = "Autograde the user's typed translation of a presented challenge sentence and log the review — every word in the sentence gets reviewed. Called by the review widget when the user submits; never call it directly, since only the user's own typed submission should be graded.",
+        description = "Autograde the user's typed translation of a presented challenge sentence and log the review, which reviews every word in the sentence. The present_translation widget calls this when the user submits. It exists for the widget rather than for conversation: the grade is meant to reflect the user's own typed answer, so a translation written or relayed by anyone else would give their schedule a misleading signal.",
         annotations(
             title = "Grade a translation",
             read_only_hint = false,
@@ -1741,7 +1749,7 @@ impl YapMcp {
     #[tool(
         title = "Get audio",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::GetAudioOut>(),
-        description = "Fetch pronunciation audio for a widget: the course's human voice-actor recording when one exists, otherwise synthesized speech — the same resolution the yap app uses. Returns base64 audio. Intended for the review widget; not useful in conversation.",
+        description = "Fetch pronunciation audio for a widget: the course's human voice-actor recording when one exists, otherwise synthesized speech — the same resolution the yap app uses. Returns base64 audio. It's here for the review widget to play and isn't much use in conversation.",
         annotations(
             title = "Get audio",
             read_only_hint = true,
@@ -1802,7 +1810,7 @@ impl YapMcp {
     #[tool(
         title = "Log a review",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::LogReviewOut>(),
-        description = "Record all card ratings for one presented challenge. Written fronts can teach several meanings; include every card from the meaning rows actually reviewed. Listening and pronunciation reviews contain one card. This updates real spaced-repetition scheduling on the user's account, so only call it after actually quizzing the user, with honest ratings.",
+        description = "Record the ratings for one challenge you quizzed the user on in conversation (the widgets log their own). Each rating reschedules the card with FSRS on the user's real account, so the schedule is only as good as the ratings: an honest rating after a real quiz keeps their intervals accurate, while a guessed or generous one teaches the scheduler something false. Ratings: again (forgot), hard, good, easy, or remembered (a simple yes, scheduled as easy for a new card and good otherwise). One written front can carry several meanings, so a review lists a card for each meaning row the user was actually tested on; listening and pronunciation reviews have a single card.",
         annotations(
             title = "Log a review",
             read_only_hint = false,
@@ -1915,7 +1923,7 @@ impl YapMcp {
     #[tool(
         title = "Get example sentences",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::GetSentencesOut>(),
-        description = "Get random example sentences (with translations and source attribution) containing a given gram. Returns two lists: comprehensible_sentences, which are otherwise composed only of words the user already knows (great for quizzing), and other_sentences, sampled from everything containing the gram regardless of difficulty.",
+        description = "Get random example sentences containing a gram, with translations and source attribution. They come in two lists. In comprehensible_sentences, every other word is one the user already knows, so the gram is the only new thing and a quiz on one tests exactly that word; these are the best ones for quizzing. other_sentences are sampled from everything containing the gram, whatever its difficulty, and are better for showing the word in its natural range of use.",
         annotations(
             title = "Get example sentences",
             read_only_hint = true,
@@ -1954,7 +1962,7 @@ impl YapMcp {
             total_comprehensible: sampled.total_comprehensible,
             other_sentences: sampled.other,
             total_containing_word: sampled.total_containing,
-            note: "comprehensible_sentences use only words the user already knows; other_sentences are sampled from everything containing the word and may include unknown words (and may lack translations).".to_string(),
+            note: "comprehensible_sentences use only words the user already knows besides this one; other_sentences can include unfamiliar words, and some may lack translations.".to_string(),
         })
     }
 
@@ -2026,7 +2034,7 @@ impl YapMcp {
     #[tool(
         title = "Search dictionary pages",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::SearchOut>(),
-        description = "Search the dictionary of the user's yap course. Returns matching entry pages as results with id, title, and url (a citable yap.town dictionary link); pass an id to fetch for the full entry. For deck operations that need exact grams (add_cards, get_sentences, log_review), use search_dictionary instead.",
+        description = "Search the dictionary of the user's yap course. Returns matching entry pages as results with id, title, and url (a citable yap.town dictionary link); an id passed to fetch returns the full entry. This pair is for looking things up and citing them; the deck tools need exact grams, which come from search_dictionary.",
         annotations(
             title = "Search dictionary pages",
             read_only_hint = true,
@@ -2302,40 +2310,59 @@ impl ServerHandler for YapMcp {
             .enable_resources()
             .build();
         info.instructions = Some(
-            "Access to the user's yap.town language-learning account: their flashcard deck, \
-             spaced-repetition reviews, dictionary, and stats.\n\
+            "This connects you to the user's yap.town account, which holds two things: their \
+             language-learning deck (flashcards, spaced-repetition reviews, dictionary, \
+             stats), and a knowledge graph, a study map on any subject that you help them \
+             build and review (the knowledge_* tools, described at the end). The deck is the \
+             same one the yap web and iOS apps use, so anything you change shows up there too.\n\
              \n\
-             Typical review session: get_due_cards, then for each card quiz the user \
-             (get_sentences can supply an example sentence that the user should fully \
-             understand), then log_review with a reviews list of explicit card/rating pairs.\n\
+             How yap teaches: words are learned and practiced inside real sentences (from \
+             films, books and other corpora) that the user can almost fully understand. Each \
+             review reschedules a card with FSRS spaced repetition, so honest ratings keep the \
+             user's intervals accurate, and a review that happens counts as real practice on \
+             their account. A typical session runs get_due_cards, quizzes each card (ideally \
+             through the widgets below), and records the outcome.\n\
              \n\
-             Words are identified by (language, gram), where a gram is the exact token \
-             sequence — word + lemma + part of speech — plus its sense number, returned by search_dictionary and \
-             get_due_cards. Pass those objects back verbatim; the server rejects anything \
-             that doesn't name a real dictionary entry. To add new words: search_dictionary \
-             first, show the user what you found, then pass the matches' language + gram to \
-             add_cards.\n\
+             Words are identified by (language, gram). A gram is the exact token sequence \
+             (word + lemma + part of speech) plus a sense number, and it's how the deck links a \
+             card to its dictionary entry, sentences and audio. Because of that, grams work \
+             best copied from search_dictionary or get_due_cards rather than written by hand: \
+             a hand-built gram usually doesn't match any entry, and the server turns it away. \
+             Multi-word phrases are learned as chunks on purpose, even transparent ones like \
+             \"I don't know\", since fluent speakers process them as a unit. To add words, a \
+             good flow is to search_dictionary, show the user what you found, and add what \
+             they pick with add_cards.\n\
              \n\
-             search and fetch are a standard browse/cite pair over the public dictionary at \
-             yap.town/d/ — use them to look up and cite entries; use search_dictionary when \
-             you need exact grams for the deck tools.\n\
+             search and fetch are a standard browse-and-cite pair over the public dictionary at \
+             yap.town/d/, handy for looking up and linking entries. search_dictionary is the \
+             one that returns grams for the deck tools.\n\
              \n\
-             When the interactive widgets are available, prefer them for quizzing, and pick \
-             the one the yap app would use: present_translation for a written card the user \
-             has seen before (the user translates a corpus sentence containing the word; the \
-             server autogrades and logs it), and present_card for new cards, listening \
-             cards, pronunciation cards, and words present_translation says have no \
-             comprehensible sentence yet (a card the user grades themselves). Never call \
-             log_review or \
-             grade_translation for a card you presented — the widget logs the review and \
-             the outcome is reported back to you.\n\
+             When the interactive widgets are available, they make the nicest quiz, and \
+             choosing the one the yap app would use keeps the experience consistent. \
+             present_translation suits a written card the user has seen before: they translate \
+             a sentence containing the word, the server grades it, and every word in that \
+             sentence gets reviewed. present_card suits new cards, listening and pronunciation \
+             cards, and words present_translation reports have no comprehensible sentence yet; \
+             there the user grades themselves. Either way the widget records the review itself \
+             and reports the outcome back to you, so the review is already counted, and \
+             logging it again would count it twice.\n\
              \n\
-             Separately, the knowledge_* tools manage a general knowledge graph (any \
-             subject, not tied to the language course): concepts linked by prerequisites and \
-             weighted encompassings, scheduled Math Academy-style so reviewing an advanced \
-             concept implicitly reviews what it encompasses. knowledge_next plans a session; \
-             knowledge_concept shows a concept's documents and past questions so you can ask \
-             new ones; knowledge_apply records every change, including reviews."
+             The knowledge graph is for anything the user wants to learn and keep, outside \
+             the language course: a field they're studying, a paper, a codebase. You and the \
+             user shape it together. You add concepts as they come up, link them, split ones \
+             that turn out to be too broad, and mark ones the user says they already know; \
+             it's meant to stay very mutable. It follows Math Academy's design. Prerequisite \
+             links decide what's ready to learn next (the frontier), and weighted \
+             \"encompassing\" links say how much practicing an advanced concept exercises a \
+             simpler one, so one good review of the advanced concept also gives partial credit \
+             to its foundations and fewer explicit reviews are needed. This works best when \
+             each concept is small enough for one question to test, so a review score means \
+             one clear thing. Reviews store the question, the user's answer and your notes, \
+             which keeps later questions fresh and lets the next session pick up where this \
+             one left off. Plain-text documents (notes, papers, chapters) can be saved and \
+             linked to concepts as source material. knowledge_next plans a session, with each \
+             concept's description and recent questions; knowledge_concept shows one concept \
+             in full; knowledge_apply records every change, reviews included."
                 .to_string(),
         );
         info
