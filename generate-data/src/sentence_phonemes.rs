@@ -413,7 +413,11 @@ mod tests {
         );
         assert_eq!(english[0].matches(" # ").count(), 1, "{english:?}");
         assert!(english.iter().skip(1).all(|s| !s.contains('#')));
-        let french = split(g2p::Language::French, "C'est fini.", &["C'est", "fini", "."]);
+        let french = split(
+            g2p::Language::French,
+            "C'est fini.",
+            &["C'est", "fini", "."],
+        );
         assert!(french.iter().all(|s| !s.contains('#')), "{french:?}");
     }
 
