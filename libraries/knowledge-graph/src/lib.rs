@@ -40,6 +40,9 @@ pub enum KnowledgeEvent {
     AddConcept {
         id: ConceptId,
         title: String,
+        /// The one thing the user can do once they know this, stated so a
+        /// single question can test it. If it takes "and" to say, it is two
+        /// concepts.
         #[serde(default)]
         description: String,
     },
@@ -62,9 +65,9 @@ pub enum KnowledgeEvent {
         #[schemars(with = "f64")]
         encompassing: OrderedFloat<f64>,
     },
-    /// Split a concept into new, finer parts. The parts inherit the concept's
-    /// memory, and the concept stays as a composite that fully encompasses
-    /// each part, so reviewing it still credits them all.
+    /// Split a concept into new, finer parts. The concept stays as a
+    /// composite that fully encompasses each part, so reviewing it still
+    /// credits them all. Split when one question can't test the concept.
     SplitConcept {
         id: ConceptId,
         into: Vec<NewConcept>,
@@ -72,7 +75,11 @@ pub enum KnowledgeEvent {
     /// Mark a concept as already known: it satisfies prerequisites and never
     /// comes due. `known: false` reverses this.
     SetKnown { id: ConceptId, known: bool },
-    /// An explicit review. `score` is in 0..=1; 0.5 and above passes.
+    /// An explicit review: one question about one concept. `score` is in
+    /// 0..=1 (0.5 and above passes) and measures how well the user recalled
+    /// that one thing. It is not the share of several things they got right;
+    /// if the question covered several, split the concept and review each
+    /// part.
     Review {
         id: ConceptId,
         #[schemars(with = "f64")]
@@ -105,8 +112,18 @@ pub enum KnowledgeEvent {
 pub struct NewConcept {
     pub id: ConceptId,
     pub title: String,
+    /// As for add_concept: the one thing, testable by one question.
     #[serde(default)]
     pub description: String,
+    /// Whether this part starts with the split concept's memory (its review
+    /// history counts for the part). Set false for a part the past reviews
+    /// never actually tested; it then starts unlearned. Defaults to true.
+    #[serde(default = "inherit_by_default")]
+    pub inherit_memory: bool,
+}
+
+fn inherit_by_default() -> bool {
+    true
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

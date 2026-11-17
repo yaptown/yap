@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use weapon::data_model::Timestamped;
 
 use crate::memory::{DUE_MEMORY, Memory, PASSING_SCORE, review_credit};
-use crate::{ConceptId, DocumentId, KnowledgeEvent, NewConcept};
+use crate::{ConceptId, DocumentId, KnowledgeEvent};
 
 /// Path weights below this don't carry implicit credit.
 const MIN_FLOW_WEIGHT: f64 = 0.05;
@@ -241,16 +241,22 @@ impl KnowledgeGraph {
             .collect()
     }
 
-    fn add_concept(&mut self, new: &NewConcept, at: DateTime<Utc>) -> Result<(), String> {
-        check_slug(&new.id)?;
-        if self.concepts.contains_key(&new.id) {
-            return Err(format!("concept id '{}' is already taken", new.id));
+    fn add_concept(
+        &mut self,
+        id: &str,
+        title: &str,
+        description: &str,
+        at: DateTime<Utc>,
+    ) -> Result<(), String> {
+        check_slug(id)?;
+        if self.concepts.contains_key(id) {
+            return Err(format!("concept id '{id}' is already taken"));
         }
         self.concepts.insert(
-            new.id.clone(),
+            id.to_string(),
             Concept {
-                title: new.title.clone(),
-                description: new.description.clone(),
+                title: title.to_string(),
+                description: description.to_string(),
                 created_at: at,
                 known: false,
                 retired: false,
@@ -327,14 +333,7 @@ impl KnowledgeGraph {
                 id,
                 title,
                 description,
-            } => self.add_concept(
-                &NewConcept {
-                    id: id.clone(),
-                    title: title.clone(),
-                    description: description.clone(),
-                },
-                at,
-            ),
+            } => self.add_concept(id, title, description, at),
             KnowledgeEvent::EditConcept {
                 id,
                 title,
@@ -371,11 +370,11 @@ impl KnowledgeGraph {
                 // Work on a copy so a bad part leaves the graph untouched.
                 let mut next = self.clone();
                 for part in into {
-                    next.add_concept(part, at)?;
+                    next.add_concept(&part.id, &part.title, &part.description, at)?;
                     let concept = next.concepts.get_mut(&part.id).expect("just added");
                     concept.split_from = Some(id.clone());
                     concept.known = parent.known;
-                    concept.memory = parent.memory.clone();
+                    concept.memory = parent.memory.clone().filter(|_| part.inherit_memory);
                     concept.documents = parent.documents.clone();
                     // The parent's foundations are each part's foundations;
                     // the parent becomes a composite built from its parts.

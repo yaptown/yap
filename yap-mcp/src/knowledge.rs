@@ -139,8 +139,14 @@ pub struct ApplyOut {
     /// For each failed review, that concept's prerequisites: the likely
     /// culprits worth probing next.
     remediation: Vec<RemediationOut>,
+    /// Reviews with a middling score, which often means the question tested
+    /// more than one thing.
+    split_hints: Vec<String>,
     synced: bool,
 }
+
+/// Scores in this range get a split hint.
+const MIDDLING_SCORE: std::ops::RangeInclusive<f64> = 0.3..=0.7;
 
 #[derive(Serialize, JsonSchema)]
 pub struct RemediationOut {
@@ -182,9 +188,42 @@ pub struct ConceptOut {
     review_history: Vec<ReviewOut>,
 }
 
+/// How many past questions knowledge_next includes per concept.
+const RECENT_QUESTIONS: usize = 5;
+
+/// A concept with what's needed to teach or quiz it, so a session needs no
+/// knowledge_concept call per concept.
+#[derive(Serialize, JsonSchema)]
+pub struct StudyConceptOut {
+    #[serde(flatten)]
+    summary: ConceptSummaryOut,
+    description: String,
+    /// The most recent questions asked about it, newest first (all of them
+    /// are in knowledge_concept). Ask something new.
+    recent_questions: Vec<PastQuestionOut>,
+    /// Linked documents (read them with knowledge_document).
+    documents: Vec<DocumentLinkOut>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct PastQuestionOut {
+    at: String,
+    score: f64,
+    question: String,
+    answer: String,
+    notes: String,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct DocumentLinkOut {
+    id: String,
+    /// How the document relates to the concept.
+    note: String,
+}
+
 #[derive(Serialize, JsonSchema)]
 pub struct TaskOut {
-    concept: ConceptSummaryOut,
+    concept: StudyConceptOut,
     /// "review" a learned concept, or a "lesson" learning a frontier concept
     /// whose practice also covers due reviews.
     kind: TaskKind,
@@ -198,7 +237,7 @@ pub struct NextOut {
     /// The fewest tasks that cover every due review, in order.
     tasks: Vec<TaskOut>,
     /// Concepts ready to learn: not learned, all prerequisites learned.
-    frontier: Vec<ConceptSummaryOut>,
+    frontier: Vec<StudyConceptOut>,
     /// The next few concepts to come due.
     upcoming: Vec<ConceptSummaryOut>,
 }
@@ -252,6 +291,35 @@ fn summary(id: &str, concept: &Concept, now: DateTime<Utc>) -> ConceptSummaryOut
 
 fn summary_of(graph: &KnowledgeGraph, id: &str, now: DateTime<Utc>) -> ConceptSummaryOut {
     summary(id, &graph.concepts[id], now)
+}
+
+fn study_of(graph: &KnowledgeGraph, id: &str, now: DateTime<Utc>) -> StudyConceptOut {
+    let concept = &graph.concepts[id];
+    StudyConceptOut {
+        summary: summary(id, concept, now),
+        description: concept.description.clone(),
+        recent_questions: concept
+            .reviews
+            .iter()
+            .rev()
+            .take(RECENT_QUESTIONS)
+            .map(|review| PastQuestionOut {
+                at: rfc3339(review.at),
+                score: review.score,
+                question: review.question.clone(),
+                answer: review.answer.clone(),
+                notes: review.notes.clone(),
+            })
+            .collect(),
+        documents: concept
+            .documents
+            .iter()
+            .map(|(id, note)| DocumentLinkOut {
+                id: id.clone(),
+                note: note.clone(),
+            })
+            .collect(),
+    }
 }
 
 fn review_out(concept: &str, review: &ReviewRecord) -> ReviewOut {
@@ -340,7 +408,7 @@ impl YapMcp {
     #[tool(
         title = "Change the knowledge graph",
         output_schema = rmcp::handler::server::common::schema_for_type::<ApplyOut>(),
-        description = "Apply a batch of changes to the user's knowledge graph, all or nothing: add/edit/split/retire concepts, set links, mark concepts known, record reviews, and link documents. Links: `prerequisite` means basic must be learned before advanced; `encompassing` (0..1) is roughly the chance that practicing advanced exercises basic. Passing a review sends credit down encompassing links, failing sends a penalty up, Math Academy-style. Most prerequisites should have encompassing 0; set it only when advanced really practices basic. Reviews: quiz the user first (check knowledge_concept's review history so you don't repeat questions), then record the score (0..1, 0.5+ passes), the question, the user's answer, and your notes. Only mark a concept known when the user says they know it.",
+        description = "Apply a batch of changes to the user's knowledge graph, all or nothing: add/edit/split/retire concepts, set links, mark concepts known, record reviews, and link documents. Links: `prerequisite` means basic must be learned before advanced; `encompassing` (0..1) is roughly the chance that practicing advanced exercises basic. Passing a review sends credit down encompassing links, failing sends a penalty up, Math Academy-style. Most prerequisites should have encompassing 0; set it only when advanced really practices basic. Keep concepts atomic: each should be testable by a single question, so if describing one takes \"and\", make it two concepts. Example: rather than one concept \"Loss functions\" (which invites \"what is it, and what makes a good one?\"), make two. `loss-function`: \"Say what a loss function is: a number scoring how far the model's output is from the target, which training minimizes.\" Quiz: \"What does a loss function compute?\" `loss-needs-informative-gradient`: \"Explain why a loss must have an informative gradient: the optimizer only follows the gradient, so where it's flat or zero there's no direction to improve.\" Quiz: \"Why is 0/1 accuracy a bad training loss?\" Prerequisite: `loss-function`. If reviewing them together is still useful, keep \"Loss functions\" as a composite by splitting it into the two, with inherit_memory false on any part its past reviews never tested. Reviews: one question tests one concept. Ask it (check past questions so you ask something new), then record the score (0..1, 0.5+ passes) for how well the user recalled that one thing, along with the question, the user's answer, and your notes. If you find yourself wanting to ask two questions, or a score would mean \"one of two parts\", split the concept first and review each part separately. Only mark a concept known when the user says they know it.",
         annotations(
             title = "Change the knowledge graph",
             read_only_hint = false,
@@ -446,6 +514,19 @@ impl YapMcp {
                     .collect(),
             })
             .collect();
+        let split_hints = reviews
+            .iter()
+            .filter(|review| MIDDLING_SCORE.contains(&review.score))
+            .map(|review| {
+                format!(
+                    "'{}' scored {}: if part of the answer was right and part wrong, the \
+                     question tested more than one thing. Split the concept (with \
+                     inherit_memory false on parts the reviews never tested) and review \
+                     each part on its own.",
+                    review.concept, review.score
+                )
+            })
+            .collect();
 
         let applied = params.ops.len();
         let synced = state.append_knowledge(params.ops, at).await;
@@ -454,6 +535,7 @@ impl YapMcp {
             concepts,
             reviews,
             remediation,
+            split_hints,
             synced: synced == SyncStatus::Synced,
         })
     }
@@ -580,7 +662,7 @@ impl YapMcp {
     #[tool(
         title = "What to study next",
         output_schema = rmcp::handler::server::common::schema_for_type::<NextOut>(),
-        description = "Plan the next study session: the fewest tasks that cover every due review (reviewing an advanced concept implicitly reviews what it encompasses), the frontier of concepts ready to learn, and what comes due soon.",
+        description = "Plan the next study session: the fewest tasks that cover every due review (reviewing an advanced concept implicitly reviews what it encompasses), the frontier of concepts ready to learn, and what comes due soon. Each task and frontier concept carries its description, its most recent questions (with answers and notes, so you can ask something new), and its linked documents, which is usually enough to run the session without knowledge_concept.",
         annotations(
             title = "What to study next",
             read_only_hint = true,
@@ -603,7 +685,7 @@ impl YapMcp {
                 .compressed_reviews(now)
                 .into_iter()
                 .map(|task| TaskOut {
-                    concept: summary_of(graph, &task.concept, now),
+                    concept: study_of(graph, &task.concept, now),
                     kind: task.kind,
                     covers: task.covers,
                 })
@@ -611,7 +693,7 @@ impl YapMcp {
             frontier: graph
                 .frontier()
                 .into_iter()
-                .map(|id| summary_of(graph, id, now))
+                .map(|id| study_of(graph, id, now))
                 .collect(),
             upcoming: upcoming
                 .into_iter()

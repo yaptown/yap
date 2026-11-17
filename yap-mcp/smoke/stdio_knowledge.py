@@ -100,6 +100,14 @@ out = s.tool("knowledge_apply", {"ops": [
 assert out["remediation"][0]["failed"] == cid("multiply")
 assert out["remediation"][0]["prerequisites"][0]["id"] == cid("add")
 
+# A failed first attempt leaves the concept unlearned, still on the frontier,
+# and the planner carries its past questions so no per-concept call is needed.
+nxt = s.tool("knowledge_next", {})
+mine = [c for c in nxt["frontier"] if c["id"] == cid("multiply")]
+assert mine and mine[0]["status"] == "new", nxt["frontier"]
+assert mine[0]["recent_questions"][0]["question"] == "4*6?"
+assert "description" in mine[0] and "documents" in mine[0]
+
 out = s.tool("knowledge_apply", {"ops": [
     {"op": "split_concept", "id": cid("multiply"), "into": [
         {"id": cid("times-tables"), "title": "Times tables"},

@@ -210,6 +210,8 @@ mod tests {
                             id: id.into(),
                             title: id.into(),
                             description: String::new(),
+                            // The past review only ever tested adding.
+                            inherit_memory: id == "adding-fractions",
                         })
                         .to_vec(),
                 },
@@ -217,6 +219,7 @@ mod tests {
             )
             .unwrap();
         assert!(graph.concepts["adding-fractions"].is_learned());
+        assert!(!graph.concepts["multiplying-fractions"].is_learned());
         let later = t0 + Duration::days(3);
         let tasks = graph.compressed_reviews(later);
         assert_eq!(tasks.len(), 1);
