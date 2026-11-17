@@ -14,6 +14,7 @@ COPY language-utils/Cargo.toml language-utils/Cargo.toml
 COPY libraries/omnigram/Cargo.toml libraries/omnigram/Cargo.toml
 COPY libraries/pack-builder/Cargo.toml libraries/pack-builder/Cargo.toml
 COPY libraries/weapon/Cargo.toml libraries/weapon/Cargo.toml
+COPY libraries/knowledge-graph/Cargo.toml libraries/knowledge-graph/Cargo.toml
 COPY libraries/imdex_map/Cargo.toml libraries/imdex_map/Cargo.toml
 COPY libraries/eyedee/Cargo.toml libraries/eyedee/Cargo.toml
 COPY libraries/autograde-core/Cargo.toml libraries/autograde-core/Cargo.toml
@@ -24,7 +25,7 @@ COPY libraries/yap-i18n/Cargo.toml libraries/yap-i18n/Cargo.toml
 # Trim the workspace to yap-mcp's path-dependency closure, dev-dependencies
 # included (walk the `path = ` entries starting from yap-mcp/Cargo.toml). A
 # missing member fails `cargo chef prepare` right here in the planner stage.
-RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-mcp",\n    "yap-frontend-rs",\n    "yap-frontend-reducers",\n    "language-utils",\n    "libraries/omnigram",\n    "libraries/pack-builder",\n    "libraries/weapon",\n    "libraries/imdex_map",\n    "libraries/eyedee",\n    "libraries/autograde-core",\n    "libraries/audio-codec",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n    "libraries/yap-i18n",\n]' Cargo.toml
+RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-mcp",\n    "yap-frontend-rs",\n    "yap-frontend-reducers",\n    "language-utils",\n    "libraries/omnigram",\n    "libraries/pack-builder",\n    "libraries/weapon",\n    "libraries/knowledge-graph",\n    "libraries/imdex_map",\n    "libraries/eyedee",\n    "libraries/autograde-core",\n    "libraries/audio-codec",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n    "libraries/yap-i18n",\n]' Cargo.toml
 # cargo-chef needs stub files for every target declared in the manifests
 RUN mkdir -p yap-mcp/src && echo "fn main() {}" > yap-mcp/src/main.rs
 RUN mkdir -p yap-frontend-rs/src yap-frontend-rs/benches \
@@ -39,6 +40,7 @@ RUN mkdir -p libraries/pack-builder/src && touch libraries/pack-builder/src/lib.
 RUN mkdir -p libraries/weapon/src/bin \
     && touch libraries/weapon/src/lib.rs \
     && echo "fn main() {}" > libraries/weapon/src/bin/weapon-scope.rs
+RUN mkdir -p libraries/knowledge-graph/src && touch libraries/knowledge-graph/src/lib.rs
 RUN mkdir -p libraries/imdex_map/src && touch libraries/imdex_map/src/lib.rs
 RUN mkdir -p libraries/eyedee/src && touch libraries/eyedee/src/lib.rs
 RUN mkdir -p libraries/autograde-core/src && touch libraries/autograde-core/src/lib.rs
@@ -69,6 +71,7 @@ COPY language-utils language-utils
 COPY libraries/omnigram libraries/omnigram
 COPY libraries/pack-builder libraries/pack-builder
 COPY libraries/weapon libraries/weapon
+COPY libraries/knowledge-graph libraries/knowledge-graph
 COPY libraries/imdex_map libraries/imdex_map
 COPY libraries/eyedee libraries/eyedee
 COPY libraries/autograde-core libraries/autograde-core

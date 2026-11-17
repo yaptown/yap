@@ -35,6 +35,15 @@ pub const DEVICE_ID: &str = "yap-mcp";
 
 pub const REVIEWS_STREAM: &str = "reviews";
 pub const DECK_SELECTION_STREAM: &str = "deck_selection";
+/// The knowledge graph (`knowledge-graph` crate). Only yap-mcp reads or writes
+/// it so far; the apps sync only the streams they register, so they never
+/// see it.
+pub const KNOWLEDGE_STREAM: &str = "knowledge";
+
+/// Streams this server folds.
+pub const SYNCED_STREAMS: [&str; 3] = [REVIEWS_STREAM, DECK_SELECTION_STREAM, KNOWLEDGE_STREAM];
+/// Streams this server appends events to.
+pub const WRITTEN_STREAMS: [&str; 2] = [REVIEWS_STREAM, KNOWLEDGE_STREAM];
 
 /// Credentials for Supabase REST calls. The stdio server authenticates as the
 /// service role; the remote server authenticates as the user themself (anon
@@ -203,5 +212,110 @@ pub async fn upload_events(
             events.len()
         );
     }
+    Ok(())
+}
+
+/// A row of the `knowledge_documents` table: plain-text documents linked to
+/// knowledge-graph concepts. Unlike events, documents are mutable.
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+pub struct KnowledgeDocument {
+    pub id: String,
+    pub title: String,
+    /// Empty when fetched without bodies.
+    #[serde(default)]
+    pub body: String,
+    pub updated_at: String,
+}
+
+/// Document ids go into request URLs verbatim, so every document call checks
+/// them first.
+fn check_document_id(id: &str) -> anyhow::Result<()> {
+    knowledge_graph::check_slug(id).map_err(anyhow::Error::msg)
+}
+
+/// Documents for a user; all of them when `ids` is None.
+pub async fn fetch_documents(
+    client: &reqwest::Client,
+    cfg: &SupabaseAuth,
+    user_id: &str,
+    ids: Option<&[String]>,
+    with_body: bool,
+) -> anyhow::Result<Vec<KnowledgeDocument>> {
+    let columns = if with_body {
+        "id,title,body,updated_at"
+    } else {
+        "id,title,updated_at"
+    };
+    let mut url = format!(
+        "{}/rest/v1/knowledge_documents?user_id=eq.{user_id}&select={columns}&order=id.asc",
+        cfg.url
+    );
+    if let Some(ids) = ids {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+        for id in ids {
+            check_document_id(id)?;
+        }
+        url.push_str(&format!("&id=in.({})", ids.join(",")));
+    }
+    Ok(cfg
+        .auth(client.get(url))
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?)
+}
+
+/// Create or replace a document.
+pub async fn save_document(
+    client: &reqwest::Client,
+    cfg: &SupabaseAuth,
+    user_id: &str,
+    id: &str,
+    title: &str,
+    body: &str,
+) -> anyhow::Result<()> {
+    check_document_id(id)?;
+    let resp = cfg
+        .auth(client.post(format!(
+            "{}/rest/v1/knowledge_documents?on_conflict=user_id,id",
+            cfg.url
+        )))
+        .header("Prefer", "resolution=merge-duplicates,return=minimal")
+        .json(&serde_json::json!({
+            "user_id": user_id,
+            "id": id,
+            "title": title,
+            "body": body,
+            "updated_at": chrono::Utc::now().to_rfc3339(),
+        }))
+        .send()
+        .await?;
+    if !resp.status().is_success() {
+        let status = resp.status();
+        bail!(
+            "failed to save document: {status} {}",
+            resp.text().await.unwrap_or_default()
+        );
+    }
+    Ok(())
+}
+
+pub async fn delete_document(
+    client: &reqwest::Client,
+    cfg: &SupabaseAuth,
+    user_id: &str,
+    id: &str,
+) -> anyhow::Result<()> {
+    check_document_id(id)?;
+    cfg.auth(client.delete(format!(
+        "{}/rest/v1/knowledge_documents?user_id=eq.{user_id}&id=eq.{id}",
+        cfg.url
+    )))
+    .send()
+    .await?
+    .error_for_status()?;
     Ok(())
 }

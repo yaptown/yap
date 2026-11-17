@@ -328,6 +328,25 @@ added = json.loads(sse_json(body)["result"]["content"][0]["text"])
 check("remote add_cards (RLS write)", "merci" in added["added"] + added["already_in_deck"],
       json.dumps(added))
 
+# 9. Knowledge documents round trip as the user (knowledge_documents RLS)
+def remote_tool(call_id, name, arguments):
+    _, _, body = req("POST", f"{BASE}/mcp", headers=mcp_headers, body={
+        "jsonrpc": "2.0", "id": call_id, "method": "tools/call",
+        "params": {"name": name, "arguments": arguments},
+    })
+    result = sse_json(body)["result"]
+    text = result["content"][0]["text"]
+    return result.get("isError", False), text
+
+doc_id = "remote-smoke-" + secrets.token_hex(3)
+err, text = remote_tool(6, "knowledge_save_document",
+                        {"id": doc_id, "title": "Remote smoke", "body": "hello"})
+check("remote knowledge_save_document (RLS write)", not err, text)
+err, text = remote_tool(7, "knowledge_document", {"id": doc_id})
+check("remote knowledge_document (RLS read)", not err and json.loads(text)["body"] == "hello", text)
+err, text = remote_tool(8, "knowledge_delete_document", {"id": doc_id})
+check("remote knowledge_delete_document", not err, text)
+
 proc.terminate()
 proc.wait(timeout=5)
 print("\nremote smoke test:", "ALL PASS" if ok else "FAILURES ABOVE")

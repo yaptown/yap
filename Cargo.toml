@@ -11,6 +11,7 @@ members = [
     "yap-frontend-reducers",
     "libraries/autograde-core",
     "libraries/weapon",
+    "libraries/knowledge-graph",
     "libraries/imdex_map",
     "libraries/eyedee",
     "libraries/bridgerton",

@@ -29,17 +29,20 @@ use language_utils::{
     language_pack::LanguagePack,
     text_cleanup::{cleanup_sentence, find_closest_match},
 };
-use weapon::data_model::{EventStore, EventType};
+use weapon::data_model::EventStore;
 use yap_frontend_rs::{
     CardContext, CardIndicator, CardSummary, Challenge, Context, Deck, DeckEvent, LanguageEvent,
     LanguageEventContent, Rating, TranslateComprehensibleSentence, autograde_translation,
     dictionary::DictionaryWord, translation_is_perfect,
 };
 
-use crate::deck::{PackCache, build_deck, detect_course, insert_rows, new_store};
+use knowledge_graph::{KnowledgeEvent, KnowledgeGraph};
+
+use crate::deck::{PackCache, build_deck, build_knowledge, detect_course, insert_rows, new_store};
 use crate::output::*;
 use crate::sync::{
-    DEVICE_ID, REVIEWS_STREAM, SupabaseAuth, fetch_events, find_user_id, upload_events,
+    DEVICE_ID, KNOWLEDGE_STREAM, REVIEWS_STREAM, SupabaseAuth, WRITTEN_STREAMS, fetch_events,
+    find_user_id, upload_events,
 };
 use crate::verbatim::Verbatim;
 
@@ -79,7 +82,7 @@ impl Config {
 /// retry. Either way the event is recorded in the local working store;
 /// `PendingSync` just means the server copy will catch up on a later call.
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum SyncStatus {
+pub(crate) enum SyncStatus {
     Synced,
     PendingSync,
 }
@@ -106,21 +109,23 @@ const IDEMPOTENCY_CONFLICT_MSG: &str = "that idempotency token was already used 
      current challenge, or omit it";
 
 pub struct YapState {
-    supabase: SupabaseAuth,
-    http: reqwest::Client,
-    user_id: String,
+    pub(crate) supabase: SupabaseAuth,
+    pub(crate) http: reqwest::Client,
+    pub(crate) user_id: String,
     context: Context,
     store: EventStore<String, String>,
     last_fetched_id: Option<i64>,
     last_fetch: Instant,
     /// Set when an upload failed, to make the next sync fetch regardless of
     /// the throttle: a re-fetch echo-confirms any event whose ack we lost and
-    /// advances uploaded_count past it, so we stop re-sending a committed
+    /// advances `uploaded` past it, so we stop re-sending a committed
     /// index (which the unique constraint would reject).
     force_fetch: bool,
     deck: Option<Deck>,
-    /// How many of our device's reviews events the server has confirmed received.
-    uploaded_count: usize,
+    knowledge: Option<KnowledgeGraph>,
+    /// Per written stream, how many of our device's events the server has
+    /// confirmed received.
+    uploaded: HashMap<&'static str, usize>,
     /// Responses already served for a given idempotency token, so a retried
     /// review (widget resubmit, or a call whose response was lost in transit
     /// after the event was recorded) replays the original outcome instead of
@@ -183,11 +188,15 @@ impl YapState {
             last_fetch: Instant::now(),
             force_fetch: false,
             deck: None,
-            uploaded_count: 0,
+            knowledge: None,
+            uploaded: HashMap::new(),
             idempotency_cache: HashMap::new(),
         };
         // Everything fetched is by definition already on the server.
-        state.uploaded_count = state.my_reviews_len();
+        for stream in WRITTEN_STREAMS {
+            let len = state.my_events_len(stream);
+            state.uploaded.insert(stream, len);
+        }
         let deck = state.deck();
         log::info!(
             "deck ready: {} cards, {} reviews",
@@ -214,11 +223,23 @@ impl YapState {
         self.deck.as_ref().expect("just built")
     }
 
-    /// How many reviews-stream events exist under our device id.
-    fn my_reviews_len(&self) -> usize {
+    pub(crate) fn knowledge(&mut self) -> &KnowledgeGraph {
+        if self.knowledge.is_none() {
+            self.knowledge = Some(build_knowledge(&self.store));
+        }
+        self.knowledge.as_ref().expect("just built")
+    }
+
+    /// How many of a stream's events exist under our device id.
+    fn my_events_len(&self, stream: &str) -> usize {
         self.store
-            .get::<EventType<DeckEvent>>(REVIEWS_STREAM.to_string())
-            .map(|stream| stream.len_device(&DEVICE_ID.to_string()))
+            .get_raw(stream.to_string())
+            .and_then(|store| {
+                store
+                    .num_events_per_device()
+                    .get(&DEVICE_ID.to_string())
+                    .copied()
+            })
             .unwrap_or(0)
     }
 
@@ -227,7 +248,7 @@ impl YapState {
     /// Called at the top of every tool handler (including read-only ones),
     /// since a pending upload should reach Supabase on the user's next
     /// action rather than waiting for their next write.
-    async fn sync(&mut self) -> anyhow::Result<()> {
+    pub(crate) async fn sync(&mut self) -> anyhow::Result<()> {
         if self.force_fetch || self.last_fetch.elapsed() >= REFRESH_INTERVAL {
             let (new_rows, max_id) = fetch_events(
                 &self.http,
@@ -241,18 +262,20 @@ impl YapState {
             self.last_fetched_id = max_id.or(self.last_fetched_id);
 
             // Echoes of our own uploads confirm the server has them (the store
-            // itself dedups the events). This also advances uploaded_count past
+            // itself dedups the events). This also advances `uploaded` past
             // any event whose upload ack we lost, so the flush below won't
             // pointlessly re-send an index the server already has.
             for row in &new_rows {
-                if row.device_id == DEVICE_ID && row.stream_id == REVIEWS_STREAM {
-                    self.uploaded_count = self
-                        .uploaded_count
-                        .max(row.event.within_device_events_index + 1);
+                if row.device_id != DEVICE_ID {
+                    continue;
+                }
+                if let Some(count) = self.uploaded.get_mut(row.stream_id.as_str()) {
+                    *count = (*count).max(row.event.within_device_events_index + 1);
                 }
             }
             if insert_rows(&mut self.store, new_rows) > 0 {
                 self.deck = None;
+                self.knowledge = None;
             }
         }
 
@@ -298,49 +321,75 @@ impl YapState {
         self.flush_pending_uploads().await
     }
 
+    /// Record knowledge-graph events (already validated against the graph at
+    /// `at`) and attempt to sync them, as one upload. Same offline-first
+    /// contract as [`Self::append_event`].
+    pub(crate) async fn append_knowledge(
+        &mut self,
+        events: Vec<KnowledgeEvent>,
+        at: chrono::DateTime<Utc>,
+    ) -> SyncStatus {
+        for event in events {
+            self.store.add_raw_event_at(
+                KNOWLEDGE_STREAM.to_string(),
+                DEVICE_ID.to_string(),
+                event,
+                None,
+                at,
+                self.context.timezone,
+            );
+        }
+        self.knowledge = None;
+        self.flush_pending_uploads().await
+    }
+
     /// Upload every locally-recorded event the server hasn't confirmed yet,
-    /// in order so the per-device index sequence never has gaps. Best-effort:
-    /// on failure the events stay pending (uploaded_count isn't advanced) and
-    /// the next call retries them. A committed index that we think is still
-    /// pending (a lost upload ack) would be rejected by the unique constraint
-    /// on re-send, so a failure sets `force_fetch`: the next sync fetches,
-    /// echo-confirms that index, and advances past it before we'd re-send.
+    /// per stream and in order so the per-device index sequence never has
+    /// gaps. Best-effort: on failure the events stay pending (`uploaded`
+    /// isn't advanced) and the next call retries them. A committed index that
+    /// we think is still pending (a lost upload ack) would be rejected by the
+    /// unique constraint on re-send, so a failure sets `force_fetch`: the next
+    /// sync fetches, echo-confirms that index, and advances past it before
+    /// we'd re-send.
     async fn flush_pending_uploads(&mut self) -> SyncStatus {
-        let pending = self
-            .store
-            .get_raw(REVIEWS_STREAM.to_string())
-            .expect("reviews stream registered in new_store")
-            .jsons(&DEVICE_ID.to_string(), self.uploaded_count);
-        if pending.is_empty() {
-            return SyncStatus::Synced;
-        }
-        match upload_events(
-            &self.http,
-            &self.supabase,
-            &self.user_id,
-            REVIEWS_STREAM,
-            DEVICE_ID,
-            &pending,
-        )
-        .await
-        {
-            Ok(()) => {
-                self.uploaded_count += pending.len();
-                SyncStatus::Synced
+        let mut status = SyncStatus::Synced;
+        for stream in WRITTEN_STREAMS {
+            let pending = self
+                .store
+                .get_raw(stream.to_string())
+                .expect("written streams registered in new_store")
+                .jsons(&DEVICE_ID.to_string(), self.uploaded[stream]);
+            if pending.is_empty() {
+                continue;
             }
-            Err(e) => {
-                log::warn!(
-                    "upload failed, {} review event(s) recorded locally and pending retry: {e:#}",
-                    pending.len()
-                );
-                // Force the next sync to fetch: if this failure was a lost
-                // ack (the server actually has the event), the echo-confirm
-                // there trims it from pending so we stop hitting the unique
-                // constraint on re-send.
-                self.force_fetch = true;
-                SyncStatus::PendingSync
+            match upload_events(
+                &self.http,
+                &self.supabase,
+                &self.user_id,
+                stream,
+                DEVICE_ID,
+                &pending,
+            )
+            .await
+            {
+                Ok(()) => {
+                    *self.uploaded.get_mut(stream).expect("seeded in for_user") += pending.len();
+                }
+                Err(e) => {
+                    log::warn!(
+                        "upload failed, {} {stream} event(s) recorded locally and pending retry: {e:#}",
+                        pending.len()
+                    );
+                    // Force the next sync to fetch: if this failure was a lost
+                    // ack (the server actually has the event), the echo-confirm
+                    // there trims it from pending so we stop hitting the unique
+                    // constraint on re-send.
+                    self.force_fetch = true;
+                    status = SyncStatus::PendingSync;
+                }
             }
         }
+        status
     }
 
     /// Look up a prior response for this tool's idempotency token. A nonce
@@ -587,7 +636,7 @@ fn ok_json_structured(value: serde_json::Value) -> CallToolResult {
 /// Success result from a typed output (see [`crate::output`]): the same
 /// value becomes both the readable text and the structured content, so the
 /// payload always matches the tool's declared outputSchema.
-fn ok_typed<T: Serialize>(value: &T) -> CallToolResult {
+pub(crate) fn ok_typed<T: Serialize>(value: &T) -> CallToolResult {
     ok_json_structured(serde_json::to_value(value).expect("output serializes"))
 }
 
@@ -627,7 +676,7 @@ fn entry_url(course: &Course, display_text: &str) -> String {
     )
 }
 
-fn error(message: impl Into<String>) -> CallToolResult {
+pub(crate) fn error(message: impl Into<String>) -> CallToolResult {
     CallToolResult::error(vec![ContentBlock::text(message.into())])
 }
 
@@ -1005,7 +1054,7 @@ impl YapMcp {
 
     /// Resolve the deck state for this call. In remote mode the authenticated
     /// user travels in the propagated HTTP request parts.
-    async fn state_slot(
+    pub(crate) async fn state_slot(
         &self,
         ctx: &RequestContext<RoleServer>,
     ) -> Result<Arc<tokio::sync::Mutex<YapState>>, String> {
@@ -2163,7 +2212,13 @@ impl YapMcp {
     }
 }
 
-#[tool_handler]
+impl YapMcp {
+    fn all_tools() -> rmcp::handler::server::router::tool::ToolRouter<Self> {
+        Self::tool_router() + Self::knowledge_router()
+    }
+}
+
+#[tool_handler(router = Self::all_tools())]
 impl ServerHandler for YapMcp {
     /// Hand-written (the macro defers to it): injects the MCP Apps `_meta`
     /// onto widget-related tools, only when the widget is actually built.
@@ -2172,7 +2227,7 @@ impl ServerHandler for YapMcp {
         _request: Option<PaginatedRequestParams>,
         _context: RequestContext<RoleServer>,
     ) -> Result<ListToolsResult, McpError> {
-        let mut tools = Self::tool_router().list_all();
+        let mut tools = Self::all_tools().list_all();
         if let Some(widget) = &self.widget {
             for tool in &mut tools {
                 if let Some(meta) = widget_tool_meta(&tool.name, &widget.uri) {
@@ -2275,7 +2330,14 @@ impl ServerHandler for YapMcp {
              comprehensible sentence yet (a card the user grades themselves). Never call \
              log_review or \
              grade_translation for a card you presented — the widget logs the review and \
-             the outcome is reported back to you."
+             the outcome is reported back to you.\n\
+             \n\
+             Separately, the knowledge_* tools manage a general knowledge graph (any \
+             subject, not tied to the language course): concepts linked by prerequisites and \
+             weighted encompassings, scheduled Math Academy-style so reviewing an advanced \
+             concept implicitly reviews what it encompasses. knowledge_next plans a session; \
+             knowledge_concept shows a concept's documents and past questions so you can ask \
+             new ones; knowledge_apply records every change, including reviews."
                 .to_string(),
         );
         info
@@ -2328,6 +2390,27 @@ mod tests {
         check::<GetAudioParams>();
         check::<SearchParams>();
         check::<FetchParams>();
+        check::<crate::knowledge::GraphParams>();
+        check::<crate::knowledge::ConceptParams>();
+        check::<crate::knowledge::ReviewsParams>();
+        check::<crate::knowledge::DocumentParams>();
+        check::<crate::knowledge::SaveDocumentParams>();
+        let apply = check::<crate::knowledge::ApplyParams>();
+        assert_eq!(
+            apply["properties"]["ops"]["items"]["$ref"],
+            "#/$defs/KnowledgeEvent"
+        );
+        for op in apply["$defs"]["KnowledgeEvent"]["oneOf"]
+            .as_array()
+            .unwrap()
+        {
+            for (name, prop) in op["properties"].as_object().unwrap() {
+                assert!(
+                    is_typed(prop),
+                    "knowledge op field {name} is untyped: {prop}"
+                );
+            }
+        }
 
         let sentences = check::<GetSentencesParams>();
         assert_eq!(sentences["properties"]["gram"]["type"], "object");

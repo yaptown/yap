@@ -24,7 +24,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective November 7, 2026.</p>
+            <p className="text-sm">Effective November 17, 2026.</p>
           </div>
         </Card>
 
@@ -153,7 +153,14 @@ export function PrivacyPage() {
               </Link>
               . If you do, that assistant can see your deck, stats, and
               dictionary, and can add cards and log reviews on your behalf —
-              only after you approve the connection while signed in. Your
+              only after you approve the connection while signed in. Through
+              the connector, an assistant can also keep a study map for you on
+              any subject: the concepts, how they relate, which ones you
+              already know, and each quiz it gives you (the question, your
+              answer, its score, and its notes). It can also save plain-text
+              documents you give it and link them to concepts. These are
+              stored with your account so the assistant can pick up where you
+              left off. Your
               conversations with the assistant happen in that provider's
               product and are governed by its privacy policy, not this one; we
               only receive the requests the assistant makes to your account.

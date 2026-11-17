@@ -1,0 +1,788 @@
+//! Knowledge-graph tools: a general (not language-specific) concept graph
+//! with Math Academy-style implicit repetition, folded from the `knowledge`
+//! event stream (see the `knowledge-graph` crate). Documents live in the
+//! mutable `knowledge_documents` table; the graph only records which concepts
+//! link to them. There is no app UI for any of this yet.
+
+use std::collections::BTreeSet;
+
+use chrono::{DateTime, Utc};
+use rmcp::{
+    RoleServer, handler::server::wrapper::Parameters, model::CallToolResult,
+    service::RequestContext, tool, tool_router,
+};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
+use knowledge_graph::{
+    Concept, ConceptStatus, KnowledgeEvent, KnowledgeGraph, PASSING_SCORE, ReviewRecord, TaskKind,
+};
+
+use crate::server::{SyncStatus, YapMcp, YapState, error, ok_typed};
+use crate::sync::{
+    KnowledgeDocument, SupabaseAuth, delete_document, fetch_documents, save_document,
+};
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+pub struct ApplyParams {
+    /// Changes to apply in order, all or nothing. Later ops can refer to
+    /// concepts added by earlier ones.
+    ops: Vec<KnowledgeEvent>,
+}
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+pub struct GraphParams {
+    /// Include retired concepts (default false).
+    #[serde(default)]
+    include_retired: bool,
+}
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+pub struct ConceptParams {
+    /// The concept's id.
+    id: String,
+}
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+pub struct ReviewsParams {
+    /// Maximum number of reviews to return, newest first (default 30).
+    #[serde(default)]
+    limit: Option<usize>,
+}
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+pub struct DocumentParams {
+    /// The document's id.
+    id: String,
+}
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+pub struct SaveDocumentParams {
+    /// Permanent lowercase slug (a-z, 0-9, '-'). Saving an existing id
+    /// replaces that document.
+    id: String,
+    title: String,
+    /// Plain text.
+    body: String,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct ConceptSummaryOut {
+    id: String,
+    title: String,
+    status: ConceptStatus,
+    /// Spaced repetitions completed (fractional; implicit credit counts).
+    reps: Option<f64>,
+    /// Current memory level, 0..=1; due at 0.5.
+    memory: Option<f64>,
+    /// RFC 3339 time the concept is (or was) due.
+    due: Option<String>,
+    /// The last review failed, so only a direct review clears it.
+    needs_explicit_review: bool,
+    reviews: usize,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct LinkOut {
+    advanced: String,
+    basic: String,
+    prerequisite: bool,
+    encompassing: f64,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct DocumentSummaryOut {
+    id: String,
+    title: String,
+    updated_at: String,
+    /// Concepts linking to the document.
+    concepts: Vec<String>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct GraphOut {
+    concepts: Vec<ConceptSummaryOut>,
+    links: Vec<LinkOut>,
+    documents: Vec<DocumentSummaryOut>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct CreditOut {
+    concept: String,
+    /// Repetitions added (negative for a penalty).
+    reps: f64,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct ReviewOut {
+    concept: String,
+    at: String,
+    score: f64,
+    question: String,
+    answer: String,
+    notes: String,
+    /// Repetitions this review added to its own concept, after discounting
+    /// for reviewing early.
+    reps: f64,
+    /// Implicit credit sent down to encompassed concepts (a pass) or penalty
+    /// sent up to encompassing ones (a fail).
+    propagated: Vec<CreditOut>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct ApplyOut {
+    applied: usize,
+    /// The resulting state of every concept the ops touched.
+    concepts: Vec<ConceptSummaryOut>,
+    /// The reviews recorded, with the credit they spread.
+    reviews: Vec<ReviewOut>,
+    /// For each failed review, that concept's prerequisites: the likely
+    /// culprits worth probing next.
+    remediation: Vec<RemediationOut>,
+    synced: bool,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct RemediationOut {
+    failed: String,
+    prerequisites: Vec<ConceptSummaryOut>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct RelatedOut {
+    concept: ConceptSummaryOut,
+    prerequisite: bool,
+    encompassing: f64,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct LinkedDocumentOut {
+    id: String,
+    /// How the document relates to the concept.
+    note: String,
+    /// Null when the document was deleted from the table.
+    title: Option<String>,
+    body: Option<String>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct ConceptOut {
+    #[serde(flatten)]
+    summary: ConceptSummaryOut,
+    description: String,
+    created_at: String,
+    split_from: Option<String>,
+    split_into: Vec<String>,
+    /// What this concept builds on.
+    builds_on: Vec<RelatedOut>,
+    /// What builds on this concept.
+    built_on_by: Vec<RelatedOut>,
+    documents: Vec<LinkedDocumentOut>,
+    /// Every explicit review, newest first.
+    review_history: Vec<ReviewOut>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct TaskOut {
+    concept: ConceptSummaryOut,
+    /// "review" a learned concept, or a "lesson" learning a frontier concept
+    /// whose practice also covers due reviews.
+    kind: TaskKind,
+    /// Due concepts this one task covers.
+    covers: Vec<String>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct NextOut {
+    total_due: usize,
+    /// The fewest tasks that cover every due review, in order.
+    tasks: Vec<TaskOut>,
+    /// Concepts ready to learn: not learned, all prerequisites learned.
+    frontier: Vec<ConceptSummaryOut>,
+    /// The next few concepts to come due.
+    upcoming: Vec<ConceptSummaryOut>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct ReviewsOut {
+    reviews: Vec<ReviewOut>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct DocumentOut {
+    id: String,
+    title: String,
+    body: String,
+    updated_at: String,
+    concepts: Vec<ConceptSummaryOut>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct SaveDocumentOut {
+    id: String,
+    /// Concepts linked to it (link with a set_document_link op).
+    concepts: Vec<String>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct DeleteDocumentOut {
+    id: String,
+    /// Concepts the document was unlinked from.
+    unlinked: Vec<String>,
+    synced: bool,
+}
+
+fn rfc3339(at: DateTime<Utc>) -> String {
+    at.to_rfc3339()
+}
+
+fn summary(id: &str, concept: &Concept, now: DateTime<Utc>) -> ConceptSummaryOut {
+    let memory = concept.memory.as_ref().filter(|_| !concept.known);
+    ConceptSummaryOut {
+        id: id.to_string(),
+        title: concept.title.clone(),
+        status: concept.status(),
+        reps: memory.map(|m| m.reps),
+        memory: memory.map(|m| m.memory_at(now)),
+        due: concept.due_at().map(rfc3339),
+        needs_explicit_review: concept.needs_explicit_review(),
+        reviews: concept.reviews.len(),
+    }
+}
+
+fn summary_of(graph: &KnowledgeGraph, id: &str, now: DateTime<Utc>) -> ConceptSummaryOut {
+    summary(id, &graph.concepts[id], now)
+}
+
+fn review_out(concept: &str, review: &ReviewRecord) -> ReviewOut {
+    ReviewOut {
+        concept: concept.to_string(),
+        at: rfc3339(review.at),
+        score: review.score,
+        question: review.question.clone(),
+        answer: review.answer.clone(),
+        notes: review.notes.clone(),
+        reps: review.applied,
+        propagated: review
+            .propagated
+            .iter()
+            .map(|(concept, reps)| CreditOut {
+                concept: concept.clone(),
+                reps: *reps,
+            })
+            .collect(),
+    }
+}
+
+/// The concepts an op refers to.
+fn touched(op: &KnowledgeEvent) -> Vec<&str> {
+    match op {
+        KnowledgeEvent::AddConcept { id, .. }
+        | KnowledgeEvent::EditConcept { id, .. }
+        | KnowledgeEvent::SetKnown { id, .. }
+        | KnowledgeEvent::Review { id, .. }
+        | KnowledgeEvent::RetireConcept { id } => vec![id],
+        KnowledgeEvent::SetLink {
+            advanced, basic, ..
+        } => vec![advanced, basic],
+        KnowledgeEvent::SplitConcept { id, into } => std::iter::once(id.as_str())
+            .chain(into.iter().map(|part| part.id.as_str()))
+            .collect(),
+        KnowledgeEvent::SetDocumentLink { concept, .. } => vec![concept],
+    }
+}
+
+/// Lock this call's state and pull in fresh events, as every tool does.
+macro_rules! synced_state {
+    ($self:ident, $ctx:ident) => {{
+        let slot = match $self.state_slot(&$ctx).await {
+            Ok(slot) => slot,
+            Err(e) => return error(e),
+        };
+        let mut state = slot.lock_owned().await;
+        if let Err(e) = state.sync().await {
+            log::warn!("sync failed, using possibly-stale events: {e:#}");
+        }
+        state
+    }};
+}
+
+/// The user's `knowledge_documents` table, cloned out of the state so the
+/// state isn't borrowed across awaits.
+struct Documents {
+    http: reqwest::Client,
+    supabase: SupabaseAuth,
+    user_id: String,
+}
+
+impl Documents {
+    fn of(state: &YapState) -> Self {
+        Documents {
+            http: state.http.clone(),
+            supabase: state.supabase.clone(),
+            user_id: state.user_id.clone(),
+        }
+    }
+
+    async fn fetch(
+        &self,
+        ids: Option<&[String]>,
+        with_body: bool,
+    ) -> Result<Vec<KnowledgeDocument>, CallToolResult> {
+        fetch_documents(&self.http, &self.supabase, &self.user_id, ids, with_body)
+            .await
+            .map_err(|e| error(format!("failed to fetch documents: {e:#}")))
+    }
+}
+
+#[tool_router(router = knowledge_router, vis = "pub(crate)")]
+impl YapMcp {
+    #[tool(
+        title = "Change the knowledge graph",
+        output_schema = rmcp::handler::server::common::schema_for_type::<ApplyOut>(),
+        description = "Apply a batch of changes to the user's knowledge graph, all or nothing: add/edit/split/retire concepts, set links, mark concepts known, record reviews, and link documents. Links: `prerequisite` means basic must be learned before advanced; `encompassing` (0..1) is roughly the chance that practicing advanced exercises basic. Passing a review sends credit down encompassing links, failing sends a penalty up, Math Academy-style. Most prerequisites should have encompassing 0; set it only when advanced really practices basic. Reviews: quiz the user first (check knowledge_concept's review history so you don't repeat questions), then record the score (0..1, 0.5+ passes), the question, the user's answer, and your notes. Only mark a concept known when the user says they know it.",
+        annotations(
+            title = "Change the knowledge graph",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = false,
+            open_world_hint = false
+        )
+    )]
+    async fn knowledge_apply(
+        &self,
+        ctx: RequestContext<RoleServer>,
+        Parameters(params): Parameters<ApplyParams>,
+    ) -> CallToolResult {
+        if params.ops.is_empty() {
+            return error("ops must not be empty");
+        }
+        let mut state = synced_state!(self, ctx);
+
+        let linked: Vec<String> = params
+            .ops
+            .iter()
+            .filter_map(|op| match op {
+                KnowledgeEvent::SetDocumentLink {
+                    document,
+                    linked: true,
+                    ..
+                } => Some(document.clone()),
+                _ => None,
+            })
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect();
+        if !linked.is_empty() {
+            let found = match Documents::of(&state).fetch(Some(&linked), false).await {
+                Ok(found) => found,
+                Err(e) => return e,
+            };
+            let found: BTreeSet<&str> = found.iter().map(|d| d.id.as_str()).collect();
+            let missing: Vec<&str> = linked
+                .iter()
+                .map(String::as_str)
+                .filter(|id| !found.contains(id))
+                .collect();
+            if !missing.is_empty() {
+                return error(format!(
+                    "nothing was applied: no document {}; save it with knowledge_save_document first",
+                    missing.join(", ")
+                ));
+            }
+        }
+
+        // Validate the whole batch on a copy, at the timestamp the events
+        // will carry, so what we store is exactly what we checked.
+        let at = Utc::now();
+        let mut graph = state.knowledge().clone();
+        for (i, op) in params.ops.iter().enumerate() {
+            if let Err(e) = graph.apply(op, at) {
+                return error(format!("nothing was applied: op {i} is invalid: {e}"));
+            }
+        }
+
+        let mut touched_ids: Vec<&str> = Vec::new();
+        for id in params.ops.iter().flat_map(touched) {
+            if !touched_ids.contains(&id) {
+                touched_ids.push(id);
+            }
+        }
+        let concepts = touched_ids
+            .iter()
+            .map(|id| summary_of(&graph, id, at))
+            .collect();
+        let reviewed: Vec<&str> = params
+            .ops
+            .iter()
+            .filter_map(|op| match op {
+                KnowledgeEvent::Review { id, .. } => Some(id.as_str()),
+                _ => None,
+            })
+            .collect();
+        // Each review op is the last review of its concept at that point;
+        // walk back from the end so repeated ids map to their own record.
+        let mut seen = std::collections::BTreeMap::<&str, usize>::new();
+        let mut reviews: Vec<ReviewOut> = reviewed
+            .iter()
+            .rev()
+            .map(|id| {
+                let back = seen.entry(id).or_default();
+                let history = &graph.concepts[*id].reviews;
+                let review = &history[history.len() - 1 - *back];
+                *back += 1;
+                review_out(id, review)
+            })
+            .collect();
+        reviews.reverse();
+        let remediation = reviews
+            .iter()
+            .filter(|review| review.score < PASSING_SCORE)
+            .map(|review| RemediationOut {
+                failed: review.concept.clone(),
+                prerequisites: graph
+                    .prerequisites(&review.concept)
+                    .map(|id| summary_of(&graph, id, at))
+                    .collect(),
+            })
+            .collect();
+
+        let applied = params.ops.len();
+        let synced = state.append_knowledge(params.ops, at).await;
+        ok_typed(&ApplyOut {
+            applied,
+            concepts,
+            reviews,
+            remediation,
+            synced: synced == SyncStatus::Synced,
+        })
+    }
+
+    #[tool(
+        title = "Show the knowledge graph",
+        output_schema = rmcp::handler::server::common::schema_for_type::<GraphOut>(),
+        description = "The user's whole knowledge graph: every concept with its learning state, every link, and every document (titles only).",
+        annotations(
+            title = "Show the knowledge graph",
+            read_only_hint = true,
+            destructive_hint = false,
+            open_world_hint = false
+        )
+    )]
+    async fn knowledge_graph(
+        &self,
+        ctx: RequestContext<RoleServer>,
+        Parameters(params): Parameters<GraphParams>,
+    ) -> CallToolResult {
+        let mut state = synced_state!(self, ctx);
+        let docs = match Documents::of(&state).fetch(None, false).await {
+            Ok(docs) => docs,
+            Err(e) => return e,
+        };
+        let now = Utc::now();
+        let graph = state.knowledge();
+        ok_typed(&GraphOut {
+            concepts: graph
+                .concepts
+                .iter()
+                .filter(|(_, c)| params.include_retired || !c.retired)
+                .map(|(id, c)| summary(id, c, now))
+                .collect(),
+            links: graph
+                .links
+                .iter()
+                .map(|((advanced, basic), link)| LinkOut {
+                    advanced: advanced.clone(),
+                    basic: basic.clone(),
+                    prerequisite: link.prerequisite,
+                    encompassing: link.encompassing,
+                })
+                .collect(),
+            documents: docs
+                .into_iter()
+                .map(|doc| DocumentSummaryOut {
+                    concepts: graph
+                        .active_concepts()
+                        .filter(|(_, c)| c.documents.contains_key(&doc.id))
+                        .map(|(id, _)| id.clone())
+                        .collect(),
+                    id: doc.id,
+                    title: doc.title,
+                    updated_at: doc.updated_at,
+                })
+                .collect(),
+        })
+    }
+
+    #[tool(
+        title = "Inspect a concept",
+        output_schema = rmcp::handler::server::common::schema_for_type::<ConceptOut>(),
+        description = "Everything about one concept: description, learning state, what it builds on and what builds on it, its linked documents in full, and its whole review history (questions asked, answers, notes). Check the history before quizzing so you ask something new.",
+        annotations(
+            title = "Inspect a concept",
+            read_only_hint = true,
+            destructive_hint = false,
+            open_world_hint = false
+        )
+    )]
+    async fn knowledge_concept(
+        &self,
+        ctx: RequestContext<RoleServer>,
+        Parameters(params): Parameters<ConceptParams>,
+    ) -> CallToolResult {
+        let mut state = synced_state!(self, ctx);
+        let doc_ids: Vec<String> = match state.knowledge().concept(&params.id) {
+            Ok(concept) => concept.documents.keys().cloned().collect(),
+            Err(e) => return error(e),
+        };
+        let docs = match Documents::of(&state).fetch(Some(&doc_ids), true).await {
+            Ok(docs) => docs,
+            Err(e) => return e,
+        };
+        let now = Utc::now();
+        let graph = state.knowledge();
+        let concept = &graph.concepts[&params.id];
+        let related = |(id, link): (&String, knowledge_graph::Link)| RelatedOut {
+            concept: summary_of(graph, id, now),
+            prerequisite: link.prerequisite,
+            encompassing: link.encompassing,
+        };
+        ok_typed(&ConceptOut {
+            summary: summary(&params.id, concept, now),
+            description: concept.description.clone(),
+            created_at: rfc3339(concept.created_at),
+            split_from: concept.split_from.clone(),
+            split_into: concept.split_into.clone(),
+            builds_on: graph.links_down(&params.id).map(related).collect(),
+            built_on_by: graph.links_up(&params.id).map(related).collect(),
+            documents: concept
+                .documents
+                .iter()
+                .map(|(id, note)| {
+                    let doc = docs.iter().find(|doc| &doc.id == id);
+                    LinkedDocumentOut {
+                        id: id.clone(),
+                        note: note.clone(),
+                        title: doc.map(|d| d.title.clone()),
+                        body: doc.map(|d| d.body.clone()),
+                    }
+                })
+                .collect(),
+            review_history: concept
+                .reviews
+                .iter()
+                .rev()
+                .map(|review| review_out(&params.id, review))
+                .collect(),
+        })
+    }
+
+    #[tool(
+        title = "What to study next",
+        output_schema = rmcp::handler::server::common::schema_for_type::<NextOut>(),
+        description = "Plan the next study session: the fewest tasks that cover every due review (reviewing an advanced concept implicitly reviews what it encompasses), the frontier of concepts ready to learn, and what comes due soon.",
+        annotations(
+            title = "What to study next",
+            read_only_hint = true,
+            destructive_hint = false,
+            open_world_hint = false
+        )
+    )]
+    async fn knowledge_next(&self, ctx: RequestContext<RoleServer>) -> CallToolResult {
+        let mut state = synced_state!(self, ctx);
+        let now = Utc::now();
+        let graph = state.knowledge();
+        let mut upcoming: Vec<(DateTime<Utc>, &String)> = graph
+            .active_concepts()
+            .filter_map(|(id, c)| c.due_at().filter(|due| *due > now).map(|due| (due, id)))
+            .collect();
+        upcoming.sort();
+        ok_typed(&NextOut {
+            total_due: graph.due(now).len(),
+            tasks: graph
+                .compressed_reviews(now)
+                .into_iter()
+                .map(|task| TaskOut {
+                    concept: summary_of(graph, &task.concept, now),
+                    kind: task.kind,
+                    covers: task.covers,
+                })
+                .collect(),
+            frontier: graph
+                .frontier()
+                .into_iter()
+                .map(|id| summary_of(graph, id, now))
+                .collect(),
+            upcoming: upcoming
+                .into_iter()
+                .take(5)
+                .map(|(_, id)| summary_of(graph, id, now))
+                .collect(),
+        })
+    }
+
+    #[tool(
+        title = "Recent knowledge reviews",
+        output_schema = rmcp::handler::server::common::schema_for_type::<ReviewsOut>(),
+        description = "The most recent explicit reviews across the whole knowledge graph, newest first, with the question asked, the user's answer, and the grading notes.",
+        annotations(
+            title = "Recent knowledge reviews",
+            read_only_hint = true,
+            destructive_hint = false,
+            open_world_hint = false
+        )
+    )]
+    async fn knowledge_reviews(
+        &self,
+        ctx: RequestContext<RoleServer>,
+        Parameters(params): Parameters<ReviewsParams>,
+    ) -> CallToolResult {
+        let mut state = synced_state!(self, ctx);
+        let graph = state.knowledge();
+        let mut reviews: Vec<(&String, &ReviewRecord)> = graph
+            .active_concepts()
+            .flat_map(|(id, c)| c.reviews.iter().map(move |r| (id, r)))
+            .collect();
+        // Reviews from one batch share a timestamp: a stable oldest-first sort
+        // keeps their order, so reversing it puts the latest first.
+        reviews.sort_by_key(|(_, review)| review.at);
+        reviews.reverse();
+        ok_typed(&ReviewsOut {
+            reviews: reviews
+                .into_iter()
+                .take(params.limit.unwrap_or(30))
+                .map(|(id, review)| review_out(id, review))
+                .collect(),
+        })
+    }
+
+    #[tool(
+        title = "Read a knowledge document",
+        output_schema = rmcp::handler::server::common::schema_for_type::<DocumentOut>(),
+        description = "A document's full text and the concepts linked to it.",
+        annotations(
+            title = "Read a knowledge document",
+            read_only_hint = true,
+            destructive_hint = false,
+            open_world_hint = false
+        )
+    )]
+    async fn knowledge_document(
+        &self,
+        ctx: RequestContext<RoleServer>,
+        Parameters(params): Parameters<DocumentParams>,
+    ) -> CallToolResult {
+        let mut state = synced_state!(self, ctx);
+        let doc = match Documents::of(&state)
+            .fetch(Some(std::slice::from_ref(&params.id)), true)
+            .await
+        {
+            Ok(mut docs) => match docs.pop() {
+                Some(doc) => doc,
+                None => return error(format!("no document '{}'", params.id)),
+            },
+            Err(e) => return e,
+        };
+        let now = Utc::now();
+        let graph = state.knowledge();
+        ok_typed(&DocumentOut {
+            concepts: graph
+                .active_concepts()
+                .filter(|(_, c)| c.documents.contains_key(&doc.id))
+                .map(|(id, c)| summary(id, c, now))
+                .collect(),
+            id: doc.id,
+            title: doc.title,
+            body: doc.body,
+            updated_at: doc.updated_at,
+        })
+    }
+
+    #[tool(
+        title = "Save a knowledge document",
+        output_schema = rmcp::handler::server::common::schema_for_type::<SaveDocumentOut>(),
+        description = "Create or replace a plain-text document (notes, an article, a chapter) the user wants to learn from. Link it to concepts with a set_document_link op in knowledge_apply; linked documents show up when inspecting a concept.",
+        annotations(
+            title = "Save a knowledge document",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
+    )]
+    async fn knowledge_save_document(
+        &self,
+        ctx: RequestContext<RoleServer>,
+        Parameters(params): Parameters<SaveDocumentParams>,
+    ) -> CallToolResult {
+        let mut state = synced_state!(self, ctx);
+        let docs = Documents::of(&state);
+        if let Err(e) = save_document(
+            &docs.http,
+            &docs.supabase,
+            &docs.user_id,
+            &params.id,
+            &params.title,
+            &params.body,
+        )
+        .await
+        {
+            return error(format!("{e:#}"));
+        }
+        let graph = state.knowledge();
+        ok_typed(&SaveDocumentOut {
+            concepts: graph
+                .active_concepts()
+                .filter(|(_, c)| c.documents.contains_key(&params.id))
+                .map(|(id, _)| id.clone())
+                .collect(),
+            id: params.id,
+        })
+    }
+
+    #[tool(
+        title = "Delete a knowledge document",
+        output_schema = rmcp::handler::server::common::schema_for_type::<DeleteDocumentOut>(),
+        description = "Delete a document and unlink it from every concept. Confirm with the user first.",
+        annotations(
+            title = "Delete a knowledge document",
+            read_only_hint = false,
+            destructive_hint = true,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
+    )]
+    async fn knowledge_delete_document(
+        &self,
+        ctx: RequestContext<RoleServer>,
+        Parameters(params): Parameters<DocumentParams>,
+    ) -> CallToolResult {
+        let mut state = synced_state!(self, ctx);
+        let docs = Documents::of(&state);
+        if let Err(e) = delete_document(&docs.http, &docs.supabase, &docs.user_id, &params.id).await
+        {
+            return error(format!("failed to delete document: {e:#}"));
+        }
+        let unlinked: Vec<String> = state
+            .knowledge()
+            .active_concepts()
+            .filter(|(_, c)| c.documents.contains_key(&params.id))
+            .map(|(id, _)| id.clone())
+            .collect();
+        let ops = unlinked
+            .iter()
+            .map(|concept| KnowledgeEvent::SetDocumentLink {
+                document: params.id.clone(),
+                concept: concept.clone(),
+                linked: false,
+                note: String::new(),
+            })
+            .collect();
+        let synced = state.append_knowledge(ops, Utc::now()).await;
+        ok_typed(&DeleteDocumentOut {
+            id: params.id,
+            unlinked,
+            synced: synced == SyncStatus::Synced,
+        })
+    }
+}

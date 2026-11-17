@@ -12,7 +12,11 @@ use yap_frontend_rs::deck_selection::{
 };
 use yap_frontend_rs::{Context, Deck, DeckEvent, DeckState};
 
-use crate::sync::{DECK_SELECTION_STREAM, EventRow, REVIEWS_STREAM};
+use knowledge_graph::{KnowledgeEvent, KnowledgeGraph};
+
+use crate::sync::{
+    DECK_SELECTION_STREAM, EventRow, KNOWLEDGE_STREAM, REVIEWS_STREAM, SYNCED_STREAMS,
+};
 
 /// An event store with the streams the MCP server uses registered.
 pub fn new_store() -> EventStore<String, String> {
@@ -22,7 +26,16 @@ pub fn new_store() -> EventStore<String, String> {
         DECK_SELECTION_STREAM.to_string(),
         None,
     );
+    store.get_or_insert_default::<EventType<KnowledgeEvent>>(KNOWLEDGE_STREAM.to_string(), None);
     store
+}
+
+/// Replay the knowledge stream into a graph.
+pub fn build_knowledge(store: &EventStore<String, String>) -> KnowledgeGraph {
+    store
+        .get::<EventType<KnowledgeEvent>>(KNOWLEDGE_STREAM.to_string())
+        .expect("knowledge stream registered in new_store")
+        .state(KnowledgeGraph::default(), &())
 }
 
 /// Insert fetched rows into the store, grouped per stream/device and ordered
@@ -33,7 +46,7 @@ pub fn insert_rows(store: &mut EventStore<String, String>, rows: Vec<EventRow>) 
     let mut grouped: BTreeMap<(String, String), Vec<Timestamped<weapon::data_model::RawJson>>> =
         BTreeMap::new();
     for row in rows {
-        if row.stream_id != REVIEWS_STREAM && row.stream_id != DECK_SELECTION_STREAM {
+        if !SYNCED_STREAMS.contains(&row.stream_id.as_str()) {
             continue;
         }
         grouped

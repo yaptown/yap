@@ -1,0 +1,13 @@
+[package]
+name = "knowledge-graph"
+version = "0.1.0"
+authors = ["Andre Popovitch <andre@popovit.ch>"]
+edition = "2024"
+
+[dependencies]
+weapon = { path = "../weapon" }
+serde.workspace = true
+chrono.workspace = true
+log.workspace = true
+schemars.workspace = true
+ordered-float = { version = "5.5.1", features = ["serde"] }

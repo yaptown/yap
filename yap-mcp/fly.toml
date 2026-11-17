@@ -6,7 +6,9 @@ app = 'yap-mcp'
 primary_region = 'ord'
 
 [build]
-dockerfile = 'yap-mcp/Dockerfile'
+# Relative to this file's directory (flyctl resolves it there); the build
+# context is still the directory flyctl runs in, i.e. the repo root.
+dockerfile = 'Dockerfile'
 
 [env]
 PORT = '8080'

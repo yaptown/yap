@@ -6,6 +6,8 @@ edition = "2024"
 
 [dependencies]
 yap-frontend-rs = { path = "../yap-frontend-rs" }
+knowledge-graph = { path = "../libraries/knowledge-graph" }
+ordered-float = "5.5.1"
 language-utils = { path = "../language-utils" }
 weapon = { path = "../libraries/weapon", features = ["supabase"] }
 lasso.workspace = true
