@@ -29,6 +29,9 @@ use serde::{Deserialize, Serialize};
 
 pub type ConceptId = String;
 pub type DocumentId = String;
+/// A lowercase slug, like concept ids, so the same idea always spells the
+/// same tag.
+pub type TagName = String;
 
 /// One change to the knowledge graph. Serialized forms are stored forever, so
 /// change them only by adding a new version.
@@ -46,6 +49,9 @@ pub enum KnowledgeEvent {
         /// is often two concepts.
         #[serde(default)]
         description: String,
+        /// Tags for finding and scoping the concept later (see the tag op).
+        #[serde(default)]
+        tags: Vec<TagName>,
     },
     /// Change a concept's title and/or description.
     EditConcept {
@@ -73,7 +79,7 @@ pub enum KnowledgeEvent {
     /// can't test the concept. The concept stays as a composite that fully
     /// encompasses each part (and the parts become its prerequisites), so
     /// reviewing it still credits them all. Parts also take on the
-    /// concept's own prerequisites and linked documents.
+    /// concept's own prerequisites, tags and linked documents.
     SplitConcept {
         id: ConceptId,
         into: Vec<NewConcept>,
@@ -105,6 +111,22 @@ pub enum KnowledgeEvent {
     /// Remove a concept from the graph, along with its links. Its id stays
     /// reserved.
     RetireConcept { id: ConceptId },
+    /// Add tags to concepts. Tags are how the user (and later sessions) find
+    /// and scope their studies, so they're worth adding generously. They can
+    /// describe the material (`machine-learning`, `linear-algebra`) or the
+    /// context the user is learning it in (`for-work`, `reading-group`), and
+    /// context tags in particular help pick relevant examples and plan a
+    /// session around one goal. Reusing tags already in the graph (listed by
+    /// knowledge_graph) keeps them useful as filters.
+    Tag {
+        concepts: Vec<ConceptId>,
+        tags: Vec<TagName>,
+    },
+    /// Remove tags from concepts.
+    Untag {
+        concepts: Vec<ConceptId>,
+        tags: Vec<TagName>,
+    },
     /// Attach (or with `linked: false`, detach) a document to a concept.
     /// Documents themselves live outside the event stream (they are mutable
     /// content); this only records the relationship. `note` says how the

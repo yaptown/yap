@@ -6,7 +6,7 @@ use std::collections::BTreeSet;
 
 use chrono::{DateTime, Utc};
 
-use crate::{ConceptId, KnowledgeGraph};
+use crate::{Concept, ConceptId, KnowledgeGraph};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -28,17 +28,27 @@ pub struct Task {
 }
 
 impl KnowledgeGraph {
-    /// A small set of tasks that together cover every due review (greedy set
-    /// cover). Concepts whose last review failed can only be covered by
-    /// reviewing them directly.
-    pub fn compressed_reviews(&self, now: DateTime<Utc>) -> Vec<Task> {
-        let due: BTreeSet<&ConceptId> = self.due(now).into_iter().collect();
+    /// A small set of tasks that together cover every due review in scope
+    /// (greedy set cover), using only in-scope concepts as tasks. Concepts
+    /// whose last review failed can only be covered by reviewing them
+    /// directly.
+    pub fn compressed_reviews(
+        &self,
+        now: DateTime<Utc>,
+        in_scope: impl Fn(&Concept) -> bool,
+    ) -> Vec<Task> {
+        let due: BTreeSet<&ConceptId> = self
+            .due(now)
+            .into_iter()
+            .filter(|id| in_scope(&self.concepts[*id]))
+            .collect();
         if due.is_empty() {
             return Vec::new();
         }
         let frontier: BTreeSet<&ConceptId> = self.frontier().into_iter().collect();
         let candidates: Vec<Task> = self
             .active_concepts()
+            .filter(|(_, concept)| in_scope(concept))
             .filter_map(|(id, concept)| {
                 let kind = if frontier.contains(id) {
                     TaskKind::Lesson
@@ -112,6 +122,7 @@ mod tests {
                     id: id.into(),
                     title: id.into(),
                     description: String::new(),
+                    tags: Vec::new(),
                 },
                 at,
             )
@@ -168,7 +179,7 @@ mod tests {
 
         let later = t0 + Duration::days(3);
         assert_eq!(graph.due(later).len(), 2);
-        let tasks = graph.compressed_reviews(later);
+        let tasks = graph.compressed_reviews(later, |_| true);
         assert_eq!(tasks.len(), 1);
         assert_eq!(tasks[0].concept, "multiply");
         assert_eq!(tasks[0].covers, vec!["multiply", "add"]);
@@ -191,7 +202,7 @@ mod tests {
         let now = t0 + Duration::hours(2);
         assert!(graph.concepts["multiply"].is_due(now));
         // A failed concept must be reviewed directly.
-        let tasks = graph.compressed_reviews(now);
+        let tasks = graph.compressed_reviews(now, |_| true);
         assert!(tasks.iter().any(|t| t.concept == "add"));
     }
 
@@ -221,7 +232,7 @@ mod tests {
         assert!(graph.concepts["adding-fractions"].is_learned());
         assert!(!graph.concepts["multiplying-fractions"].is_learned());
         let later = t0 + Duration::days(3);
-        let tasks = graph.compressed_reviews(later);
+        let tasks = graph.compressed_reviews(later, |_| true);
         assert_eq!(tasks.len(), 1);
         assert_eq!(tasks[0].concept, "fractions");
     }

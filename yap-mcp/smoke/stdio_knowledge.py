@@ -75,8 +75,10 @@ def cid(name):
 
 s = Server()
 s.tool("knowledge_apply", {"ops": [
-    {"op": "add_concept", "id": cid("add"), "title": "Adding numbers"},
+    {"op": "add_concept", "id": cid("add"), "title": "Adding numbers",
+     "tags": [cid("arithmetic")]},
     {"op": "add_concept", "id": cid("multiply"), "title": "Multiplying numbers"},
+    {"op": "tag", "concepts": [cid("add"), cid("multiply")], "tags": [cid("for-school")]},
     {"op": "set_link", "advanced": cid("multiply"), "basic": cid("add"),
      "prerequisite": True, "encompassing": 0.8},
 ]})
@@ -90,6 +92,14 @@ s.tool("knowledge_apply", {"ops": [
 nxt = s.tool("knowledge_next", {})
 assert cid("add") in [c["id"] for c in nxt["frontier"]]
 assert cid("multiply") not in [c["id"] for c in nxt["frontier"]]
+
+# Tags: counted in the graph, and they scope a session.
+graph = s.tool("knowledge_graph", {"tag": cid("for-school")})
+assert {c["id"] for c in graph["concepts"]} == {cid("add"), cid("multiply")}, graph["concepts"]
+counts = {t["tag"]: t["concepts"] for t in graph["tags"]}
+assert counts[cid("for-school")] == 2 and counts[cid("arithmetic")] == 1, counts
+assert [c["id"] for c in s.tool("knowledge_next", {"tag": cid("arithmetic")})["frontier"]] == [cid("add")]
+assert s.tool("knowledge_next", {"tag": cid("nothing-here")})["frontier"] == []
 
 out = s.tool("knowledge_apply", {"ops": [
     {"op": "review", "id": cid("add"), "score": 1.0, "question": "2+3?", "answer": "5",

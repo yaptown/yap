@@ -2351,7 +2351,10 @@ impl ServerHandler for YapMcp {
              the language course: a field they're studying, a paper, a codebase. You and the \
              user shape it together. You add concepts as they come up, link them, split ones \
              that turn out to be too broad, and mark ones the user says they already know; \
-             it's meant to stay very mutable. It follows Math Academy's design. Prerequisite \
+             it's meant to stay very mutable. You can also add concepts the user didn't \
+             name, when they unify, connect or extend what's there, so their understanding \
+             ends up complete rather than a list of isolated facts. It follows Math \
+             Academy's design. Prerequisite \
              links decide what's ready to learn next (the frontier), and weighted \
              \"encompassing\" links say how much practicing an advanced concept exercises a \
              simpler one, so one good review of the advanced concept also gives partial credit \
@@ -2359,8 +2362,11 @@ impl ServerHandler for YapMcp {
              each concept is small enough for one question to test, so a review score means \
              one clear thing. Reviews store the question, the user's answer and your notes, \
              which keeps later questions fresh and lets the next session pick up where this \
-             one left off. Plain-text documents (notes, papers, chapters) can be saved and \
-             linked to concepts as source material. knowledge_next plans a session, with each \
+             one left off. Tags on concepts record both the material (`machine-learning`) and \
+             the context the user is learning it in (`for-work`), so later sessions can find \
+             things and focus on one goal; adding them as you go pays off. Plain-text \
+             documents (notes, papers, chapters) can be saved and linked to concepts as \
+             source material. knowledge_next plans a session, with each \
              concept's description and recent questions; knowledge_concept shows one concept \
              in full; knowledge_apply records every change, reviews included."
                 .to_string(),
@@ -2416,6 +2422,7 @@ mod tests {
         check::<SearchParams>();
         check::<FetchParams>();
         check::<crate::knowledge::GraphParams>();
+        check::<crate::knowledge::NextParams>();
         check::<crate::knowledge::ConceptParams>();
         check::<crate::knowledge::ReviewsParams>();
         check::<crate::knowledge::DocumentParams>();

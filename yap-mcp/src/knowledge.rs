@@ -35,6 +35,18 @@ pub struct GraphParams {
     /// Include retired concepts (default false).
     #[serde(default)]
     include_retired: bool,
+    /// Only show concepts with this tag (and the links among them). The tag
+    /// list in the output always covers the whole graph.
+    #[serde(default)]
+    tag: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+pub struct NextParams {
+    /// Plan only around concepts with this tag, e.g. a context like
+    /// `for-work` when the user wants a session on one goal.
+    #[serde(default)]
+    tag: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, JsonSchema)]
@@ -82,6 +94,7 @@ pub struct ConceptSummaryOut {
     /// practice of its own.
     needs_explicit_review: bool,
     reviews: usize,
+    tags: Vec<String>,
 }
 
 #[derive(Serialize, JsonSchema)]
@@ -106,6 +119,15 @@ pub struct GraphOut {
     concepts: Vec<ConceptSummaryOut>,
     links: Vec<LinkOut>,
     documents: Vec<DocumentSummaryOut>,
+    /// Every tag in use, with how many concepts carry it. Reusing these
+    /// rather than coining near-synonyms keeps tags useful as filters.
+    tags: Vec<TagCountOut>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct TagCountOut {
+    tag: String,
+    concepts: usize,
 }
 
 #[derive(Serialize, JsonSchema)]
@@ -292,7 +314,13 @@ fn summary(id: &str, concept: &Concept, now: DateTime<Utc>) -> ConceptSummaryOut
         due: concept.due_at().map(rfc3339),
         needs_explicit_review: concept.needs_explicit_review(),
         reviews: concept.reviews.len(),
+        tags: concept.tags.iter().cloned().collect(),
     }
+}
+
+/// Whether a concept falls under an optional tag filter.
+fn in_scope(tag: Option<&str>) -> impl Fn(&Concept) -> bool + '_ {
+    move |concept| tag.is_none_or(|tag| concept.tags.contains(tag))
 }
 
 fn summary_of(graph: &KnowledgeGraph, id: &str, now: DateTime<Utc>) -> ConceptSummaryOut {
@@ -363,6 +391,9 @@ fn touched(op: &KnowledgeEvent) -> Vec<&str> {
             .chain(into.iter().map(|part| part.id.as_str()))
             .collect(),
         KnowledgeEvent::SetDocumentLink { concept, .. } => vec![concept],
+        KnowledgeEvent::Tag { concepts, .. } | KnowledgeEvent::Untag { concepts, .. } => {
+            concepts.iter().map(String::as_str).collect()
+        }
     }
 }
 
@@ -414,7 +445,7 @@ impl YapMcp {
     #[tool(
         title = "Change the knowledge graph",
         output_schema = rmcp::handler::server::common::schema_for_type::<ApplyOut>(),
-        description = "Apply a batch of changes to the user's knowledge graph: add, edit, split or retire concepts, set links, mark concepts known, record reviews, and link documents. The batch is all or nothing, and later ops can refer to concepts added earlier in it.\n\nHow the graph works, Math Academy-style: concepts are linked in two ways. A prerequisite link means the basic concept is learned before the advanced one appears on the frontier. An encompassing link (0 to 1) is roughly the chance that practicing the advanced concept exercises the basic one. When a review passes, credit flows down encompassing links, and when one fails, a penalty flows up. That credit is discounted while the receiving concept's memory is still fresh, so practice right after learning adds little. Many prerequisites have encompassing 0, since needing one thing first doesn't mean practicing the other exercises it.\n\nScheduling works best when a single question can test each concept, and a description that needs an \"and\" is often two concepts in disguise. For example, \"Loss functions\" tends to invite a two-part question (what is it, and what makes a good one?), so it works better as two: `loss-function`, \"Say what a loss function is: a number scoring how far the model's output is from the target, which training minimizes\" (quiz: \"What does a loss function compute?\"), and `loss-needs-informative-gradient`, \"Explain why a loss must have an informative gradient: the optimizer only follows the gradient, so where it's flat or zero there's no direction to improve\" (quiz: \"Why is 0/1 accuracy a bad training loss?\"), with `loss-function` as its prerequisite. If reviewing the two together is still useful, splitting \"Loss functions\" into them keeps it as a composite.\n\nA review records one question about one concept. The score (0 to 1, with 0.5 and up passing) is how well the user recalled that one thing, stored with the question, their answer and your notes. Past questions come back from knowledge_next and knowledge_concept, which makes it easy to ask something fresh. If a question wants to be two, or a score would really mean \"one of two parts\", that's usually a sign the concept is ready to split so each part gets its own schedule. Marking a concept known takes it off the schedule entirely, so it fits things the user has told you they already know.",
+        description = "Apply a batch of changes to the user's knowledge graph: add, edit, split or retire concepts, set links, mark concepts known, record reviews, and link documents. The batch is all or nothing, and later ops can refer to concepts added earlier in it.\n\nHow the graph works, Math Academy-style: concepts are linked in two ways. A prerequisite link means the basic concept is learned before the advanced one appears on the frontier. An encompassing link (0 to 1) is roughly the chance that practicing the advanced concept exercises the basic one. When a review passes, credit flows down encompassing links, and when one fails, a penalty flows up. That credit is discounted while the receiving concept's memory is still fresh, so practice right after learning adds little. Many prerequisites have encompassing 0, since needing one thing first doesn't mean practicing the other exercises it.\n\nScheduling works best when a single question can test each concept, and a description that needs an \"and\" is often two concepts in disguise. For example, \"Loss functions\" tends to invite a two-part question (what is it, and what makes a good one?), so it works better as two: `loss-function`, \"Say what a loss function is: a number scoring how far the model's output is from the target, which training minimizes\" (quiz: \"What does a loss function compute?\"), and `loss-needs-informative-gradient`, \"Explain why a loss must have an informative gradient: the optimizer only follows the gradient, so where it's flat or zero there's no direction to improve\" (quiz: \"Why is 0/1 accuracy a bad training loss?\"), with `loss-function` as its prerequisite. If reviewing the two together is still useful, splitting \"Loss functions\" into them keeps it as a composite.\n\nLike Mendeleev leaving gaps in the periodic table for elements nobody had found yet, the graph can hold concepts the user never mentioned, when they're what makes the rest hang together. A few kinds of connection are worth seeking out: the unifying idea behind several things the user asked about, the dimension along which those things differ, and neighboring concepts that bridge or extend what's already there, so their understanding doesn't have quiet holes. For example, if the user asks about forward Euler and Heun's method for solving differential equations, the graph becomes much more useful with a node for numerical integration itself (approximating an ODE's solution by stepping forward in small time increments) and one for order of accuracy (forward Euler is first order, so halving the step size roughly halves the error, while Heun's method is second order, so halving it cuts the error to about a quarter). Both are prerequisites of the two methods, and they're often the ideas that make the named methods click. You might also notice a natural extension, like RK4 as the fourth-order member of the same family. Concepts you add this way start unlearned, like any other, and it's good to mention what you added and why, so the user sees the map grow and can say if something doesn't belong or that they already know it.\n\nTags help the user and later sessions find and scope what's in the graph, so it's worth adding them generously, both when creating concepts (add_concept's tags) and afterwards (the tag op, which can tag many concepts at once). They can describe the material (`machine-learning`, `linear-algebra`) or the context the user is learning it in (`for-work`, `reading-group`). Context tags are especially useful: they tell a future session why the user cares, which helps it pick relevant examples and plan a focused session. knowledge_graph lists the tags already in use, and reusing those keeps tags reliable as filters.\n\nA review records one question about one concept. The score (0 to 1, with 0.5 and up passing) is how well the user recalled that one thing, stored with the question, their answer and your notes. Past questions come back from knowledge_next and knowledge_concept, which makes it easy to ask something fresh. If a question wants to be two, or a score would really mean \"one of two parts\", that's usually a sign the concept is ready to split so each part gets its own schedule. Marking a concept known takes it off the schedule entirely, so it fits things the user has told you they already know.",
         annotations(
             title = "Change the knowledge graph",
             read_only_hint = false,
@@ -577,7 +608,7 @@ impl YapMcp {
     #[tool(
         title = "Show the knowledge graph",
         output_schema = rmcp::handler::server::common::schema_for_type::<GraphOut>(),
-        description = "The user's whole knowledge graph: every concept with its learning state, every link, and every document (titles only).",
+        description = "The user's whole knowledge graph: every concept with its learning state and tags, every link, every document (titles only), and every tag in use with its count. The tag list is handy before adding concepts, since reusing an existing tag keeps filtering by it reliable. Passing a tag narrows the view to concepts carrying it.",
         annotations(
             title = "Show the knowledge graph",
             read_only_hint = true,
@@ -597,16 +628,22 @@ impl YapMcp {
         };
         let now = Utc::now();
         let graph = state.knowledge();
+        let in_scope = in_scope(params.tag.as_deref());
+        let shown: BTreeSet<&String> = graph
+            .concepts
+            .iter()
+            .filter(|(_, c)| (params.include_retired || !c.retired) && in_scope(c))
+            .map(|(id, _)| id)
+            .collect();
         ok_typed(&GraphOut {
-            concepts: graph
-                .concepts
+            concepts: shown
                 .iter()
-                .filter(|(_, c)| params.include_retired || !c.retired)
-                .map(|(id, c)| summary(id, c, now))
+                .map(|id| summary(id, &graph.concepts[*id], now))
                 .collect(),
             links: graph
                 .links
                 .iter()
+                .filter(|((advanced, basic), _)| shown.contains(advanced) && shown.contains(basic))
                 .map(|((advanced, basic), link)| LinkOut {
                     advanced: advanced.clone(),
                     basic: basic.clone(),
@@ -616,15 +653,28 @@ impl YapMcp {
                 .collect(),
             documents: docs
                 .into_iter()
-                .map(|doc| DocumentSummaryOut {
-                    concepts: graph
+                .filter_map(|doc| {
+                    let concepts: Vec<String> = graph
                         .active_concepts()
                         .filter(|(_, c)| c.documents.contains_key(&doc.id))
                         .map(|(id, _)| id.clone())
-                        .collect(),
-                    id: doc.id,
-                    title: doc.title,
-                    updated_at: doc.updated_at,
+                        .collect();
+                    let relevant =
+                        params.tag.is_none() || concepts.iter().any(|id| shown.contains(id));
+                    relevant.then_some(DocumentSummaryOut {
+                        concepts,
+                        id: doc.id,
+                        title: doc.title,
+                        updated_at: doc.updated_at,
+                    })
+                })
+                .collect(),
+            tags: graph
+                .tags()
+                .into_iter()
+                .map(|(tag, concepts)| TagCountOut {
+                    tag: tag.clone(),
+                    concepts,
                 })
                 .collect(),
         })
@@ -696,7 +746,7 @@ impl YapMcp {
     #[tool(
         title = "What to study next",
         output_schema = rmcp::handler::server::common::schema_for_type::<NextOut>(),
-        description = "Plan the next study session. Following Math Academy, the plan keeps reviews few so more of the user's time goes to learning: since practicing an advanced concept gives credit to what it encompasses, one well-chosen task can cover several due reviews, and the plan picks the fewest tasks that cover them all. A task is either a review of a learned concept or a lesson, which teaches a frontier concept for the first time and happens to cover due reviews along the way. Concepts whose last review failed always get a task of their own. Alongside the tasks come the frontier (concepts whose prerequisites are all learned, so they're ready to teach) and what comes due soon. Each task and frontier concept carries its description, its most recent questions with answers and notes, and its linked documents, which is usually enough to run the whole session without knowledge_concept.",
+        description = "Plan the next study session. Following Math Academy, the plan keeps reviews few so more of the user's time goes to learning: since practicing an advanced concept gives credit to what it encompasses, one well-chosen task can cover several due reviews, and the plan picks the fewest tasks that cover them all. A task is either a review of a learned concept or a lesson, which teaches a frontier concept for the first time and happens to cover due reviews along the way. Concepts whose last review failed always get a task of their own. Alongside the tasks come the frontier (concepts whose prerequisites are all learned, so they're ready to teach) and what comes due soon. Each task and frontier concept carries its description, its most recent questions with answers and notes, and its linked documents, which is usually enough to run the whole session without knowledge_concept. Passing a tag plans around just those concepts, which suits a session with one goal, like a context tag such as `for-work`.",
         annotations(
             title = "What to study next",
             read_only_hint = true,
@@ -704,19 +754,29 @@ impl YapMcp {
             open_world_hint = false
         )
     )]
-    async fn knowledge_next(&self, ctx: RequestContext<RoleServer>) -> CallToolResult {
+    async fn knowledge_next(
+        &self,
+        ctx: RequestContext<RoleServer>,
+        Parameters(params): Parameters<NextParams>,
+    ) -> CallToolResult {
         let mut state = synced_state!(self, ctx);
         let now = Utc::now();
         let graph = state.knowledge();
+        let in_scope = in_scope(params.tag.as_deref());
         let mut upcoming: Vec<(DateTime<Utc>, &String)> = graph
             .active_concepts()
+            .filter(|(_, c)| in_scope(c))
             .filter_map(|(id, c)| c.due_at().filter(|due| *due > now).map(|due| (due, id)))
             .collect();
         upcoming.sort();
         ok_typed(&NextOut {
-            total_due: graph.due(now).len(),
+            total_due: graph
+                .due(now)
+                .into_iter()
+                .filter(|id| in_scope(&graph.concepts[*id]))
+                .count(),
             tasks: graph
-                .compressed_reviews(now)
+                .compressed_reviews(now, &in_scope)
                 .into_iter()
                 .map(|task| TaskOut {
                     concept: study_of(graph, &task.concept, now),
@@ -727,6 +787,7 @@ impl YapMcp {
             frontier: graph
                 .frontier()
                 .into_iter()
+                .filter(|id| in_scope(&graph.concepts[*id]))
                 .map(|id| study_of(graph, id, now))
                 .collect(),
             upcoming: upcoming

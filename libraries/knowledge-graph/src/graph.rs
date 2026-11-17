@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use weapon::data_model::Timestamped;
 
 use crate::memory::{DUE_MEMORY, Memory, PASSING_SCORE, review_credit};
-use crate::{ConceptId, DocumentId, KnowledgeEvent};
+use crate::{ConceptId, DocumentId, KnowledgeEvent, TagName};
 
 /// Path weights below this don't carry implicit credit.
 const MIN_FLOW_WEIGHT: f64 = 0.05;
@@ -33,6 +33,7 @@ pub struct Concept {
     pub reviews: Vec<ReviewRecord>,
     /// Linked documents, with a note on how each relates.
     pub documents: BTreeMap<DocumentId, String>,
+    pub tags: BTreeSet<TagName>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -265,9 +266,48 @@ impl KnowledgeGraph {
                 memory: None,
                 reviews: Vec::new(),
                 documents: BTreeMap::new(),
+                tags: BTreeSet::new(),
             },
         );
         Ok(())
+    }
+
+    /// Add (`tagged`) or remove tags on concepts, checking everything first
+    /// so a bad id or tag leaves the graph untouched.
+    fn set_tags(
+        &mut self,
+        concepts: &[ConceptId],
+        tags: &[TagName],
+        tagged: bool,
+    ) -> Result<(), String> {
+        for tag in tags {
+            check_slug(tag)?;
+        }
+        for id in concepts {
+            self.concept(id)?;
+        }
+        for id in concepts {
+            let concept_tags = &mut self.concepts.get_mut(id).expect("checked above").tags;
+            for tag in tags {
+                if tagged {
+                    concept_tags.insert(tag.clone());
+                } else {
+                    concept_tags.remove(tag);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Every tag on an active concept, with how many concepts carry it.
+    pub fn tags(&self) -> BTreeMap<&TagName, usize> {
+        let mut counts = BTreeMap::new();
+        for (_, concept) in self.active_concepts() {
+            for tag in &concept.tags {
+                *counts.entry(tag).or_default() += 1;
+            }
+        }
+        counts
     }
 
     fn set_link(&mut self, advanced: &str, basic: &str, link: Link) -> Result<(), String> {
@@ -333,7 +373,16 @@ impl KnowledgeGraph {
                 id,
                 title,
                 description,
-            } => self.add_concept(id, title, description, at),
+                tags,
+            } => {
+                for tag in tags {
+                    check_slug(tag)?;
+                }
+                self.add_concept(id, title, description, at)?;
+                self.set_tags(std::slice::from_ref(id), tags, true)
+            }
+            KnowledgeEvent::Tag { concepts, tags } => self.set_tags(concepts, tags, true),
+            KnowledgeEvent::Untag { concepts, tags } => self.set_tags(concepts, tags, false),
             KnowledgeEvent::EditConcept {
                 id,
                 title,
@@ -376,6 +425,7 @@ impl KnowledgeGraph {
                     concept.known = parent.known;
                     concept.memory = parent.memory.clone().filter(|_| part.inherit_memory);
                     concept.documents = parent.documents.clone();
+                    concept.tags = parent.tags.clone();
                     // The parent's foundations are each part's foundations;
                     // the parent becomes a composite built from its parts.
                     for basic in &prerequisites {
