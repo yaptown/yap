@@ -177,7 +177,7 @@ pub async fn load_routing_candidates(course: Course) -> anyhow::Result<RoutingCa
         })
         .filter(|(sentence, _, source)| {
             // Never filter manual sentences
-            source.is_manual() || !banned_sentences.contains(&sentence.to_lowercase())
+            source.is_manual() || !banned_sentences.contains(&ban_key(sentence))
         })
         .filter(|(sentence, _, source)| source.is_manual() || !has_encoding_corruption(sentence))
         // Unlike quality filters, this must hold even for manual sentences.
@@ -345,11 +345,20 @@ fn retain_dialect(
     }
 }
 
-/// Load banned sentences from both manual and AI-generated files.
+/// The form a sentence is banned under: lowercase, with trailing punctuation
+/// and whitespace dropped, so banning "Qu'est-ce que s'est." also bans the
+/// same words ending in " ?" or "…".
+fn ban_key(sentence: &str) -> String {
+    sentence
+        .trim_end_matches(|c: char| !c.is_alphanumeric())
+        .to_lowercase()
+}
+
+/// Load banned sentences from both manual and AI-generated files, as `ban_key`s.
 ///
-/// Entries are normalized through `cleanup_sentence` so they match the form
-/// that input sentences take after cleanup (e.g. thin NBSP before `?` / `!`
-/// in French).
+/// Entries are normalized through `cleanup_sentence` first so they match the
+/// form that input sentences take after cleanup (e.g. thin NBSP before `?` /
+/// `!` in French).
 fn load_banned_sentences(
     source_data_path: &std::path::Path,
     language: Language,
@@ -357,8 +366,10 @@ fn load_banned_sentences(
     let mut banned_sentences = HashSet::new();
 
     let normalize = |raw: &str| {
-        language_utils::text_cleanup::cleanup_sentence(raw.trim().to_string(), language)
-            .to_lowercase()
+        ban_key(&language_utils::text_cleanup::cleanup_sentence(
+            raw.trim().to_string(),
+            language,
+        ))
     };
 
     let banned_sentences_file = source_data_path.join("banned_sentences.txt");
@@ -373,6 +384,20 @@ fn load_banned_sentences(
             if !normalized.is_empty() {
                 banned_sentences.insert(normalized);
             }
+        }
+    }
+
+    // Written by `subtitle-corpus proofread --anki`: deck sentences its
+    // coherence pass flagged.
+    let proofread_banned_file = source_data_path.join("banned_sentences_proofread.jsonl");
+    if proofread_banned_file.exists() {
+        #[derive(Deserialize)]
+        struct Ban {
+            sentence: String,
+        }
+        for line in std::fs::read_to_string(&proofread_banned_file)?.lines() {
+            let ban: Ban = serde_json::from_str(line)?;
+            banned_sentences.insert(normalize(&ban.sentence));
         }
     }
 

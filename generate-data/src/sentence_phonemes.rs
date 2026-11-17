@@ -112,6 +112,14 @@ fn sentence_phonemes(
     let mut rendered = String::new();
     let mut gram_spans = vec![None::<(usize, usize)>; grams.len()];
     let mut token_spans = Vec::new();
+    // Where a multi-word gram's words break (see the format docs): the byte
+    // each later word starts at.
+    let tokens_are_words = matches!(
+        language,
+        Language::ChineseSimplified | Language::ChineseTraditional | Language::Thai
+    );
+    let mut word_breaks = Vec::new();
+    let mut previous_token = None;
     for (i, word, whitespace) in
         language_utils::render_words(atoms, sentence.capitalize_first, language)
     {
@@ -121,6 +129,13 @@ fn sentence_phonemes(
         rendered.push_str(whitespace.as_str());
         if start < end {
             token_spans.push((start, end));
+            if let Some((gram, previous_end)) = previous_token
+                && gram == i
+                && (tokens_are_words || previous_end < start)
+            {
+                word_breaks.push(start);
+            }
+            previous_token = Some((i, end));
         }
         let span = gram_spans[i].get_or_insert((start, end));
         span.1 = end;
@@ -183,7 +198,8 @@ fn sentence_phonemes(
         words: &words,
     };
     let phonemized = g2p::phonemize_with(g2p_language, text, &hints).map_err(refusal)?;
-    split_by_gram(&phonemized, &gram_spans).ok_or_else(|| "g2p gave no phoneme spans".into())
+    split_by_gram(&phonemized, &gram_spans, &word_breaks)
+        .ok_or_else(|| "g2p gave no phoneme spans".into())
 }
 
 /// A per-sentence refusal becomes a count; a broken backend (Python not on
@@ -212,19 +228,39 @@ fn refusal(error: g2p::Error) -> String {
 /// geminate across a boundary, a contraction) goes to the first. A phoneme
 /// never goes to an earlier gram than the phoneme before it, so the
 /// sequences always join back into the sentence's tokens in order.
-fn split_by_gram(phonemized: &g2p::Phonemized, grams: &[(usize, usize)]) -> Option<Vec<String>> {
+///
+/// `word_breaks` are the bytes where a gram's later words start; a `#` goes
+/// between a gram's phonemes whose text lies on either side of one.
+fn split_by_gram(
+    phonemized: &g2p::Phonemized,
+    grams: &[(usize, usize)],
+    word_breaks: &[usize],
+) -> Option<Vec<String>> {
     if phonemized.phoneme_text_spans.len() != phonemized.phonemes.len() {
         return None;
     }
     let mut sequences = vec![Vec::new(); grams.len()];
     let mut owner = 0;
+    let mut previous_start = None;
     for (phoneme, token) in tokens(phonemized) {
         let (start, _) = phonemized.phoneme_text_spans[phoneme];
         let first = grams
             .iter()
             .position(|&(_, end)| start < end)
             .unwrap_or(grams.len() - 1);
+        if first > owner {
+            previous_start = None;
+        }
         owner = owner.max(first);
+        let (gram_start, gram_end) = grams[owner];
+        if let Some(previous) = previous_start
+            && word_breaks
+                .iter()
+                .any(|&at| previous < at && at <= start && gram_start < at && at < gram_end)
+        {
+            sequences[owner].push(PhonemeToken::WordBreak.to_string());
+        }
+        previous_start = Some(start);
         sequences[owner].push(token.to_string());
     }
     Some(
@@ -296,7 +332,7 @@ mod tests {
             .collect::<Vec<_>>()
             .join(" ")
             .split(' ')
-            .filter(|t| !t.is_empty())
+            .filter(|t| !t.is_empty() && *t != "#")
             .map(str::to_owned)
             .collect();
         let expected: Vec<_> = tokens(phonemized)
@@ -309,7 +345,7 @@ mod tests {
             .flat_map(|s| sentence_phonemes::tokens(s))
             .filter_map(|token| match token {
                 PhonemeToken::Phone { phoneme, .. } => Some(phoneme.to_owned()),
-                PhonemeToken::AccentPhraseStart => None,
+                PhonemeToken::AccentPhraseStart | PhonemeToken::WordBreak => None,
             })
             .collect();
         let original: Vec<_> = phonemized
@@ -320,16 +356,19 @@ mod tests {
         assert_eq!(phones, original);
     }
 
+    /// Splits `text` into `grams`; a gram's words break after its spaces.
     fn split(language: g2p::Language, text: &str, grams: &[&str]) -> Vec<String> {
         let mut spans = Vec::new();
+        let mut breaks = Vec::new();
         let mut cursor = 0;
         for gram in grams {
             let start = cursor + text[cursor..].find(gram).unwrap();
             cursor = start + gram.len();
             spans.push((start, cursor));
+            breaks.extend(gram.match_indices(' ').map(|(i, _)| start + i + 1));
         }
         let phonemized = g2p::phonemize(language, text).unwrap();
-        let sequences = split_by_gram(&phonemized, &spans).unwrap();
+        let sequences = split_by_gram(&phonemized, &spans, &breaks).unwrap();
         assert_joins(&phonemized, &sequences);
         sequences
     }
@@ -363,6 +402,19 @@ mod tests {
             mandarin[0].chars().any(|c| c.is_ascii_digit()),
             "{mandarin:?}"
         );
+    }
+
+    #[test]
+    fn multi_word_grams_break_between_their_words() {
+        let english = split(
+            g2p::Language::English,
+            "And then we left.",
+            &["And then", "we", "left", "."],
+        );
+        assert_eq!(english[0].matches(" # ").count(), 1, "{english:?}");
+        assert!(english.iter().skip(1).all(|s| !s.contains('#')));
+        let french = split(g2p::Language::French, "C'est fini.", &["C'est", "fini", "."]);
+        assert!(french.iter().all(|s| !s.contains('#')), "{french:?}");
     }
 
     #[test]
@@ -400,7 +452,7 @@ mod tests {
         // Pretend the last phoneme was spoken from the first word.
         let last = phonemized.phoneme_text_spans.len() - 1;
         phonemized.phoneme_text_spans[last] = (0, 2);
-        let sequences = split_by_gram(&phonemized, &[(0, 2), (3, 7)]).unwrap();
+        let sequences = split_by_gram(&phonemized, &[(0, 2), (3, 7)], &[]).unwrap();
         assert_joins(&phonemized, &sequences);
         assert!(!sequences[1].is_empty());
     }

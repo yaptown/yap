@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 5381747
-Total errors: 3706
+Total predictions: 5376693
+Total errors: 3699
 Accuracy: 99.93%
 
 ## Error Patterns (sorted by frequency)
@@ -1987,13 +1987,6 @@ Accuracy: 99.93%
   - Take it easy, aller à votre garage .
   - Tous vos trucs dans le garage .
 
-### "i" + "I" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Mais qu'iI finisse ce qu'iI a commencé.
-  - Mais qu'iI finisse ce qu'iI a commencé.
-
 ### "inscrit" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3161,12 +3154,6 @@ Accuracy: 99.93%
 - Examples:
   - On va mettre les points sur les 'i'.
 
-### "," + "je" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Et moi,je le voyais à la mienne.
-
 ### "," + "“" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3755,12 +3742,6 @@ Accuracy: 99.93%
 - Examples:
   - Impossible; il n'y a pas d'homme assez mince pour s'introduire par là.
 
-### "J'" + "ai" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - J' ai fait un aller-retour la lune.
-
 ### "Japon" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4000,12 +3981,6 @@ Accuracy: 99.93%
 - Actual: Space
 - Examples:
   - On "moi, mon gosse", j'suis pas con.
-
-### "Ou" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Ou'est-ce que c'est ?
 
 ### "Oublie" + """ (1 occurrences)
 - Predicted: None
@@ -4642,12 +4617,6 @@ Accuracy: 99.93%
 - Actual: Space
 - Examples:
   - Merde, vous êtes un bâtards .
-
-### "bébé" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - J'ai dis 'oh oui bébé', viens voir.
 
 ### "bébé" + "." (1 occurrences)
 - Predicted: None
@@ -7492,12 +7461,6 @@ Accuracy: 99.93%
 - Actual: Space
 - Examples:
   - Tous étaient partis par toi .
-
-### "toi" + ":" (1 occurrences)
-- Predicted: Nbsp
-- Actual: None
-- Examples:
-  - Souviens-toi: ouvre le avant de le manger.
 
 ### "tort" + "sur" (1 occurrences)
 - Predicted: Space

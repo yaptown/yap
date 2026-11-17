@@ -14,12 +14,22 @@
 //! * a phone: an optional stress prefix (`ˈ` primary, `ˌ` secondary), the g2p
 //!   phoneme, then its tone number when it bears one (Mandarin, Thai: `a3`),
 //!   then `ꜜ` when it ends a Japanese accent nucleus mora (pitch drops after
-//!   it); or
-//! * `%`, which starts a Japanese accent phrase (before its first mora).
+//!   it);
+//! * `%`, which starts a Japanese accent phrase (before its first mora); or
+//! * `#`, a break between two words of a multi-word gram ("and # then").
+//!   A gram breaks where its text has a space, so "c'est" is one word. Chinese
+//!   and Thai, written without spaces, also break between every two of the
+//!   gram's tokens (不 # 客气), since those are their words. Japanese doesn't:
+//!   its multi-token grams are nearly all a word plus the particle or ending
+//!   spoken with it (彼は, ですか, している), as tight as "c'est", and `%`
+//!   already marks where its spoken chunks (accent phrases) start, even
+//!   inside a gram.
+//!   A sequence never starts or
+//!   ends with `#`; whether two grams are spaced apart is in the sentence text.
 //!
 //! Japanese H/L levels follow from the nucleus and phrase starts (g2p's
-//! `tokyo_pitch_level`). No g2p phoneme contains a digit, `ꜜ`, `%`, or begins
-//! with a stress mark, so [`tokens`] parses every sequence unambiguously.
+//! `tokyo_pitch_level`). No g2p phoneme contains a digit, `ꜜ`, `%`, `#`, or
+//! begins with a stress mark, so [`tokens`] parses every sequence unambiguously.
 //! Joining a sentence's gram sequences with spaces (skipping empty ones)
 //! gives the whole sentence's tokens in order.
 use crate::sentence_codec::GramKey;
@@ -86,12 +96,14 @@ impl StressMark {
 }
 
 const ACCENT_PHRASE_START: &str = "%";
+const WORD_BREAK: &str = "#";
 const ACCENT_NUCLEUS: char = 'ꜜ';
 
 /// One token of a sequence; see the [module docs](self) for the text form.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PhonemeToken<'a> {
     AccentPhraseStart,
+    WordBreak,
     Phone {
         phoneme: &'a str,
         stress: Option<StressMark>,
@@ -104,6 +116,7 @@ impl std::fmt::Display for PhonemeToken<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
             Self::AccentPhraseStart => f.write_str(ACCENT_PHRASE_START),
+            Self::WordBreak => f.write_str(WORD_BREAK),
             Self::Phone {
                 phoneme,
                 stress,
@@ -128,8 +141,10 @@ impl std::fmt::Display for PhonemeToken<'_> {
 
 impl<'a> PhonemeToken<'a> {
     pub fn parse(token: &'a str) -> Self {
-        if token == ACCENT_PHRASE_START {
-            return Self::AccentPhraseStart;
+        match token {
+            ACCENT_PHRASE_START => return Self::AccentPhraseStart,
+            WORD_BREAK => return Self::WordBreak,
+            _ => {}
         }
         let (stress, rest) = [StressMark::Primary, StressMark::Secondary]
             .into_iter()

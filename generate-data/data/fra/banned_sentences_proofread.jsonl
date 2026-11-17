@@ -1,0 +1,610 @@
+{"sentence":"Absolument raison.","reason":"« Absolument raison » est une construction grammaticalement incorrecte en français ; on dit « avoir absolument raison »."}
+{"sentence":"Accroches-toi.","reason":"À l’impératif, la forme correcte est « Accroche-toi », sans s."}
+{"sentence":"Ah ouai ?","reason":"« Ouai » est une déformation fautive de « ouais »."}
+{"sentence":"Aies confiance.","reason":"« Aies » est une forme incorrecte ici : l’impératif de « avoir » est « aie »."}
+{"sentence":"Allez dehors, tout les deux, en avant marche.","reason":"« Tout les deux » has an agreement error; it should be « tous les deux ». "}
+{"sentence":"Allez y soulevez faîtes un petit effort.","reason":"« Faîtes » est une faute d’orthographe ; la forme correcte est « faites »."}
+{"sentence":"Alors qu'est ce que vous compter en faire ?","reason":"« Vous compter » is grammatically incorrect here; it should be « vous comptez »."}
+{"sentence":"Amuses-toi bien.","reason":"« Amuses-toi » est une faute de conjugaison : l’impératif de « s’amuser » s’écrit « amuse-toi ». "}
+{"sentence":"Années après années, j'ai dit la Parole.","reason":"L’expression usuelle est « année après année » ; « années après années » est une erreur de forme."}
+{"sentence":"Appelez-ça un ami, si vous voulez.","reason":"« ça » is a demonstrative object here and should not be joined to the imperative with a hyphen: « Appelez ça un ami ». "}
+{"sentence":"Apporte-la moi, ainsi que l'appareil.","reason":"The object pronouns in an affirmative imperative are joined by hyphens: « Apporte-la-moi ». "}
+{"sentence":"Apprend à utiliser le Côté Obscur de la Force.","reason":"The affirmative tu imperative is « apprends », not « apprend »."}
+{"sentence":"Attend un moment.","reason":"L’impératif de « attendre » à la deuxième personne du singulier s’écrit « attends »."}
+{"sentence":"Attend un peu.","reason":"L’impératif de « attendre » à la deuxième personne du singulier s’écrit « attends »."}
+{"sentence":"Attend une seconde.","reason":"L’impératif de « attendre » à la deuxième personne du singulier s’écrit « attends »."}
+{"sentence":"Attend-moi.","reason":"L’impératif de « attendre » à la deuxième personne du singulier s’écrit « attends »."}
+{"sentence":"Attendons d'être arrivés, que je vois les lieux.","reason":"« Que je vois les lieux » is ungrammatical in this purpose clause; it requires « que je voie les lieux »."}
+{"sentence":"Au delà du gouvernement et de la police.","reason":"« Au-delà » s’écrit avec un trait d’union."}
+{"sentence":"Au fait tu as vraiment assurer là bas.","reason":"Après « tu as », il faut le participe passé « assuré », et « là-bas » prend un trait d’union."}
+{"sentence":"Au fait, il a quelque chose à vous.","reason":"« Il a quelque chose à vous » is an incomplete construction; it needs a complement such as « dire » or « offrir »."}
+{"sentence":"Avait femme, frère la prendre, lui aller montagne.","reason":"La phrase est grammaticalement incohérente : les groupes « Avait femme, frère » et « la prendre, lui aller montagne » ne forment pas une construction française utilisable."}
+{"sentence":"Avez vous parler avec votre responsable de résidence ?","reason":"L’auxiliaire « avez » doit être suivi du participe passé « parlé », et non de l’infinitif « parler »."}
+{"sentence":"Avez-vous déja vu une course aussi serrée ?","reason":"« déja » est une faute d’orthographe : il faut écrire « déjà »."}
+{"sentence":"Besoin de liberté, vous savez qui voter.","reason":"La tournure « savoir qui voter » est grammaticalement défectueuse ici ; on dirait « savoir pour qui voter ». "}
+{"sentence":"Bien sur que si.","reason":"« sur » devrait s’écrire « sûr » dans cette expression."}
+{"sentence":"Bien sûr je vous ferez une facture pour ça.","reason":"Erreur de conjugaison : « je vous ferez » devrait être « je vous ferai ». "}
+{"sentence":"Bon chance.","reason":"Accord incorrect : il faut dire « Bonne chance ». "}
+{"sentence":"Bonjour, que puis-je pour vous ?","reason":"The question is missing a verb: « que puis-je faire pour vous ? »"}
+{"sentence":"C'est I'heure.","reason":"« I'heure » appears to use an uppercase I instead of the lowercase l in « l'heure »."}
+{"sentence":"C'est Ià que notre grand-père a commencé.","reason":"« Ià » appears to use an uppercase I instead of the lowercase l in « là »."}
+{"sentence":"C'est Ià.","reason":"« Ià » appears to use an uppercase I instead of the lowercase l in « là »."}
+{"sentence":"C'est S-U-C-E-M-O-l.","reason":"La suite de lettres « S-U-C-E-M-O-l » semble corrompue : elle ne forme pas un nom ou un mot reconnaissable."}
+{"sentence":"C'est bien qui je pense ?","reason":"La construction « C'est bien qui je pense ? » est grammaticalement défectueuse en français."}
+{"sentence":"C'est ce qu'il s'est passé.","reason":"La tournure correcte est « C'est ce qui s'est passé » : « ce » est le sujet de « s'est passé »."}
+{"sentence":"C'est ce qu'il se passe ?","reason":"La tournure correcte est « C'est ce qui se passe » : « ce » est le sujet de « se passe »."}
+{"sentence":"C'est ce que j'ai dis.","reason":"Le participe passé de « dire » est « dit », pas « dis »."}
+{"sentence":"C'est ce que j'ai fais.","reason":"Le participe passé de « faire » est « fait », pas « fais »."}
+{"sentence":"C'est ce que je fait.","reason":"Accord verbal incorrect : « ce que je fais » (et non « ce que je fait »)."}
+{"sentence":"C'est ce que je me suis dis.","reason":"Participe passé incorrect : « je me suis dit » (et non « je me suis dis »)."}
+{"sentence":"C'est ce que je voulais que tu vois.","reason":"Après « vouloir que », il faut le subjonctif : « je voulais que tu voies »."}
+{"sentence":"C'est ce qui c'est passé.","reason":"« C'est ce qui c'est passé » confond « s'est » avec « c'est » ; la correct form is « C'est ce qui s'est passé ». "}
+{"sentence":"C'est ce qui t'es arrivé ?","reason":"« t'es » is incorrect here; the phrase should be « t'est arrivé »."}
+{"sentence":"C'est déja bien que t'as une copine.","reason":"« déja » est une faute d’orthographe ; il faut écrire « déjà »."}
+{"sentence":"C'est exacte.","reason":"Accord incorrect : « exacte » doit s’accorder avec « c’ », masculin singulier (« exact »)."}
+{"sentence":"C'est face.","reason":"« C'est face » n'est pas une construction française intelligible ici ; le mot semble corrompu ou manquant."}
+{"sentence":"C'est finit.","reason":"« Finit » is the third-person present form; here the past participle « fini » is required."}
+{"sentence":"C'est l'occasion pour nous de se placer.","reason":"Le pronom réfléchi ne correspond pas à « nous » : on dirait « de nous placer »."}
+{"sentence":"C'est la femme que vous avez vu.","reason":"L’accord du participe passé avec le complément d’objet direct placé avant est manquant : « vue »."}
+{"sentence":"C'est la vielle dame qui l'a mis.","reason":"« vielle dame » appears to be a misspelling of « vieille dame »."}
+{"sentence":"C'est partit.","reason":"« Parti » ne prend pas de « t » dans cette expression."}
+{"sentence":"C'est probablement la meilleur chambre forte jamais construite.","reason":"Accord incorrect : « chambre » est féminin, donc il faut « la meilleure chambre forte »."}
+{"sentence":"C'est qui je suis.","reason":"Construction grammaticalement incorrecte : « C'est qui je suis »."}
+{"sentence":"C'est qui tu es.","reason":"Construction grammaticalement incorrecte : « C'est qui tu es »."}
+{"sentence":"C'est quoi ca ?","reason":"« ca » manque la cédille : il faut écrire « ça »."}
+{"sentence":"C'est sur je dois en faire plus.","reason":"« sur » devrait être « sûr » ici : « C'est sûr, je dois en faire plus. »"}
+{"sentence":"C'est sur ravitaillement automatique et en séquence ?","reason":"Il manque un déterminant devant « ravitaillement » dans cette phrase."}
+{"sentence":"C'est toi qui a commencé.","reason":"The verb should agree with « toi »: « C'est toi qui as commencé. »"}
+{"sentence":"C'est toi qui a écrit ça ?","reason":"The verb should agree with « toi »: « C'est toi qui as écrit ça ? »"}
+{"sentence":"C'est toi qui dit ça.","reason":"Avec « toi » sujet de « qui », le verbe doit s’accorder à la deuxième personne : « dis », pas « dit »."}
+{"sentence":"C'est toi qui décide.","reason":"Avec « toi » sujet de « qui », le verbe doit s’accorder à la deuxième personne : « décides », pas « décide »."}
+{"sentence":"C'est toi qui l'a dit.","reason":"Avec « toi », le verbe après « qui » doit être à la deuxième personne : « l’as dit »."}
+{"sentence":"C'est toi qui l'a faite comme moi ?","reason":"Avec « toi », le verbe après « qui » doit être à la deuxième personne : « l’as faite »."}
+{"sentence":"C'est toi qui l'a fait ?","reason":"Avec « toi », le verbe après « qui » doit être à la deuxième personne : « l’as fait »."}
+{"sentence":"C'est toi qui l'a écrit ?","reason":"Avec « toi », le verbe après « qui » doit être à la deuxième personne : « l’as écrit »."}
+{"sentence":"C'est toi qui le dit.","reason":"Avec « toi », le verbe après « qui » doit être à la deuxième personne : « le dis »."}
+{"sentence":"C'est toi qui les a fait venir ?","reason":"Avec « toi », le verbe après « qui » doit être à la deuxième personne : « les as fait venir »."}
+{"sentence":"C'est toi qui m'a appris ça.","reason":"L’accord avec « toi » exige « m’as appris », pas « m’a appris »."}
+{"sentence":"C'est toi qui m'a fait ça.","reason":"L’accord avec « toi » exige « m’as fait », pas « m’a fait »."}
+{"sentence":"C'est toi qui voit.","reason":"Accord incorrect : « qui » reprend « toi », donc il faut « vois »."}
+{"sentence":"C'est tout pour I'instant.","reason":"« I'instant » has a capital I where the lowercase l in « l'instant » is needed."}
+{"sentence":"C'est un même but qui nous a crée.","reason":"« a crée » is an incorrect verb form here; it should be « a créés »."}
+{"sentence":"C'est un nom de jeune file.","reason":"« file » appears to be a typo for « fille » in « nom de jeune fille »."}
+{"sentence":"C'est une soirée d'affaire capitale.","reason":"L’expression usuelle est « soirée d’affaires » ; « d’affaire » est une erreur de nombre."}
+{"sentence":"C'est à moi que tu parle ?","reason":"« parle » should be « parles » with « tu »."}
+{"sentence":"Ca a déjà eu lieu.","reason":"« Ca » est mal orthographié : il faut écrire « Ça »."}
+{"sentence":"Ca a dû être dur.","reason":"« Ca » est mal orthographié : il faut écrire « Ça »."}
+{"sentence":"Ca a même étonné Old Moses au début.","reason":"« Ca » est mal orthographié : il faut écrire « Ça »."}
+{"sentence":"Ca m'a pas touché, et nous serons riche.","reason":"Accord incorrect : « nous serons riche » devrait être « nous serons riches »."}
+{"sentence":"Ca te dérange ?","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca te fait du bien.","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca te regarde ?","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca va bien j'ai quelques nouvelles idées.","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca va les gars ?","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca va redevenir humain comme celle là.","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca va, ca va.","reason":"« ca » should be « ça » in this context."}
+{"sentence":"Ca va, maman ?","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca va, mon pote ?","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca va, monsieur ?","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca vous coûtera cher mais on peut essayer.","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca vous dérange si je jette un oeil ?","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca y est l'oiseau te plaît ?","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca y est, il fait nuit.","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca, c'est le futur.","reason":"« Ca » should be « Ça » in this context."}
+{"sentence":"Ca, il a besoin de vous, c'est sur.","reason":"« Ca » should be « Ça » in this context; « sur » should be « sûr »."}
+{"sentence":"Calmes toi.","reason":"L’impératif « calme » ne prend pas de s ici : « Calme-toi. »"}
+{"sentence":"Car c'est du nombre que viendront la force.","reason":"L’accord du verbe est incorrect : « la force » est singulier, il faut « viendra ». "}
+{"sentence":"Ce château a résisté à des milliers d'années.","reason":"« Résister à des milliers d’années » ne fonctionne pas pour exprimer une durée ; il faudrait par exemple « résister pendant des milliers d’années »."}
+{"sentence":"Ce n'est qu'une enfant.","reason":"« Enfant » est masculin ici : on dit « Ce n'est qu'un enfant. »"}
+{"sentence":"Ce que nous avons ici une bande de voyou.","reason":"La construction est grammaticalement incomplète : « Ce que nous avons ici, c’est une bande de voyous. »"}
+{"sentence":"Ce que tu lui a fait m'a parlé.","reason":"Accord fautif : avec « tu », il faut « as », pas « a »."}
+{"sentence":"Ce sont des gens biens.","reason":"« Bien » est invariable dans l’expression « des gens bien »."}
+{"sentence":"Cette piece ressemble beaucoup aux autres beaucoup aux autres.","reason":"The phrase « beaucoup aux autres » is accidentally repeated, and « piece » is missing the accent in « pièce »."}
+{"sentence":"Combien une baleine peut tenir sous l'eau ?","reason":"Pour demander une durée, il faut « combien de temps » : « Combien de temps une baleine peut-elle tenir sous l'eau ? »"}
+{"sentence":"Commandant à équipage.","reason":"Il manque l’article dans « à l’équipage » ; « à équipage » n’est pas une construction française correcte."}
+{"sentence":"Comme osez-vous entrer ici sans y être invité ?","reason":"Construction grammaticalement incorrecte : « Comme osez-vous… » ne fonctionne pas ici. « Comment osez-vous… » serait la forme attendue."}
+{"sentence":"Comme sait-on qu'elle va venir jusqu'ici ?","reason":"« Comme sait-on » is not a valid French question construction here; « Comment sait-on » would be grammatical."}
+{"sentence":"Comme ça nous pourrons allez au foot en famille.","reason":"« Pourrons » doit être suivi de l’infinitif « aller », et non de « allez ». "}
+{"sentence":"Comment Ie savez-vous ?","reason":"« Ie » appears to be a typo for « le »."}
+{"sentence":"Comment as-tu fais ça ?","reason":"Erreur de conjugaison : « faire » au passé composé se conjugue ici « fait », pas « fais »."}
+{"sentence":"Comment on-t-il eu ce rendez-vous ?","reason":"« on-t-il » is not a valid inversion; the subject and verb form are malformed."}
+{"sentence":"Comment parler une langue sans le savoir ?","reason":"« Sans le savoir » ne s’accorde pas avec « une langue » ; il faudrait dire « sans la savoir »."}
+{"sentence":"Comment peux supporter d'être si près d'elle ?","reason":"Il manque le sujet « tu » après « peux »."}
+{"sentence":"Comment s'est arrivé ?","reason":"Construction grammaticalement incorrecte : « s'est arrivé » ne se dit pas ici. On dirait « Comment est-ce arrivé ? »"}
+{"sentence":"Comment t'as fais ça ?","reason":"« Fais » devrait être « fait » : avec l’auxiliaire « avoir », le participe passé de « faire » est invariable ici."}
+{"sentence":"Comment vous nous avez trouvé ?","reason":"« Nous » est un complément d’objet direct placé avant « avez trouvé » ; le participe passé doit s’accorder : « trouvés » ou « trouvées ». "}
+{"sentence":"Comment ça c'est passé ?","reason":"« ça c'est passé » is a grammatical error here; the verb is pronominal and should be « ça s'est passé »."}
+{"sentence":"Conduit prudemment.","reason":"L’impératif de « conduire » à la deuxième personne du singulier est « conduis », pas « conduit »."}
+{"sentence":"Croyez-vous qu'il soit rien d'aussi épuisant ?","reason":"La construction « qu'il soit rien d'aussi épuisant » est grammaticalement défectueuse en français courant."}
+{"sentence":"D'accord avec toi le conseil est.","reason":"La phrase s’arrête sur « est » sans complément ni suite, ce qui laisse la construction inutilisable."}
+{"sentence":"D'accords.","reason":"Dans l’expression « d’accord », « accord » reste au singulier."}
+{"sentence":"De I'argent ?","reason":"« I'argent » contains a capital I where the lowercase l is needed: « l'argent »."}
+{"sentence":"De qu'est-ce que vous parlez ?","reason":"Construction grammaticalement incorrecte : on dirait « De quoi est-ce que vous parlez ? » ou « De quoi vous parlez ? »."}
+{"sentence":"De quoi est-ce que tu parle ?","reason":"« Tu » requires « parles »: « De quoi est-ce que tu parles ? »"}
+{"sentence":"De quoi s'agit-iI ?","reason":"« iI » contient un I majuscule à la place du l dans « il »."}
+{"sentence":"De quoi tu parle ?","reason":"Avec « tu », le verbe doit être conjugué « parles »."}
+{"sentence":"Depuis quand font-il ça ?","reason":"Accord incorrect : avec « ils », il faut « font-ils »."}
+{"sentence":"Devines quoi ?","reason":"« Devines » est une forme incorrecte de l’impératif ; il faut écrire « Devine quoi ? »."}
+{"sentence":"Dieux merci.","reason":"« Dieux merci » semble être une erreur d’orthographe dans l’expression « Dieu merci ». "}
+{"sentence":"Dieux que c'est bon d'entendre ta voix.","reason":"« Dieux que c’est bon » semble être une erreur d’orthographe dans l’exclamation « Dieu que c’est bon ». "}
+{"sentence":"Dis-Iui à quel point tu m'es dévoué.","reason":"« Dis-Iui » contient un I majuscule à la place du l dans le pronom « lui »."}
+{"sentence":"Dis-le que tu seras dans mon coeur.","reason":"« Dis-le que » est une construction incorrecte ici ; il faut « Dis-lui que »."}
+{"sentence":"Dis-le que tu vas être mon amie.","reason":"« Dis-le que » est une construction incorrecte ici ; il faut « Dis-lui que »."}
+{"sentence":"Donne-le moi, et je pourrais fermer les yeux.","reason":"The object pronouns in an affirmative imperative are joined by hyphens: « Donne-le-moi ». "}
+{"sentence":"Donnes moi ça.","reason":"À l’impératif, « donner » s’écrit « donne » sans s devant « moi » : « Donne-moi ça. »"}
+{"sentence":"Donnez-lui un reçu, ainsi que pour ces lettres.","reason":"La construction « ainsi que pour ces lettres » est mal rattachée à « Donnez-lui un reçu » et rend la phrase incohérente."}
+{"sentence":"Donnez-moi la force d'en partir un homme.","reason":"La construction « d'en partir un homme » est grammaticalement incorrecte en français."}
+{"sentence":"Durant toute notre vie nous avons fais cette guerre.","reason":"« Avons fais » is an incorrect passé composé form; it should be « avons fait »."}
+{"sentence":"Dès que je pourrais retourner aux Etats-Unis.","reason":"After « dès que », a future event takes the future tense here: « dès que je pourrai retourner », not « pourrais »."}
+{"sentence":"Détend-toi.","reason":"« Détend-toi » should be « Détends-toi » in the imperative."}
+{"sentence":"Eh bien qui, qui a-t-il trouvé ?","reason":"Construction « qui, qui a-t-il trouvé » est grammaticalement corrompue ; on attend « qui, qui est-ce qu'il a trouvé ? » ou « eh bien, qu'a-t-il trouvé ? »."}
+{"sentence":"Elle a disparue.","reason":"Avec l’auxiliaire « avoir », le participe passé « disparu » ne s’accorde pas ici."}
+{"sentence":"Elle est au nom de ma mère.","reason":"La construction « être au nom de ma mère » ne fonctionne pas avec « elle » comme sujet ; c’est une formulation grammaticalement incohérente."}
+{"sentence":"Elle le fera, Commandant, si il le faut.","reason":"« Si il » should be contracted to « s’il » in French."}
+{"sentence":"Elle lui a donné talon de sa chaussure.","reason":"The phrase is missing an article: « le talon de sa chaussure »."}
+{"sentence":"Elle me I'a dit.","reason":"« I'a » appears to be a corrupted « l'a »."}
+{"sentence":"Elle n'a rien avoir avec ça.","reason":"Il manque « à » dans l’expression « n’avoir rien à voir avec ça »."}
+{"sentence":"Elles viennent de le voir sur leur ordinateurs.","reason":"« leur » doit s’accorder avec « ordinateurs » : « sur leurs ordinateurs »."}
+{"sentence":"Embrasses-le.","reason":"À l’impératif, « embrasser » s’écrit « embrasse » : « Embrasse-le. »"}
+{"sentence":"En quelques sortes.","reason":"L’expression figée s’écrit « en quelque sorte », au singulier."}
+{"sentence":"En tout cas, vous allez me promettre un chose.","reason":"« Un chose » has incorrect gender; it should be « une chose »."}
+{"sentence":"En toute générosité, iI t'a offert du travail.","reason":"« iI » appears to be a corrupted spelling of « Il »."}
+{"sentence":"Encore un qu'en a plus long à tirer.","reason":"« qu'en » appears to be a corruption of « qui en » in « Encore un qui en a plus long à tirer. »"}
+{"sentence":"Entre autre.","reason":"L’expression s’écrit « entre autres » ; « autre » doit être au pluriel."}
+{"sentence":"Est ce que t'as fais des progrès ?","reason":"« t'as fais » devrait être « t'as fait »."}
+{"sentence":"Est-ce que quelqu'un m'entends ?","reason":"« Quelqu’un » est singulier : il faut écrire « m’entend ». "}
+{"sentence":"Est-ce que tu m'écoute ?","reason":"Accord verbal incorrect : avec « tu », il faut « écoutes »."}
+{"sentence":"Est-ce que çà faisait parti de votre plan ?","reason":"« çà » should be « ça », and « parti » should be « partie » in « faire partie de ».«"}
+{"sentence":"Et attendu la police en fumant son cigare ?","reason":"« attendu » is a past participle without an auxiliary, leaving the question without a usable finite verb."}
+{"sentence":"Et eux qu'est-ce qu'il font ?","reason":"Accord incorrect : avec « eux », il faut « qu'est-ce qu'ils font ? »"}
+{"sentence":"Et je lui en ai proposé un prix raisonnable.","reason":"« en » est redondant avec « un prix raisonnable » dans cette construction."}
+{"sentence":"Et moi, je ne faisait que viser le tien.","reason":"Accord verbal incorrect : « je ne faisais que viser »."}
+{"sentence":"Et moi,je le voyais à la mienne.","reason":"Il manque une espace après la virgule : « Et moi, je le voyais à la mienne. »"}
+{"sentence":"Et obtiendrai justice pour mon père.","reason":"La forme conjuguée « obtiendrai » nécessite un sujet explicite en français : « Et j'obtiendrai justice pour mon père. »"}
+{"sentence":"Et quand il ferait mieux de jouer, il parle.","reason":"« Quand » ne s’emploie pas normalement avec le conditionnel dans une subordonnée temporelle ; la phrase semble demander « quand il devrait jouer »."}
+{"sentence":"Et vous êtiez à votre poste toute la nuit ?","reason":"« êtiez » est une faute d’orthographe ; il faut écrire « étiez ». "}
+{"sentence":"Excuse nous de t'y avoir inviter.","reason":"« Excuse-nous » needs a hyphen, and after « avoir » the past participle « invité » is required, not « inviter »."}
+{"sentence":"Excuses-moi.","reason":"À l’impératif, « excuse » ne prend pas de s devant « moi » : « Excuse-moi. »"}
+{"sentence":"Fais la fête avec le roi qui est qui ?","reason":"La construction « le roi qui est qui » est grammaticalement incohérente ici et rend la phrase inutilisable."}
+{"sentence":"Fait attention.","reason":"Il faut « Fais attention » à l’impératif ; « Fait attention » est une erreur de conjugaison."}
+{"sentence":"Hé, ok, il ira bien, tout le monde baissé.","reason":"« tout le monde baissé » est une construction grammaticalement défectueuse en français."}
+{"sentence":"II Ie faut.","reason":"Corruption de caractères : « II Ie faut » semble être « Il le faut », avec des I majuscules à la place de l et un I à la place de l."}
+{"sentence":"II a disparu.","reason":"« II » emploie deux I majuscules à la place de « Il »."}
+{"sentence":"II a dit quoi ?","reason":"« II » emploie deux I majuscules à la place de « Il »."}
+{"sentence":"II a raison.","reason":"« II » emploie deux I majuscules à la place de « Il »."}
+{"sentence":"II dort.","reason":"« II » emploie deux I majuscules à la place de « Il »."}
+{"sentence":"II est Ià.","reason":"Corruption de caractères : « II est Ià » semble être « Il est là », avec des I majuscules à la place de l."}
+{"sentence":"II est ici.","reason":"« II » emploie deux I majuscules à la place de « Il »."}
+{"sentence":"II est malade.","reason":"« II » emploie deux I majuscules à la place de « Il »."}
+{"sentence":"II est mignon.","reason":"« II » emploie deux I majuscules à la place de « Il »."}
+{"sentence":"II est où ?","reason":"« II » emploie deux I majuscules à la place de « Il »."}
+{"sentence":"II est parti.","reason":"« II » emploie deux I majuscules à la place de « Il »."}
+{"sentence":"II est tard.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II est à moi.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II faut faire quelque chose.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II faut partir.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II faut qu'on parle.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II faut que j'y aille.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II faut que je te parle.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II faut que je vous parle.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II faut y aller.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II n'en est pas question.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II paraît que ce sera une soirée mémorable.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II reviendra.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II rit.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II s'appelle comment ?","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II s'est passé quelque chose ?","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II se passe quelque chose.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II souffle.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II soupire.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II va bien.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II y a autre chose.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II y a quatre ans et neuf mois.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II y a quelqu'un ?","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II y a quelque chose.","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"II y en a d'autres ?","reason":"« II » est une corruption typographique de « Il »."}
+{"sentence":"Il a téléphoné qu'il allait interroger Mme Bates.","reason":"« Téléphoner que » ne fonctionne pas ici en français ; il faudrait une construction comme « téléphoner pour dire que ». "}
+{"sentence":"Il doit rester huit tasses de mon père.","reason":"Construction grammaticalement incohérente : « rester huit tasses de mon père » ne forme pas une phrase française utilisable."}
+{"sentence":"Il doit être entrain de faire quelque chose.","reason":"« En train » s’écrit en deux mots dans cette construction."}
+{"sentence":"Il en est hors de question.","reason":"Construction mal formée : on dit « Il n’en est pas question » ou « C’est hors de question ». "}
+{"sentence":"Il est Ià.","reason":"« Ià » contient un I majuscule à la place du l minuscule dans « là »."}
+{"sentence":"Il est quatre étages au sous-sol.","reason":"La construction « Il est quatre étages au sous-sol » est grammaticalement mal formée."}
+{"sentence":"Il faut jouer des os pour sortir d'ici.","reason":"« Jouer des os » ne forme pas une expression française dans ce contexte ; il s’agit probablement d’une corruption de « jouer des coudes ». "}
+{"sentence":"Il faut que je mettes un type là dedans.","reason":"Après « il faut que », le subjonctif est « je mette », pas « je mettes »."}
+{"sentence":"Il faut que vous voyez ça.","reason":"Après « il faut que », le subjonctif est requis : « Il faut que vous voyiez ça. »"}
+{"sentence":"Il faut vraiment que vous voyez ça.","reason":"Après « il faut que », le subjonctif est requis : « vous voyiez »."}
+{"sentence":"Il n'y a que toi qui compte.","reason":"« Qui » reprend « toi » et le verbe doit s’accorder à la deuxième personne : « qui comptes ». »"}
+{"sentence":"Il se fait appelé comme ça depuis des années.","reason":"Après « se fait », le verbe doit être à l’infinitif : « se faire appeler »."}
+{"sentence":"Il se vont vers un point de débarquement.","reason":"« Il se vont » has a subject–verb agreement error; it should be « ils vont » or « il va »."}
+{"sentence":"Il valait jusqu'à ce qu'on soit rois.","reason":"« Il valait » manque un complément dans cette construction ; la phrase ne fonctionne pas telle quelle."}
+{"sentence":"Il vaut mieux que tu es une bonne explication.","reason":"After « il vaut mieux que », the verb requires the subjunctive: « que tu aies » or « que tu sois », not « que tu es »."}
+{"sentence":"Il voulait se passer au rouge avant de partir.","reason":"La construction « se passer au rouge » est incorrecte en français et rend la phrase inutilisable."}
+{"sentence":"Il y a eut environ un million de prisonniers.","reason":"« Eut » should be « eu » in the passé composé construction « il y a eu ». "}
+{"sentence":"Il y a une explication scientifique a tout ca.","reason":"Missing accents: « à tout ça »."}
+{"sentence":"Il y autre chose.","reason":"La construction « il y a » est incomplète : il manque le verbe « a »."}
+{"sentence":"Il ya un moyen de s'en sortir.","reason":"« ya » doit être séparé en « y a »."}
+{"sentence":"Il était heureux de quitter le Sud Dakota.","reason":"Le nom français de l’État est « le Dakota du Sud », et non « le Sud Dakota »."}
+{"sentence":"Ils ont du aller dans l'autre sens.","reason":"Missing circumflex: « dû » is required in « Ils ont dû aller »."}
+{"sentence":"J' ai fait un aller-retour la lune.","reason":"L’espace après l’apostrophe coupe la contraction « J’ai », et il manque une préposition devant « la lune »."}
+{"sentence":"J'adore faire la mutation de plante.","reason":"« De plante » is missing a determiner; the phrase should be « de la plante » or « d’une plante »."}
+{"sentence":"J'ai acheté ce nain un honneur d'or.","reason":"La construction demande « acheté à ce nain un honneur d'or » pour indiquer le bénéficiaire."}
+{"sentence":"J'ai beaucoup entendu parlé de toi.","reason":"« entendu parlé » est une erreur : après « entendre », il faut l’infinitif « parler »."}
+{"sentence":"J'ai celles ci aussi, juste au cas où.","reason":"Le pronom démonstratif s’écrit « celles-ci », avec un trait d’union."}
+{"sentence":"J'ai dis 'oh oui bébé', viens voir.","reason":"« J'ai dis » est une erreur de conjugaison : il faut écrire « J'ai dit ». "}
+{"sentence":"J'ai fais ce que je devais faire.","reason":"« Fais » est une forme du présent ; au passé composé, il faut écrire « fait »."}
+{"sentence":"J'ai fais tout ce que je pouvais.","reason":"« Fais » est une forme du présent ; au passé composé, il faut écrire « fait »."}
+{"sentence":"J'ai fais ça des millions de fois.","reason":"« Fais » est une forme du présent ; au passé composé, il faut écrire « fait »."}
+{"sentence":"J'ai un projet de Jet électriques.","reason":"« Jet » is singular while « électriques » is plural; the phrase has a clear number-agreement error."}
+{"sentence":"J'ai un tas de condamnations comme book.","reason":"« book » est un mot anglais inséré dans une construction française qui ne fonctionne pas."}
+{"sentence":"J'avais besoin que tu me vois une fois.","reason":"Après « avoir besoin que », il faut le subjonctif : « que tu me voies ». Le texte emploie la forme indicative « vois ». "}
+{"sentence":"J'en ai entendu parlé.","reason":"« Entendu parlé » est incorrect ici : la construction demande l’infinitif « entendre parler ». La phrase doit être « J’en ai déjà entendu parler. »"}
+{"sentence":"J'espere que tu n'auras pas ça chance.","reason":"« ça chance » est une forme incorrecte ici ; il faut « ta chance »."}
+{"sentence":"J'espère que Georgia s'est occupé des animaux.","reason":"Accord incorrect avec le sujet féminin « Georgia » : il faut « s'est occupée »."}
+{"sentence":"J'espère que celà ne deviendra pas la mode.","reason":"« celà » est une faute d’orthographe : le pronom s’écrit « cela »."}
+{"sentence":"J'espêre que ma mêre ne le saura jamais.","reason":"« espêre » et « mêre » sont mal orthographiés : il faut « espère » et « mère ». "}
+{"sentence":"Je I'adore.","reason":"Le pronom « l’ » est corrompu en « I’ »."}
+{"sentence":"Je I'ai déjà fait.","reason":"Le pronom « l’ » est corrompu en « I’ »."}
+{"sentence":"Je I'ai fait.","reason":"Le pronom « l’ » est corrompu en « I’ »."}
+{"sentence":"Je I'ai trouvé.","reason":"Le pronom « l’ » est corrompu en « I’ »."}
+{"sentence":"Je I'ai vu.","reason":"Le pronom « l’ » est corrompu en « I’ »."}
+{"sentence":"Je I'ai.","reason":"Le pronom « l’ » est corrompu en « I’ »."}
+{"sentence":"Je I'aime bien.","reason":"Le pronom « l’ » est corrompu en « I’ »."}
+{"sentence":"Je I'aime.","reason":"Le pronom « l’ » est corrompu en « I’ »."}
+{"sentence":"Je I'espère.","reason":"Le pronom « l’ » est corrompu en « I’ »."}
+{"sentence":"Je I'ignorais.","reason":"Le pronom « l’ » est corrompu en « I’ »."}
+{"sentence":"Je I'ignore.","reason":"Le pronom « l’ » est corrompu en « I’ »."}
+{"sentence":"Je Ie sais.","reason":"Le pronom « le » est corrompu en « Ie »."}
+{"sentence":"Je Ie savais.","reason":"Le pronom « le » est corrompu en « Ie »."}
+{"sentence":"Je Ie sens.","reason":"Le pronom « le » est corrompu en « Ie »."}
+{"sentence":"Je comprend pas.","reason":"« Comprend » is incorrectly conjugated; it should be « comprends »."}
+{"sentence":"Je crois que l'on devrait continuer a avancer.","reason":"Accent manquant dans « à avancer »."}
+{"sentence":"Je descend.","reason":"« Je descend » has an incorrect verb ending; the first-person form is « Je descends ». "}
+{"sentence":"Je dois te parler avant ton départ.'","reason":"Guillemet fermant isolé en fin de phrase, signe probable de corruption."}
+{"sentence":"Je l'ai eut pour un bon prix.","reason":"« Eut » is the past historic form of avoir; the passé composé requires « eu » here."}
+{"sentence":"Je le fait.","reason":"Erreur de conjugaison : avec « je », il faut « fais », pas « fait »."}
+{"sentence":"Je le prend.","reason":"Erreur de conjugaison : il faut écrire « Je le prends ». "}
+{"sentence":"Je le vous dirai quand le moment sera venu.","reason":"The object pronouns are in the wrong order; standard French is « Je vous le dirai ». "}
+{"sentence":"Je les ai vu.","reason":"With the preceding plural direct object « les », the past participle must agree: « vus » or « vues », not « vu »."}
+{"sentence":"Je leur dirai que tu m'a surpris.","reason":"« m'a » should be « m'as » with « tu »: « Je leur dirai que tu m'as surpris. »"}
+{"sentence":"Je maintiens qu'on devrais aller à Miami, demain.","reason":"« qu'on devrais » has incorrect agreement; it should be « qu'on devrait »."}
+{"sentence":"Je me disais quelque part dans le Pacifique Sud.","reason":"La construction « Je me disais quelque part dans le Pacifique Sud » est grammaticalement cassée : le complément de lieu n’a pas de lien exprimé avec le verbe."}
+{"sentence":"Je n'ai jamais dis ça.","reason":"« Dis » est une forme du présent ; le participe passé requis est « dit »."}
+{"sentence":"Je n'ai jamais entendue un aussi beau compliment.","reason":"Avec « avoir », le participe passé ne s’accorde pas ici : il faut « entendu »."}
+{"sentence":"Je n'ai pas dis ça.","reason":"« dis » est une forme incorrecte ici ; le participe passé de « dire » est « dit »."}
+{"sentence":"Je n'avais jamais vu de course aussi serré.","reason":"Accord incorrect : « course » est féminin, il faut « serrée ». "}
+{"sentence":"Je n'en ai jamais entendu parlé.","reason":"Après « entendre », l’expression se construit avec l’infinitif : « entendu parler », pas « entendu parlé »."}
+{"sentence":"Je ne I'ai jamais vu.","reason":"« I'ai » appears to use a capital I instead of the lowercase l in « l'ai »."}
+{"sentence":"Je ne I'ai pas vu.","reason":"« I'ai » appears to use a capital I instead of the lowercase l in « l'ai ». "}
+{"sentence":"Je ne comprend pas.","reason":"« Comprend » is the third-person singular form; with « je », the verb should be « comprends »."}
+{"sentence":"Je ne l'ai pas fais.","reason":"« Fais » est la forme du présent ; le participe passé correct est « fait ». "}
+{"sentence":"Je ne sais pas ce qui c'est passé.","reason":"Erreur grammaticale : il faut écrire « ce qui s'est passé », et non « ce qui c'est passé »."}
+{"sentence":"Je ne sais pas. ll poste ses clichés.","reason":"« ll poste » semble être une corruption de « Il poste »."}
+{"sentence":"Je peux piquer un somme sur votre divan ?","reason":"« Piquer un somme » est une erreur grammaticale : on dit « piquer un somme »? Actually, the correct expression is « piquer un somme »—but here « une somme » is incorrect; it should be « un somme »."}
+{"sentence":"Je promet.","reason":"« Je promet » est une erreur de conjugaison : il faut écrire « Je promets ». "}
+{"sentence":"Je sais un truc que la plupart ignore.","reason":"« La plupart » prend normalement un verbe au pluriel : « ignorent ». "}
+{"sentence":"Je savais qu'on le paierai un jour.","reason":"Erreur de conjugaison : « paierai » est au futur simple, alors qu’il faut le conditionnel « paierait » après « Je savais que »."}
+{"sentence":"Je suis celui qui peux t'ouvrir ton coffre.","reason":"Accord verbal incorrect : « celui qui peux » devrait être « celui qui peut »."}
+{"sentence":"Je suis de la mieux payée.","reason":"« Je suis de la mieux payée » est une construction grammaticalement incorrecte."}
+{"sentence":"Je suis d ?","reason":"The line is visibly corrupted: “d ?” does not form a usable word or phrase."}
+{"sentence":"Je suis revenu un soir pour prendre une truc.","reason":"« une truc » has incorrect gender agreement; it should be « un truc »."}
+{"sentence":"Je suis une journaliste professionnelle et les drogues.","reason":"La phrase se termine par « et les drogues », un groupe qui ne s’articule pas grammaticalement avec le début."}
+{"sentence":"Je t'aimes beaucoup, c'est la raison.","reason":"« Je t'aimes » has an incorrect verb ending; it should be « Je t'aime ». "}
+{"sentence":"Je t'en prie, ne t'en va pas.","reason":"La négation est mal accordée avec « va » : il faut « ne t’en vas pas »."}
+{"sentence":"Je t'en pris.","reason":"« Pris » est une erreur de forme verbale dans cette expression ; il faut « Je t’en prie. »"}
+{"sentence":"Je te I'ai dit.","reason":"« I'ai » contient un I majuscule à la place du l dans « l'ai »."}
+{"sentence":"Je te I'ai déjà dit.","reason":"« I'ai » contient un I majuscule à la place du l dans « l'ai »."}
+{"sentence":"Je te I'avais dit.","reason":"« I'avais » contient un I majuscule à la place du l dans « l'avais »."}
+{"sentence":"Je te l'ai dis.","reason":"« Dis » should be « dit »: the past participle of « dire » is « dit »."}
+{"sentence":"Je te l'avais dis qu'il adorerait ça.","reason":"« dis » should be « dit » in the past participle."}
+{"sentence":"Je te l'avais dis.","reason":"« dis » should be « dit » in the past participle."}
+{"sentence":"Je te le promet.","reason":"« promet » should be « promets » with the subject « je »."}
+{"sentence":"Je te promet.","reason":"Accord verbal incorrect : « promet » doit être « promets » avec « je »."}
+{"sentence":"Je trouve que ces fleurs tellement sexy.","reason":"La proposition est grammaticalement incomplète : il manque un verbe après « ces fleurs » (par exemple « sont »)."}
+{"sentence":"Je vais I'appeler.","reason":"Le « I » majuscule semble avoir remplacé le « l » dans « l'appeler »."}
+{"sentence":"Je vais lui amener à la foire du Trône.","reason":"Construction pronominale incorrecte : « lui amener » manque l’objet direct de la personne amenée. On dirait plutôt « Je vais l’amener à la foire du Trône. »"}
+{"sentence":"Je vais te Ie dire.","reason":"« Ie » uses a capital I instead of the l in « le », corrupting the word."}
+{"sentence":"Je vous I'ai dit.","reason":"« I'ai » contient un I majuscule à la place du l minuscule dans « l'ai »."}
+{"sentence":"Je vous I'ai déjà dit.","reason":"« I'ai » contient un I majuscule à la place du l minuscule dans « l'ai »."}
+{"sentence":"Je vous I'avais dit.","reason":"« I'avais » contient un I majuscule à la place du l minuscule dans « l'avais »."}
+{"sentence":"Je vous en pris.","reason":"« Je vous en pris » is a malformed version of the expression « Je vous en prie »."}
+{"sentence":"Je vous l'avait dit.","reason":"« Je » prend « avais » ; « avait » est une erreur de conjugaison."}
+{"sentence":"Je vous l'avez dit.","reason":"« Je » prend « ai », pas « avez » ; la conjugaison ne correspond pas au sujet."}
+{"sentence":"L 'Alliance a dû se rassembler maintenant.","reason":"L’espace après « L » sépare incorrectement l’article de son apostrophe."}
+{"sentence":"L'amant a dit que quelque chose.","reason":"« L'amant a dit que quelque chose » laisse la proposition introduite par « que » sans verbe ni complément permettant de l'achever."}
+{"sentence":"L'un d'eux était les aliments pour chats.","reason":"Accord incorrect : « L'un d'eux » est singulier, mais l'attribut « les aliments pour chats » est pluriel."}
+{"sentence":"La grosse légume de cette cuisine.","reason":"Erreur d’accord : « légume » est masculin, il faut « le gros légume ». "}
+{"sentence":"La photo officielle, où je fais ça ?","reason":"La question « où je fais ça ? » est grammaticalement mal construite dans ce contexte."}
+{"sentence":"La porte cabine est ouverte et verrouillée.","reason":"« Porte cabine » is not a valid French construction here; it should be « porte de cabine » or « porte de la cabine ». "}
+{"sentence":"La question était de quoi avez vous parler ?","reason":"« Avez-vous parler » is grammatically incorrect here; it should be « avez-vous parlé »."}
+{"sentence":"La race pure à porté de main, hein ?","reason":"« À porté de main » is a spelling error; the expression is « à portée de main »."}
+{"sentence":"Laisses tomber.","reason":"À l’impératif avec « tu », « laisse » ne prend pas de « s » : « Laisse tomber. »"}
+{"sentence":"Le gauche.","reason":"« Le gauche » ne peut pas s’employer ainsi en français : « gauche » est ici un adjectif qui nécessite un nom, ou un adverbe sans article."}
+{"sentence":"Le nouvel ordre renverse I'ancien, c'est normal.","reason":"« I'ancien » appears to contain a capital I in place of the lowercase l in « l'ancien »."}
+{"sentence":"Le sont-ils ?","reason":"« Le sont-ils ? » is malformed: the verb « sont » cannot take « le » as its subject here; the intended question may be « Le sont-ils ? » only if « le » is an object, but the article-like placement makes the phrase unusable."}
+{"sentence":"Les IS O allaient être mon cadeau au monde.","reason":"« IS O » contient une coupure anormale au milieu du sigle, probablement « ISO »."}
+{"sentence":"Les gars quelque soit ce qui vous amène ici.","reason":"« quelque soit » should be « quel que soit » here."}
+{"sentence":"Les hommes n'ont pas besoin d'être attirant.","reason":"L’adjectif doit s’accorder avec « les hommes » : « attirants »."}
+{"sentence":"Les hommes ont besoin qu'une femme les soutiennent.","reason":"Le verbe doit s’accorder avec « une femme » : « soutienne »."}
+{"sentence":"Leurs familles pourront les honorer avec des funérailles convenable.","reason":"« Convenable » doit s’accorder au pluriel avec « funérailles »."}
+{"sentence":"Loin s'en faut.","reason":"Construction incorrecte : on dit « loin s’en faut », pas « loin s'en faut » précédé de cette tournure ?"}
+{"sentence":"Lèves-toi.","reason":"À l’impératif, « lever » à la deuxième personne du singulier s’écrit « lève » : « Lève-toi. »"}
+{"sentence":"Ma famille est passé par le système d'aides.","reason":"Accord incorrect : « famille » est féminin, il faut « Ma famille est passée par le système d’aides. »"}
+{"sentence":"Maintenant, dîtes moi qui est derrière ça.","reason":"« Dîtes » est une graphie incorrecte ici ; il faut écrire « dites »."}
+{"sentence":"Mais ma propre aventure a pris tout autre tournure.","reason":"Il manque un déterminant devant « tout autre tournure » : « a pris une tout autre tournure »."}
+{"sentence":"Mais n'est-ce dans la logique des choses ?","reason":"La négation est incomplète : il manque « pas » après « n'est-ce »."}
+{"sentence":"Mais qu'est-ce qui t'es arrivé ?","reason":"Erreur de forme : « t'es arrivé » devrait être « t'est arrivé »."}
+{"sentence":"Mais qu'iI finisse ce qu'iI a commencé.","reason":"« iI » remplace « il » par un I majuscule aux deux occurrences."}
+{"sentence":"Mais que je le ferais si c'était nécessaire.","reason":"The question structure is ungrammatical: « que » is followed by a subject and conditional verb where the question would require inversion or another valid construction."}
+{"sentence":"Mais tu ne I'as pas fait.","reason":"Le pronom « l' » est écrit avec un I majuscule (« I'as »), ce qui corrompt le mot."}
+{"sentence":"Mais à première vue, elle aura l'air normal.","reason":"Accord incorrect : « l'air normale » avec « elle »."}
+{"sentence":"Marché conclus.","reason":"L’expression figée s’écrit « Marché conclu » ; « conclus » est une forme incorrecte ici."}
+{"sentence":"Merci Dieu.","reason":"« Merci Dieu » n’est pas une construction française idiomatique ; on dirait plutôt « Dieu merci » ou « Merci, mon Dieu ». "}
+{"sentence":"Merci de m'avoir sauver la vie.","reason":"Après « avoir », il faut le participe passé « sauvé », pas l’infinitif « sauver »."}
+{"sentence":"Merci, M. Ie Président.","reason":"« Ie » est une corruption de « le » dans « M. le Président »."}
+{"sentence":"Mes deux plus jeunes enfants ont besoins de moi.","reason":"« besoin » est invariable dans l’expression « avoir besoin de » : « ont besoin de moi »."}
+{"sentence":"Messieurs, c'est à police de régler ça.","reason":"Il manque l’article « la » dans « à la police »."}
+{"sentence":"Mets le cheval sur la table, elle par terre.","reason":"La seconde partie, « elle par terre », est grammaticalement incomplète et ne peut pas se rattacher correctement à l’impératif."}
+{"sentence":"Mettez-vous à I'aise.","reason":"Le « I » majuscule remplace la lettre « l » dans « l’aise »."}
+{"sentence":"Mon ami dit que vous être étalon.","reason":"Erreur de conjugaison : « vous être étalon » devrait être « vous êtes étalon »."}
+{"sentence":"Mon mentor m'a tout apprit sur la Force.","reason":"« Apprit » est une forme du passé simple ; ici, le participe passé attendu est « appris ». "}
+{"sentence":"Montres moi.","reason":"The imperative should be « Montre-moi »: it has no final « s » here and takes a hyphen before « moi »."}
+{"sentence":"Même écouter une autre langue à moitié, devenez utile.","reason":"The subject « écouter une autre langue à moitié » requires « devient », not « devenez »."}
+{"sentence":"N on.","reason":"« N on » splits the word « Non ». "}
+{"sentence":"N'y penses même pas.","reason":"À l’impératif négatif, « pense » ne prend pas de s : « N’y pense même pas. »"}
+{"sentence":"N'y vas pas.","reason":"À l’impératif négatif, « va » ne prend pas de s : « N’y va pas. »"}
+{"sentence":"Ne dit pas ça.","reason":"« Dit » is not the imperative form; it should be « dis ». "}
+{"sentence":"Ne le soit pas.","reason":"« Soit » ne convient pas à l’impératif négatif ici ; la forme est « Ne le sois pas » (tu) ou « Ne le soyez pas » (vous)."}
+{"sentence":"Ne répond pas.","reason":"Erreur d’accord à l’impératif : il faut « Ne réponds pas. »"}
+{"sentence":"Ni les plus haut défenseurs des droits civils.","reason":"« Haut » doit s’accorder au pluriel avec « défenseurs » : « les plus hauts défenseurs ». "}
+{"sentence":"Non, bien sur que non.","reason":"Accent circonflexe manquant à « sûr » dans « bien sûr ». "}
+{"sentence":"Non, c'est moi qui devrait prendre la tête.","reason":"Avec « moi qui », le verbe se conjugue à la première personne : « c'est moi qui devrais ». "}
+{"sentence":"Non, c'est toi qui a besoin de dormir.","reason":"Accord verbal incorrect : « c'est toi qui as besoin »."}
+{"sentence":"Non, je comprends. ll est super cool.","reason":"« ll » appears to be a corrupted spelling of « Il »."}
+{"sentence":"Non, vous lui avez donné bien plus important.","reason":"La construction « donner bien plus important » est grammaticalement défectueuse : il manque un complément, par exemple « quelque chose de bien plus important »."}
+{"sentence":"Nous avons avions foi en un même but.","reason":"Le verbe est répété de façon incohérente : « avons avions foi »."}
+{"sentence":"Nous l'aimons beaucoup et lui continuerons nos faveurs.","reason":"Construction fautive : « continuer » ne se construit pas ici avec « lui » comme complément indirect. "}
+{"sentence":"Nous recevez-vous ?","reason":"Erreur grammaticale : « Nous recevez-vous ? » mélange le sujet « nous » avec la forme verbale « recevez » ; il faudrait « Nous recevez-vous ? » seulement si le verbe était à la 2e personne du pluriel avec « vous » sujet, ou « Nous reçoit-il ? » selon le sens."}
+{"sentence":"Nous serons de-nouveau ensemble bientôt, je le promet.","reason":"« de-nouveau » should be « de nouveau », and « je le promet » should be « je le promets ». "}
+{"sentence":"Nul part.","reason":"« Nul part » est une erreur : l’expression s’écrit « nulle part ». "}
+{"sentence":"Oh, ouais, mais c'est si l loin.","reason":"Le mot « loin » est accidentellement coupé en « l loin »."}
+{"sentence":"On I'a.","reason":"« I'a » contient un I majuscule à la place du l dans « l'a »."}
+{"sentence":"On dirait une vrai usine à idées ici.","reason":"« Vrai » doit s’accorder avec « usine » : « une vraie usine »."}
+{"sentence":"On ne peut pas ha.i.r son père ?","reason":"« ha.i.r » est une corruption accidentelle du mot « haïr »."}
+{"sentence":"Ou'est-ce que c'est ?","reason":"« Ou'est-ce que c'est ? » contient une forme mal construite ; « Qu'est-ce que c'est ? » serait grammatical."}
+{"sentence":"Oui, biensur.","reason":"« biensur » est une graphie fautive de « bien sûr ». "}
+{"sentence":"Oui, j'en suis sur.","reason":"« sur » should be « sûr » in the expression « j’en suis sûr »."}
+{"sentence":"Où est I'argent ?","reason":"« I'argent » semble être une corruption de « l'argent » : le I majuscule remplace le l minuscule."}
+{"sentence":"Où est Mr.","reason":"« Mr. » est une abréviation anglaise, pas française. En français, on écrit « M. »."}
+{"sentence":"Où est t'il ?","reason":"« t'il » est une contraction incorrectement écrite de « est-il » dans cette inversion."}
+{"sentence":"Parlez moi du rouge à lèvre que vous portez ?","reason":"The imperative pronoun needs a hyphen (“Parlez-moi”), and the usual expression is “rouge à lèvres.”"}
+{"sentence":"Parlé de quoi ?","reason":"« Parlé de quoi ? » lacks the auxiliary required for this past-tense form; as a question, it should be « Parler de quoi ? » or include an auxiliary."}
+{"sentence":"Pas Ia peine.","reason":"Corruption de mot : « Ia » semble être « la » (Pas la peine)."}
+{"sentence":"Pas de chapeau sur vraie carte d'identité.","reason":"L’article manque devant « vraie carte d’identité » : on dirait « sur une vraie carte d’identité »."}
+{"sentence":"Pas si vous êtes celui qui tendez l'embuscade.","reason":"Accord fautif : avec « celui » comme antécédent, on attend « celui qui tend l'embuscade ». »"}
+{"sentence":"Personne n'a jamais écris sur les fleurs avant.","reason":"« Écris » should be « écrit » in the passé composé: « Personne n'a jamais écrit sur les fleurs avant. »"}
+{"sentence":"Peut-on au moins savoir ce qui ce passe ?","reason":"« Ce qui ce passe » contient une faute de mot : il faut « ce qui se passe »."}
+{"sentence":"Peut-tu me dire ce qu'il lui arrive ?","reason":"« Peut-tu » est une forme incorrecte ; il faut « Peux-tu ». "}
+{"sentence":"Phaseurs parés.","reason":"« Phaseurs parés » ne forme pas une expression française intelligible et semble corrompu."}
+{"sentence":"Pour I'instant.","reason":"« I'instant » has a capital I where the word « l'instant » requires a lowercase l."}
+{"sentence":"Pour lui, c'était réglé ll a été condamné ?","reason":"« ll » appears to be a corrupted « Il »."}
+{"sentence":"Pour que tu augmente ta force, pour être prête.","reason":"Accord incorrect : « tu augmentes » (ou, plus naturellement, « Pour que tu augmentes ta force »)."}
+{"sentence":"Pourquoi as-tu fais ça ?","reason":"« As-tu fais » is a conjugation error; the past participle of « faire » is « fait »."}
+{"sentence":"Pourquoi t'as fais ça ?","reason":"« Fais » should be « fait » after « t’as »."}
+{"sentence":"Pourquoi tu as fais ça ?","reason":"« Fais » should be « fait » after « tu as »."}
+{"sentence":"Pouvez-vous vous souvenir d'un chose en particulier ?","reason":"« chose » est féminin : il faut dire « d'une chose »."}
+{"sentence":"Premièrement je trouve que c'est un livre géniale.","reason":"« Livre » est masculin ; il faut « génial »."}
+{"sentence":"Prend soin de toi.","reason":"À l’impératif avec « tu », il faut écrire « Prends soin de toi ». "}
+{"sentence":"Prends ton garçon et allez chez vous.","reason":"« Prends » s’adresse à une seule personne, mais « allez » est à la deuxième personne du pluriel."}
+{"sentence":"Prends-le personnel Qu'est-ce que ça change ?","reason":"« Prends-le personnel » est une construction grammaticalement défectueuse et semble corrompue."}
+{"sentence":"Prêt à refaire tout foirer, c'est bien ça ?","reason":"La construction « refaire tout foirer » est grammaticalement défectueuse ; on dirait plutôt « tout faire foirer »."}
+{"sentence":"Puis que c'était comme si tu l'étais.","reason":"« Puis que » ne fonctionne pas ici comme une construction française ; il faudrait « Puisque c’était… » ou « Puis, c’était… »."}
+{"sentence":"Q'est-ce qu'il y a ?","reason":"« Q'est-ce » is a corrupted spelling of « Qu'est-ce »."}
+{"sentence":"Q'est-ce que c'est ?","reason":"« Q'est-ce » is a corrupted spelling of « Qu'est-ce »."}
+{"sentence":"Q'est-ce qui se passe ?","reason":"« Q'est-ce » is a corrupted spelling of « Qu'est-ce »."}
+{"sentence":"Qu'arriver le premier c'est ce qui compte.","reason":"Construction grammaticalement rompue : « Qu'arriver le premier » ne peut pas se construire ainsi."}
+{"sentence":"Qu'as-tu dis ?","reason":"« dis » should be « dit » in the passé composé."}
+{"sentence":"Qu'as-tu fais ?","reason":"« fais » should be « fait » in the passé composé."}
+{"sentence":"Qu'es-ce que c'est ?","reason":"« Qu'es-ce » est une forme mal orthographiée de « qu'est-ce »."}
+{"sentence":"Qu'es-ce que tu fais ?","reason":"« Qu'es-ce » est une forme mal orthographiée de « qu'est-ce »."}
+{"sentence":"Qu'es-ce qui se passe ?","reason":"« Qu'es-ce » est une forme mal orthographiée de « qu'est-ce »."}
+{"sentence":"Qu'est ce que je leur dit ?","reason":"« dit » devrait être « dis » avec le sujet « je »."}
+{"sentence":"Qu'est ce que t'as dis frérot ?","reason":"Dans « t'as dit », le participe passé s’écrit « dit », pas « dis »."}
+{"sentence":"Qu'est ce que tu as mis la dedans ?","reason":"« là-dedans » s’écrit avec un accent et un trait d’union."}
+{"sentence":"Qu'est ce que tu es entrain de faire ?","reason":"Il faut écrire « en train de faire » : « entrain » est un autre mot."}
+{"sentence":"Qu'est ce que tu raconte ?","reason":"« raconte » devrait être « racontes » avec le sujet « tu »."}
+{"sentence":"Qu'est ce que tu regarde ?","reason":"« regarde » devrait être « regardes » avec le sujet « tu »."}
+{"sentence":"Qu'est ce que tu veut dire ?","reason":"Accord erroné : « tu veux »."}
+{"sentence":"Qu'est qu'il se passe ?","reason":"La construction interrogative attend « Qu'est-ce qu'il se passe ? »."}
+{"sentence":"Qu'est qu'il y a ?","reason":"La construction interrogative attend « Qu'est-ce qu'il y a ? »."}
+{"sentence":"Qu'est que tu fais ?","reason":"La construction interrogative attend « Qu'est-ce que tu fais ? »."}
+{"sentence":"Qu'est que tu veux dire ?","reason":"La construction interrogative attend « Qu'est-ce que tu veux dire ? »."}
+{"sentence":"Qu'est qui s'est passé ?","reason":"La construction interrogative attend « Qu'est-ce qui s'est passé ? »."}
+{"sentence":"Qu'est qui se passe ?","reason":"La construction interrogative attend « Qu'est-ce qui se passe ? »."}
+{"sentence":"Qu'est-ce ce que je faisais là-bas ?","reason":"« Ce » est répété dans la construction interrogative."}
+{"sentence":"Qu'est-ce je dois faire ?","reason":"La construction interrogative attend « Qu'est-ce que je dois faire ? »."}
+{"sentence":"Qu'est-ce qu'iI a dit ?","reason":"« iI » contient un I majuscule à la place du l dans « il »."}
+{"sentence":"Qu'est-ce qu'iI dit ?","reason":"« iI » contient un I majuscule à la place du l dans « il »."}
+{"sentence":"Qu'est-ce qu'iI y a, Ià ?","reason":"« iI » contient un I majuscule à la place du l dans « il », et « Ià » un I majuscule à la place du l dans « là »."}
+{"sentence":"Qu'est-ce qu'iI y a ?","reason":"« iI » contient un I majuscule à la place du l dans « il »."}
+{"sentence":"Qu'est-ce qu'il c'est passé ?","reason":"« c'est passé » should be « s'est passé » in this construction."}
+{"sentence":"Qu'est-ce qu'il ce passe ?","reason":"« ce passe » should be « se passe » in this construction."}
+{"sentence":"Qu'est-ce qu'il est arrivé ?","reason":"La construction interrogative est incorrecte : on dit « Qu'est-ce qui lui est arrivé ? » ou « Qu'est-il arrivé ? »."}
+{"sentence":"Qu'est-ce qu'il t'as dit ?","reason":"« t'as » signifie « tu as » ; ici, avec « il », il faut « t'a »."}
+{"sentence":"Qu'est-ce qu'il t'es arrivé ?","reason":"« t'es » signifie « tu es » ; ici, la construction correcte est « il t'est arrivé »."}
+{"sentence":"Qu'est-ce qu'ils ont pris des rues ?","reason":"La construction « prendre des rues » ne fonctionne pas ici : la phrase est grammaticalement défectueuse."}
+{"sentence":"Qu'est-ce que c'est sensé vouloir dire ?","reason":"« sensé » signifie raisonnable ; ici, il faut « censé » (« supposé vouloir dire »)."}
+{"sentence":"Qu'est-ce que c'était quoi ?","reason":"Mélange deux constructions interrogatives (« Qu'est-ce que c'était ? » et « C'était quoi ? »), ce qui rend la question grammaticalement défectueuse."}
+{"sentence":"Qu'est-ce que ce est ?","reason":"« Ce est » est incorrect ici : il faut « c'est »."}
+{"sentence":"Qu'est-ce que j'ai dis ?","reason":"« dis » should be « dit » after « j’ai »."}
+{"sentence":"Qu'est-ce que j'ai fais ?","reason":"« fais » should be « fait » after « j’ai »."}
+{"sentence":"Qu'est-ce que j'étais sensé faire ?","reason":"« Sensé » signifie « raisonnable » ; ici, il faut écrire « censé »."}
+{"sentence":"Qu'est-ce que je fait ?","reason":"Accord verbal incorrect : avec « je », il faut « fais », pas « fait »."}
+{"sentence":"Qu'est-ce que je peux pour toi ?","reason":"La construction est grammaticalement incorrecte : il manque un verbe, par exemple « faire », après « peux »."}
+{"sentence":"Qu'est-ce que je suis sensé faire ?","reason":"« sensé » signifie « raisonnable » ; ici, il faut « censé » (« supposé »)."}
+{"sentence":"Qu'est-ce que qu'il y a ?","reason":"The extra « que » makes the question ungrammatical; it should be « Qu'est-ce qu'il y a ? »."}
+{"sentence":"Qu'est-ce que qu'on a ?","reason":"The extra « que » makes the question ungrammatical; it should be « Qu'est-ce qu'on a ? »."}
+{"sentence":"Qu'est-ce que qui se passe ?","reason":"The extra « que » makes the question ungrammatical; it should be « Qu'est-ce qui se passe ? »."}
+{"sentence":"Qu'est-ce que s'est passé ?","reason":"The question is malformed: « que s'est passé » needs « qui » (« Qu'est-ce qui s'est passé ? »)."}
+{"sentence":"Qu'est-ce que s'est ?","reason":"This is a malformed question; « Qu'est-ce que c'est ? » would be grammatical."}
+{"sentence":"Qu'est-ce que se passe ?","reason":"The question is malformed: « que se passe » needs « qui » (« Qu'est-ce qui se passe ? »)."}
+{"sentence":"Qu'est-ce que t'as dis ?","reason":"« Dis » should be « dit » after « t'as »."}
+{"sentence":"Qu'est-ce que t'as fais ?","reason":"« Fais » should be « fait » after « t'as »."}
+{"sentence":"Qu'est-ce que t'en dit ?","reason":"« t'en dit » has incorrect verb agreement; with « tu », it should be « t'en dis »."}
+{"sentence":"Qu'est-ce que t'en pense ?","reason":"« t'en pense » has incorrect verb agreement; with « tu », it should be « t'en penses »."}
+{"sentence":"Qu'est-ce que tu as dis ?","reason":"Accord verbal incorrect : le participe passé de « dire » est « dit », pas « dis »."}
+{"sentence":"Qu'est-ce que tu as fais ?","reason":"« Fais » should be « fait » after « tu as »."}
+{"sentence":"Qu'est-ce que tu as grandi.","reason":"« Qu'est-ce que tu as grandi » is not a grammatical French construction."}
+{"sentence":"Qu'est-ce que tu dit ?","reason":"Accord verbal incorrect : « tu dis », et non « tu dit »."}
+{"sentence":"Qu'est-ce que tu en dit ?","reason":"Accord verbal incorrect : « tu en dis », et non « tu en dit »."}
+{"sentence":"Qu'est-ce que tu en pense ?","reason":"Accord verbal incorrect : « tu en penses », et non « tu en pense »."}
+{"sentence":"Qu'est-ce que tu fait ici ?","reason":"« Tu fait » est une erreur de conjugaison ; il faut « tu fais »."}
+{"sentence":"Qu'est-ce que tu fait là ?","reason":"« Tu fait » est une erreur de conjugaison ; il faut « tu fais »."}
+{"sentence":"Qu'est-ce que tu fait ?","reason":"« Tu fait » est une erreur de conjugaison ; il faut « tu fais »."}
+{"sentence":"Qu'est-ce que tu joues ?","reason":"« Qu'est-ce que tu joues ? » est une construction grammaticalement incorrecte en français ; on dirait plutôt « À quoi tu joues ? »."}
+{"sentence":"Qu'est-ce que tu lui a dit ?","reason":"« tu » requires « as » here: « Qu'est-ce que tu lui as dit ? »"}
+{"sentence":"Qu'est-ce que tu lui a fait ?","reason":"« tu » requires « as » here: « Qu'est-ce que tu lui as fait ? »"}
+{"sentence":"Qu'est-ce que tu lui as dis ?","reason":"The past participle is « dit », not « dis »."}
+{"sentence":"Qu'est-ce que tu paries de plus ?","reason":"« Parier de plus » ne fonctionne pas ici pour demander ce que la personne mise en plus ; la construction est grammaticalement défectueuse."}
+{"sentence":"Qu'est-ce que tu va faire ?","reason":"Erreur d’accord : avec « tu », il faut « vas » (« Qu'est-ce que tu vas faire ? »)."}
+{"sentence":"Qu'est-ce que vous faite ?","reason":"Accord incorrect : avec « vous », le verbe s’écrit « faites », pas « faite »."}
+{"sentence":"Qu'est-ce que ça veux dire ?","reason":"Accord verbal incorrect : avec « ça », il faut « veut »."}
+{"sentence":"Qu'est-ce que ça à voir avec moi ?","reason":"Il manque le verbe « a » dans la construction « ça a à voir avec moi »."}
+{"sentence":"Qu'est-ce que ça à voir avec ça ?","reason":"Il manque le verbe « a » dans la construction « ça a à voir avec ça »."}
+{"sentence":"Qu'est-ce que ça à voir ?","reason":"Il manque le verbe « a » dans la construction « ça a à voir »."}
+{"sentence":"Qu'est-ce qui c'est passé ici ?","reason":"« c'est passé » should be « s'est passé »."}
+{"sentence":"Qu'est-ce qui c'est passé ?","reason":"« c'est passé » should be « s'est passé »."}
+{"sentence":"Qu'est-ce qui ce passe ici ?","reason":"« ce passe » should be « se passe »."}
+{"sentence":"Qu'est-ce qui ce passe ?","reason":"« ce passe » should be « se passe »."}
+{"sentence":"Qu'est-ce qui lui est arrivée ?","reason":"Accord incorrect : dans « Qu'est-ce qui lui est arrivé ? », le participe passé s'accorde avec « qu'est-ce qui », masculin singulier."}
+{"sentence":"Qu'est-ce qui t'amènes ici ?","reason":"« Qui » est le sujet singulier : il faut écrire « Qu'est-ce qui t'amène ici ? »"}
+{"sentence":"Qu'est-ce qui t'amènes ?","reason":"« Qui » est le sujet singulier : il faut écrire « Qu'est-ce qui t'amène ? »"}
+{"sentence":"Qu'est-ce qui t'as pris si longtemps ?","reason":"« t'as » should be « t'a »: « qui » is the subject."}
+{"sentence":"Qu'est-ce qui t'es arrivée ?","reason":"« t'es » should be « t'est »; the feminine agreement in « arrivée » is otherwise possible."}
+{"sentence":"Qu'est-ce qui t'es arrivé ?","reason":"« t'es » should be « t'est »."}
+{"sentence":"Qu'est-ce qui te faire dire ça ?","reason":"The construction should be « Qu'est-ce qui te fait dire ça ? »."}
+{"sentence":"Qu'est-ce qui te fais dire ça ?","reason":"« fais » should be « fait »: « qui » is the subject."}
+{"sentence":"Qu'est-ce qui te fais penser ça ?","reason":"« fais » should be « fait »: « qui » is the subject."}
+{"sentence":"Qu'est-ce qui te fais rire ?","reason":"« fais » should be « fait »: « qui » is the subject."}
+{"sentence":"Qu'est-ce qui vous faire dire ça ?","reason":"« faire » should be conjugated as « fait »."}
+{"sentence":"Qu'est-ce qui vous faut ?","reason":"The standard construction is « Qu'est-ce qu'il vous faut ? »"}
+{"sentence":"Qu'il y a-t-il écrit ?","reason":"La question est grammaticalement mal formée : on dit « Qu'y a-t-il écrit ? »."}
+{"sentence":"Qu'il y a-t-il ?","reason":"La question est grammaticalement mal formée : on dit « Qu'y a-t-il ? »."}
+{"sentence":"Quand l'avez-vous pour la dernière fois ?","reason":"La construction est incomplète : il manque un participe passé après « avez-vous » (par exemple « eu »)."}
+{"sentence":"Quand tu rencontre ta fleur, tu peux tout surmonter.","reason":"Accord fautif : avec « tu », le verbe doit être « rencontres »."}
+{"sentence":"Que c'est qu'il y a ?","reason":"La tournure interrogative est mal formée ; on dirait « Qu'est-ce qu'il y a ? »."}
+{"sentence":"Que c'est que tu veux ?","reason":"La tournure interrogative est mal formée ; on dirait « Qu'est-ce que tu veux ? »."}
+{"sentence":"Que c'est qui se passe ?","reason":"La tournure interrogative est mal formée ; on dirait « Qu'est-ce qui se passe ? »."}
+{"sentence":"Que c'est ça ?","reason":"La question est mal formée ; on dirait « Qu'est-ce que c'est ? » ou « C'est quoi, ça ? »."}
+{"sentence":"Que c'est-il passé ?","reason":"L'inversion est mal formée ; on dirait « Que s'est-il passé ? »."}
+{"sentence":"Que ce passe-t-il ici ?","reason":"Il faut « se » dans cette tournure : « Que se passe-t-il ici ? »."}
+{"sentence":"Que ce passe-t-il ?","reason":"Il faut « se » dans cette tournure : « Que se passe-t-il ? »."}
+{"sentence":"Que faisait-il dans votre hanche ?","reason":"« Dans votre hanche » est une construction grammaticale, mais l’expression semble corrompue : on ne fait normalement pas quelque chose « dans » la hanche de quelqu’un."}
+{"sentence":"Que lui as-tu dis ?","reason":"« dis » should be « dit » in the passé composé."}
+{"sentence":"Que lui est-il arrivée ?","reason":"« arrivée » should be « arrivé »; the subject is « il »."}
+{"sentence":"Que s'est-t-il passé ?","reason":"Incorrect inversion: the added “t” is unnecessary; it should be « Que s'est-il passé ? »."}
+{"sentence":"Que se passe-t-iI ?","reason":"Le « I » majuscule dans « t-iI » remplace par erreur le « l » de « t-il ». "}
+{"sentence":"Que t'es-t-il arrivé ?","reason":"The inversion is malformed: it should be « Que t'est-il arrivé ? »."}
+{"sentence":"Que ta paye est le double de la mienne ?","reason":"« Que » does not form a grammatical direct question here; the sentence needs a question form such as « Comment se fait-il que ta paye soit le double de la mienne ? »."}
+{"sentence":"Que-ce qui s'est passé là bas ?","reason":"« Que-ce qui » est une forme mal construite ; il faut « Qu’est-ce qui ». "}
+{"sentence":"Quel heure est-il ?","reason":"« Heure » est féminin : il faut dire « Quelle heure est-il ? »."}
+{"sentence":"Quel sorte de monde est-ce, d'ailleurs ?","reason":"« Sorte » est féminin ; il faut « Quelle sorte de monde… »."}
+{"sentence":"Quelle heure est-t-il ?","reason":"« Quelle heure est-t-il ? » contient une erreur de forme : la tournure correcte est « Quelle heure est-il ? »."}
+{"sentence":"Quelque chose sans aucun doute sors du sol.","reason":"Erreur de conjugaison : « sors » devrait être « sort »."}
+{"sentence":"Qui a fait quelque chose qu'elle a aimé.","reason":"La construction « Qui a fait quelque chose qu'elle a aimé » est grammaticalement incohérente : le sujet interrogatif « qui » ne s’accorde pas avec le pronom féminin « elle ». "}
+{"sentence":"Qui est Blanche-Neige, et que fait-il là ?","reason":"Le pronom masculin « il » ne s’accorde pas avec « Blanche-Neige »."}
+{"sentence":"Qui est Ià ?","reason":"« Ià » semble être une corruption de « là » : le premier caractère est un I majuscule à la place d’un l minuscule."}
+{"sentence":"Qui est à I'appareil ?","reason":"« I'appareil » uses a capital I where the French article « l' » is required."}
+{"sentence":"Qui n'agissent que pour l'argent.","reason":"Accord grammatical incorrect : « Qui » sujet singulier ne peut pas commander « agissent » au pluriel."}
+{"sentence":"Qui sais ?","reason":"« Qui sais » has incorrect subject–verb agreement; it should be « Qui sait ? »."}
+{"sentence":"Qui sont ?","reason":"La question « Qui sont ? » est grammaticalement tronquée : il manque le sujet ou le complément nécessaire après « sont »."}
+{"sentence":"Qui t'appelles ?","reason":"« Qui t'appelles ? » est mal formé : avec « qui » comme complément, on dirait « Tu appelles qui ? » ou « Qui appelles-tu ? »."}
+{"sentence":"Qui te l'as dit ?","reason":"« Qui » est le sujet, donc le verbe doit être « a », et non « as »."}
+{"sentence":"Regarde et apprend.","reason":"À l’impératif, il faut écrire « apprends » : « Regarde et apprends. »"}
+{"sentence":"Regardes moi.","reason":"L’impératif de « regarder » est « regarde » sans s, et le pronom complément doit être relié par un trait d’union : « Regarde-moi. »"}
+{"sentence":"Regardes toi.","reason":"L’impératif de « regarder » est « regarde » sans s, et le pronom complément doit être relié par un trait d’union : « Regarde-toi. »"}
+{"sentence":"Regardes ça.","reason":"L’impératif de « regarder » est « regarde » sans s : « Regarde ça. »"}
+{"sentence":"Restes ici.","reason":"À l’impératif, « rester » s’écrit « reste » sans s devant « ici »."}
+{"sentence":"S'iI te plaît.","reason":"« iI » contient un I majuscule à la place du l dans « s'il »."}
+{"sentence":"S'iI vous plaît.","reason":"« iI » contient un I majuscule à la place du l dans « s'il »."}
+{"sentence":"S'il te plait, ne fait pas ça.","reason":"L'impératif de « faire » est « fais » : « ne fais pas ça »."}
+{"sentence":"S'il te plaît ne fait pas ça.","reason":"L'impératif de « faire » est « fais » : « ne fais pas ça »."}
+{"sentence":"S'il vous plaît, lui donnez plus de LSD.","reason":"La construction impérative est incorrecte : il faut « donnez-lui », pas « lui donnez »."}
+{"sentence":"Sa va ?","reason":"« Sa va » est une erreur d’orthographe : il faut écrire « Ça va ? »."}
+{"sentence":"Sais-tu le temps qu'il s'est écoulé ?","reason":"La construction est incorrecte : on dirait « Sais-tu combien de temps il s'est écoulé ? » ou « Sais-tu le temps qui s'est écoulé ? »."}
+{"sentence":"Salut, je suis content de vous rencontrer..","reason":"Ponctuation finale doublée (« .. »), signe de corruption accidentelle."}
+{"sentence":"Se il vous plaît.","reason":"« Se il vous plaît » est une forme corrompue ; il faut écrire « S’il vous plaît ». "}
+{"sentence":"Se n'était qu'un autre système de contrôle.","reason":"« Se n'était » should be « Ce n'était »."}
+{"sentence":"Seigneur mettez votre votre lumière sur nous.","reason":"Accidental duplicated word: « votre votre »."}
+{"sentence":"Si on s'entraîne, il doivent y aller.","reason":"« On » appelle le pluriel « ils », mais « il doivent » est une erreur d’accord."}
+{"sentence":"Si te plaît.","reason":"La formule correcte est « S'il te plaît » ; « Si te plaît » est grammaticalement incorrect."}
+{"sentence":"Si tu veux que je partes, dis-le.","reason":"Après « Si tu veux que », le verbe doit être au subjonctif : « que je parte », et non « que je partes »."}
+{"sentence":"Soit prudent.","reason":"« Soit prudent » is incorrect here; the imperative is « Sois prudent ». "}
+{"sentence":"Souviens-toi: ouvre le avant de le manger.","reason":"L’impératif affirmatif avec le pronom « le » s’écrit avec un trait d’union : « ouvre-le ». "}
+{"sentence":"Soyez gentil faîtes moi un signe.","reason":"« Faîtes » is an incorrect spelling here; the imperative is « faites »."}
+{"sentence":"Sérieusement, vous verrez tout cela lors votre orientation.","reason":"Il manque la préposition « de » dans « lors de votre orientation »."}
+{"sentence":"T u sais com ment sont les espions.","reason":"Des espaces accidentels coupent les mots : « T u sais com ment »."}
+{"sentence":"T'as I'air en forme.","reason":"« I'air » contient un I majuscule à la place du l dans « l'air »."}
+{"sentence":"T'as dis quoi ?","reason":"« dis » should be « dit » in « T'as dit quoi ? »."}
+{"sentence":"T'as fais quoi ?","reason":"« Fais » est une erreur de conjugaison ici : il faut écrire « T’as fait quoi ? »."}
+{"sentence":"T'en est sûr ?","reason":"« T'en est » has incorrect subject-verb agreement; it should be « T'en es »."}
+{"sentence":"T'en pense quoi ?","reason":"« T'en pense » is missing the s in the second-person singular form « penses »."}
+{"sentence":"T'en prends cinq, t'en as une cadeau.","reason":"« Cadeau » is masculine, so « une cadeau » is a clear gender-agreement error."}
+{"sentence":"Ta destinée suis un autre chemin que le mien.","reason":"Accord incorrect : « Ta destinée » est le sujet, donc le verbe doit être « suit ». "}
+{"sentence":"Tout frais.","reason":"Fragment adjectival « Tout frais » n’a pas de sens comme expression autonome en français standard et semble avoir perdu un mot."}
+{"sentence":"Tout les nouveaux élèves en ont un.","reason":"Accord fautif : « Tout les nouveaux élèves » devrait être « Tous les nouveaux élèves »."}
+{"sentence":"Tout vas bien ?","reason":"Accord fautif : avec « tout », le verbe s’écrit « va », pas « vas »."}
+{"sentence":"Tout à fait raison.","reason":"Il manque le déterminant dans « tout à fait raison » : on dit « avoir tout à fait raison »."}
+{"sentence":"Tu I'as dit.","reason":"« I'as » contains a capital I in place of the l in « l'as »."}
+{"sentence":"Tu I'as vu ?","reason":"« I'as » contains a capital I in place of the l in « l'as »."}
+{"sentence":"Tu I'as ?","reason":"« I'as » contains a capital I in place of the l in « l'as »."}
+{"sentence":"Tu Ie connais ?","reason":"« Ie » contains a capital I in place of the l in « le »."}
+{"sentence":"Tu a parlé de service, tu es une infirmière ?","reason":"The conjugation is incorrect: « Tu as parlé », not « Tu a parlé »."}
+{"sentence":"Tu as I'air en forme.","reason":"« I'air » contient un I majuscule à la place du l dans « l'air ». "}
+{"sentence":"Tu as encore ramassé du métal de Blanc.","reason":"La tournure « ramassé du métal de Blanc » est grammaticalement incohérente : « de Blanc » ne s’accorde pas naturellement avec « métal » et semble corrompu."}
+{"sentence":"Tu as fais ce qu'il fallait.","reason":"Faute de conjugaison : « fais » doit être « fait » avec « tu as »."}
+{"sentence":"Tu as fais ce que tu devais faire.","reason":"Faute de conjugaison : « fais » doit être « fait » avec « tu as »."}
+{"sentence":"Tu as une idée de heure qu'il est ?","reason":"Il manque l’article élidé : « de l’heure qu’il est »."}
+{"sentence":"Tu as à un fils dans l'armée.","reason":"« Tu as à un fils » est une construction grammaticalement incorrecte."}
+{"sentence":"Tu est sûre d'être du bon côté ?","reason":"« Tu est » est une erreur de conjugaison ; il faut « Tu es ».»"}
+{"sentence":"Tu finiras dans livres d'Histoire.","reason":"Il manque un article : « Tu finiras dans les livres d’Histoire. »"}
+{"sentence":"Tu l'as déja vu avec quelqu'un ?","reason":"« déja » est une faute d’orthographe ; il faut écrire « déjà »."}
+{"sentence":"Tu l'as laissé allumée la nuit dernière.","reason":"Accord incorrect : avec le complément féminin « l’ », il faut écrire « Tu l’as laissée allumée ». "}
+{"sentence":"Tu l'as été.","reason":"« Tu l'as été » est une construction défectueuse en français : « être » ne peut pas ici reprendre « l' » comme complément."}
+{"sentence":"Tu le mets tout les jours le drapeau ?","reason":"« Tout » doit s’accorder avec « jours » : « tous les jours ». "}
+{"sentence":"Tu m'entend ?","reason":"Erreur de conjugaison : avec « tu », le verbe s’écrit « entends »."}
+{"sentence":"Tu me mettras deux aller-retour en première classe.","reason":"Le nom composé prend le pluriel : « deux allers-retours ». "}
+{"sentence":"Tu n'as pas de la lessive à faire ?","reason":"La négation appelle « de lessive » ici, et non « de la lessive »."}
+{"sentence":"Tu n'en es pas intelligent pour autant.","reason":"La tournure attendue est « Tu n'en es pas plus intelligent pour autant » ; sans « plus », la phrase est grammaticalement défectueuse."}
+{"sentence":"Tu sais ce que ça veux dire ?","reason":"« Veux » ne s’accorde pas avec le sujet « ça » ; il faut « veut »."}
+{"sentence":"Tu sais de quoi t'es capable de faire.","reason":"La construction mélange « de quoi tu es capable » et « ce que tu es capable de faire » ; il faudrait dire « Tu sais ce que t'es capable de faire » ou « Tu sais de quoi t'es capable ». "}
+{"sentence":"Tu sais les sacrifices que j'ai fait.","reason":"L’accord du participe passé est requis : « les sacrifices que j’ai faits ». "}
+{"sentence":"Tu te crois si bien toi-même ?","reason":"La tournure « se croire si bien soi-même » n’est pas une construction française intelligible dans ce contexte."}
+{"sentence":"Tu te rappelle ?","reason":"« Rappelle » is the wrong verb form with « tu »; it should be « rappelles ». "}
+{"sentence":"Tu trouve pas qu'elle est sexy frérot ?","reason":"« Tu trouve » has incorrect agreement with « tu »; it should be « tu trouves »."}
+{"sentence":"Tu verras que sonner aux portes.","reason":"La construction « Tu verras que sonner aux portes » est grammaticalement défectueuse : « que » ne peut pas introduire ici l’infinitif « sonner »."}
+{"sentence":"Tu viens de manger de la pizza de sofa ?","reason":"« pizza de sofa » semble être une corruption de mot : l’expression ne forme pas un syntagme français intelligible."}
+{"sentence":"Tu-Sais-Qui de revenir au pouvoir.","reason":"La construction « Tu-Sais-Qui de revenir au pouvoir » est grammaticalement incomplète : l’infinitif « de revenir » n’a pas de verbe ou de nom pour le gouverner."}
+{"sentence":"Un achète une Cadillac et l'autre un vison.","reason":"« Un achète » is ungrammatical here; the phrase requires « l’un achète »."}
+{"sentence":"Un contrat que c'est, deux ans.","reason":"La construction « Un contrat que c'est, deux ans » est grammaticalement incohérente."}
+{"sentence":"Vers détail.","reason":"« Vers détail » est une construction incorrecte et inutilisable en français ; il semble manquer un mot ou une préposition."}
+{"sentence":"Viens tout de suite, et tu m'as.","reason":"La phrase « et tu m'as » est grammaticalement incomplète et ne forme pas une réplique utilisable ici."}
+{"sentence":"Voilà qui est parler.","reason":"« Voilà qui est parler » est grammaticalement incorrect ; « parler » ne peut pas suivre « est » ainsi."}
+{"sentence":"Vous I'avez vu ?","reason":"« I'avez » semble être une corruption de « l'avez »."}
+{"sentence":"Vous I'avez ?","reason":"« I'avez » semble être une corruption de « l'avez »."}
+{"sentence":"Vous Ie connaissez ?","reason":"« Ie » semble être une corruption de « le »."}
+{"sentence":"Vous avez rapporté du bon vins avec vous ?","reason":"Erreur d’accord : « du bon vins » devrait être « du bon vin »."}
+{"sentence":"Vous avez si bien veillez sur moi.","reason":"Accord verbal incorrect : après « avez », il faut le participe passé « veillé », et non « veillez »."}
+{"sentence":"Vous aviez l'air à l'aise, sur deux.","reason":"« Sur deux » ne s’intègre pas à la phrase et forme un fragment détaché inutilisable ici."}
+{"sentence":"Vous m'ayez surprise en flagrant délit de curiosité.","reason":"« Ayez » is subjunctive and leaves the sentence without a governing clause; as a standalone line, it should be « Vous m'avez surprise… »."}
+{"sentence":"Vous savez ce qui arrivé à Donny ?","reason":"Il manque « est » dans « ce qui est arrivé à Donny »."}
+{"sentence":"Vous voulez qu'un quart d'heure ?","reason":"La construction « Vous voulez qu’un quart d’heure » est grammaticalement incomplète et ne peut pas s’employer telle quelle."}
+{"sentence":"Vous vous amusez bien à ce que je vois..","reason":"Ponctuation finale doublée accidentellement."}
+{"sentence":"Vous vous attendiez peut-être me voir en uniforme ?","reason":"Il manque la préposition « de » après « vous attendiez » : « Vous vous attendiez peut-être à me voir en uniforme ? »"}
+{"sentence":"Vous voyez un seul de vos code dans Facebook ?","reason":"« code » should be plural after « un seul de vos »: « un seul de vos codes »."}
+{"sentence":"Voyons à quoi nous avons à faire ici.","reason":"Confusion entre « avoir affaire à » et « avoir à faire » ; ici, il faut « Voyons à quoi nous avons affaire ici. »"}
+{"sentence":"À toute à l'heure.","reason":"« À toute à l'heure » has incorrect agreement; the expression is « À tout à l'heure ». "}
+{"sentence":"Ça a I'air bon.","reason":"Accidental character substitution: “I'air” uses a capital I instead of the apostrophe in “l’air”."}
+{"sentence":"Ça fait un.","reason":"La phrase s’interrompt après l’article « un », sans nom ni complément qui permette de l’interpréter comme un fragment autonome."}
+{"sentence":"Ça va allez.","reason":"« Ça va allez » est une erreur de conjugaison : après « va », il faut l’infinitif « aller ». "}
+{"sentence":"Écoutes-moi.","reason":"The tu imperative of écouter is « écoute », without an s; « Écoutes-moi » is a grammatical error."}
+{"sentence":"Êtes-vous la dame qui avez appelé ce matin ?","reason":"Accord incorrect : « la dame qui avez appelé » devrait être « la dame qui a appelé »."}

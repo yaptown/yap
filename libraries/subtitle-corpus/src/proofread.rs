@@ -1,5 +1,6 @@
 //! Orthography review of cues, then conservative coherence review of course sentences.
 
+pub mod anki;
 mod prompts;
 
 use std::{
@@ -60,6 +61,16 @@ pub struct Options {
     /// Audit both passes without modifying correction overlays.
     #[arg(long)]
     no_merge: bool,
+    /// Run only the coherence pass, over the Anki-deck sentences of each course pack.
+    #[arg(long)]
+    anki: bool,
+    /// With --anki, judge only every Nth chunk: a sample whose requests are
+    /// the full run's, so the full run reuses them from cache.
+    #[arg(long, default_value_t = 1)]
+    every: usize,
+    /// Course data generate-data wrote, for --anki.
+    #[arg(long, default_value = "./out")]
+    course_out: PathBuf,
 }
 
 #[derive(Debug, Deserialize)]
@@ -953,6 +964,9 @@ fn evaluate(samples: &[Sample], chunks: &[Chunk], rows: &[Audited], flags: &[Aud
 
 #[tokio::main]
 pub async fn run(options: Options) -> Result<()> {
+    if options.anki {
+        return anki::run(&options).await;
+    }
     let samples: Option<Vec<Sample>> = options
         .eval
         .as_ref()

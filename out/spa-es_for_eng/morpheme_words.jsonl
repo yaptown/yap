@@ -6831,6 +6831,7 @@
 [{"surface":"quiebr","canonical":"quebrar"},["quiebra"]]
 [{"surface":"quien","canonical":"quien"},["quien","quienes","quienquiera"]]
 [{"surface":"quier","canonical":"querer"},["Cualquier","quiera","quieran","quieras","quiere","quieren","quieres","quiero"]]
+[{"surface":"quiera","canonical":"querer"},["cualquiera"],1]
 [{"surface":"quiera","canonical":"querer","tag":"3sg.sbjv"},["quienquiera"]]
 [{"surface":"quiera","canonical":"querer","tag":"sbjv"},["Cualquiera"]]
 [{"surface":"quiet","canonical":"quietar"},["inquieto"]]

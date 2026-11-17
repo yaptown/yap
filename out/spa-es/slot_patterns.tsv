@@ -1,13 +1,13 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-dar algo	filled	8656	12	12	1.00	yes		
-ser alguien	filled	5197	7	12	0.58	no	"El paraíso es esto."	es … esto
-dar algo	clitic	418	11	12	0.92	yes	Lo que le da sentido a la vida.	Lo … da
+dar algo	filled	8648	12	12	1.00	yes		
+ser alguien	filled	5190	7	12	0.58	no	"El paraíso es esto."	es … esto
+dar algo	clitic	417	11	12	0.92	yes	Lo que le da sentido a la vida.	Lo … da
 necesito su ayuda	clitic	95	12	12	1.00	yes		
 su gracia	filled	54	4	12	0.33	no	Al contrario, muchas gracias a usted.	gracias … usted
 a sus pies	clitic	25	11	12	0.92	yes	Agárrate a mi pie y dame la mano Yo te ayudaré.	a … mi … pie
 necesito su ayuda	filled	21	12	12	1.00	yes		
 su gracia	clitic	20	5	12	0.42	no	Me gusta la forma en la que ella ríe mis gracias.	mis … gracias
-en su punto	filled	14	0	12	0.00	no	Bob está todo el rato en el punto de mira de la policía.	en … punto … mira
+en su punto	filled	13	0	12	0.00	no	Bob está todo el rato en el punto de mira de la policía.	en … punto … mira
 cuál es su nombre	clitic	12	12	12	1.00	yes		
 en su punto	clitic	11	8	11	0.73	yes	Atacaremos a MRX en su punto más débil ¡Su orgullo!	en … su … punto
 a sus pies	filled	10	9	10	0.90	yes	Los dos palmerales están a cuatro pies de distancia.	a … pies … distancia

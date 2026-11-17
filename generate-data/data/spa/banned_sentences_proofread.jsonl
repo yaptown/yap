@@ -1,0 +1,507 @@
+{"sentence":"A bebé le gusta el ritmo.","reason":"Falta un determinante: en español sería «Al bebé le gusta el ritmo»."}
+{"sentence":"A la primera oportunidad tengan nos van a joder.","reason":"La secuencia «tengan nos» está mal formada y parece una corrupción accidental de «nos tengan»."}
+{"sentence":"A lo que he esperado sobre la Tierra.","reason":"Construcción incompleta: «A lo que he esperado sobre la Tierra» no forma una expresión española utilizable tal como está."}
+{"sentence":"A otra persona, pero a mí no'.","reason":"The closing quotation mark is mismatched: the line ends with an apostrophe after «mí no»."}
+{"sentence":"A que te dedicas?","reason":"Falta la tilde en el interrogativo «qué»."}
+{"sentence":"A que te refieres con eso?","reason":"Falta la tilde en el interrogativo «qué»."}
+{"sentence":"A que te refieres?","reason":"Falta la tilde en el interrogativo «qué»."}
+{"sentence":"A todos los animales la carne, por así decirlo.","reason":"La frase carece de un verbo o una construcción que conecte «A todos los animales» con «la carne»; así no se puede usar como oración."}
+{"sentence":"AI final de la semana recibes un lindo cheque.","reason":"“AI final” contains a letter substitution; it should read “Al final.”"}
+{"sentence":"Abre Ia puerta.","reason":"«Ia» usa una i mayúscula en lugar de la ele de «la», un error claro de carácter."}
+{"sentence":"Acabo de recibir mi primer llamada oficial de Homicidios.","reason":"«Llamada» es femenino; debe decir «mi primera llamada oficial»."}
+{"sentence":"Ademas porque la casa siempre gana.","reason":"Falta la tilde en «Además»."}
+{"sentence":"Adónde iras entonces?","reason":"“Irás” requires an accent on the final syllable."}
+{"sentence":"Ah si, ellos tenían un ejercito.","reason":"Missing accents change the intended words: «sí» and «ejército»."}
+{"sentence":"Ahora dime que vamos a hacer y como.","reason":"The indirect questions need accents: «qué» and «cómo»."}
+{"sentence":"Ahora es hora de su mitad.","reason":"La construcción «es hora de su mitad» no forma una expresión española inteligible; parece texto corrupto."}
+{"sentence":"Ahora los podemos el doble de rápido.","reason":"Falta un verbo después de «podemos»: «Ahora los podemos hacer el doble de rápido»."}
+{"sentence":"Ahora sabemos que su secretaria.","reason":"La construcción queda incompleta: «sabemos que su secretaria» deja sin predicado lo que se sabe."}
+{"sentence":"Ahora soy yo por lo que está sucediendo.","reason":"La construcción «soy yo por lo que está sucediendo» no funciona gramaticalmente; parece faltar o estar dañada una palabra o frase."}
+{"sentence":"Ahí un espacio por el cual mirar.","reason":"Falta el verbo «hay»: «Ahí un espacio por el cual mirar» no forma una construcción utilizable."}
+{"sentence":"Al menos eso le dice a las chicas.","reason":"El clítico de objeto indirecto no concuerda en número: debería ser «les dice a las chicas»."}
+{"sentence":"Al menos piensa, en cuan genial seria el bebe.","reason":"Faltan tildes en «cuán», «sería» y «bebé»."}
+{"sentence":"Al menos que ellos se preocupen por ti.","reason":"«Al menos que» is an incorrect construction here; the conjunction is «a menos que»."}
+{"sentence":"Alrededor de los sobrevivientes un perímetro creen.","reason":"La construcción está gramaticalmente rota: «un perímetro» no encaja con «creen» en esa posición."}
+{"sentence":"Amigos, dejenme presentarles al que hizo los dibujos.","reason":"«Dejenme» debe llevar tilde: «Déjenme»."}
+{"sentence":"Aquí todos sabemos quien es la verdadera virgen.","reason":"Falta la tilde en «quién» en la pregunta indirecta: «Aquí todos sabemos quién es la verdadera virgen»."}
+{"sentence":"Asi fui yo, si recuerdas.","reason":"“Asi” should be “Así”; the missing accent changes the standard spelling."}
+{"sentence":"Asi que, nosotros tendremos un ojo en ellos.","reason":"“Asi” should be “Así”; the missing accent changes the standard spelling."}
+{"sentence":"Asi que, que vas a decirme?","reason":"“Asi” and interrogative “que” should be “Así” and “qué”."}
+{"sentence":"Asi que, usted hace lo que quiere?","reason":"“Asi” and interrogative “que” should be “Así” and “qué”."}
+{"sentence":"Asique empecé a buscar en los registros de pagos.","reason":"“Asique” is an accidental word-boundary error; it should be “Así que”."}
+{"sentence":"Aunque sea tome un poco de agua.","reason":"«Aunque sea tome» combina una forma que no encaja con la oración; «aunque» debería ir seguido de «tome», o «sea» necesitaría una pausa y una construcción distinta."}
+{"sentence":"Aún serás el abogado más jóven de país.","reason":"«Jóven» lleva una tilde incorrecta («joven»), y falta el artículo en «de país»; sería «del país»."}
+{"sentence":"Aún si no lo dijo, son palabras valiosas.","reason":"En el sentido de «incluso si», se escribe «aun si», sin tilde."}
+{"sentence":"Bien, y que gana el con eso?","reason":"The interrogative and pronoun are missing their accents: «qué gana él con eso?»."}
+{"sentence":"Bonito traje, tu esposo te lo dió?","reason":"«Dió» lleva una tilde incorrecta; se escribe «dio»."}
+{"sentence":"Bueno, entonces como vamos a hacer eso?","reason":"Falta la tilde en «cómo» en la pregunta directa."}
+{"sentence":"Bueno, eso todo se lo llevó, hijo la policía.","reason":"La frase está dañada: «eso todo se lo llevó, hijo la policía» no forma una construcción gramatical inteligible."}
+{"sentence":"Bueno, te voy a decir de que estoy hablando.","reason":"Falta la tilde en «qué» en la interrogativa indirecta: «de qué estoy hablando»."}
+{"sentence":"Bueno, todos estos son cosechas excelentes, señor.","reason":"Hay un error de concordancia: «estos» es masculino, pero «cosechas» es femenino."}
+{"sentence":"Cambiemos la cerraduras mañana otra vez.","reason":"El artículo y el sustantivo no concuerdan: debería ser «las cerraduras» o «la cerradura»."}
+{"sentence":"Como así?","reason":"The interrogative requires the accent: «¿Cómo así?»."}
+{"sentence":"Como cuales?","reason":"The interrogative requires the accent: «¿Cómo cuáles?»."}
+{"sentence":"Como dije antes, dejare que vivas por dos razones.","reason":"«Dejaré» needs an accent for the intended future tense."}
+{"sentence":"Con cual se casa su señora?","reason":"La pregunta tiene un error gramatical claro: debería decir «¿Con cuál se casa su señora?»."}
+{"sentence":"Con ella logre mi primera cita contigo.","reason":"“Logre” should be “logré” in this statement; as written, it is the subjunctive form and leaves the sentence ungrammatical."}
+{"sentence":"Con que este es el edificio.","reason":"«Con que» no funciona en esta oración; para expresar «so, this is the building», sería «Conque este es el edificio»."}
+{"sentence":"Con tal fuerza en contra, hay contemplar otras opciones.","reason":"Falta «que» en la construcción impersonal: «hay que contemplar otras opciones»."}
+{"sentence":"Cree en mi como yo crei en ti.","reason":"Faltan las tildes en «mí» y «creí»."}
+{"sentence":"Creemos que nuestra empleada, ha descubierto quienes son.","reason":"En la interrogativa indirecta, corresponde «quiénes»."}
+{"sentence":"Creo que con eso terminamos con el numero dos.","reason":"«numero» should be «número» in «el número dos»."}
+{"sentence":"Creo que debes y verás lo que quiero decir.","reason":"La construcción queda gramaticalmente incompleta: «debes» necesita un infinitivo y no puede coordinarse así con «verás»."}
+{"sentence":"Creo que el otro equipo lo logro.","reason":"«Logro» means “I achieve”; with «el otro equipo» as the subject, the verb should be «logra» or «logró»."}
+{"sentence":"Creo que el sabía que esta era la puerta.","reason":"The subject pronoun needs the accent: «él sabía»."}
+{"sentence":"Creo que estar a su lado todo el tiempo.","reason":"La subordinada queda sin verbo conjugado: «Creo que estar a su lado todo el tiempo» no forma una oración completa."}
+{"sentence":"Creo que se donde podría estar.","reason":"Falta la tilde en «sé» (saber) y en «dónde» en la pregunta indirecta: «Creo que sé dónde podría estar»."}
+{"sentence":"Cualquier parecido con la realidad es una coincidencia.]","reason":"Sobra un corchete de cierre al final de la frase."}
+{"sentence":"Cuando conocemos una persona, normalmente esta se presenta.","reason":"Falta la «a» personal: en este sentido, se dice «conocemos a una persona»."}
+{"sentence":"Cuando estuve de encubierto un par de meses.","reason":"«Estuve de encubierto» is an ungrammatical construction here; use «estuve encubierto» or «estuve de incógnito»."}
+{"sentence":"Cuando tenia un par de años más que tú.","reason":"Falta la tilde en «tenía»; «tenia» no corresponde a la forma verbal en este contexto."}
+{"sentence":"Cuanto es?","reason":"Falta la tilde en «cuánto» en esta pregunta."}
+{"sentence":"Cuanto tiempo?","reason":"Falta la tilde en «cuánto» en esta pregunta."}
+{"sentence":"Danos hoy nuestro pan nuestro y perdona nuestras ofensas.","reason":"Accidental repetition: “nuestro” appears twice in “Danos hoy nuestro pan nuestro”."}
+{"sentence":"De acuerdo contigo el Consejo está.","reason":"La construcción «De acuerdo contigo el Consejo está» tiene un orden de palabras que no funciona en español estándar; sería «El Consejo está de acuerdo contigo»."}
+{"sentence":"De cualquiera manera, Ud. gana.","reason":"«Cualquiera» no se usa delante de «manera»; debe ser «cualquier manera»."}
+{"sentence":"De donde eres?","reason":"En esta pregunta directa, «donde» debe llevar tilde: «dónde»."}
+{"sentence":"De donde lo sacaste?","reason":"En esta pregunta directa, «donde» debe llevar tilde: «dónde»."}
+{"sentence":"De donde sacaste eso?","reason":"En esta pregunta directa, «donde» debe llevar tilde: «dónde»."}
+{"sentence":"De donde sacaste esto?","reason":"En esta pregunta directa, «donde» debe llevar tilde: «dónde»."}
+{"sentence":"De eso es que lo que se trata.","reason":"La construcción mezcla «es que» con «lo que» y queda gramaticalmente mal formada."}
+{"sentence":"Debes pensar por ambos de nosotros por todos nosotros.","reason":"La secuencia «por ambos de nosotros por todos nosotros» está mal formada y parece una corrupción o mezcla accidental de dos expresiones."}
+{"sentence":"Debes sentir la Fuerza alrededor de tuyo.","reason":"«Alrededor de tuyo» no es una construcción gramatical en español; sería «a tu alrededor» o «alrededor de ti»."}
+{"sentence":"Debo ser lo suficiente bueno para ti.","reason":"La construcción correcta es «lo suficientemente bueno»; «lo suficiente bueno» es un error gramatical."}
+{"sentence":"Debí haber cambiado contigo, debimos haber cambiado juntos..","reason":"The line ends with a duplicated period, a concrete punctuation error."}
+{"sentence":"Deja ir ese muchacho inocente.","reason":"Falta la preposición personal «a» ante «ese muchacho»: «Deja ir a ese muchacho inocente»."}
+{"sentence":"Desde entonces, sólo fue mia y de mi mamá.","reason":"“mia” should be “mía” (the possessive pronoun requires an accent)."}
+{"sentence":"Dile lo qué has hecho y cómo te sientes.","reason":"The relative pronoun should be «que» without an accent: «Dile lo que has hecho…»."}
+{"sentence":"Dile que fuiste tu y ya.","reason":"The subject pronoun needs an accent: «fuiste tú»."}
+{"sentence":"Dime como esta el tiempo allá arriba.","reason":"Faltan tildes: «cómo» y «está»."}
+{"sentence":"Dime cuando lo hayas hecho.","reason":"Falta la tilde en «cuándo» en la pregunta indirecta."}
+{"sentence":"Dime que crees sobre esto?","reason":"Debe llevar tilde interrogativa: «Dime qué crees sobre esto?»; sin ella, «que crees sobre esto» no forma una construcción válida."}
+{"sentence":"Dios sabe cuanto tiempo hace que esto sucede.","reason":"Falta la tilde en «cuánto» en la interrogativa indirecta: «Dios sabe cuánto tiempo hace que esto sucede»."}
+{"sentence":"Dormidos, la mente puede hacer lo que sea.","reason":"“Dormidos” does not agree with or grammatically attach to “la mente”; the sentence appears to have a dangling modifier."}
+{"sentence":"Déjame ver como está.","reason":"Falta la tilde en «cómo» en la interrogativa indirecta: «Déjame ver cómo está»."}
+{"sentence":"EI avión estará listo en media hora.","reason":"“EI” uses a capital I instead of the lowercase l in “El,” corrupting the word."}
+{"sentence":"EI durmiente debe despertar.","reason":"“EI” uses a capital I instead of the lowercase l in “El,” corrupting the word."}
+{"sentence":"EI gusto es mío.","reason":"“EI” uses a capital I instead of the lowercase l in “El,” corrupting the word."}
+{"sentence":"EI tiempo está de tu lado.","reason":"“EI” uses a capital I instead of the lowercase l in “El,” corrupting the word."}
+{"sentence":"El Almirante ha decidido poner algunos hombre en tierra.","reason":"«Algunos» debe concordar en plural con «hombres»."}
+{"sentence":"El debería participar de la acción.","reason":"«El» debería llevar tilde («Él»): tal como está escrito, el artículo queda seguido directamente de un verbo y la oración no es gramatical."}
+{"sentence":"El dia es suyo, hagan lo que quieran.","reason":"“dia” is missing the accent in “día.”"}
+{"sentence":"El dijo que era un modo muy bueno.","reason":"“El dijo” uses the article “El” instead of the pronoun “Él,” making the sentence ungrammatical."}
+{"sentence":"El engaña a todos alrededor.","reason":"«El» debe llevar tilde como pronombre: «Él engaña a todos alrededor»."}
+{"sentence":"El era de la familia real.","reason":"Falta la tilde en el pronombre «Él»."}
+{"sentence":"El era un hombre que quería una esposa.","reason":"Falta la tilde en el pronombre «Él»."}
+{"sentence":"El es así por naturaleza.","reason":"Falta la tilde en el pronombre «Él»."}
+{"sentence":"El es mas rápido pero podemos seguirlo.","reason":"Faltan las tildes en «Él» y «más»."}
+{"sentence":"El es mecánico y ella es ama de casa.","reason":"Falta la tilde en el pronombre «Él»."}
+{"sentence":"El es mi capitán y mi amigo, Su Majestad.","reason":"Falta la tilde en el pronombre «Él»."}
+{"sentence":"El es mi paciente.","reason":"Falta la tilde en el pronombre «Él»."}
+{"sentence":"El es muy bueno en las crisis.","reason":"Falta la tilde en el pronombre «Él»."}
+{"sentence":"El es más fuerte de lo que se dice.","reason":"Falta la tilde en el pronombre «Él»."}
+{"sentence":"El es tu amigo.","reason":"Falta la tilde en el pronombre «Él»."}
+{"sentence":"El es un gran hombre.","reason":"Falta la tilde en el pronombre «Él»."}
+{"sentence":"El estaba en la conferencia de prensa.","reason":"«El» debe llevar tilde al ser pronombre: «Él estaba…»."}
+{"sentence":"El estuvo dispuesto a venir tan fácilmente.","reason":"«El» debe llevar tilde al ser pronombre: «Él estuvo…»."}
+{"sentence":"El está al final, la última celda.","reason":"«El» debe llevar tilde al ser pronombre: «Él está…»."}
+{"sentence":"El está de buen humor, es ahora o nunca.","reason":"«El» debe llevar tilde al ser pronombre: «Él está…»."}
+{"sentence":"El fin de los tiempos esta aquí.","reason":"«Esta» debe llevar tilde en la forma verbal: «está aquí»."}
+{"sentence":"El fue una especie de Cura en su tribu.","reason":"«El» debe llevar tilde al ser pronombre: «Él fue…»."}
+{"sentence":"El futuro siempre esta en movimiento.","reason":"«Esta» debe llevar tilde en la forma verbal: «está en movimiento»."}
+{"sentence":"El ha de tener muchas cosas que hacer.","reason":"Falta la tilde en el pronombre «Él»; sin ella, «El ha» no es gramatical."}
+{"sentence":"El hombre de pie grande tiene grande los zapatos.","reason":"«Grande» no concuerda con «los zapatos»; debería ser «grandes»."}
+{"sentence":"El ira a la tierra de Buda muy pronto.","reason":"Faltan las tildes de «Él» y «irá»."}
+{"sentence":"El irá a su funeraria dentro de una hora.","reason":"Falta la tilde en «Él»."}
+{"sentence":"El lobo se acostado con las ovejas suficiente tiempo.","reason":"Falta el auxiliar «ha»: «El lobo se ha acostado…»."}
+{"sentence":"El me ha abierto la mente.","reason":"Falta la tilde en el pronombre «Él»; «El me ha abierto» no forma una construcción gramatical."}
+{"sentence":"El nos aseguró que usted, su señor, nos pagaría.","reason":"«El» debe llevar tilde: «Él nos aseguró…»."}
+{"sentence":"El pasaba por aquí en todo momento.","reason":"«El» before the verb is ungrammatical here; it should be the pronoun «Él»."}
+{"sentence":"El sabe perfectamente que los niños no pueden salir.","reason":"«El sabe» should be «Él sabe»; without the accent, «el» is an article and the sentence is ungrammatical."}
+{"sentence":"El sabe que todos esos son amigos nuestros.","reason":"«El sabe» should be «Él sabe»; without the accent, «el» is an article and the sentence is ungrammatical."}
+{"sentence":"El saco a seis personas del metro tren.","reason":"The sentence appears to require «Él sacó»; both the subject pronoun and the past-tense verb are missing their accents."}
+{"sentence":"El se convirtió en el primer verdadero inmortal.","reason":"«El se convirtió» should be «Él se convirtió»; without the accent, «el» is an article and the sentence is ungrammatical."}
+{"sentence":"El se encargará de ponerme en ese río.","reason":"«El se encargará» should be «Él se encargará»; without the accent, «el» is an article and the sentence is ungrammatical."}
+{"sentence":"El se ocupa de esas cosas.","reason":"«El se ocupa» should be «Él se ocupa»; without the accent, «el» is an article and the sentence is ungrammatical."}
+{"sentence":"El sólo se quedó con uno.","reason":"«El» debería llevar tilde («Él»): es el pronombre sujeto."}
+{"sentence":"El te probó y está satisfecho de ti.","reason":"«El» debería llevar tilde («Él»): es el pronombre sujeto."}
+{"sentence":"El tipo está en un tina.","reason":"Error claro de género: «tina» es femenino, por lo que corresponde «una tina»."}
+{"sentence":"El tren expreso llegara a la plataforma dos.","reason":"«Llegara» is the imperfect subjunctive, which does not fit this standalone statement; «llegará» is needed."}
+{"sentence":"El va a presentar mañana en la tarde.","reason":"«El» should be «Él» (the subject pronoun)."}
+{"sentence":"El va a recuperar el Grial por nosotros.","reason":"«El» should be «Él» (the subject pronoun)."}
+{"sentence":"El va a saber de qué hablo.","reason":"«El» should be «Él» (the subject pronoun)."}
+{"sentence":"El viene por usted.","reason":"Falta la tilde en el pronombre «Él»."}
+{"sentence":"El único que parece no saberlo eres tu.","reason":"«tu» should be the pronoun «tú»."}
+{"sentence":"El, es el que pude llevarme a el.","reason":"Both instances of «el» are pronouns and should be accented «él»; the comma also incorrectly separates the subject from the verb."}
+{"sentence":"Ella es mi señuelo, mi protección mi leal guardaespaldas.","reason":"La lista de aposiciones está mal conectada: «mi protección» y «mi leal guardaespaldas» necesitan una conjunción o puntuación que las separe."}
+{"sentence":"Ella los asesino tanto como yo lo hice.","reason":"«asesino» should be «asesinó» for the third-person past tense agreeing with «Ella»."}
+{"sentence":"En EE.","reason":"La abreviatura «EE.» está incompleta; falta «UU.» para «EE. UU.»."}
+{"sentence":"En hora buena.","reason":"«En hora buena» está separado incorrectamente; la locución se escribe «enhorabuena»."}
+{"sentence":"En su sueño, estaba encontrar el fin del mundo.","reason":"La construcción «estaba encontrar» es gramaticalmente defectuosa."}
+{"sentence":"En tiempo duros, encontró mucho dinero.","reason":"Hay un error de concordancia: debería decir «En tiempos duros»."}
+{"sentence":"Encontraron una huella en el ojo izquierdo, el pulgar.","reason":"The phrase “el pulgar” is left grammatically disconnected after “en el ojo izquierdo”; as written, the sentence is broken."}
+{"sentence":"Entonces debemos encontrar alguien que sepa.","reason":"Falta la preposición «a» ante «alguien» como objeto directo: «encontrar a alguien que sepa»."}
+{"sentence":"Entonces sabes porqué no podemos estar juntos.","reason":"«Porqué» is a noun; in this indirect question it should be «por qué»."}
+{"sentence":"Entonces tendré cerrar las cortinas.","reason":"Falta «que» en la perífrasis «tener que»: debería decir «Entonces tendré que cerrar las cortinas»."}
+{"sentence":"Enviaré alguien para que te acompañe.","reason":"Falta la preposición «a» ante el complemento de persona: «Enviaré a alguien para que te acompañe»."}
+{"sentence":"Es aquí que donde encontramos a la profesora?","reason":"La construcción «Es aquí que donde» combina dos estructuras incompatibles y queda gramaticalmente rota."}
+{"sentence":"Es el sacrificio que el acepta.","reason":"«el» debe llevar tilde: «él acepta»."}
+{"sentence":"Es es una teoría interesante.","reason":"Accidental repetition: “Es es una teoría interesante.”"}
+{"sentence":"Es mas listo de lo que piensas.","reason":"Falta la tilde en «más»; aquí es un adverbio de cantidad."}
+{"sentence":"Es mi primera vez en EE.","reason":"La abreviatura «EE.» queda truncada; en español, «Estados Unidos» se abrevia «EE. UU.»."}
+{"sentence":"Es muy asunto mío con quién salgo.","reason":"«Muy» no puede modificar «asunto» aquí; la construcción sería «Es asunto mío con quién salgo»."}
+{"sentence":"Es secreto mayor así que esto es en privado.","reason":"La construcción «Es secreto mayor» está mal formada; en español se diría «Es un secreto mayor»."}
+{"sentence":"Es siempre hace cuatro días y seis horas.","reason":"«Es siempre hace» combina dos construcciones incompatibles y no forma una oración gramatical."}
+{"sentence":"Es solo que hablas ingles tan bien, estoy asombrado.","reason":"Falta la tilde en «inglés»."}
+{"sentence":"Es sorprendente quien se preocupa del elenco de apoyo.","reason":"«Quién» lleva tilde en esta interrogativa indirecta."}
+{"sentence":"Es tiempo de preguntarse en lo que usted cree.","reason":"La construcción «preguntarse en lo que usted cree» no es gramatical en este sentido; sería «preguntarse en qué cree usted»."}
+{"sentence":"Es todo Io que tengo.","reason":"«Io» parece una corrupción de «lo»: la primera letra es una i mayúscula en lugar de una ele."}
+{"sentence":"Es un gusto de verte de nuevo.","reason":"La construcción «Es un gusto de verte» es gramaticalmente incorrecta; se dice «Es un gusto verte»."}
+{"sentence":"Es un nombre muy de adulto para un niñita.","reason":"Error gramatical claro: debe decir «para una niñita»."}
+{"sentence":"Es una cosa llevando a otra y a otra.","reason":"El gerundio «llevando» no funciona aquí como modificador de «cosa»; la construcción queda gramaticalmente defectuosa."}
+{"sentence":"Es una de ellos.","reason":"«Una» no concuerda con «ellos» en esta construcción; sería «uno de ellos» o «una de ellas»."}
+{"sentence":"Esa cosa que viste es de los más pequeños.","reason":"Hay un error de concordancia: «cosa» es femenino, por lo que debería decir «de las más pequeñas»."}
+{"sentence":"Escucha, hay algo que tengo que hablar contigo.","reason":"La construcción está mal formada: «hablar» requiere «de» en «algo de lo que tengo que hablar contigo»."}
+{"sentence":"Escucharon hablar de mi en los últimos días.","reason":"«mi» debe llevar tilde como pronombre preposicional: «de mí»."}
+{"sentence":"Ese es el por qué.","reason":"Como sustantivo, debe escribirse «porqué»: «Ese es el porqué»."}
+{"sentence":"Ese es una razonamiento realmente bueno.","reason":"Hay un error de género: «razonamiento» es masculino, así que debería decir «un razonamiento»."}
+{"sentence":"Ese esta bastante bien.","reason":"Debe llevar tilde: «Ese está bastante bien»."}
+{"sentence":"Eso es algo que podria hacer sin correr peligro.","reason":"Falta la tilde en «podría»."}
+{"sentence":"Eso es lo que te acaba en este negocio.","reason":"La construcción «te acaba en este negocio» no forma una expresión gramatical con este sentido."}
+{"sentence":"Eso es muy atractivo en un hombre..","reason":"Tiene un punto duplicado al final («hombre..»), un error claro de puntuación."}
+{"sentence":"Eso es por que tu no la dejas.","reason":"Debe escribirse «Eso es porque tú no la dejas»: «porque» expresa la causa y «tú» es el pronombre personal."}
+{"sentence":"Eso es todo lo que se.","reason":"Parece faltar la tilde de «sé»; sin ella, «se» deja la frase sin un sentido gramatical claro."}
+{"sentence":"Eso es todos lo que yo pregunto.","reason":"Hay un error de concordancia: debería decir «Eso es todo lo que yo pregunto»."}
+{"sentence":"Eso le va a levantar los ánimos'.","reason":"Hay una comilla simple de cierre sobrante al final de la frase."}
+{"sentence":"Eso me afectará el resto mi vida.","reason":"Falta la preposición «de»: «el resto de mi vida»."}
+{"sentence":"Eso no es mio.","reason":"«mio» debe llevar tilde: «mío»."}
+{"sentence":"Eso que?","reason":"«Qué» lleva tilde cuando se usa como interrogativo."}
+{"sentence":"Eso sí es la linea de la cadera.","reason":"Falta la tilde en «línea»."}
+{"sentence":"Esta ahí para que la viera cualquiera.","reason":"«Esta» debería ser «Está»; aquí es el verbo estar."}
+{"sentence":"Esta bien el sábado, el sábado esta bien.","reason":"Ambas apariciones de «esta» deberían llevar tilde: «está bien»."}
+{"sentence":"Esta claro?","reason":"«Esta» debería ser «Está»; aquí es el verbo estar."}
+{"sentence":"Esta con el y viene hacia acá.","reason":"«Esta» debería ser «Está» y «el» debería ser «él»."}
+{"sentence":"Esta hecho de con buenos materiales.","reason":"The phrase “hecho de con buenos materiales” contains a corrupted prepositional construction; it should be “hecho de buenos materiales.”"}
+{"sentence":"Esta yendo fuerte contra la ley de la comisión.","reason":"Falta la tilde en «Está»; «Esta yendo» no es correcto en este contexto."}
+{"sentence":"Estas cosas te convierten ser algo que no eres.","reason":"La construcción «te convierten ser algo» es claramente agramatical; falta «en» antes de «algo»."}
+{"sentence":"Estas lejos de ser lo que siempre fuiste.","reason":"“Estas” should be “Estás” (you are)."}
+{"sentence":"Estas listo para ver a tu padre, chico?","reason":"“Estas” should be “Estás” (you are)."}
+{"sentence":"Estas listo?","reason":"“Estas” should be “Estás” (you are)."}
+{"sentence":"Estas seguro de esto?","reason":"“Estas” should be “Estás” (you are)."}
+{"sentence":"Estas seguro, en ir a la escuela este año?","reason":"“Estas” should be “Estás” (you are)."}
+{"sentence":"Este es solo un pequeños paso para la humanidad.","reason":"Hay un error de concordancia: debería decir «un pequeño paso»."}
+{"sentence":"Esto a prueba de balas.","reason":"Falta el verbo «es»: «Esto es a prueba de balas»."}
+{"sentence":"Esto es algo sobre lo que debería creerme.","reason":"«Creerme sobre algo» no es una construcción válida aquí; debería ser «creer en algo» o «creer algo»."}
+{"sentence":"Esto es buenas noticias, garantizado.","reason":"Hay un error de concordancia: «esto» no concuerda con «buenas noticias»."}
+{"sentence":"Esto es lo que usted hara.","reason":"Falta la tilde en «hará»."}
+{"sentence":"Esto esto es la tela que cubre al cerebro.","reason":"Repetición accidental de «Esto»: «Esto esto es…»."}
+{"sentence":"Esto no se trata sólo de tú.","reason":"Después de la preposición «de» debe usarse «ti», no el pronombre sujeto «tú»."}
+{"sentence":"Esto sólo lo usan los principiantes'.","reason":"La comilla simple final está suelta y parece un error de puntuación/corrupción."}
+{"sentence":"Estos son toda la gente sana que tenemos.","reason":"Hay un error claro de concordancia: «Estos son» no concuerda con «toda la gente». Puede ser «Esta es toda la gente sana que tenemos» o «Estos son todos los ... que tenemos»."}
+{"sentence":"Estoy echo.","reason":"«Echo» debe ser «hecho» en esta construcción."}
+{"sentence":"Estoy seguro que se olvido de eso.","reason":"Falta la tilde en «olvidó»."}
+{"sentence":"Estuve ahi para estudiar animales y la naturaleza.","reason":"Falta la tilde en «ahí»."}
+{"sentence":"Existen el tipo dos, tipo tres y tipo cuatro.","reason":"La enumeración requiere concordancia plural: «Existen los tipos dos, tres y cuatro»."}
+{"sentence":"Ey, que tal si jugamos un juego?","reason":"En «qué tal si» corresponde el interrogativo «qué»."}
+{"sentence":"Fue una pasajero en nuestro ultimo viaje.","reason":"“Una pasajero” has a clear gender mismatch; “ultimo” also needs an accent in this context (“último”)."}
+{"sentence":"Fué una noche muy especial para nosotros dos.","reason":"«Fue» no lleva tilde; «Fué» es una falta ortográfica."}
+{"sentence":"Fíjese que útil es cada uno.","reason":"Falta la tilde en «qué»: debe ser «Fíjese qué útil es cada uno»."}
+{"sentence":"Gracias por la fiesta de anoche'?","reason":"El apóstrofo está mal colocado después de «anoche» y parece un error de edición."}
+{"sentence":"Ha pasado mucho desde que comimos por ultima vez.","reason":"Falta la tilde en «última»."}
+{"sentence":"Habia un rayo azul que bajo desde el cielo.","reason":"Faltan las tildes en «Había» y «bajó»."}
+{"sentence":"Han habido incidentes con los otros niños.","reason":"El verbo impersonal «haber» no concuerda en plural: sería «Ha habido incidentes»."}
+{"sentence":"Han tomado a dos de nuestro amigos como prisioneros.","reason":"«nuestro» no concuerda con «amigos»; debe ser «nuestros amigos»."}
+{"sentence":"Hara un poco de ruido, pero sera efectivo.","reason":"Faltan las tildes de «hará» y «será»."}
+{"sentence":"Hare una de esas dos cosas.","reason":"Falta la tilde de «haré»."}
+{"sentence":"Has algo.","reason":"«Has algo» usa el auxiliar «has» en lugar del imperativo «haz»."}
+{"sentence":"Has lo que quieras.","reason":"“Has” debería ser “Haz”: el imperativo es necesario en “Haz lo que quieras”."}
+{"sentence":"Hasta que se torno en un gran juego.","reason":"«Torno» is missing the accent in «tornó»; as written, the verb form does not fit the sentence."}
+{"sentence":"Hay gente que no le gusta eso.","reason":"Falta la preposición «a» en la construcción con «gustar»: «Hay gente a la que no le gusta eso»."}
+{"sentence":"Hay muchos aquí que prefieren están en otro lugar .","reason":"La construcción «prefieren están» es gramaticalmente incorrecta; aquí corresponde «prefieren estar»."}
+{"sentence":"Hay más de mi que debes saber.","reason":"«Mi» necesita tilde como pronombre tras «de»: «Hay más de mí que debes saber»."}
+{"sentence":"Hay una mucha humedad aquí.","reason":"«Una mucha humedad» combina incorrectamente el artículo indefinido con «mucha»; sería «Hay mucha humedad aquí» o «Hay una humedad…»."}
+{"sentence":"Haz Io que quieras.","reason":"“Io” uses a capital i in place of the l in “lo,” corrupting the word."}
+{"sentence":"Haz de mi tu voluntad.","reason":"“De mi” should be “de mí” here: it is the prepositional pronoun."}
+{"sentence":"Haz dicho justamente lo que pensaba hacer.","reason":"“Haz dicho” is a word-choice error; the phrase requires “Has dicho.”"}
+{"sentence":"He tomado a nada y lo convertí en algo.","reason":"«A nada» no funciona como complemento de «tomar» en esta oración; la construcción es gramaticalmente defectuosa."}
+{"sentence":"He visto hacer esta cosas desde hace mucho.","reason":"«Esta» no concuerda en número con «cosas»."}
+{"sentence":"He vistos estas pero nunca he estado.","reason":"«Vistos» es una forma incorrecta aquí; el participio de «haber» debe ser «visto»."}
+{"sentence":"Hecha un vistazo.","reason":"«Hecha un vistazo» tiene una forma verbal incorrecta; debería ser «Echa un vistazo»."}
+{"sentence":"Juro que vaya a donde vayas, iré yo.","reason":"La construcción «Juro que vaya a donde vayas» no es gramatical en este contexto; parece haber una mezcla accidental de estructuras."}
+{"sentence":"Jóvenes, saben que es lo que vemos.","reason":"En la pregunta indirecta debe escribirse «qué»: «saben qué es lo que vemos»."}
+{"sentence":"La Piedra esta en la nave de adelante.","reason":"«esta» necesita tilde («está») para funcionar como el verbo estar en esta oración."}
+{"sentence":"La alineación a unido a los mundos.","reason":"Error verbal: debería decir «ha unido», no «a unido»."}
+{"sentence":"La cabeza del policia por la mujer de vuelta.","reason":"La frase está gramaticalmente rota: «La cabeza del policía por la mujer de vuelta» no forma una construcción inteligible."}
+{"sentence":"La cabeza está allí, se quieres dar una mirada.","reason":"«Se quieres» es una combinación gramaticalmente incorrecta; debería ser «si quieres»."}
+{"sentence":"La forma en que le hablas a ellos.","reason":"El pronombre singular «le» no concuerda con «a ellos»; corresponde «les»."}
+{"sentence":"La gente podría pensar que se esconde de mi.","reason":"«Mi» should be «mí» here: it is the pronoun after «de»."}
+{"sentence":"La mirada del mundo están puestas en la Embajada.","reason":"Hay una discordancia clara: «la mirada» es singular, pero el verbo y el participio aparecen en plural («están puestas»)."}
+{"sentence":"La policía ya viene. debemos irnos.","reason":"The word “debemos” should be capitalized because it follows a period."}
+{"sentence":"La ultima cosa que necesitas es llamar la atencion.","reason":"Faltan las tildes en «última» y «atención»."}
+{"sentence":"Las chicas también, sobre todo las tienen muchas opciones.","reason":"La frase parece tener una corrupción o un fragmento accidental en «sobre todo las tienen muchas opciones»; la construcción no se entiende en español."}
+{"sentence":"Las hacen sentir bien sobre si misma.","reason":"«si misma» has an agreement error; the reflexive phrase should agree with the feminine plural «las» (and «sí» needs an accent)."}
+{"sentence":"Las mejores historias de Sexo en Nueva York.'","reason":"Tiene una comilla simple sobrante al final."}
+{"sentence":"Llevaremos las visitantes de vuelta a la tierra.","reason":"Falta la «a» personal ante «las visitantes»: «Llevaremos a las visitantes…»."}
+{"sentence":"Lo dices por que le gustó mi libro.","reason":"«Por que» is incorrectly separated here; it should be «porque» to mean “because.”"}
+{"sentence":"Lo llamaré si pienso en algo mas.","reason":"«mas» should be «más» here; without the accent, it is the conjunction meaning «but»."}
+{"sentence":"Lo llevo en mi corazón'.","reason":"A stray closing quotation mark after «corazón» appears to be accidental text corruption."}
+{"sentence":"Lo nombre 'El juego de la cita'.","reason":"“Lo nombre” is not a grammatical standalone form here; it likely needs an accent (“Lo nombré”) or a different word order for a command."}
+{"sentence":"Lo que llevaba días localizar ahora lleva unos minutos.","reason":"The infinitive «localizar» does not form a grammatical construction here; a verb such as «intentando» is needed before it."}
+{"sentence":"Lo que sea ayudó a él a sobrevivir.","reason":"Falta el pronombre de objeto directo que acompaña a «a él»: sería «Lo que sea lo ayudó a él a sobrevivir»."}
+{"sentence":"Lo sé, Io sé.","reason":"La segunda aparición está escrita con una I mayúscula en lugar de una l minúscula: «Io sé»."}
+{"sentence":"Lo único que puedes leer aqui es el menú.","reason":"Falta la tilde en «aquí»."}
+{"sentence":"Los coches al de mi mujer.","reason":"La frase carece de una relación gramatical clara entre «Los coches» y «al de mi mujer»."}
+{"sentence":"Los demas son simples, pero estan muy bien.","reason":"Faltan tildes en «demás» y «están»."}
+{"sentence":"Los niños serán más fácil de convencer.","reason":"El adjetivo debe concordar en plural con «los niños»: «Los niños serán más fáciles de convencer»."}
+{"sentence":"Manda al pañuelo, para que nos deje limpios.","reason":"La construcción «Manda al pañuelo» no es inteligible en español y parece un error de palabras."}
+{"sentence":"Me alegro de que tu hayas empezado.","reason":"«tu» debería llevar tilde: «Me alegro de que tú hayas empezado»."}
+{"sentence":"Me alegro que estes aquí para decirnos esas cosas.","reason":"“estes” should be “estés” here; the missing accent changes the verb form."}
+{"sentence":"Me encanta tu estómago Me encanta tu dedo.","reason":"Dos oraciones distintas aparecen unidas sin separación: «Me encanta tu estómago Me encanta tu dedo»."}
+{"sentence":"Me saldré del paso de la puerta.","reason":"«Me saldré del paso de la puerta» mezcla construcciones y no forma una expresión utilizable en español."}
+{"sentence":"Me siento mejor de que estén libres.","reason":"La construcción «me siento mejor de que» no funciona con ese sentido; hay un error gramatical."}
+{"sentence":"Me sorprende que tuviera al valor de hacerse responsable.","reason":"«Al valor» es incorrecto aquí; debe ser «el valor»."}
+{"sentence":"Me veo mucho más jóven que los demás.","reason":"«jóven» lleva una tilde incorrecta; se escribe «joven»."}
+{"sentence":"Me voy, una noticia importante.","reason":"La segunda parte, «una noticia importante», no se integra gramaticalmente con «Me voy»."}
+{"sentence":"Medicina es para cabra.","reason":"Falta un artículo ante el sustantivo contable singular: «para una cabra» o «para la cabra»."}
+{"sentence":"Mi amistad y mi estima es infinita.","reason":"The coordinated subject “Mi amistad y mi estima” requires plural agreement: “son infinitas.”"}
+{"sentence":"Mi cumpleaños es el mes que viene, pero fantástico.","reason":"La frase queda gramaticalmente rota en «pero fantástico»: el adjetivo no tiene una conexión clara con el resto de la oración."}
+{"sentence":"Mi no sé.","reason":"«Mi» no puede funcionar aquí como posesivo de «no sé»; la frase tiene una construcción gramaticalmente rota."}
+{"sentence":"Mi olvidar.","reason":"«Mi olvidar» is not a grammatical Spanish phrase; «olvidar» is an infinitive and does not work as a noun after «mi»."}
+{"sentence":"Mi padre paso su vida buscando respuestas.","reason":"Falta la tilde en «pasó»; «paso» no concuerda con «Mi padre»."}
+{"sentence":"Mira esa chica.","reason":"Falta la «a» personal al referirse a una persona como objeto directo: «Mira a esa chica»."}
+{"sentence":"Miren, lo principal es que lo niños hablen.","reason":"La concordancia está mal: debe decir «los niños»."}
+{"sentence":"Más la mayor de ellas es la caridad'.","reason":"«Más» means “more” here and does not work as a conjunction; the conjunction is «mas». The trailing apostrophe is also unmatched."}
+{"sentence":"Ni los más alto defensores de los derechos civiles.","reason":"«Alto» debe concordar en plural con «defensores»: «los más altos defensores»."}
+{"sentence":"No Io creo.","reason":"«Io» appears to be a character error for «lo»."}
+{"sentence":"No Io entiendo.","reason":"«Io» appears to be a character error for «lo»."}
+{"sentence":"No Io haré.","reason":"«Io» appears to be a character error for «lo»."}
+{"sentence":"No Io sabía.","reason":"«Io» appears to be a character error for «lo»."}
+{"sentence":"No creo que a quien usted busque este aqui.","reason":"Faltan las tildes de «esté» y «aquí»."}
+{"sentence":"No creo que el sepa nada.","reason":"Falta la tilde en el pronombre «él»: «No creo que él sepa nada»."}
+{"sentence":"No creo que esperan que encontremos una solución diplomática.","reason":"Tras «No creo que», «esperan» requiere subjuntivo: «esperen»."}
+{"sentence":"No eres sutil, pero si eficaz.","reason":"«si» debería llevar tilde: «pero sí eficaz»."}
+{"sentence":"No eso.","reason":"La construcción «No eso» no funciona como frase en español; parece faltar una palabra o haberse corrompido el texto."}
+{"sentence":"No esta.","reason":"Falta la tilde en «está»; sin ella, «esta» es un demostrativo y la frase queda mal formada."}
+{"sentence":"No lo hara.","reason":"Falta la tilde en «hará»."}
+{"sentence":"No lo sabia.","reason":"“sabia” is missing the accent; it should be “sabía.”"}
+{"sentence":"No s é.","reason":"The word “sé” is accidentally split by a space."}
+{"sentence":"No sabes nada de acerca de mi.","reason":"La construcción «nada de acerca de mí» duplica la preposición y no es gramatical."}
+{"sentence":"No te atreve.. no intenta darme esa mirada fija.","reason":"“No te atreve” is not a grammatical form here; it should be “No te atreves” or “No se atreve.”"}
+{"sentence":"No tienes porqué.","reason":"«Porqué» es un sustantivo; en esta expresión corresponde escribir «por qué»: «No tienes por qué»."}
+{"sentence":"Nunca habia visto nada tan hermoso en mi vida.","reason":"Falta la tilde en «había»."}
+{"sentence":"Nunca preguntaste que pensaba de esta casa.","reason":"Falta la tilde en «qué» en la pregunta indirecta: «Nunca preguntaste qué pensaba de esta casa»."}
+{"sentence":"OK, yo lo tomo como un si.","reason":"«Sí» lleva tilde cuando significa una respuesta afirmativa: «como un sí»."}
+{"sentence":"Obviamente tuve que hacerlo, tú sabes eso de mi.","reason":"«Mí» lleva tilde después de la preposición «de»: «eso de mí»."}
+{"sentence":"Oh corazon, corazon, vivo al deseo de mi corazon.","reason":"Faltan las tildes en «corazón» (aparece dos veces)."}
+{"sentence":"Oh si eres el mejor.","reason":"«Sí» afirmativo requiere tilde."}
+{"sentence":"Oh si, le aseguro que fueron ellos.","reason":"«Sí» afirmativo requiere tilde."}
+{"sentence":"Oh, que lindo.","reason":"«Qué» lleva tilde en esta expresión exclamativa: «Oh, qué lindo»."}
+{"sentence":"Oh, tu la hiciste mi apuesta.","reason":"“Tu” should be the subject pronoun “tú”; without the accent it is the possessive determiner, making the phrase grammatically malformed."}
+{"sentence":"Ojalá sea algo más elegante que dándome un tiro.","reason":"La comparación queda mal formada: «más elegante que dándome un tiro». El gerundio no encaja en esa construcción."}
+{"sentence":"Ok, Hay que deshacernos de él.","reason":"«Hay que deshacernos» está mal formado; la construcción impersonal requiere «deshacerse»."}
+{"sentence":"Ordenes de la policía.","reason":"Falta la tilde en «Órdenes»; como sustantivo, se escribe con tilde."}
+{"sentence":"Oye, quien está en casa?","reason":"«quien» should be the interrogative pronoun «quién»."}
+{"sentence":"Oye, quien puso el rojo aquí.","reason":"«quien» should be the interrogative pronoun «quién»."}
+{"sentence":"Padre, tu que puedes hacer todas las cosas.","reason":"“tu” should be accented as the pronoun “tú.”"}
+{"sentence":"Para qué es eso?","reason":"Falta el signo de apertura de interrogación: «¿Para qué es eso?»."}
+{"sentence":"Parece tienes una sala entera para ti, muchacho.","reason":"Falta «que» en «Parece que tienes una sala…»; «Parece tienes» no es una construcción normal en español."}
+{"sentence":"Permítanme su atención un momento.","reason":"«Permítanme su atención» has an incorrect construction; it should be something like «Prést(en)me su atención» or «Permítanme llamar su atención»."}
+{"sentence":"Pero creo que del perro de su abuela.","reason":"«Creo que del perro de su abuela» has no usable grammatical construction; the thought is severed after «que»."}
+{"sentence":"Pero la que es y serás siempre.","reason":"La frase combina «la que es» con «serás», cambiando de tercera a segunda persona dentro de la misma construcción; lo esperable sería «la que eres y serás» o «la que es y será»."}
+{"sentence":"Pero que estoy diciendo?","reason":"«Que» debe llevar tilde en esta pregunta: «qué»."}
+{"sentence":"Pero sabes que?","reason":"«Que» debe llevar tilde en esta pregunta: «qué»."}
+{"sentence":"Pero sea cuidadosos en no proceder sin pruebas.","reason":"La concordancia es incorrecta: «sea» está en singular, pero «cuidadosos» se dirige a varias personas. Debería ser «sean cuidadosos»."}
+{"sentence":"Pero yo no lo he sido y tu si.","reason":"Faltan las tildes diacríticas en «tú» y «sí»."}
+{"sentence":"Podrían haber días oscuros por delante.","reason":"En la construcción impersonal «haber» no concuerda en plural: debería ser «Podría haber días oscuros por delante»."}
+{"sentence":"Por cuanto tiempo?","reason":"Falta la tilde en el interrogativo «cuánto»."}
+{"sentence":"Por eso la cantidad de la fianza.","reason":"La frase queda en una construcción truncada: «Por eso la cantidad de la fianza» no tiene predicado."}
+{"sentence":"Por eso los cambios de gravedad.","reason":"La frase queda en una construcción truncada: «Por eso los cambios de gravedad» no tiene predicado."}
+{"sentence":"Por hacerlo que cuente.","reason":"La construcción «Por hacerlo que cuente» está gramaticalmente rota; no se entiende como una frase válida en español."}
+{"sentence":"Por mí, como si se los pisa.","reason":"«Como si» requires the subjunctive here; «pisa» is an ungrammatical indicative form."}
+{"sentence":"Por que lucha usted, si estoy en lo cierto.","reason":"«Por que» should be «Por qué» in this question."}
+{"sentence":"Por que, quiero y te hara sentirte mejor.","reason":"«Por que» should be «Por qué» and «hara» should be «hará»."}
+{"sentence":"Porque al Sargento Mayor y a mi nos encanta.","reason":"«mi» debe llevar tilde porque es el pronombre: «a mí»."}
+{"sentence":"Porque conozco los hombres, y seguramente tú también.","reason":"Falta la «a» personal ante el objeto humano definido: «conozco a los hombres»."}
+{"sentence":"Porque en tí veo el reflejo de mí mismo.","reason":"«ti» no lleva tilde; «tí» es una falta ortográfica."}
+{"sentence":"Porque todo el mundo tiene el derecho vivir.","reason":"Falta la preposición «a» en «tener el derecho a vivir»."}
+{"sentence":"Porque tu eres el mejor de nosotros.","reason":"Debe llevar tilde «tú» como pronombre; «tu» es posesivo."}
+{"sentence":"Primero hare que subas a tu nave.","reason":"Falta la tilde en «haré»; sin ella, «hare» no corresponde al futuro que requiere la frase."}
+{"sentence":"Pronto estaras con él.","reason":"Falta la tilde en «estarás»."}
+{"sentence":"Pude poner una bala en tu oreja si quisiera.","reason":"«Pude» no concuerda con la condición hipotética «si quisiera»; sería «podría» o «podía poner»."}
+{"sentence":"Puede que tenga algo para comer en mí casa.","reason":"“Mí” lleva tilde como pronombre; aquí debe ser el posesivo “mi”."}
+{"sentence":"Puedo mostrarle cuan segura es.","reason":"«Cuán» lleva tilde en esta construcción de grado: «Puedo mostrarle cuán segura es»."}
+{"sentence":"Que el sabe lo que usted sabe.","reason":"«El» needs an accent as the pronoun «él»."}
+{"sentence":"Que gentileza que te hayas vestido para mí.","reason":"«Qué» needs an accent in this exclamation: «Qué gentileza…»."}
+{"sentence":"Que la Fuerza este con ustedes.","reason":"“Este” should be “esté” in this subjunctive clause."}
+{"sentence":"Que las fuerza nos acompañe.","reason":"“Las fuerza” has a clear article–noun gender mismatch; it should be “la fuerza.”"}
+{"sentence":"Que no están trabajando o sub-empleado.","reason":"“Sub-empleado” should agree with the plural subject: “subempleados.”"}
+{"sentence":"Que rara es la vida.","reason":"Falta la tilde en «qué» en esta exclamación: «Qué rara es la vida»."}
+{"sentence":"Que tu cabeza tenga precio y permanecer tan calmado.","reason":"La coordinación combina «tenga» en subjuntivo con «permanecer» en infinitivo, dejando la segunda parte sin una construcción gramatical clara."}
+{"sentence":"Quería ir dónde están las estrellas.'","reason":"«Dónde» lleva tilde solo en usos interrogativos o exclamativos; aquí corresponde «donde»."}
+{"sentence":"Quería mantener mi familia a salvo.","reason":"Falta la preposición personal «a» ante «mi familia»: «mantener a mi familia a salvo»."}
+{"sentence":"Quiero que mi medio sea un producto de mi.","reason":"«De mi» requiere el pronombre tónico «de mí» en esta frase."}
+{"sentence":"Quiero saber como funciona su sistema de seguridad.","reason":"Debe llevar tilde interrogativa: «Quiero saber cómo funciona su sistema de seguridad»."}
+{"sentence":"Quizas podría controlar ese sistema de seguridad.","reason":"Falta la tilde en «Quizás»."}
+{"sentence":"Quizá en las mías pueda hacer bien.","reason":"La construcción «en las mías pueda hacer bien» queda gramaticalmente incompleta: «hacer bien» necesita un objeto o la forma «hacerlo bien»."}
+{"sentence":"Quizás tu no podrías comprar esa clase de publicidad.","reason":"«tu» debe llevar tilde como pronombre: «tú no podrías»."}
+{"sentence":"Quítate eso antes que de papá lo vea.","reason":"La secuencia «antes que de papá lo vea» está mal formada; debería ser «antes de que papá lo vea» o «antes que papá lo vea»."}
+{"sentence":"Realmente maravilloso la mente de un niño puede ser.","reason":"«Maravilloso» no concuerda en género con «la mente»; debería ser «maravillosa»."}
+{"sentence":"Realmente pensaste que podrias tomar mi asiento?","reason":"Falta la tilde en «podrías»."}
+{"sentence":"Recuerda que le sigue el juego asi como nosotros.","reason":"Falta la tilde en «así»."}
+{"sentence":"Rojo su madre.","reason":"«Rojo su madre» no forma una construcción gramatical inteligible en español."}
+{"sentence":"S í.","reason":"«S í» divide accidentalmente la palabra «Sí»."}
+{"sentence":"SU GEMELA que mantenerla unida.","reason":"La construcción «SU GEMELA que mantenerla unida» está severamente incompleta y no se puede interpretar como una frase utilizable."}
+{"sentence":"Saber que el esta al mando.","reason":"Faltan las tildes en «él» y «está»; sin ellas, la frase queda mal escrita."}
+{"sentence":"Sabes donde esperas que te lleve el tren.","reason":"«Dónde» lleva tilde en esta pregunta indirecta."}
+{"sentence":"Se caso con otra mujer.","reason":"Falta la tilde en «casó»; «caso» no corresponde a la forma verbal en pasado."}
+{"sentence":"Se mi camino en la cocina.","reason":"«Se» appears to be a corrupted spelling of the imperative «sé»; as written, the sentence is ungrammatical."}
+{"sentence":"Se mi mensajero obtendrás parte de las ganancias.","reason":"«Se» appears to be a corrupted spelling of the imperative «sé»; as written, the sentence is ungrammatical."}
+{"sentence":"Se que a todo el mundo le gusta.","reason":"Falta la tilde en «sé» (verbo saber)."}
+{"sentence":"Se que estoy haciendo en este momento?","reason":"Faltan las tildes en «sé» (verbo saber) y «qué» (interrogativo indirecto)."}
+{"sentence":"Se que producto es el que vendo?","reason":"Faltan las tildes en «sé» (verbo saber) y «qué» (interrogativo indirecto)."}
+{"sentence":"Se valiente, es la voluntad de Dios.","reason":"Falta la tilde en el imperativo «sé»: «Sé valiente»."}
+{"sentence":"Seguiré todas las ordenes que estas autorizado para dar.","reason":"Missing accents in «órdenes» and «estás»."}
+{"sentence":"Si hazlo o lo voy a hacer yo.","reason":"«Si» should be «Sí» here: it is an affirmative response before the imperative «hazlo»."}
+{"sentence":"Si hubiera sido mas rápido en ese último movimiento.","reason":"«Mas» should be «más» in the sense of “faster.”"}
+{"sentence":"Si llega el momento, sabrás que hacer.","reason":"«Que» should be «qué» in the indirect question «sabrás qué hacer»."}
+{"sentence":"Si no te subes al avión, adiós todos.","reason":"«Adiós» takes the preposition «a» before the people being addressed: «adiós a todos»."}
+{"sentence":"Si quiere reemplazar a alguien, ahora es cuándo.","reason":"«Cuándo» lleva tilde en una pregunta indirecta, pero aquí corresponde «cuando»: «ahora es cuando»."}
+{"sentence":"Si quieren venir conmigo, así es cómo planeo hacerlo.","reason":"En la construcción «así es como planeo hacerlo», «como» no lleva tilde."}
+{"sentence":"Si te gusta puedo darte una árbol.","reason":"“Árbol” is masculine, so it should be “un árbol,” not “una árbol.”"}
+{"sentence":"Siempre estare ahi para cuidarte.Te prometo eso.","reason":"Faltan tildes en «estaré» y «ahí», y falta un espacio después del punto en «cuidarte.Te»."}
+{"sentence":"Siempre quise preguntarle donde le hicieron ese tatuaje.","reason":"Debe llevar tilde: «dónde» introduce una pregunta indirecta."}
+{"sentence":"Sigue cómo si no supieras nada.","reason":"«Cómo» lleva tilde en interrogativas o exclamativas; aquí corresponde «como»: «Sigue como si no supieras nada»."}
+{"sentence":"Siguiente, a traves de estas puertas.","reason":"Falta la tilde en «través»."}
+{"sentence":"Sin embargo, piense en lo que se divierte.","reason":"«Piense en lo que se divierte» tiene una construcción gramaticalmente defectuosa; «divertirse» no admite aquí «lo que» como complemento."}
+{"sentence":"Sin hablar que es soleado y son felices.","reason":"La construcción «sin hablar que» está mal formada; sería «sin hablar de que»."}
+{"sentence":"Solo queria chequear que asi fuera.","reason":"Faltan tildes en «quería» y «así»."}
+{"sentence":"Solo quiero oir la voz de mi madre.","reason":"Falta la tilde en «oír»."}
+{"sentence":"Solo tendrá que decirme quien es ella.","reason":"Falta la tilde en «quién» en la pregunta indirecta."}
+{"sentence":"Soy un siervo por los cuernos de alguien mas?","reason":"«mas» debería llevar tilde («más») con el sentido de ‘someone else’."}
+{"sentence":"Subes el interruptor y tienes electricidad todo el día.","reason":"La expresión no es gramatical: se dice «subes el interruptor» solo si lo levantas físicamente; para encenderlo, sería «enciendes el interruptor»."}
+{"sentence":"Supongo que me llamaras la atencion.","reason":"Faltan las tildes en «llamarás» y «atención»."}
+{"sentence":"Sé lo que hacer.","reason":"La construcción «Sé lo que hacer» no es gramatical en español; sería «Sé qué hacer»."}
+{"sentence":"Sí que Io es.","reason":"“Io” appears to be an accidental letter substitution for “lo”: “Sí que lo es.”"}
+{"sentence":"Sí soy la mitad del hombre eres.","reason":"La construcción «soy la mitad del hombre eres» es gramaticalmente defectuosa; parece faltar «que»."}
+{"sentence":"Sí, Io es.","reason":"«Io es» contiene una probable corrupción de «lo»."}
+{"sentence":"Sí, Io sé.","reason":"«Io sé» contiene una probable corrupción de «lo»."}
+{"sentence":"Sí, el parecía ser el adecuado cierto?","reason":"«el» debe llevar tilde como pronombre: «él parecía ser el adecuado»."}
+{"sentence":"Sí, eso es lo que necesitamos un distribuidor.","reason":"La construcción está mal formada: «lo que necesitamos» no puede ir seguido directamente de «un distribuidor»; falta una conexión como «es» o «de»."}
+{"sentence":"Sólo con la condición de que yo invito.","reason":"La construcción «con la condición de que» requiere subjuntivo aquí: «yo invite»."}
+{"sentence":"Sólo ha ocurrido cinco veces desde nuestra primer canción.","reason":"«Primer» should agree with the feminine noun: «nuestra primera canción»."}
+{"sentence":"Sólo para.","reason":"«Sólo para» queda como una construcción incompleta; no se entiende como una respuesta o fragmento autónomo."}
+{"sentence":"Tal vez mi vida entera cambio en aquel momento.","reason":"«Cambio» no concuerda con «mi vida entera»; aquí debe ser «cambió»."}
+{"sentence":"Tan pronto cuando tengas una buena herramienta.","reason":"“Tan pronto cuando” mixes two constructions; the standard phrase is “tan pronto como”."}
+{"sentence":"Te Io agradezco.","reason":"“Io” uses a capital I instead of the lowercase letter l in “lo,” corrupting the word."}
+{"sentence":"Te Io juro.","reason":"“Io” uses a capital I instead of the lowercase letter l in “lo,” corrupting the word."}
+{"sentence":"Te Io prometo.","reason":"“Io” uses a capital I instead of the lowercase letter l in “lo,” corrupting the word."}
+{"sentence":"Te digo de que me di cuenta.","reason":"La forma interrogativa requiere tilde: «Te digo de qué me di cuenta»."}
+{"sentence":"Te escuché hablando, sabía donde estabas en la habitación.","reason":"Falta la tilde en «dónde» en la interrogativa indirecta: «sabía dónde estabas»."}
+{"sentence":"Te has revelado contra nuestras autoridades.","reason":"«Revelado contra» usa la palabra equivocada; debería ser «rebelado contra»."}
+{"sentence":"Te llevare de compras quiero comprarte algo.","reason":"«Llevare» should be «llevaré» in this future-tense context."}
+{"sentence":"Te quito los pulgares con mi pinzas.","reason":"«Mi» no concuerda en número con «pinzas»; debería ser «mis pinzas»."}
+{"sentence":"Te sientes excitado al mismo tiempo aterrado.","reason":"Falta una conjunción para unir los dos estados: «Te sientes excitado y al mismo tiempo aterrado»."}
+{"sentence":"Te veo en el punto de reunion.","reason":"«reunion» está mal escrito; lleva tilde: «reunión»."}
+{"sentence":"Te veo en la reunion de profesores?","reason":"«reunion» está mal escrito; lleva tilde: «reunión»."}
+{"sentence":"Te voy a decir qué entre tú y yo.","reason":"La construcción «decir qué entre tú y yo» está mal formada; parece faltar una parte esencial de la frase."}
+{"sentence":"Ten cuidado de en quién te conviertes.","reason":"La construcción «cuidado de en quién» es gramaticalmente defectuosa; debería ser «cuidado en quién»."}
+{"sentence":"Ten un poco de respecto por ti mismo.","reason":"«Respecto» no significa «respeto» aquí; el término correcto es «respeto»."}
+{"sentence":"Tengo que llegar hasta el ahora.","reason":"«El ahora» is not grammatical in this phrase; it should be «hasta ahora»."}
+{"sentence":"Tengo que llevarme este hombre a Estados Unidos.","reason":"The personal «a» is missing before «este hombre»: «llevarme a este hombre»."}
+{"sentence":"Tiene conexiones directamente el en departamento.","reason":"La secuencia «directamente el en departamento» está desordenada y no forma una construcción gramatical."}
+{"sentence":"Tienes que ser capaz para salir de esto.","reason":"La construcción estándar es «ser capaz de salir de esto»; «capaz para salir» es un error gramatical claro."}
+{"sentence":"Tienes sed?","reason":"Falta el signo de apertura de interrogación: «¿Tienes sed?»."}
+{"sentence":"Todas agentes o intereses civiles.","reason":"La construcción «Todas agentes o intereses civiles» tiene una concordancia y una estructura nominal defectuosas; no funciona como un fragmento natural."}
+{"sentence":"Todas las personal a las estaciones de lanzamiento.","reason":"“Todas las personal” tiene un error claro de concordancia; probablemente falta la terminación plural en “personal(es)”."}
+{"sentence":"Todavía tenías un huevo de oro qué dar.","reason":"«Qué» debe llevar tilde solo en usos interrogativos o exclamativos; aquí corresponde «que»: «un huevo de oro que dar»."}
+{"sentence":"Todo comenzó con el y terminara con el.","reason":"Faltan tildes que cambian la forma gramatical: «él» (pronombre) y «terminará» (futuro)."}
+{"sentence":"Todo es correcto cuando nuestros amigos estan con nosotros.","reason":"Falta la tilde en «están»."}
+{"sentence":"Todo estos años, y sigues haciéndote la víctima.","reason":"Error de concordancia: debería decir «Todos estos años»."}
+{"sentence":"Todo lo que necesito es una firme.","reason":"«Una firme» no funciona aquí como sustantivo; probablemente es una corrupción de «una firma»."}
+{"sentence":"Todos tenemos diferente fuerza y habilidades.","reason":"«Diferente» no concuerda con los sustantivos coordinados; la frase debería decir «diferentes fuerzas y habilidades»."}
+{"sentence":"Tomare un avión y te veré ahí esta tarde.","reason":"«Tomare» should be «Tomaré» here; the missing accent changes the verb form."}
+{"sentence":"Trata de lo que está pasando ahora.","reason":"La construcción «trata de lo que está pasando» no funciona en español; parece faltar un verbo, como «trata de entender lo que está pasando»."}
+{"sentence":"Tu Padre él es.","reason":"La construcción «Tu Padre él es» no forma una oración gramatical en español y queda severamente incompleta."}
+{"sentence":"Tu crees?","reason":"«Tu» debe llevar tilde: «Tú crees?»."}
+{"sentence":"Tu eres la unica familia que tengo.","reason":"Faltan las tildes en «Tú» y «única»."}
+{"sentence":"Tu eres la única excepción.","reason":"Falta la tilde en «Tú»."}
+{"sentence":"Tu estabas en mi lista por largo tiempo.","reason":"Falta la tilde en «Tú»."}
+{"sentence":"Tu fuiste la mejor parte de mi vida.","reason":"Falta la tilde en «Tú»."}
+{"sentence":"Tu hijo esta a punto de cambiar.","reason":"Falta la tilde en «está»."}
+{"sentence":"Tu lo has dicho, Papá.","reason":"Falta la tilde en el pronombre «Tú»."}
+{"sentence":"Tu padre es una gran hombre.","reason":"Error de concordancia: «una gran hombre» debería ser «un gran hombre»."}
+{"sentence":"Tu padre no tenia esto.","reason":"Falta la tilde en «tenía»."}
+{"sentence":"Tu que piensas?","reason":"Falta la tilde interrogativa en «qué» y el signo de apertura: «¿Tú qué piensas?»"}
+{"sentence":"Tu sabrás mejor que yo que es lo importante.","reason":"«Tu» is a subject pronoun and should be «Tú»; «qué» also needs an accent in «qué es lo importante»."}
+{"sentence":"Tu seras puesto en el congelador de carbono.","reason":"«Tu» is a subject pronoun and should be «Tú»; «serás» needs an accent."}
+{"sentence":"Tu tendras que hacer ese disparo.","reason":"«Tu» is a subject pronoun and should be «Tú»; «tendrás» needs an accent."}
+{"sentence":"Tu tienes el Don de ver el futuro.","reason":"«Tu» is a subject pronoun and should be «Tú»."}
+{"sentence":"Tu tienes la mano en todo esto?","reason":"«Tu» is a subject pronoun and should be «Tú»."}
+{"sentence":"Tu tomarás mi lugar en el Senado.","reason":"«Tu» is a subject pronoun and should be «Tú»; «tomarás» needs an accent."}
+{"sentence":"Tu vas por aquí yo por allá.","reason":"«Tu» is a subject pronoun and should be «Tú»."}
+{"sentence":"Tu y yo debemos empezar a trabajar juntos.","reason":"«Tu» debe llevar tilde: «Tú y yo»."}
+{"sentence":"Tu y yo nunca podremos estar juntos.","reason":"«Tu» debe llevar tilde: «Tú y yo»."}
+{"sentence":"Tú crees que tu deberes proteger a las ovejas.","reason":"La construcción «tu deberes proteger» tiene un error gramatical: debería ser, por ejemplo, «tu deber es proteger» o «tus deberes son proteger»."}
+{"sentence":"Tú padre estaba tan orgulloso de ti.","reason":"«Tú» es un pronombre; aquí corresponde el posesivo «Tu»."}
+{"sentence":"Tú padre no se hizo villano en un día.","reason":"«Tú» es un pronombre; aquí corresponde el posesivo «Tu»."}
+{"sentence":"Tú tenias sus trucos pero yo su confianza.","reason":"“Tenias” is missing the accent; it should be “tenías.”"}
+{"sentence":"Una bala diamante en la frente.","reason":"«Bala diamante» is not a standard Spanish construction here; it likely needs «bala de diamante»."}
+{"sentence":"Una boda real es mucho más seguro.","reason":"«Seguro» no concuerda en género con «boda»; debería ser «segura»."}
+{"sentence":"Va tener donde poner sus cortos pies.","reason":"Falta la preposición «a» en la perífrasis «ir a» + infinitivo: «Va a tener». "}
+{"sentence":"Vamos a pasar a mi padres a otro cuarto.","reason":"Hay un error de concordancia: debería decir «mis padres»."}
+{"sentence":"Vamos a tener más sobre esto mas adelante.","reason":"Falta la tilde en «más» en «más adelante»."}
+{"sentence":"Vamos a ver que linaje se termina.","reason":"The indirect question uses interrogative «qué», which requires an accent."}
+{"sentence":"Vamos a ver que puede hacer este auto.","reason":"The indirect question uses interrogative «qué», which requires an accent."}
+{"sentence":"Vea que encuentre la forma de llegar aqui.","reason":"«aqui» debe llevar tilde: «aquí»."}
+{"sentence":"Veo que otros aqui también reciben atención especial.","reason":"Falta la tilde en «aquí»."}
+{"sentence":"Veremos quien estudia medicina en ocho años.","reason":"Falta la tilde en el interrogativo indirecto: «quién»."}
+{"sentence":"Viajamos a muchas veces esa velocidad.","reason":"La construcción es gramaticalmente incorrecta: «a muchas veces» debería ser «a muchas veces esa velocidad»? En español se dice «a muchas veces esa velocidad» sin «a» tras el verbo, o «viajamos a muchas veces la velocidad». Aquí la combinación resulta defectuosa."}
+{"sentence":"Vivo, moviéndose y no se sabe.","reason":"La frase combina «vivo» con el gerundio «moviéndose» sin un sujeto que concuerde, y «no se sabe» queda desconectado; la construcción resulta ininteligible."}
+{"sentence":"Voy a ir al y luego haremos esa cosa.","reason":"“Al” is left without a noun, making the first clause unusable as written."}
+{"sentence":"Voy a ver que es.","reason":"Debe llevar tilde en la interrogativa indirecta: «Voy a ver qué es»."}
+{"sentence":"Y ahora vengo personalmente para ver que tal andas.","reason":"«Qué» lleva tilde en la expresión interrogativa indirecta «ver qué tal andas»."}
+{"sentence":"Y creo que te hizo un muy buen chico.","reason":"La construcción «te hizo un muy buen chico» resulta gramaticalmente defectuosa; no expresa una relación clara entre «hacer» y «chico»."}
+{"sentence":"Y ella esta esperando poder practicar.","reason":"Falta la tilde en «está»: «Y ella está esperando poder practicar.»"}
+{"sentence":"Y están siempre alegra que hayas venido?","reason":"«Alegra» no concuerda con «están»; la construcción queda gramaticalmente rota."}
+{"sentence":"Y fué el momento más feliz de mi vida.","reason":"«Fué» lleva una tilde incorrecta; la forma correcta es «fue»."}
+{"sentence":"Y has hechos cambios en mi vida.","reason":"«Has hechos» es un error de concordancia: con «haber», el participio no concuerda; sería «has hecho cambios»."}
+{"sentence":"Y lo que se, es que funcionara.","reason":"«Se» should be «sé» (the verb saber); without the accent, the clause is grammatically malformed."}
+{"sentence":"Y mirar todo lo que el hace.","reason":"Falta la tilde en «él», que funciona como pronombre: «todo lo que él hace»."}
+{"sentence":"Y muestra lo revolucionario que puede ser código fuente.","reason":"La construcción requiere un artículo: «lo revolucionario que puede ser el código fuente»."}
+{"sentence":"Y pensaba que lo logre por esto.","reason":"«Pensaba que lo logre» has an incompatible tense/mood; the verb form should be «logré» or another form that fits the intended meaning."}
+{"sentence":"Y sobretodo disciplina con el dinero.","reason":"«Sobretodo» debería escribirse separado en este uso: «sobre todo»."}
+{"sentence":"Y sí, todos los días alguien cumple cumpleaños, saben.","reason":"«Cumple cumpleaños» is a malformed construction; the usual expression is «cumple años»."}
+{"sentence":"Y te enterré aqui bajo nuestro arbol.","reason":"The words «aquí» and «árbol» are missing their required written accents."}
+{"sentence":"Y todo lo que haz hecho por ellos.","reason":"«Haz hecho» está mal escrito en este contexto; debe ser «has hecho»."}
+{"sentence":"Y todo parecia ir tan bien.","reason":"Falta la tilde en «parecía»."}
+{"sentence":"Y tres semanas despues vinimos nosotros.","reason":"«despues» is missing the accent in «después»."}
+{"sentence":"Y tu eres el unico que los puede conseguir.","reason":"«tu» and «unico» are missing the accents in «tú» and «único»."}
+{"sentence":"Y tu que miras bolsa de huesos?","reason":"«tu» and interrogative «que» are missing the accents in «tú» and «qué»."}
+{"sentence":"Y tu querías ir por el estrecho.","reason":"«tu» is missing the accent in «tú»."}
+{"sentence":"Y tu tienes el reloj de mi padre.","reason":"«tu» is missing the accent in «tú»."}
+{"sentence":"Y un templo está comprendido de piedras.","reason":"La construcción «está comprendido de piedras» no es gramatical en español; sería «está compuesto de piedras»."}
+{"sentence":"Y yo de que tú estés aquí.","reason":"La construcción «yo de que…» carece de un verbo o expresión que la complete; así, no forma un fragmento utilizable."}
+{"sentence":"Y yo realizar mi sueño.","reason":"The infinitive “realizar” has no grammatical connection to “Y yo”; the line is unusable as written."}
+{"sentence":"Ya Io creo que sí.","reason":"“Io” has a capital i in place of the l in “lo.”"}
+{"sentence":"Ya Io creo.","reason":"“Io” has a capital i in place of the l in “lo.”"}
+{"sentence":"Ya Io sé.","reason":"“Io” has a capital i in place of the l in “lo.”"}
+{"sentence":"Ya Io tengo.","reason":"“Io” has a capital i in place of the l in “lo.”"}
+{"sentence":"Ya Io veo.","reason":"“Io” has a capital i in place of the l in “lo.”"}
+{"sentence":"Ya Io verás.","reason":"“Io” has a capital i in place of the l in “lo.”"}
+{"sentence":"Ya esta lista para leer el diario.","reason":"Falta la tilde en «está»: «Ya está lista para leer el diario»."}
+{"sentence":"Ya se todo eso y usted lo sabe.","reason":"«se» debe llevar tilde: «Ya sé todo eso»."}
+{"sentence":"Ya te Io dije.","reason":"“Io” appears to be a letter-recognition error; it should be “lo.”"}
+{"sentence":"Ya van tres semanas desde de mi último pez.","reason":"«Desde de» es una duplicación incorrecta; se dice «desde mi último pez»."}
+{"sentence":"Yo amarte mucho tiempo.","reason":"La construcción «Yo amarte» no es gramatical; con «yo» se requiere un verbo conjugado, como «Yo te amé»."}
+{"sentence":"Yo llevare a la princesa en el Halcón.","reason":"“Llevare” is the future subjunctive, which cannot normally stand in this independent clause; the sentence appears to have a missing accent in “llevaré.”"}
+{"sentence":"Yo pensé que parecías le mañana de navidad.","reason":"“le mañana” is malformed; the article should be “la mañana.”"}
+{"sentence":"Yo pensé que usted habia decidido quedarse.","reason":"“habia” is missing the accent in “había.”"}
+{"sentence":"Yo se que a ti te gusta.","reason":"«Sé» lleva tilde cuando significa «yo sé»; «se» sin tilde es un pronombre."}
+{"sentence":"Yo se que usted entenderá esta transformación.","reason":"«Sé» lleva tilde cuando significa «yo sé»; «se» sin tilde es un pronombre."}
+{"sentence":"Yo se todo lo que pasa en esta ciudad.","reason":"«Sé» lleva tilde cuando significa «yo sé»; «se» sin tilde es un pronombre."}
+{"sentence":"Yo, yo te pedí de que tuvieras fe.","reason":"Dequeísmo: «pedí de que» should be «pedí que»."}
+{"sentence":"Yyo a ti.","reason":"Accidental word-boundary corruption: «Yyo»."}
+{"sentence":"Zanahoria, pídele a los muchachos que no lo hagan.","reason":"The plural object «a los muchachos» conflicts with the singular clitic «le»; it should be «pídeles»."}
+{"sentence":"África está lleno de traidores quizá esperando un líder.","reason":"«África» is feminine, so the adjective should be «llena»."}
+{"sentence":"ÉI es la resurrección y la luz.","reason":"«ÉI» appears to use a capital I instead of a lowercase l in «Él»."}
+{"sentence":"ÉI está bien.","reason":"«ÉI» appears to use a capital I instead of a lowercase l in «Él»."}

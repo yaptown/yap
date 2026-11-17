@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 4413239
-Total errors: 5618
+Total predictions: 4409000
+Total errors: 5609
 Accuracy: 99.87%
 
 ## Error Patterns (sorted by frequency)
@@ -4269,12 +4269,6 @@ Accuracy: 99.87%
 - Examples:
   - No, yo-- Él estaba mirando la montaña.
 
-### "." + "Te" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Siempre estare ahi para cuidarte.Te prometo eso.
-
 ### ".." + "ver" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -5949,12 +5943,6 @@ Accuracy: 99.87%
 - Examples:
   - Nunca olvidaré ese anhelo ?
 
-### "anoche" + "'?" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Gracias por la fiesta de anoche'?
-
 ### "antemano" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -6357,12 +6345,6 @@ Accuracy: 99.87%
 - Examples:
   - La mayoría de las veces, las palabras de dentro decían «no cargado».
 
-### "caridad" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Más la mayor de ellas es la caridad'.
-
 ### "casa" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -6410,12 +6392,6 @@ Accuracy: 99.87%
 - Actual: Space
 - Examples:
   - Buscaba cigarrillos "Sever" y cabellos rizados echados atrás a la moda.
-
-### "cita" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Lo nombre 'El juego de la cita'.
 
 ### "ciudades" + "»" (1 occurrences)
 - Predicted: Space
@@ -6548,12 +6524,6 @@ Accuracy: 99.87%
 - Actual: Space
 - Examples:
   - Fundó la cooperativa "Taxi Ruso".
-
-### "corazón" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Lo llevo en mi corazón'.
 
 ### "corazón" + "?" (1 occurrences)
 - Predicted: None
@@ -8013,12 +7983,6 @@ Accuracy: 99.87%
 - Examples:
   - A un camión se lo llama «lorry» en Reino Unido.
 
-### "lugar" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Hay muchos aquí que prefieren están en otro lugar .
-
 ### "luna" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -8402,12 +8366,6 @@ Accuracy: 99.87%
 - Actual: Space
 - Examples:
   - Es inaceptable lo que sienten los niños "queer" por culpa de los reaccionarios.
-
-### "no" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - A otra persona, pero a mí no'.
 
 ### "no" + "»" (1 occurrences)
 - Predicted: Space
@@ -8828,12 +8786,6 @@ Accuracy: 99.87%
 - Actual: Space
 - Examples:
   - Esperaba que lo presumirías -contestó el otro.
-
-### "principiantes" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Esto sólo lo usan los principiantes'.
 
 ### "principio" + "—" (1 occurrences)
 - Predicted: Space
@@ -10052,12 +10004,6 @@ Accuracy: 99.87%
 - Actual: Space
 - Examples:
   - Éramos "Warsaw" pero ahora somos "Joy Division".
-
-### "ánimos" + "'" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Eso le va a levantar los ánimos'.
 
 ### "él" + """ (1 occurrences)
 - Predicted: None
