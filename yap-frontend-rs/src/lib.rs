@@ -2209,6 +2209,7 @@ impl weapon::AppState for Deck {
                         deck.locked_cards.remove(&card);
                     }
                 }
+                deck.end_lockup_once_no_locked_card_is_due(*timestamp);
             }
         }
 
@@ -2379,6 +2380,18 @@ impl DeckState {
         }
     }
 
+    /// Lockup exists to hold back a due backlog. Once the last due locked card
+    /// is released, the rest are just future cards, so unlock them all rather
+    /// than leave lockup holding only cards that aren't due yet.
+    fn end_lockup_once_no_locked_card_is_due(&mut self, now: DateTime<Utc>) {
+        let any_due = self.locked_cards.iter().any(|card| {
+            matches!(self.cards.get(card), Some(CardData::Added { fsrs_card }) if fsrs_card.due <= now)
+        });
+        if !any_due {
+            self.locked_cards.clear();
+        }
+    }
+
     fn log_review(
         &mut self,
         card: CardIndicator<SpurGram, Spur>,
@@ -2389,7 +2402,9 @@ impl DeckState {
         // ANY review releases a card from lockup — including incidental ones
         // through sentence challenges, so a word we just discovered the user
         // doesn't know can be reviewed immediately
-        self.locked_cards.remove(&card);
+        if self.locked_cards.remove(&card) {
+            self.end_lockup_once_no_locked_card_is_due(timestamp);
+        }
 
         // Make sure the card is valid before logging a review
         if !context.is_card_valid(&card) {
@@ -4589,7 +4604,7 @@ pub enum CardContent {
 pub(crate) const REVIEW_LOCKUP_TRIGGER: usize = 20;
 /// ...and keeps this many of the most-due cards active. The gap between the
 /// two is a deliberate wiggle zone so the offer doesn't nag on borderline days.
-pub(crate) const REVIEW_LOCKUP_KEEP: usize = 15;
+pub const REVIEW_LOCKUP_KEEP: usize = 15;
 
 /// The daily offer to set aside ("lock up") all but the most-due cards.
 #[bridge(opaque)]
@@ -4886,6 +4901,23 @@ impl Deck {
             .filter_map(|card_indicator| {
                 let card_data = self.cards.get(card_indicator)?;
                 self.card_to_summary(card_indicator, card_data)
+            })
+            .collect()
+    }
+
+    /// Every added card's summary, paired with whether it's set aside in
+    /// lockup, most overdue first. Lockup only hides cards from the review
+    /// queue, so this is the deck's whole schedule.
+    pub fn card_summaries_with_lockup(&self, timestamp_ms: f64) -> Vec<(CardSummary, bool)> {
+        let review_info = self.get_review_info_including_locked(timestamp_ms);
+        review_info
+            .due_cards
+            .iter()
+            .chain(&review_info.future_cards)
+            .filter_map(|card_indicator| {
+                let card_data = self.cards.get(card_indicator)?;
+                let summary = self.card_to_summary(card_indicator, card_data)?;
+                Some((summary, self.locked_cards.contains(card_indicator)))
             })
             .collect()
     }
@@ -6626,6 +6658,10 @@ mod tests {
             .get_release_offer(vec![], t1_ms)
             .expect("release expected");
         assert_eq!(release.release_count(), 10);
+
+        // Releasing them leaves only future cards locked, so lockup ends
+        let released = apply_deck_event(deck.clone(), release.unlock_event(), t1);
+        assert_eq!(released.locked_count(), 0);
 
         // Weeks later the future cards have come due — locked, not active
         let t2 = t1 + chrono::Duration::days(30);

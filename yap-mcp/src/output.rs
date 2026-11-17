@@ -3,10 +3,15 @@
 //! (schemars) — so the schema and the payload cannot drift. Doc comments
 //! become schema descriptions the model can read.
 
+use std::collections::BTreeMap;
+
+use chrono::{DateTime, Duration, Utc};
 use language_utils::{Gram, Language, TaggedGram};
 use schemars::JsonSchema;
 use serde::Serialize;
-use yap_frontend_rs::{DefinitionView, VoiceActorInfo};
+use yap_frontend_rs::{CardSummary, Deck, DefinitionView, REVIEW_LOCKUP_KEEP, VoiceActorInfo};
+
+use crate::server::card_kind;
 
 /// One card as listed by get_due_cards / unlock_cards.
 #[derive(Serialize, JsonSchema)]
@@ -26,20 +31,144 @@ pub struct CardSummaryOut {
     pub fsrs_state: String,
     /// RFC 3339 timestamp when the card was/is due.
     pub due: Option<String>,
+    /// True when the card is set aside in lockup.
+    pub locked: bool,
+}
+
+/// A count of cards, split by kind and by FSRS state.
+#[derive(Serialize, JsonSchema, Default)]
+pub struct CardCountsOut {
+    pub total: usize,
+    /// Keyed by "written", "listening", "pronunciation".
+    pub by_kind: BTreeMap<String, usize>,
+    /// Keyed by "new", "learning", "review", "relearning".
+    pub by_fsrs_state: BTreeMap<String, usize>,
+}
+
+impl CardCountsOut {
+    fn of<'a>(cards: impl IntoIterator<Item = &'a CardSummary>) -> Self {
+        let mut counts = Self::default();
+        for card in cards {
+            counts.total += 1;
+            *counts
+                .by_kind
+                .entry(card_kind(&card.card_indicator).to_string())
+                .or_default() += 1;
+            *counts.by_fsrs_state.entry(card.state.clone()).or_default() += 1;
+        }
+        counts
+    }
+}
+
+/// Lockup: when a big backlog is due at once, yap keeps a manageable handful
+/// of cards active and sets the rest aside. A locked card stays locked until
+/// it's released by unlock_cards or reviewed, even once it's due — so locked
+/// cards split into ones that are due now (the backlog) and ones that aren't
+/// due yet (no different from any future card).
+#[derive(Serialize, JsonSchema)]
+pub struct LockupOut {
+    /// All cards set aside in lockup.
+    pub total: usize,
+    /// Locked cards that are due now — what unlock_cards releases from.
+    pub due_now: CardCountsOut,
+    /// Locked cards not due yet; they need no attention until they're due.
+    pub not_yet_due: usize,
+    /// RFC 3339 due date of the most overdue locked card.
+    pub oldest_due: Option<String>,
+    /// RFC 3339 time the next not-yet-due locked card becomes due.
+    pub next_becomes_due: Option<String>,
+    /// The most cards one unlock_cards call releases.
+    pub release_batch_size: usize,
+}
+
+/// How many cards come due over the coming days. Cumulative and counting
+/// locked cards too, so each figure is the full backlog the user would face
+/// by then if they stopped reviewing now.
+#[derive(Serialize, JsonSchema)]
+pub struct DueForecastOut {
+    pub due_now: usize,
+    pub due_within_1_day: usize,
+    pub due_within_7_days: usize,
+    pub due_within_30_days: usize,
+}
+
+/// The deck's whole schedule, broken down.
+#[derive(Serialize, JsonSchema)]
+pub struct DeckBreakdownOut {
+    /// Every scheduled card in the deck.
+    pub all_cards: CardCountsOut,
+    /// Due now and in the active queue (what get_due_cards lists).
+    pub due_now_active: CardCountsOut,
+    pub lockup: LockupOut,
+    pub forecast: DueForecastOut,
+    /// Cards with many lapses that keep being forgotten.
+    pub leeches: usize,
+}
+
+impl DeckBreakdownOut {
+    pub fn new(deck: &Deck, now: DateTime<Utc>) -> Self {
+        let cards = deck.card_summaries_with_lockup(now.timestamp_millis() as f64);
+        let now_ms = now.timestamp_millis() as f64;
+        let due_by = |horizon: Duration| {
+            let cutoff = (now + horizon).timestamp_millis() as f64;
+            cards
+                .iter()
+                .filter(|(card, _)| card.due_timestamp_ms <= cutoff)
+                .count()
+        };
+        let locked_due: Vec<&CardSummary> = cards
+            .iter()
+            .filter(|(card, locked)| *locked && card.due_timestamp_ms <= now_ms)
+            .map(|(card, _)| card)
+            .collect();
+        let locked_future = || {
+            cards
+                .iter()
+                .filter(|(card, locked)| *locked && card.due_timestamp_ms > now_ms)
+        };
+        // `cards` is sorted most overdue first.
+        let rfc3339 = |card: &CardSummary| {
+            DateTime::from_timestamp_millis(card.due_timestamp_ms as i64).map(|d| d.to_rfc3339())
+        };
+
+        Self {
+            all_cards: CardCountsOut::of(cards.iter().map(|(card, _)| card)),
+            due_now_active: CardCountsOut::of(
+                cards
+                    .iter()
+                    .filter(|(card, locked)| !*locked && card.due_timestamp_ms <= now_ms)
+                    .map(|(card, _)| card),
+            ),
+            lockup: LockupOut {
+                total: locked_due.len() + locked_future().count(),
+                oldest_due: locked_due.first().and_then(|card| rfc3339(card)),
+                due_now: CardCountsOut::of(locked_due),
+                not_yet_due: locked_future().count(),
+                next_becomes_due: locked_future().next().and_then(|(card, _)| rfc3339(card)),
+                release_batch_size: REVIEW_LOCKUP_KEEP,
+            },
+            forecast: DueForecastOut {
+                due_now: due_by(Duration::zero()),
+                due_within_1_day: due_by(Duration::days(1)),
+                due_within_7_days: due_by(Duration::days(7)),
+                due_within_30_days: due_by(Duration::days(30)),
+            },
+            leeches: deck.get_leeches().len(),
+        }
+    }
 }
 
 #[derive(Serialize, JsonSchema)]
 pub struct GetDueCardsOut {
-    /// Total cards due right now (may exceed the number shown).
+    /// Cards due right now in the active queue (may exceed the number shown).
     pub total_due: usize,
     /// How many cards are included in `cards`.
     pub showing: usize,
     pub cards: Vec<CardSummaryOut>,
-    /// Cards set aside in lockup (see note).
-    pub cards_in_lockup: usize,
+    /// The active due cards, split by kind and FSRS state.
+    pub due_breakdown: CardCountsOut,
+    pub lockup: LockupOut,
     pub note: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub lockup_note: Option<String>,
 }
 
 #[derive(Serialize, JsonSchema)]
@@ -47,7 +176,7 @@ pub struct UnlockCardsOut {
     /// Cards released back into the due queue.
     pub unlocked: Vec<CardSummaryOut>,
     /// Cards still set aside in lockup.
-    pub cards_in_lockup: usize,
+    pub lockup: LockupOut,
     pub note: String,
     /// Whether the unlock event reached the server (present only when an
     /// unlock actually happened).
@@ -149,10 +278,7 @@ pub struct GetStatsOut {
     pub total_reviews: u64,
     /// RFC 3339 timestamp of the user's first review.
     pub started: Option<String>,
-    pub cards_in_deck: usize,
-    pub cards_due_now: usize,
-    /// Cards set aside in lockup.
-    pub cards_locked_away: usize,
+    pub cards: DeckBreakdownOut,
     pub tier: TierOut,
     /// The last 7 days of activity, most recent first.
     pub recent_days: Vec<DayOut>,

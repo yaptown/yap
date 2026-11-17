@@ -736,7 +736,7 @@ fn audio_result(audio: CachedAudio) -> CallToolResult {
 
 /// The card shape shared by get_due_cards and unlock_cards: everything the
 /// LLM needs to quiz the user and pass the card back to log_review.
-fn card_summary_out(language: Language, summary: &CardSummary) -> CardSummaryOut {
+fn card_summary_out(language: Language, summary: &CardSummary, locked: bool) -> CardSummaryOut {
     let indicator = summary.card_indicator();
     CardSummaryOut {
         language,
@@ -747,10 +747,11 @@ fn card_summary_out(language: Language, summary: &CardSummary) -> CardSummaryOut
         fsrs_state: summary.state().to_string(),
         due: chrono::DateTime::from_timestamp_millis(summary.due_timestamp_ms() as i64)
             .map(|d| d.to_rfc3339()),
+        locked,
     }
 }
 
-fn card_kind(card: &Card) -> &'static str {
+pub(crate) fn card_kind(card: &Card) -> &'static str {
     match card {
         CardIndicator::WrittenGram { .. } => "written",
         CardIndicator::ListeningGram { .. } => "listening",
@@ -811,6 +812,10 @@ pub struct GetDueCardsParams {
     /// Maximum number of due cards to return (default 10).
     #[serde(default)]
     limit: Option<usize>,
+    /// Also list due cards that are set aside in lockup, marked locked
+    /// (default false). Reviewing a locked card unlocks it.
+    #[serde(default)]
+    include_locked: bool,
 }
 
 #[derive(Serialize, Deserialize, JsonSchema)]
@@ -1226,7 +1231,7 @@ impl YapMcp {
     #[tool(
         title = "List due flashcards",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::GetDueCardsOut>(),
-        description = "List the user's currently-due yap flashcards, most overdue first. Each entry carries its language and card object; pass the language and a reviews list of card/rating pairs to log_review after quizzing the user. Gram cards can be quizzed with example sentences from get_sentences.",
+        description = "List the user's currently-due yap flashcards, most overdue first, with the due cards broken down by kind and FSRS state and a breakdown of lockup (how many locked cards are due now vs not yet due). Each entry carries its language and card object; pass the language and a reviews list of card/rating pairs to log_review after quizzing the user. Gram cards can be quizzed with example sentences from get_sentences. Set include_locked to also list the locked cards that are due.",
         annotations(
             title = "List due flashcards",
             read_only_hint = true,
@@ -1249,30 +1254,27 @@ impl YapMcp {
             log::warn!("sync failed, using possibly-stale events: {e:#}");
         }
         let language = state.context.course.target_language;
-        let now_ms = Utc::now().timestamp_millis() as f64;
+        let now = Utc::now();
         let deck = state.deck();
-        let due = deck.due_card_summaries(now_ms);
-        let total_due = due.len();
-        let locked = deck.locked_count();
-
-        let cards: Vec<CardSummaryOut> = due
+        let breakdown = DeckBreakdownOut::new(deck, now);
+        let cards: Vec<CardSummaryOut> = deck
+            .card_summaries_with_lockup(now.timestamp_millis() as f64)
             .iter()
+            .filter(|(summary, locked)| {
+                summary.due_timestamp_ms <= now.timestamp_millis() as f64
+                    && (params.include_locked || !locked)
+            })
             .take(limit)
-            .map(|summary| card_summary_out(language, summary))
+            .map(|(summary, locked)| card_summary_out(language, summary, *locked))
             .collect();
 
         ok_typed(&GetDueCardsOut {
-            total_due,
+            total_due: breakdown.due_now_active.total,
             showing: cards.len(),
             cards,
-            cards_in_lockup: locked,
-            note: "kind 'written' = recognize the written word; 'listening' = normally an audio card (quiz in text as best you can); 'pronunciation' = a letter-sound pattern. A card's gram field can be passed to get_sentences.".to_string(),
-            lockup_note: (locked > 0).then(|| format!(
-                "{locked} cards are set aside in lockup — when a big backlog is due at once, \
-                 yap keeps a manageable handful active and sets the rest aside to be practiced \
-                 later. unlock_cards releases the next batch; reviewing a locked card also \
-                 unlocks it."
-            )),
+            due_breakdown: breakdown.due_now_active,
+            lockup: breakdown.lockup,
+            note: "kind 'written' = recognize the written word; 'listening' = normally an audio card (quiz in text as best you can); 'pronunciation' = a letter-sound pattern. A card's gram field can be passed to get_sentences. Locked cards due now are a backlog the user hasn't reached; unlock_cards releases the next batch and reviewing a locked card also unlocks it.".to_string(),
         })
     }
 
@@ -1303,15 +1305,15 @@ impl YapMcp {
             let deck = state.deck();
             match deck.get_release_offer(vec![], Utc::now().timestamp_millis() as f64) {
                 None => {
-                    let locked = deck.locked_count();
-                    let note = if locked == 0 {
+                    let lockup = DeckBreakdownOut::new(deck, Utc::now()).lockup;
+                    let note = if lockup.total == 0 {
                         "no cards are in lockup"
                     } else {
                         "locked cards exist but none are due yet; try again once they're due"
                     };
                     return ok_typed(&UnlockCardsOut {
                         unlocked: vec![],
-                        cards_in_lockup: locked,
+                        lockup,
                         note: note.to_string(),
                         synced: None,
                     });
@@ -1320,7 +1322,7 @@ impl YapMcp {
                     let unlocked: Vec<CardSummaryOut> = offer
                         .release_preview()
                         .iter()
-                        .map(|summary| card_summary_out(language, summary))
+                        .map(|summary| card_summary_out(language, summary, false))
                         .collect();
                     let DeckEvent::Language(event) = offer.unlock_event();
                     (event.content, unlocked)
@@ -1331,7 +1333,7 @@ impl YapMcp {
 
         ok_typed(&UnlockCardsOut {
             unlocked,
-            cards_in_lockup: state.deck().locked_count(),
+            lockup: DeckBreakdownOut::new(state.deck(), Utc::now()).lockup,
             note: "these cards are back in the due queue and will show up in get_due_cards."
                 .to_string(),
             synced: Some(synced == SyncStatus::Synced),
@@ -1959,7 +1961,7 @@ impl YapMcp {
     #[tool(
         title = "Get learning stats",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::GetStatsOut>(),
-        description = "Get the user's yap stats: streak, XP, review counts, deck size, due cards, comprehension tier, and recent daily activity.",
+        description = "Get the user's yap stats: streak, XP, review counts, comprehension tier, recent daily activity, and a breakdown of the deck — every card by kind and FSRS state, what's due now, lockup (locked cards due now vs not yet due), a due forecast for the next 1/7/30 days, and leeches.",
         annotations(
             title = "Get learning stats",
             read_only_hint = true,
@@ -1980,8 +1982,6 @@ impl YapMcp {
         let deck = state.deck();
         let stats = deck.stats();
         let tier = deck.get_current_tier();
-        let now_ms = Utc::now().timestamp_millis() as f64;
-        let due = deck.due_card_summaries(now_ms).len();
 
         // History is retained in full; this endpoint still shows the latest study week.
         let first_day = stats
@@ -2011,9 +2011,7 @@ impl YapMcp {
             xp: stats.xp,
             total_reviews: stats.total_reviews,
             started: stats.start_time.map(|t| t.to_rfc3339()),
-            cards_in_deck: deck.num_cards_added(),
-            cards_due_now: due,
-            cards_locked_away: deck.locked_count(),
+            cards: DeckBreakdownOut::new(deck, Utc::now()),
             tier: TierOut {
                 name: tier.name,
                 tier: tier.tier,
