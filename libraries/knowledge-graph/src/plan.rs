@@ -138,6 +138,8 @@ mod tests {
                     question: String::new(),
                     answer: String::new(),
                     notes: String::new(),
+                    extra_credit: String::new(),
+                    user_was_given: Vec::new(),
                 },
                 at,
             )

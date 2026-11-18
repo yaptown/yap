@@ -49,6 +49,7 @@ pub struct ReviewRecord {
     pub question: String,
     pub answer: String,
     pub notes: String,
+    pub extra_credit: String,
     /// Repetitions this review added to the concept itself, after the
     /// early-repetition discount.
     pub applied: f64,
@@ -202,8 +203,14 @@ impl KnowledgeGraph {
     }
 
     /// The strongest encompassing path weight from `from` to every concept it
-    /// reaches in `direction` (the product of the weights along the path).
-    fn flow(&self, from: &str, direction: Direction) -> BTreeMap<ConceptId, f64> {
+    /// reaches in `direction` (the product of the weights along the path),
+    /// never passing through `blocked`.
+    fn flow(
+        &self,
+        from: &str,
+        direction: Direction,
+        blocked: &[ConceptId],
+    ) -> BTreeMap<ConceptId, f64> {
         let mut best: BTreeMap<ConceptId, f64> = BTreeMap::new();
         let mut stack = vec![(from.to_string(), 1.0)];
         while let Some((id, weight)) = stack.pop() {
@@ -212,6 +219,9 @@ impl KnowledgeGraph {
                 Direction::Up => self.links_up(&id).map(|(c, l)| (c.clone(), l)).collect(),
             };
             for (other, link) in next {
+                if blocked.contains(&other) {
+                    continue;
+                }
                 let w = weight * link.encompassing;
                 if w >= MIN_FLOW_WEIGHT && best.get(&other).is_none_or(|&b| w > b) {
                     best.insert(other.clone(), w);
@@ -225,7 +235,7 @@ impl KnowledgeGraph {
     /// The strongest encompassing path weight from `advanced` to each concept
     /// below it: how much of a repetition reviewing `advanced` sends there.
     pub fn encompassed_by(&self, advanced: &str) -> BTreeMap<ConceptId, f64> {
-        self.flow(advanced, Direction::Down)
+        self.flow(advanced, Direction::Down, &[])
     }
 
     /// Concepts that are not learned but whose prerequisites all are: what
@@ -339,14 +349,22 @@ impl KnowledgeGraph {
     /// Apply credit to every learned concept that `from` reaches in
     /// `direction`, weighted by path weight. Positive credit skips concepts
     /// awaiting an explicit re-review.
-    fn propagate(&mut self, from: &str, credit: f64, at: DateTime<Utc>) -> Vec<(ConceptId, f64)> {
+    /// Spread a review's credit along encompassing links, skipping concepts
+    /// the question supplied (and whatever is reached only through them).
+    fn propagate(
+        &mut self,
+        from: &str,
+        credit: f64,
+        given: &[ConceptId],
+        at: DateTime<Utc>,
+    ) -> Vec<(ConceptId, f64)> {
         let direction = if credit > 0.0 {
             Direction::Down
         } else {
             Direction::Up
         };
         let mut propagated = Vec::new();
-        for (id, weight) in self.flow(from, direction) {
+        for (id, weight) in self.flow(from, direction, given) {
             let concept = self
                 .concepts
                 .get_mut(&id)
@@ -465,8 +483,13 @@ impl KnowledgeGraph {
                 question,
                 answer,
                 notes,
+                extra_credit,
+                user_was_given,
             } => {
                 check_unit("score", score.0)?;
+                for given in user_was_given {
+                    self.concept(given)?;
+                }
                 let concept = self.concept_mut(id)?;
                 if concept.known {
                     return Err(format!(
@@ -481,7 +504,7 @@ impl KnowledgeGraph {
                     (None, true) => concept.memory.insert(Memory::fresh(at)).credit(credit, at),
                     (None, false) => 0.0,
                 };
-                let propagated = self.propagate(id, credit, at);
+                let propagated = self.propagate(id, credit, user_was_given, at);
                 self.concepts
                     .get_mut(id)
                     .expect("checked above")
@@ -492,6 +515,7 @@ impl KnowledgeGraph {
                         question: question.clone(),
                         answer: answer.clone(),
                         notes: notes.clone(),
+                        extra_credit: extra_credit.clone(),
                         applied,
                         propagated,
                     });

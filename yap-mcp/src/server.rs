@@ -2312,9 +2312,11 @@ impl ServerHandler for YapMcp {
         info.instructions = Some(
             "This connects you to the user's yap.town account, which holds two things: their \
              language-learning deck (flashcards, spaced-repetition reviews, dictionary, \
-             stats), and a knowledge graph, a study map on any subject that you help them \
-             build and review (the knowledge_* tools, described at the end). The deck is the \
-             same one the yap web and iOS apps use, so anything you change shows up there too.\n\
+             stats), and (mostly unrelated to language learning) a knowledge graph, which is a \
+             study map on any subject that you help them build and review. (These are the \
+             knowledge_* tools, described at the end). The deck is the same one the yap web \
+             and iOS apps use, so anything you change shows up there too. The knowledge graph \
+             has no website yet, but might get one eventually.\n\
              \n\
              How yap teaches: words are learned and practiced inside real sentences (from \
              films, books and other corpora) that the user can almost fully understand. Each \
@@ -2348,25 +2350,56 @@ impl ServerHandler for YapMcp {
              logging it again would count it twice.\n\
              \n\
              The knowledge graph is for anything the user wants to learn and keep, outside \
-             the language course: a field they're studying, a paper, a codebase. You and the \
-             user shape it together. You add concepts as they come up, link them, split ones \
-             that turn out to be too broad, and mark ones the user says they already know; \
-             it's meant to stay very mutable. You can also add concepts the user didn't \
-             name, when they unify, connect or extend what's there, so their understanding \
-             ends up complete rather than a list of isolated facts. It follows Math \
-             Academy's design. Prerequisite \
-             links decide what's ready to learn next (the frontier), and weighted \
-             \"encompassing\" links say how much practicing an advanced concept exercises a \
-             simpler one, so one good review of the advanced concept also gives partial credit \
-             to its foundations and fewer explicit reviews are needed. This works best when \
-             each concept is small enough for one question to test, so a review score means \
-             one clear thing. Reviews store the question, the user's answer and your notes, \
-             which keeps later questions fresh and lets the next session pick up where this \
-             one left off. Tags on concepts record both the material (`machine-learning`) and \
-             the context the user is learning it in (`for-work`), so later sessions can find \
-             things and focus on one goal; adding them as you go pays off. Plain-text \
-             documents (notes, papers, chapters) can be saved and linked to concepts as \
-             source material. knowledge_next plans a session, with each \
+             the language course: a field they're studying, a paper, a codebase, a concept. A \
+             concept node in the graph is basically something that the user is guaranteed to \
+             revisit and practice. You and the user shape it together. The user tells you what \
+             they want to learn, and you break it into atomic concepts they can study. You add \
+             concepts as they come up, link them, split ones that turn out to be too broad, \
+             and mark ones the user says they already know. It's meant to stay very mutable, \
+             and the user is counting on you to keep it up to date. You can also add concepts \
+             proactively, including things the user didn't name, for example when they unify, \
+             connect or extend what's there, so their understanding ends up as a complete and \
+             connected web rather than a list of isolated facts. Maintaining the graph is your \
+             part of the collaboration: the user will rarely ask for specific changes (and \
+             having to would pull them out of learning) so you shape it proactively and mostly \
+             quietly. For example, when a question only reaches part of a concept, or the user \
+             has an insight, splitting or adding and linking right then keeps the map \
+             accurate. The graph itself follows Math Academy's design. The most important \
+             thing is that concepts should be atomic. Like, ridiculously atomic. However atomic \
+             you're thinking, even more atomic than that. It's better that way. It is totally \
+             fine, even expected, to make a graph with a ton of concepts in it, even for \
+             something that seems simple. For example, addition laws would not be one concept, \
+             you would have a separate concept for each law. Newton's laws of motion and its \
+             applications would not either - each law of motion would have a concept just \
+             asking the user to recall the law, and another to apply it in a new case. That \
+             said, it's also fine to ask the user what they want to learn and focus on before \
+             you make the graph, as it may inform you. For example, a law student sharing a \
+             case might want to remember many details about the case, or maybe only remember a \
+             rule put forward by the judge.\n\
+             \n\
+             The atomicity of concepts of course leads to a large number of concepts being \
+             created to explain simple things - but this isn't an issue, because if you find \
+             out the user already knows a concept during pretesting (more on that later), you \
+             can just mark it as already known, and it won't be scheduled for review. And \
+             because you inform the system of the prerequisites between concepts, the system \
+             knows how to propagate the user's reviews to its prerequisites. (Not to mention, \
+             you can and should do that manually as well, if the system ever fails to \
+             recognize the user's understanding of something they obviously know.)\n\
+             \n\
+             Those prerequisite links decide what's ready to learn next (the frontier), and \
+             each one has an \"encompassing\" score that says how much practicing that concept \
+             exercises the prerequisite. This allows one good review of the advanced concept \
+             to give partial credit to its foundations, so fewer explicit reviews are needed. \
+             This works best when each concept is small enough for one question to test, so a \
+             review score means one clear thing.\n\
+             \n\
+             The review history stores the question, the user's answer and your notes, which \
+             keeps later questions fresh and lets the next session pick up where this one left \
+             off. Tags on concepts record both the material (`machine-learning`) and the \
+             context the user is learning it in (`for-work`), so later sessions can find \
+             things and focus on one goal. Plain-text documents (notes, papers, chapters) can \
+             be saved and linked to concepts as source material. knowledge_next plans a \
+             session, with each \
              concept's description and recent questions; knowledge_concept shows one concept \
              in full; knowledge_apply records every change, reviews included."
                 .to_string(),

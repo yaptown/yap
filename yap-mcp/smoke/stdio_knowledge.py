@@ -103,7 +103,7 @@ assert s.tool("knowledge_next", {"tag": cid("nothing-here")})["frontier"] == []
 
 out = s.tool("knowledge_apply", {"ops": [
     {"op": "review", "id": cid("add"), "score": 1.0, "question": "2+3?", "answer": "5",
-     "notes": "instant"},
+     "notes": "instant", "extra_credit": "Asked 3+2 too; said 5, so order doesn't matter."},
     {"op": "review", "id": cid("multiply"), "score": 0.3, "question": "4*6?", "answer": "20",
      "notes": "confused with 4*5"},
 ]})
@@ -148,11 +148,15 @@ assert {r["concept"] for r in reviews["reviews"][:2]} == {cid("add"), cid("multi
 before = s.tool("knowledge_graph", {})
 s.close()
 
+# Extra credit is kept with the review and survives a refold.
+extra = lambda: s.tool("knowledge_concept", {"id": cid("add")})["review_history"][0]["extra_credit"]
+
 # A fresh process folds the same graph from Supabase.
 s = Server()
 after = s.tool("knowledge_graph", {})
 mine = lambda g: sorted((c["id"], c["status"], c["reviews"]) for c in g["concepts"] if RUN in c["id"])
 assert mine(before) == mine(after), (mine(before), mine(after))
 assert len(mine(after)) == 4
+assert extra().startswith("Asked 3+2"), extra()
 s.close()
 print("\nknowledge smoke OK")

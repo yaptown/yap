@@ -107,6 +107,20 @@ pub enum KnowledgeEvent {
         /// The grader's notes: what was right, wrong, or worth probing next.
         #[serde(default)]
         notes: String,
+        /// An optional extra-credit question asked alongside the main one, to
+        /// paint the bigger picture or connect to other concepts: what was
+        /// asked, what the user said, and what it showed. It's kept for
+        /// later sessions to read and never affects scheduling.
+        #[serde(default)]
+        extra_credit: String,
+        /// Concepts the question handed the user (a formula stated, a
+        /// definition given) rather than making them recall it. Credit from
+        /// a pass normally flows to what this concept builds on, on the
+        /// assumption that answering exercised it; concepts listed here
+        /// (and anything reached only through them) are skipped, since the
+        /// answer showed nothing about them.
+        #[serde(default)]
+        user_was_given: Vec<ConceptId>,
     },
     /// Remove a concept from the graph, along with its links. Its id stays
     /// reserved.
