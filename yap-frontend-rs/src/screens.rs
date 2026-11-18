@@ -67,6 +67,40 @@ pub fn account_copy() -> AccountCopy {
     }
 }
 
+/// The settings section that tells people how to connect an AI assistant to
+/// their account through yap-mcp. The full guide is the web page at `guide_url`.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ConnectorCopy {
+    pub title: String,
+    pub body: String,
+    pub url_label: String,
+    pub url: String,
+    pub copy_action: String,
+    pub copied: String,
+    pub claude_step: String,
+    pub chatgpt_step: String,
+    pub guide_action: String,
+    pub guide_url: String,
+}
+
+#[bridgerton::bridge]
+#[bridgerton::stable(strong)]
+pub fn connector_copy() -> ConnectorCopy {
+    ConnectorCopy {
+        title: yap_i18n::tr!("settings-screen-ai-assistants"),
+        body: yap_i18n::tr!("settings-screen-ai-assistants-body"),
+        url_label: yap_i18n::tr!("settings-screen-connector-url"),
+        url: "https://mcp.yap.town/mcp".into(),
+        copy_action: yap_i18n::tr!("common-copy"),
+        copied: yap_i18n::tr!("common-copied"),
+        claude_step: yap_i18n::tr!("mcp-docs-connect-claude", label = "Claude:"),
+        chatgpt_step: yap_i18n::tr!("mcp-docs-connect-chatgpt", label = "ChatGPT:"),
+        guide_action: yap_i18n::tr!("settings-screen-connector-guide"),
+        guide_url: "https://yap.town/mcp".into(),
+    }
+}
+
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum IdleKind {

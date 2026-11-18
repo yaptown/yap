@@ -15,6 +15,7 @@ struct SettingsScreen: View {
     @State private var confirmingDelete = false
     @State private var deleting = false
     @State private var deleteFailed = false
+    @State private var copiedConnectorURL = false
     @FocusState private var editingName: Bool
     var body: some View {
         TimelineView(.every(1)) { context in
@@ -32,6 +33,7 @@ struct SettingsScreen: View {
                     CardSection(L("settings-screen-appearance")) {
                         Toggle(L("mode-toggle-animated-background"), isOn: $animatedBackground).tint(.yapSwitchTint).frame(minHeight: 44)
                     }
+                    connector()
                     CardSection(L("common-about")) {
                         SettingsRow(sync?.version_label ?? L("settings-screen-version")) { Text(get_app_version()).monospacedDigit() }
                         Divider()
@@ -110,6 +112,34 @@ struct SettingsScreen: View {
                     Button(L("common-cancel"), role: .cancel) {}
                 } message: { Text(copy.delete_account_body) }
             if deleteFailed { Text(copy.delete_account_failed).font(.footnote).foregroundStyle(Color.yapNegativeForeground).padding(.bottom, 8) }
+        }
+    }
+
+    /// How to connect an AI assistant to the account through yap's MCP connector.
+    private func connector() -> some View {
+        let copy = connector_copy()
+        return CardSection(copy.title) {
+            Text(copy.body).font(.footnote).foregroundStyle(Color.yapMuted).padding(.vertical, 8)
+            Divider()
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(copy.url_label).font(.footnote).foregroundStyle(Color.yapMuted)
+                    Text(copy.url).font(.caption.monospaced()).foregroundStyle(Color.yapText).textSelection(.enabled)
+                }
+                Spacer(minLength: 0)
+                Button(copiedConnectorURL ? copy.copied : copy.copy_action) {
+                    UIPasteboard.general.string = copy.url
+                    copiedConnectorURL = true
+                    Task { try? await Task.sleep(for: .seconds(2)); copiedConnectorURL = false }
+                }.buttonStyle(.bordered).controlSize(.small)
+            }.frame(minHeight: 44)
+            Divider()
+            VStack(alignment: .leading, spacing: 8) {
+                Text(copy.claude_step)
+                Text(copy.chatgpt_step)
+            }.font(.footnote).foregroundStyle(Color.yapMuted).padding(.vertical, 8)
+            Divider()
+            Link(destination: URL(string: copy.guide_url)!) { SettingsRow(copy.guide_action) { Image(systemName: "arrow.up.right") } }
         }
     }
 

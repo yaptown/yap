@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NotificationSettings } from "@/browse/notification-settings";
 import { PasskeySettings } from "@/browse/passkey-settings";
 import { DeleteAccountSettings } from "@/browse/delete-account-settings";
+import { ConnectorSettings } from "@/browse/connector-settings";
 
 // Everything about the signed-in account, in one place. Like the iOS
 // SettingsScreen, the account card comes first and ends with sign-out and
@@ -75,6 +76,7 @@ export function SettingsPage() {
         </Card>
         <NotificationSettings />
         <PasskeySettings />
+        <ConnectorSettings />
       </main>
     </TopPageLayout>
   );

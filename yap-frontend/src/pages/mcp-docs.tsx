@@ -2,12 +2,13 @@ import { t } from "@/lib/i18n";
 import { rich } from "@/lib/i18n-react";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import { connector_copy } from "../../../yap-frontend-rs/pkg";
 
 const CONTACT_EMAIL = "support@yap.town";
 const SECURITY_EMAIL = "security@yap.town";
-const CONNECTOR_URL = "https://mcp.yap.town/mcp";
 
 export function McpDocsPage() {
+  const { url } = connector_copy();
   return (
     <div className="max-w-2xl mx-auto">
       <div className="flex flex-col items-center justify-center p-4 gap-4">
@@ -36,7 +37,7 @@ export function McpDocsPage() {
             </p>
             <p>
               {rich("mcp-docs-url", {
-                url: <code className="text-foreground">{CONNECTOR_URL}</code>,
+                url: <code className="text-foreground">{url}</code>,
               })}
             </p>
           </div>
