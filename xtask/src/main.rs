@@ -33,6 +33,8 @@ enum Task {
 }
 
 fn main() {
+    // The repo .env holds SENTRY_AUTH_TOKEN for `ios --archive`.
+    dotenvy::from_path(root().join(".env")).ok();
     let result = match Cli::parse().task {
         Task::Shaders => shaders::run(),
         Task::Ios(args) => ios::run(args),

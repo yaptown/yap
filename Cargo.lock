@@ -8705,6 +8705,7 @@ name = "xtask"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "dotenvy",
  "naga",
  "serde_json",
  "tempfile",
