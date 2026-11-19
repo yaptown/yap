@@ -290,6 +290,8 @@ function useStudyController(
       timestamp_ms: screenReadiness.timestamp_ms,
       needs_display_name: userInfo?.displayName === null,
       display_name_dismissed: dismissedSetDisplayName,
+      // The web asks for notifications from the idle screen's engagement prompts.
+      notifications: undefined,
       has_access_token: accessToken !== undefined,
       starting_fresh: startingFresh,
       history_known: historyKnown,

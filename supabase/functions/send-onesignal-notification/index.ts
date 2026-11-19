@@ -79,7 +79,7 @@ serve(async (req) => {
       headings: { en: title },
       contents: { en: body },
       include_external_user_ids: [userId],
-      ...(url && { url }),
+      ...(url && { web_url: url }),
       ...(test && { 
         // For test notifications, send immediately
         send_after: new Date().toISOString()

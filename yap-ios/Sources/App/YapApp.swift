@@ -6,6 +6,7 @@ import SwiftUI
     @State private var background = BackgroundController()
     @State private var authSheet = AuthSheet()
     @State private var sessions = SessionLifecycle()
+    @State private var push = PushNotifications.shared
     init() {
         YapHost.configure_ui_language(preferences: Locale.preferredLanguages)
         do { try YapHost.initialize() } catch { fatalError("Unable to start Yap: \(error)") }
@@ -32,9 +33,10 @@ import SwiftUI
                 guard !auth.restoring else { return }
                 audio.stopAll()
                 sessions.changeIdentity(auth: auth)
+                push.link(userId: auth.userId)
             }
             .sheet(isPresented: $authSheet.isPresented) { SignInView() }
-            .environment(background).environment(auth).environment(audio).environment(authSheet).tint(.yapAccent)
+            .environment(background).environment(auth).environment(push).environment(audio).environment(authSheet).tint(.yapAccent)
             // `.secondary` is the web's muted-foreground plum, not the system's translucent
             // gray, which turns muddy over the animated background's saturated blobs.
             // Views still write `Color.yapMuted` rather than `.secondary`: on glass the
@@ -57,6 +59,7 @@ import SwiftUI
 
 struct SessionRoot: View {
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(PushNotifications.self) private var push
     @Environment(AudioPlayer.self) private var audio
     let session: YapSession
     let auth: AuthStore
@@ -85,7 +88,12 @@ struct SessionRoot: View {
         }
         .task { await session.start() }
         .onChange(of: auth.accessToken) { _, _ in session.tokenChanged() }
-        .onChange(of: scenePhase) { _, phase in if phase == .active { session.sceneBecameActive() } }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            session.sceneBecameActive()
+            // Notifications may have been turned on or off in Settings meanwhile.
+            Task { await push.refresh() }
+        }
         .onDisappear { audio.stopAll() }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in

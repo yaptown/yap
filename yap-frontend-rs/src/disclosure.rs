@@ -65,6 +65,52 @@ pub fn get_review_prompts(
     }
 }
 
+/// The OS's answer to "may this app send notifications?".
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum NotificationPermission {
+    /// Never asked: the system prompt can still be shown.
+    NotDetermined,
+    /// Refused or turned off: only the system settings can turn it back on.
+    Denied,
+    Granted,
+}
+
+/// When the learner was last asked to turn on reminders, by onboarding or by
+/// the review screen's prompt, whatever they answered.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct NotificationAsk {
+    pub at_ms: f64,
+    pub at_review: u64,
+}
+
+/// What a host that sends native reminders knows about them. Hosts that ask
+/// some other way pass `None` and never see the prompt.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct NotificationPromptInputs {
+    pub permission: NotificationPermission,
+    pub last_asked: Option<NotificationAsk>,
+}
+
+/// Learners without reminders are asked again once both this many reviews and
+/// [`NOTIFICATION_REASK_DAYS`] have passed since the last ask.
+const NOTIFICATION_REASK_REVIEWS: u64 = 150;
+const NOTIFICATION_REASK_DAYS: f64 = 7.0;
+
+pub(crate) fn should_ask_for_notifications(
+    inputs: &NotificationPromptInputs,
+    total_reviews: u64,
+    now_ms: f64,
+) -> bool {
+    inputs.permission != NotificationPermission::Granted
+        && inputs.last_asked.is_none_or(|ask| {
+            total_reviews >= ask.at_review + NOTIFICATION_REASK_REVIEWS
+                && now_ms - ask.at_ms >= NOTIFICATION_REASK_DAYS * 24.0 * 60.0 * 60.0 * 1000.0
+        })
+}
+
 /// `has_taken_test` is a tri-state on purpose: `None` means the user's
 /// review history hasn't been confirmed against the server yet, and an
 /// unknown history must never be read as "never took it" — a fresh device
@@ -192,6 +238,36 @@ mod tests {
                 offer_engagement: false,
             }
         );
+    }
+
+    #[test]
+    fn notifications_are_asked_again_after_both_150_reviews_and_7_days() {
+        const DAY: f64 = 24.0 * 60.0 * 60.0 * 1000.0;
+        let asked = |permission, at_review| NotificationPromptInputs {
+            permission,
+            last_asked: Some(NotificationAsk {
+                at_ms: 0.0,
+                at_review,
+            }),
+        };
+        let never = NotificationPromptInputs {
+            permission: NotificationPermission::NotDetermined,
+            last_asked: None,
+        };
+        assert!(should_ask_for_notifications(&never, 0, 0.0));
+        for (permission, reviews, days, expected) in [
+            (NotificationPermission::Denied, 149, 30.0, false),
+            (NotificationPermission::Denied, 500, 6.9, false),
+            (NotificationPermission::Denied, 150, 7.0, true),
+            (NotificationPermission::NotDetermined, 150, 7.0, true),
+            (NotificationPermission::Granted, 500, 30.0, false),
+        ] {
+            assert_eq!(
+                should_ask_for_notifications(&asked(permission, 0), reviews, days * DAY),
+                expected,
+                "{permission:?} {reviews} reviews {days} days"
+            );
+        }
     }
 
     #[test]

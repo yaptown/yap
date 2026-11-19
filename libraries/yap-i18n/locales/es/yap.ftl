@@ -1344,3 +1344,6 @@ settings-screen-ai-assistants = Asistentes de IA
 settings-screen-ai-assistants-body = Conecta Claude, ChatGPT u otro asistente de IA a tu cuenta para hacer repasos, buscar palabras y añadirlas a tu mazo en plena conversación. Todo se sincroniza con la app.
 settings-screen-connector-url = URL del conector
 settings-screen-connector-guide = Guía de configuración y solución de problemas
+home-reminders = Recordatorios
+notification-prompt-turned-off = Las notificaciones de Yap están desactivadas. Actívalas en Ajustes y te enviaremos un pequeño recordatorio diario.
+notification-prompt-open-settings = Abrir Ajustes

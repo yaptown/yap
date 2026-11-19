@@ -96,7 +96,8 @@ serve(async (req) => {
             headings: { en: notification.title },
             contents: { en: notification.body },
             include_external_user_ids: [notification.user_id],
-            url: notification.url || 'https://yap.town'
+            // web_url, not url: url also opens a browser from the iOS app's notifications.
+            web_url: notification.url || 'https://yap.town'
           }
 
           const response = await fetch('https://onesignal.com/api/v1/notifications', {

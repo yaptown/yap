@@ -1292,3 +1292,6 @@ settings-screen-ai-assistants = AI 助手
 settings-screen-ai-assistants-body = 将 Claude、ChatGPT 或其他 AI 助手连接到你的账户，就能在对话中复习、查词并把词加入你的卡组。一切都会与应用同步。
 settings-screen-connector-url = 连接器 URL
 settings-screen-connector-guide = 设置指南与故障排除
+home-reminders = 提醒
+notification-prompt-turned-off = Yap 的通知已关闭。在“设置”中打开后，我们会每天给你发送一条小提醒。
+notification-prompt-open-settings = 打开设置

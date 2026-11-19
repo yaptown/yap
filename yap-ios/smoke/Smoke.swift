@@ -228,7 +228,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         check(review.total_count == UInt64(cards.count) && review.due_count > 0)
         var screenInputs = ReviewScreenInputs(banned: [.Listening, .Speaking], sentence_list: nil,
             online: false, is_signed_in: false, needs_display_name: false, display_name_dismissed: false,
-            has_access_token: false, starting_fresh: nil, history_known: true,
+            notifications: nil, has_access_token: false, starting_fresh: nil, history_known: true,
             dismissed_accomplishment_at_review: withCards.get_total_reviews(), placement: nil, current_challenge: nil, timestamp_ms: reviewTime)
         let screen = withCards.review_screen_view(inputs: screenInputs)
         check(screen.total_count == UInt64(cards.count) && screen.target_language == .French)

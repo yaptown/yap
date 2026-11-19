@@ -1342,3 +1342,6 @@ settings-screen-ai-assistants = AI assistants
 settings-screen-ai-assistants-body = Connect Claude, ChatGPT or another AI assistant to your account to do reviews, look up words and add them to your deck mid-conversation. Everything syncs with the app.
 settings-screen-connector-url = Connector URL
 settings-screen-connector-guide = Setup guide and troubleshooting
+home-reminders = Reminders
+notification-prompt-turned-off = Notifications are turned off for Yap. Turn them on in Settings and we'll send a small daily reminder.
+notification-prompt-open-settings = Open Settings

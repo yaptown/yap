@@ -13,6 +13,7 @@ export function useStudyScreenInputs(enabled = true): ReviewScreenInputs {
     is_signed_in: false,
     needs_display_name: false,
     display_name_dismissed: false,
+    notifications: undefined,
     has_access_token: false,
     starting_fresh: undefined,
     history_known: false,

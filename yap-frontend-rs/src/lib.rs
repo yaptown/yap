@@ -75,8 +75,9 @@ pub use audio::{
 pub use challenge::CardContext;
 pub use deck_event::*;
 pub use disclosure::{
-    FlashcardDisclosure, ReviewPromptContext, ReviewPrompts, get_flashcard_disclosure,
-    get_review_prompts, should_show_challenge_tutorial,
+    FlashcardDisclosure, NotificationAsk, NotificationPermission, NotificationPromptInputs,
+    ReviewPromptContext, ReviewPrompts, get_flashcard_disclosure, get_review_prompts,
+    should_show_challenge_tutorial,
 };
 pub use human_audio::{lookup as lookup_human_audio, register as register_human_audio};
 pub use utils::ai_server_url;
@@ -6410,6 +6411,7 @@ mod tests {
             is_signed_in: true,
             needs_display_name: false,
             display_name_dismissed: false,
+            notifications: None,
             has_access_token: true,
             starting_fresh: None,
             history_known: true,
@@ -6529,6 +6531,35 @@ mod tests {
         assert!(matches!(
             deck.review_screen_view(inputs).step,
             ReviewStep::Accomplishment(_)
+        ));
+    }
+
+    #[test]
+    fn review_screen_asks_for_notifications_only_when_idle_and_signed_in() {
+        let now = Utc::now();
+        let deck = deck_with_n_due_cards(1, now - chrono::Duration::minutes(10));
+        let mut inputs = review_screen_inputs(now);
+        inputs.notifications = Some(NotificationPromptInputs {
+            permission: NotificationPermission::Denied,
+            last_asked: None,
+        });
+        assert!(matches!(
+            deck.review_screen_view(inputs.clone()).step,
+            ReviewStep::Challenge(_)
+        ));
+        let cards = deck
+            .get_review_info(vec![], now.timestamp_millis() as f64)
+            .due_cards;
+        let deck = review_cards_to_future(deck, &cards, now);
+        let ReviewStep::EnableNotifications(view) = deck.review_screen_view(inputs.clone()).step
+        else {
+            panic!("expected the notification prompt");
+        };
+        assert_eq!(view.enable_label, "Open Settings");
+        inputs.is_signed_in = false;
+        assert!(matches!(
+            deck.review_screen_view(inputs).step,
+            ReviewStep::Idle(_)
         ));
     }
 

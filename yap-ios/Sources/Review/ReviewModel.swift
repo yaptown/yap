@@ -162,6 +162,7 @@ import Observation
         ReviewScreenInputs(banned: banned, sentence_list: sentenceList, online: session.online,
             is_signed_in: auth.userId != nil, needs_display_name: auth.needsDisplayName,
             display_name_dismissed: UserDefaults.standard.bool(forKey: "yap-skipped-set-display-name"),
+            notifications: PushNotifications.shared.promptInputs,
             has_access_token: auth.accessToken != nil, starting_fresh: startingFresh, history_known: historyKnown,
             dismissed_accomplishment_at_review: session.dismissedAccomplishmentAtReview, placement: session.placementSession, current_challenge: currentChallenge, timestamp_ms: Self.now)
     }
@@ -196,6 +197,9 @@ import Observation
             _ = try await update_profile(display_name: name, bio: nil, access_token: token)
             self.auth.displayName = name; self.auth.needsDisplayName = false; self.refresh()
         }
+        // The ask is recorded either way, so the prompt waits its turn to return.
+        actions.enableNotifications = { await PushNotifications.shared.enable(atReview: self.deck.get_total_reviews()) }
+        actions.skipNotifications = { PushNotifications.shared.recordAsk(atReview: self.deck.get_total_reviews()) }
         return actions
     }
     func stop() {

@@ -49,6 +49,7 @@ struct ReviewScreen: View {
                         switch view.step {
                         case let .PlacementTest(placement): PlacementTestView(placement: placement)
                         case .SetDisplayName: SetDisplayNameView(reviewCount: view.total_reviews)
+                        case let .EnableNotifications(prompt): NotificationPromptCard(prompt, actions: actions)
                         default: EmptyView()
                         }
                     }.padding(12).frame(maxWidth: .readableColumn).frame(maxWidth: .infinity)

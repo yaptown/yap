@@ -1244,6 +1244,9 @@ impl Deck {
                 yap_i18n::tr!("home-profile"),
                 None,
             ),
+            ReviewStep::EnableNotifications(view) => {
+                (view.title, yap_i18n::tr!("home-reminders"), None)
+            }
             ReviewStep::Accomplishment(view) => {
                 (view.heading, yap_i18n::tr!("home-accomplishment"), None)
             }
@@ -1454,6 +1457,8 @@ pub struct ReviewScreenInputs {
     pub is_signed_in: bool,
     pub needs_display_name: bool,
     pub display_name_dismissed: bool,
+    /// `None` on hosts that don't send native reminders.
+    pub notifications: Option<NotificationPromptInputs>,
     pub has_access_token: bool,
     pub starting_fresh: Option<bool>,
     pub history_known: bool,
@@ -1490,9 +1495,43 @@ pub enum ReviewStep {
     PlacementTest(PlacementSession),
     ReviewPlan(Box<ReviewPlanView>),
     SetDisplayName,
+    EnableNotifications(NotificationPromptView),
     Accomplishment(Box<AccomplishmentView>),
     Challenge(Box<ChallengeView>),
     Idle(Box<IdleScreenView>),
+}
+
+/// Asks a learner without reminders to turn them on. When the OS has already
+/// been answered, only its settings can change that, so the button goes there.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct NotificationPromptView {
+    pub icon: String,
+    pub title: String,
+    pub body: String,
+    pub enable_label: String,
+    pub skip_label: String,
+}
+
+impl NotificationPromptView {
+    fn new(permission: NotificationPermission) -> Self {
+        let opens_settings = permission == NotificationPermission::Denied;
+        Self {
+            icon: "ui.reminder".into(),
+            title: yap_i18n::tr!("onboarding-we-ll-remind-you-to-practice-so-it-becomes"),
+            body: if opens_settings {
+                yap_i18n::tr!("notification-prompt-turned-off")
+            } else {
+                yap_i18n::tr!("onboarding-a-small-daily-reminder-makes-it-easy-to-stay")
+            },
+            enable_label: if opens_settings {
+                yap_i18n::tr!("notification-prompt-open-settings")
+            } else {
+                yap_i18n::tr!("onboarding-enable-reminders")
+            },
+            skip_label: yap_i18n::tr!("common-not-now"),
+        }
+    }
 }
 
 /// The entire review screen, captured by the Review fixture variant.
@@ -1515,8 +1554,9 @@ pub struct ReviewScreenView {
 
 #[bridgerton::bridge]
 impl Deck {
-    /// Selects PlacementTest → ReviewPlan → SetDisplayName → Accomplishment
-    /// → held (or next) Challenge → Idle, in that priority order on both hosts.
+    /// Selects PlacementTest → ReviewPlan → SetDisplayName → EnableNotifications
+    /// → Accomplishment → held (or next) Challenge → Idle, in that priority order
+    /// on both hosts.
     /// A held challenge takes precedence over idle even when nothing is due.
     /// Hosts retain a selected challenge until the deck or restrictions change;
     /// `None` is never held, so newly ready challenges can surface from idle.
@@ -1548,8 +1588,9 @@ impl Deck {
 }
 
 impl Deck {
-    /// Selects PlacementTest → ReviewPlan → SetDisplayName → Accomplishment
-    /// → held (or next) Challenge → Idle, in that priority order on both hosts.
+    /// Selects PlacementTest → ReviewPlan → SetDisplayName → EnableNotifications
+    /// → Accomplishment → held (or next) Challenge → Idle, in that priority order
+    /// on both hosts.
     /// A held challenge takes precedence over idle even when nothing is due.
     /// Hosts retain a selected challenge until the deck or restrictions change;
     /// `None` is never held, so newly ready challenges can surface from idle.
@@ -1587,6 +1628,18 @@ impl Deck {
             ReviewStep::ReviewPlan(Box::new(plan))
         } else if prompts.offer_display_name {
             ReviewStep::SetDisplayName
+        } else if let Some(notifications) = inputs.notifications
+            && review.due_count() == 0
+            && inputs.current_challenge.is_none()
+            && inputs.online
+            && inputs.is_signed_in
+            && disclosure::should_ask_for_notifications(
+                &notifications,
+                total_reviews,
+                inputs.timestamp_ms,
+            )
+        {
+            ReviewStep::EnableNotifications(NotificationPromptView::new(notifications.permission))
         } else if let Some(accomplishment) = self.accomplishment_view(inputs.timestamp_ms)
             && inputs.dismissed_accomplishment_at_review != Some(total_reviews)
         {
@@ -1723,6 +1776,7 @@ mod tests {
             is_signed_in: true,
             needs_display_name: false,
             display_name_dismissed: false,
+            notifications: None,
             has_access_token: true,
             starting_fresh: Some(true),
             history_known: true,

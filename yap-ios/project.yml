@@ -3,6 +3,9 @@ options:
   deploymentTarget:
     iOS: '18.0'
 packages:
+  onesignal:
+    url: https://github.com/OneSignal/OneSignal-XCFramework
+    from: '5.8.1'
   sentry-cocoa:
     url: https://github.com/getsentry/sentry-cocoa
     from: '9.29.0'
@@ -35,6 +38,9 @@ targets:
         application-identifier: $(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)
         keychain-access-groups:
           - $(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)
+        # Reminders arrive through OneSignal. Archiving for distribution signs
+        # this as production.
+        aps-environment: development
     configFiles:
       Debug: Generated/Link.xcconfig
       Release: Generated/Link.xcconfig
@@ -43,6 +49,8 @@ targets:
         product: Sentry
       - package: supabase-swift
         product: Supabase
+      - package: onesignal
+        product: OneSignalFramework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: town.yap.ios
@@ -59,7 +67,7 @@ targets:
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
-        MARKETING_VERSION: '1.0.3'
+        MARKETING_VERSION: '1.0.4'
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CURRENT_PROJECT_VERSION: '1'
         ENABLE_USER_SCRIPT_SANDBOXING: YES

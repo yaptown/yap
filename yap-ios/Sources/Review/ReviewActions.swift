@@ -45,6 +45,8 @@ extension EnvironmentValues {
     var switchCourse: () -> Void = { log("switch course") }
     var saveDisplayName: (String) async throws -> Void = { _ in log("save display name") }
     var skipDisplayName: () -> Void = { log("dismiss display name") }
+    var enableNotifications: () async -> Void = { log("enable notifications") }
+    var skipNotifications: () -> Void = { log("dismiss notifications") }
     static var inert: Self { Self() }
     private static func log(_ action: String) {
         print("fixture action \(action)")

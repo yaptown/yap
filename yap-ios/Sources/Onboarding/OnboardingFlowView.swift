@@ -6,6 +6,7 @@ struct OnboardingFlowView: View {
     let session: YapSession
     let course: Course
     let onComplete: () -> Void
+    @Environment(PushNotifications.self) private var push
     @State private var state: OnboardingState
 
     init(session: YapSession, course: Course, hasHeardAbout: Bool, onComplete: @escaping () -> Void) {
@@ -47,6 +48,10 @@ struct OnboardingFlowView: View {
             }.onChange(of: state.step_index) { _, _ in proxy.scrollTo("top", anchor: .top) }
         }
         .background(.clear)
+        // The permission is read asynchronously, so the itinerary may gain the step after launch.
+        .onChange(of: push.permission, initial: true) { _, permission in
+            if let permission { send(.RefreshNotificationOffer(offer: permission == .NotDetermined)) }
+        }
         .navigationTitle(view.navigation_title)
         .navigationBarTitleDisplayMode(.inline)
         #if DEBUG
@@ -117,9 +122,14 @@ struct OnboardingFlowView: View {
             }
         case let .Ready(icon, body, _):
             ReadyCelebration(icon: icon, title: view.title, message: body)
-        case .Notifications:
-            // iOS never offers this step until native notification support lands.
-            EmptyView()
+        case let .Notifications(icon, body, enableLabel, _, skipLabel):
+            NotificationPromptCard(icon: icon, title: view.title, message: body, enableLabel: enableLabel, skipLabel: skipLabel) {
+                await push.enable(atReview: 0)
+                send(.NotificationsDone)
+            } skip: {
+                push.recordAsk(atReview: 0)
+                send(.NotificationsDone)
+            }
         }
     }
 

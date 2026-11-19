@@ -24,7 +24,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective November 17, 2026.</p>
+            <p className="text-sm">Effective November 18, 2026.</p>
           </div>
         </Card>
 
@@ -103,6 +103,17 @@ export function PrivacyPage() {
               stream from clips.yap.town.
             </p>
             <p>
+              <span className="text-foreground">Reminders.</span> If you turn
+              on notifications on the website or in the iOS app, your
+              browser's or device's push token is registered with OneSignal
+              under your account ID. While you're signed in, we store a
+              schedule of upcoming reminders (their time, title, and text,
+              such as how many cards you have due) and send each one through
+              OneSignal. The iOS app also remembers on your device when it last
+              asked you to turn reminders on. You can turn reminders off any
+              time in your browser's or device's settings.
+            </p>
+            <p>
               <span className="text-foreground">Technical.</span> We use Sentry
               for error and performance monitoring on the site and in the iOS app
               so we can fix crashes. Error
@@ -130,6 +141,7 @@ export function PrivacyPage() {
               <li>Fly.io — backend servers</li>
               <li>Sentry — error and performance monitoring</li>
               <li>Resend — sending emails, such as notifications</li>
+              <li>OneSignal — sending reminder notifications</li>
               <li>Amazon Web Services — some backend processing and storage</li>
               <li>
                 AI providers (Google, OpenAI, ElevenLabs) — grading practice
