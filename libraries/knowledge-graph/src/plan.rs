@@ -113,7 +113,7 @@ mod tests {
     use chrono::Duration;
     use ordered_float::OrderedFloat;
 
-    use crate::{KnowledgeEvent, KnowledgeGraph, NewConcept};
+    use crate::{ConceptScore, KnowledgeEvent, KnowledgeGraph, NewConcept};
 
     fn add(graph: &mut KnowledgeGraph, id: &str, at: chrono::DateTime<chrono::Utc>) {
         graph
@@ -133,8 +133,10 @@ mod tests {
         graph
             .apply(
                 &KnowledgeEvent::Review {
-                    id: id.into(),
-                    score: OrderedFloat(score),
+                    scores: vec![ConceptScore {
+                        concept: id.into(),
+                        score: OrderedFloat(score),
+                    }],
                     question: String::new(),
                     answer: String::new(),
                     notes: String::new(),
@@ -206,6 +208,110 @@ mod tests {
         // A failed concept must be reviewed directly.
         let tasks = graph.compressed_reviews(now, |_| true);
         assert!(tasks.iter().any(|t| t.concept == "add"));
+    }
+
+    /// Scoring a foundation in the same review overrides the credit the
+    /// advanced concept would have sent it, and stops the flow there.
+    #[test]
+    fn explicit_scores_block_implicit_credit() {
+        let t0 = chrono::DateTime::UNIX_EPOCH;
+        let mut graph = KnowledgeGraph::default();
+        for id in ["add", "multiply", "exponent"] {
+            add(&mut graph, id, t0);
+            review(&mut graph, id, 1.0, t0);
+        }
+        link(&mut graph, "multiply", "add", 1.0);
+        link(&mut graph, "exponent", "multiply", 1.0);
+        let later = t0 + Duration::days(3);
+        graph
+            .apply(
+                &KnowledgeEvent::Review {
+                    scores: [("exponent", 1.0), ("multiply", 0.2)]
+                        .map(|(concept, score)| ConceptScore {
+                            concept: concept.into(),
+                            score: OrderedFloat(score),
+                        })
+                        .to_vec(),
+                    question: "2^3?".into(),
+                    answer: "6".into(),
+                    notes: String::new(),
+                    extra_credit: String::new(),
+                    user_was_given: Vec::new(),
+                },
+                later,
+            )
+            .unwrap();
+        let exponent = graph.concepts["exponent"].reviews.last().unwrap();
+        assert!(exponent.propagated.is_empty());
+        assert_eq!(exponent.also_scored, vec![("multiply".to_string(), 0.2)]);
+        assert!(graph.concepts["multiply"].needs_explicit_review());
+        // 'add' got nothing: the only path to it ran through 'multiply'.
+        assert_eq!(graph.concepts["add"].reviews.len(), 1);
+        assert!(graph.concepts["add"].is_due(later));
+    }
+
+    /// A pass above and a fail below meet in the middle concept, which
+    /// takes their sum whichever order the scores are listed in.
+    #[test]
+    fn score_order_does_not_matter() {
+        let t0 = chrono::DateTime::UNIX_EPOCH;
+        let later = t0 + Duration::days(3);
+        let fold = |scores: [(&str, f64); 2]| {
+            let mut graph = KnowledgeGraph::default();
+            for id in ["basic", "middle", "advanced"] {
+                add(&mut graph, id, t0);
+                review(&mut graph, id, 1.0, t0);
+            }
+            link(&mut graph, "middle", "basic", 1.0);
+            link(&mut graph, "advanced", "middle", 1.0);
+            graph
+                .apply(
+                    &KnowledgeEvent::Review {
+                        scores: scores
+                            .map(|(concept, score)| ConceptScore {
+                                concept: concept.into(),
+                                score: OrderedFloat(score),
+                            })
+                            .to_vec(),
+                        question: String::new(),
+                        answer: String::new(),
+                        notes: String::new(),
+                        extra_credit: String::new(),
+                        user_was_given: Vec::new(),
+                    },
+                    later,
+                )
+                .unwrap();
+            graph.concepts["middle"].memory.clone()
+        };
+        assert_eq!(
+            fold([("advanced", 1.0), ("basic", 0.0)]),
+            fold([("basic", 0.0), ("advanced", 1.0)])
+        );
+    }
+
+    #[test]
+    fn v1_reviews_still_load() {
+        use weapon::data_model::Event;
+        let stored = r#"{"version":"V1","op":"review","id":"add","score":0.75,"question":"2+3?","answer":"5"}"#;
+        let versioned: crate::VersionedKnowledgeEvent = serde_json::from_str(stored).unwrap();
+        let Some(KnowledgeEvent::Review { scores, .. }) =
+            KnowledgeEvent::from_versioned(&versioned, &())
+        else {
+            panic!("expected a review");
+        };
+        assert_eq!(scores[0].concept, "add");
+        let resaved = serde_json::to_string(&versioned).unwrap();
+        assert_eq!(
+            serde_json::from_str::<crate::VersionedKnowledgeEvent>(&resaved).unwrap(),
+            versioned
+        );
+        let other = r#"{"version":"V1","op":"set_known","id":"add","known":true}"#;
+        let versioned: crate::VersionedKnowledgeEvent = serde_json::from_str(other).unwrap();
+        assert!(matches!(
+            KnowledgeEvent::from_versioned(&versioned, &()),
+            Some(KnowledgeEvent::SetKnown { .. })
+        ));
     }
 
     #[test]

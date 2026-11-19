@@ -88,18 +88,21 @@ pub enum KnowledgeEvent {
     /// comes due, which suits things the user has told you they know.
     /// `known: false` puts it back on the schedule.
     SetKnown { id: ConceptId, known: bool },
-    /// An explicit review: one question about one concept. `score` (0 to 1,
-    /// with 0.5 and up passing) is how well the user recalled that one thing;
-    /// a pass moves the concept forward roughly in proportion, and a fail
-    /// sets it back. When a question ends up covering several things, a
-    /// partial score blurs them together, and splitting the concept usually
-    /// gives the scheduler a cleaner signal. A concept's first pass is what
-    /// starts its schedule; a failed first attempt is recorded but leaves it
-    /// unlearned.
+    /// An explicit review: one question and the user's answer. A review can
+    /// reinforce several concepts, but most of the time it just scores the
+    /// concept the question was meant to test, and the automatic
+    /// propagation extends part of that credit to what the concept builds
+    /// on. If the user clearly understood, or clearly failed to understand,
+    /// some other concept along the way, it's fine to score that one
+    /// explicitly too. Scores run from 0 to 1, with 0.5 and up passing: a
+    /// pass moves the concept forward roughly in proportion, and a fail sets
+    /// it back. A concept's first pass is what starts its schedule; a failed
+    /// first attempt is recorded but leaves it unlearned.
     Review {
-        id: ConceptId,
-        #[schemars(with = "f64")]
-        score: OrderedFloat<f64>,
+        /// The concepts this review reinforces (or sets back), each with
+        /// its own score. Usually just the concept the question was meant to
+        /// test.
+        scores: Vec<ConceptScore>,
         /// What was asked.
         question: String,
         /// What the user answered.
@@ -115,8 +118,8 @@ pub enum KnowledgeEvent {
         extra_credit: String,
         /// Concepts the question handed the user (a formula stated, a
         /// definition given) rather than making them recall it. Credit from
-        /// a pass normally flows to what this concept builds on, on the
-        /// assumption that answering exercised it; concepts listed here
+        /// a pass normally flows to what the scored concepts build on, on
+        /// the assumption that answering exercised it; concepts listed here
         /// (and anything reached only through them) are skipped, since the
         /// answer showed nothing about them.
         #[serde(default)]
@@ -172,10 +175,76 @@ fn inherit_by_default() -> bool {
     true
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema)]
+pub struct ConceptScore {
+    pub concept: ConceptId,
+    /// How well the answer showed this concept, 0 to 1 (0.5 and up passes).
+    #[schemars(with = "f64")]
+    pub score: OrderedFloat<f64>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(tag = "version")]
 pub enum VersionedKnowledgeEvent {
-    V1(KnowledgeEvent),
+    V1(v1::KnowledgeEvent),
+    V2(KnowledgeEvent),
+}
+
+/// V1 differed from the current events only in its review, which scored a
+/// single concept.
+mod v1 {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+    #[serde(untagged)]
+    pub enum KnowledgeEvent {
+        Review(Review),
+        Other(super::KnowledgeEvent),
+    }
+
+    #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+    #[serde(tag = "op", rename_all = "snake_case")]
+    pub enum Review {
+        Review {
+            id: ConceptId,
+            score: OrderedFloat<f64>,
+            question: String,
+            answer: String,
+            #[serde(default)]
+            notes: String,
+            #[serde(default)]
+            extra_credit: String,
+            #[serde(default)]
+            user_was_given: Vec<ConceptId>,
+        },
+    }
+
+    impl KnowledgeEvent {
+        pub fn upgrade(&self) -> super::KnowledgeEvent {
+            match self {
+                KnowledgeEvent::Other(event) => event.clone(),
+                KnowledgeEvent::Review(Review::Review {
+                    id,
+                    score,
+                    question,
+                    answer,
+                    notes,
+                    extra_credit,
+                    user_was_given,
+                }) => super::KnowledgeEvent::Review {
+                    scores: vec![ConceptScore {
+                        concept: id.clone(),
+                        score: *score,
+                    }],
+                    question: question.clone(),
+                    answer: answer.clone(),
+                    notes: notes.clone(),
+                    extra_credit: extra_credit.clone(),
+                    user_was_given: user_was_given.clone(),
+                },
+            }
+        }
+    }
 }
 
 impl weapon::data_model::Event for KnowledgeEvent {
@@ -183,12 +252,13 @@ impl weapon::data_model::Event for KnowledgeEvent {
     type Context = ();
 
     fn to_versioned(&self) -> Self::Versioned {
-        VersionedKnowledgeEvent::V1(self.clone())
+        VersionedKnowledgeEvent::V2(self.clone())
     }
 
     fn from_versioned(versioned: &Self::Versioned, _context: &()) -> Option<Self> {
         match versioned {
-            VersionedKnowledgeEvent::V1(event) => Some(event.clone()),
+            VersionedKnowledgeEvent::V1(event) => Some(event.upgrade()),
+            VersionedKnowledgeEvent::V2(event) => Some(event.clone()),
         }
     }
 }

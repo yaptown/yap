@@ -102,11 +102,16 @@ assert [c["id"] for c in s.tool("knowledge_next", {"tag": cid("arithmetic")})["f
 assert s.tool("knowledge_next", {"tag": cid("nothing-here")})["frontier"] == []
 
 out = s.tool("knowledge_apply", {"ops": [
-    {"op": "review", "id": cid("add"), "score": 1.0, "question": "2+3?", "answer": "5",
-     "notes": "instant", "extra_credit": "Asked 3+2 too; said 5, so order doesn't matter."},
-    {"op": "review", "id": cid("multiply"), "score": 0.3, "question": "4*6?", "answer": "20",
-     "notes": "confused with 4*5"},
+    {"op": "review", "scores": [{"concept": cid("add"), "score": 1.0}], "question": "2+3?",
+     "answer": "5", "notes": "instant",
+     "extra_credit": "Asked 3+2 too; said 5, so order doesn't matter."},
+    {"op": "review", "scores": [{"concept": cid("multiply"), "score": 0.3},
+                                {"concept": cid("add"), "score": 0.9}],
+     "question": "4*6?", "answer": "20",
+     "notes": "added correctly, but stopped at 4*5"},
 ]})
+assert [r["concept"] for r in out["reviews"]] == [cid("add"), cid("multiply"), cid("add")], out["reviews"]
+assert out["reviews"][1]["also_scored"] == [{"concept": cid("add"), "score": 0.9}]
 assert out["remediation"][0]["failed"] == cid("multiply")
 assert out["remediation"][0]["prerequisites"][0]["id"] == cid("add")
 
@@ -149,7 +154,7 @@ before = s.tool("knowledge_graph", {})
 s.close()
 
 # Extra credit is kept with the review and survives a refold.
-extra = lambda: s.tool("knowledge_concept", {"id": cid("add")})["review_history"][0]["extra_credit"]
+extra = lambda: s.tool("knowledge_concept", {"id": cid("add")})["review_history"][-1]["extra_credit"]
 
 # A fresh process folds the same graph from Supabase.
 s = Server()

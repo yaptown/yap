@@ -138,6 +138,22 @@ pub struct CreditOut {
 }
 
 #[derive(Serialize, JsonSchema)]
+pub struct ScoreOut {
+    concept: String,
+    score: f64,
+}
+
+fn scores_out(scores: &[(String, f64)]) -> Vec<ScoreOut> {
+    scores
+        .iter()
+        .map(|(concept, score)| ScoreOut {
+            concept: concept.clone(),
+            score: *score,
+        })
+        .collect()
+}
+
+#[derive(Serialize, JsonSchema)]
 pub struct ReviewOut {
     concept: String,
     at: String,
@@ -148,6 +164,9 @@ pub struct ReviewOut {
     /// Any extra-credit question and how it went; doesn't affect scheduling.
     #[serde(skip_serializing_if = "String::is_empty")]
     extra_credit: String,
+    /// Other concepts the same answer was scored on.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    also_scored: Vec<ScoreOut>,
     /// Repetitions this review added to its own concept, after discounting
     /// for reviewing early.
     reps: f64,
@@ -169,9 +188,9 @@ pub struct ApplyOut {
     /// Reviews with a middling score, which often means the question tested
     /// more than one thing.
     split_hints: Vec<String>,
-    /// For passing reviews: the linked concepts the answer may also have
-    /// shown the user understands.
-    credit_hints: Vec<String>,
+    /// For each review: the linked concepts the answer may also have shown
+    /// something about, whether understanding or a gap.
+    linked_hints: Vec<String>,
     /// After reviews, a reminder to fold what they revealed back into the
     /// graph.
     after_review: Option<String>,
@@ -310,6 +329,9 @@ pub struct PastQuestionOut {
     notes: String,
     #[serde(skip_serializing_if = "String::is_empty")]
     extra_credit: String,
+    /// Other concepts the same answer was scored on.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    also_scored: Vec<ScoreOut>,
 }
 
 #[derive(Serialize, JsonSchema)]
@@ -424,6 +446,7 @@ fn study_of(graph: &KnowledgeGraph, id: &str, now: DateTime<Utc>) -> StudyConcep
                 answer: review.answer.clone(),
                 notes: review.notes.clone(),
                 extra_credit: review.extra_credit.clone(),
+                also_scored: scores_out(&review.also_scored),
             })
             .collect(),
         documents: concept
@@ -446,6 +469,7 @@ fn review_out(concept: &str, review: &ReviewRecord) -> ReviewOut {
         answer: review.answer.clone(),
         notes: review.notes.clone(),
         extra_credit: review.extra_credit.clone(),
+        also_scored: scores_out(&review.also_scored),
         reps: review.applied,
         propagated: review
             .propagated
@@ -464,8 +488,10 @@ fn touched(op: &KnowledgeEvent) -> Vec<&str> {
         KnowledgeEvent::AddConcept { id, .. }
         | KnowledgeEvent::EditConcept { id, .. }
         | KnowledgeEvent::SetKnown { id, .. }
-        | KnowledgeEvent::Review { id, .. }
         | KnowledgeEvent::RetireConcept { id } => vec![id],
+        KnowledgeEvent::Review { scores, .. } => {
+            scores.iter().map(|s| s.concept.as_str()).collect()
+        }
         KnowledgeEvent::SetLink {
             advanced, basic, ..
         } => vec![advanced, basic],
@@ -527,7 +553,7 @@ impl YapMcp {
     #[tool(
         title = "Change the knowledge graph",
         output_schema = rmcp::handler::server::common::schema_for_type::<ApplyOut>(),
-        description = "Apply a batch of changes to the user's knowledge graph: add, edit, split or retire concepts, set links, mark concepts known, record reviews, and link documents. The batch's application is atomic, and later ops can refer to concepts added earlier in it.\n\nHow the graph works, Math Academy-style: concepts are linked in two ways. A prerequisite link means the basic concept is learned before the advanced one appears on the frontier. An encompassing link (0 to 1) is roughly the chance that practicing the advanced concept exercises the basic one. When a review passes, credit flows down encompassing links, and when one fails, a penalty flows up. That credit is discounted while the receiving concept's memory is still fresh, so practice right after learning adds little. Many prerequisites have encompassing 0, since needing one thing first doesn't mean practicing the other exercises it.\n\nScheduling works best when a single question can test each concept, and a description that needs an \"and\" is often two concepts in disguise. You should obviously consider this while making concepts, but it's also common for reviews to expose where a concept was not as atomic as you thought. For example, you may have a concept for \"newton's second law\", but then realize during reviews that the user remembered f=ma but forgot what the terms meant, and then of course they didn't connect it to the idea that forces determine the second derivative of motion. That is why you can split concepts and rewire the graph after-the-fact - a normal response to a partially failed review is to split out a separate concept for the part of the thing the user forgot. As another example, \"Loss functions\" is too broad a concept, better would be \"loss function are what? optimization target in machine learning\" (quiz: \"What do you think a loss function is in machine learning?\"), \"loss functions must have what? a gradient\" (quiz: \"Suppose your loss is a black box that only returns a number. You could still train by tweaking weights at random and keeping the tweaks that lower it. What does a differentiable loss give you that this doesn't?\"), \"loss function gradient should be what? informative\" (quiz: \"'1 if the prediction is correct and 0 otherwise' is differentiable almost everywhere and is minimized exactly when pred = true. Why is it still a poor loss function?\")\n\nLike Mendeleev leaving gaps in the periodic table for elements nobody had found yet, the graph can hold concepts the user never mentioned, when they're what makes the rest hang together. A few kinds of connection are worth seeking out: the unifying idea behind several things the user asked about, the dimension along which those things differ, and neighboring concepts that bridge or extend what's already there, so their understanding doesn't have quiet holes. For example, if the user asks about forward Euler and Heun's method for solving differential equations, the graph becomes much more useful with a node for numerical integration itself (approximating an ODE's solution by stepping forward in small time increments) and one for order of accuracy (forward Euler is first order, so halving the step size roughly halves the error, while Heun's method is second order, so halving it cuts the error to about a quarter). Both are prerequisites of the two methods, and they're often the ideas that make the named methods click. You might also notice a natural extension, like RK4 as the fourth-order member of the same family. Likewise, when a new concept naturally touches something already in the user's graph, linking the two ties the new idea into what they know, which helps both stick (you might add a new node connecting both numerical integration and gradient-descent, such as \"gradient step is a forward Euler step on the gradient flow\", to help the user connect the concepts to things they already know). That's worth doing where the connection is real and direct, and best skipped when it's a stretch: a forced link muddies the map. Concepts you add this way start unlearned, like any other. A brief mention makes sense when the user might already know one (so they can say so and it gets marked known), and otherwise the additions can just happen.\n\nKeeping the graph in good shape is your part of the collaboration. The user is here to learn and will rarely think to ask for a particular split or link, and if they do find themselves having to, it pulls them out of learning and into managing a tool, which makes for a worse experience. So the graph stays most useful when you shape it as you go rather than waiting to be asked. Splits, links and new nodes are bookkeeping in service of the user's learning, so making them quietly works well: the user's attention belongs on the material, and they can always look at the graph if they're curious. A few moments make natural triggers. When a question only reaches part of a concept (you want to ask about the cross-entropy gradient, but the concept also covers writing cross-entropy as log-sum-exp minus the correct logit), that part is really its own concept, and splitting before recording the review lets the score land on the part it actually measured while the untested part keeps an honest \"new\" status. When the user has an insight or a surprise (noticing that softmax is the gradient of log-sum-exp), that's worth adding as a concept right away, linked to what it connects; those moments are often the most memorable thing in a session, and capturing them lets later reviews build on them. And when an answer leans on another idea, in the graph or not yet, that suggests a link, and sometimes a missing node. The graph is cheap to change, so a change that turns out wrong is easy to fix later.\n\nTags help the user and later sessions find and scope what's in the graph, so it's worth adding them generously, both when creating concepts (add_concept's tags) and afterwards (the tag op, which can tag many concepts at once). They can describe the material (`machine-learning`, `linear-algebra`) or the context the user is learning it in (`for-work`, `reading-group`, `from-linear-algebra-done-right`). Context tags are especially useful: they tell a future session why the user cares, which helps it pick relevant examples and plan a focused session. knowledge_graph lists the tags already in use, and reusing those keeps tags reliable as filters.\n\nA review records one question about one concept. The score (0 to 1, with 0.5 and up passing) is how well the user recalled that one thing, stored with the question, their answer and your notes. Past questions come back from knowledge_next and knowledge_concept, which makes it easy to ask something fresh.\n\nThe main question works best when it's no broader than the concept it tests. There's an admirable pull toward a deep question that strikes at the heart of the matter, or several that let the user show real mastery, but a question wider than its concept measures something else. For `newtons-first-law`, \"What is Newton's first law?\" is the question; \"What is Newton's first law, and how does it apply to an astronaut floating in a spaceship?\" also tests applying it, which may be a concept of its own. The deeper question still has a home as extra credit: asked after the main one and labeled as extra credit for the user, so they know it's a bonus, it can paint the bigger picture or connect to other concepts. Adding extra credit is up to you and entirely optional, but if you do add it, its outcome goes in the review's extra_credit field (what you asked, what they said, what it showed), where later sessions can read it but it shouldn't affect the score; that way it doesn't affect the scheduler. (If the extra-credit answer shows the user knows another concept in the graph, that concept can get a review of its own.)\n\nOne thing follows from keeping main questions simple: a simple question can be answered by recitation, so understanding gets tested by giving it concepts of its own: `newtons-first-law` stays a plain recall node, and something like `apply-newtons-first-law` holds the application (why a puck sliding on smooth ice keeps going), with its own question and schedule (Math Academy works this way, which is how its reviews test understanding without any single question doing too much). But it's worth repeating that there's nothing wrong with simple, flashcard-like nodes. A broad web of flashcards on its own has a way of turning into true understanding, or the foundation needed for true understanding if nothing else. The related subjects you want to talk about, that excite you and the user, the applications and examples, these can all form additional concepts to add to the graph as well. It's up to you and your read on what's right for the user! A concept is basically something that the user is guaranteed to revisit and practice - if they should revisit and practice explaining something in their own words, or applying a concept in a new way, that's fine too!\n\nA blended score is where scheduling quietly goes wrong. If the user nailed one part of a concept and missed another, a score like 0.6 tells the scheduler both parts are half-remembered, so the part they know comes back sooner than it needs to and the part they don't comes back later than it should. An answer that splits like that is usually a sign the concept is two concepts, and one batch can record it cleanly: a split_concept op first (with inherit_memory false for any part earlier reviews never really tested), then a review of each part, scored on what the answer showed about that part. The same batch can carry it all, so nothing has to be recorded blended first and fixed later.\n\nDon't spoil a concept's prerequisites! (Unless you want to.) If you do so, you rob the user of the chance to prove their knowledge of the prerequisite of a concept as well as the concept itself. And it affects the scheduler, because credit from a pass flows down to what the concept builds on because answering is assumed to have exercised those foundations: recalling them was part of the work. A question that hands the user a foundation breaks that assumption. If a question about the cross-entropy gradient states \"the loss is log-sum-exp minus the correct logit\", the user never had to recall that formula, yet a pass would still credit the formula's concept. So questions work best giving only the setup (the logits, which class is correct) and leaving the user to bring the rest; the same goes for descriptions, where \"Given X, explain...\" with X a prerequisite invites handing X over. When supplying something really is needed for a fair question, listing it in the review's user_was_given keeps the credit honest: those concepts, and anything reached only through them, get nothing from that review.\n\nBy the way, it might be a good idea to keep the review notes factual. They aren't really supposed to be todos for your future self. They're just supposed to be a summary of what actually happened, and what the user actually said (quote them verbatim), rather than advice for how to teach them in the future, unless you're using them to encode a specific user request or something.\n\nMarking a concept known takes it off the schedule entirely, so it fits things the user has told you they already know, or subjects where they ace the pretest.",
+        description = "Apply a batch of changes to the user's knowledge graph: add, edit, split or retire concepts, set links, mark concepts known, record reviews, and link documents. The batch's application is atomic, and later ops can refer to concepts added earlier in it.\n\nHow the graph works, Math Academy-style: concepts are linked in two ways. A prerequisite link means the basic concept is learned before the advanced one appears on the frontier. An encompassing link (0 to 1) is roughly the chance that practicing the advanced concept exercises the basic one. When a review passes, credit flows down encompassing links, and when one fails, a penalty flows up. That credit is discounted while the receiving concept's memory is still fresh, so practice right after learning adds little. Many prerequisites have encompassing 0, since needing one thing first doesn't mean practicing the other exercises it.\n\nScheduling works best when a single question can test each concept, and a description that needs an \"and\" is often two concepts in disguise. You should obviously consider this while making concepts, but it's also common for reviews to expose where a concept was not as atomic as you thought. For example, you may have a concept for \"newton's second law\", but then realize during reviews that the user remembered f=ma but forgot what the terms meant, and then of course they didn't connect it to the idea that forces determine the second derivative of motion. That is why you can split concepts and rewire the graph after-the-fact - a normal response to a partially failed review is to split out a separate concept for the part of the thing the user forgot. As another example, \"Loss functions\" is too broad a concept, better would be \"loss function are what? optimization target in machine learning\" (quiz: \"What do you think a loss function is in machine learning?\"), \"loss functions must have what? a gradient\" (quiz: \"Suppose your loss is a black box that only returns a number. You could still train by tweaking weights at random and keeping the tweaks that lower it. What does a differentiable loss give you that this doesn't?\"), \"loss function gradient should be what? informative\" (quiz: \"'1 if the prediction is correct and 0 otherwise' is differentiable almost everywhere and is minimized exactly when pred = true. Why is it still a poor loss function?\")\n\nLike Mendeleev leaving gaps in the periodic table for elements nobody had found yet, the graph can hold concepts the user never mentioned, when they're what makes the rest hang together. A few kinds of connection are worth seeking out: the unifying idea behind several things the user asked about, the dimension along which those things differ, and neighboring concepts that bridge or extend what's already there, so their understanding doesn't have quiet holes. For example, if the user asks about forward Euler and Heun's method for solving differential equations, the graph becomes much more useful with a node for numerical integration itself (approximating an ODE's solution by stepping forward in small time increments) and one for order of accuracy (forward Euler is first order, so halving the step size roughly halves the error, while Heun's method is second order, so halving it cuts the error to about a quarter). Both are prerequisites of the two methods, and they're often the ideas that make the named methods click. You might also notice a natural extension, like RK4 as the fourth-order member of the same family. Likewise, when a new concept naturally touches something already in the user's graph, linking the two ties the new idea into what they know, which helps both stick (you might add a new node connecting both numerical integration and gradient-descent, such as \"gradient step is a forward Euler step on the gradient flow\", to help the user connect the concepts to things they already know). That's worth doing where the connection is real and direct, and best skipped when it's a stretch: a forced link muddies the map. Concepts you add this way start unlearned, like any other. A brief mention makes sense when the user might already know one (so they can say so and it gets marked known), and otherwise the additions can just happen.\n\nKeeping the graph in good shape is your part of the collaboration. The user is here to learn and will rarely think to ask for a particular split or link, and if they do find themselves having to, it pulls them out of learning and into managing a tool, which makes for a worse experience. So the graph stays most useful when you shape it as you go rather than waiting to be asked. Splits, links and new nodes are bookkeeping in service of the user's learning, so making them quietly works well: the user's attention belongs on the material, and they can always look at the graph if they're curious. A few moments make natural triggers. When a question only reaches part of a concept (you want to ask about the cross-entropy gradient, but the concept also covers writing cross-entropy as log-sum-exp minus the correct logit), that part is really its own concept, and splitting before recording the review lets the score land on the part it actually measured while the untested part keeps an honest \"new\" status. When the user has an insight or a surprise (noticing that softmax is the gradient of log-sum-exp), that's worth adding as a concept right away, linked to what it connects; those moments are often the most memorable thing in a session, and capturing them lets later reviews build on them. And when an answer leans on another idea, in the graph or not yet, that suggests a link, and sometimes a missing node. The graph is cheap to change, so a change that turns out wrong is easy to fix later.\n\nTags help the user and later sessions find and scope what's in the graph, so it's worth adding them generously, both when creating concepts (add_concept's tags) and afterwards (the tag op, which can tag many concepts at once). They can describe the material (`machine-learning`, `linear-algebra`) or the context the user is learning it in (`for-work`, `reading-group`, `from-linear-algebra-done-right`). Context tags are especially useful: they tell a future session why the user cares, which helps it pick relevant examples and plan a focused session. knowledge_graph lists the tags already in use, and reusing those keeps tags reliable as filters.\n\nA review records one question, the user's answer and your notes, and it can reinforce more than one concept. Usually it just scores the concept the question was meant to test (0 to 1, with 0.5 and up passing), and the automatic propagation extends part of that credit to the concepts it builds on. But if the user clearly understood, or clearly failed to understand, some other concept along the way, it's fine to score that one explicitly in the same review: explaining the cross-entropy gradient correctly can show the user knows softmax, and a slip in it can show they've got softmax wrong. A concept scored this way moves on its own score instead of on credit propagated from the main one. Past questions come back from knowledge_next and knowledge_concept, along with any other concepts each one scored, which makes it easy to ask something fresh.\n\nThe main question works best when it's no broader than the concept it tests. There's an admirable pull toward a deep question that strikes at the heart of the matter, or several that let the user show real mastery, but a question wider than its concept measures something else. For `newtons-first-law`, \"What is Newton's first law?\" is the question; \"What is Newton's first law, and how does it apply to an astronaut floating in a spaceship?\" also tests applying it, which may be a concept of its own. The deeper question still has a home as extra credit: asked after the main one and labeled as extra credit for the user, so they know it's a bonus, it can paint the bigger picture or connect to other concepts. Adding extra credit is up to you and entirely optional, but if you do add it, its outcome goes in the review's extra_credit field (what you asked, what they said, what it showed), where later sessions can read it but it shouldn't affect the score; that way it doesn't affect the scheduler. (If the extra-credit answer shows the user knows another concept in the graph, or shows a gap in one, that concept can be scored too, on what the answer showed.)\n\nOne thing follows from keeping main questions simple: a simple question can be answered by recitation, so understanding gets tested by giving it concepts of its own: `newtons-first-law` stays a plain recall node, and something like `apply-newtons-first-law` holds the application (why a puck sliding on smooth ice keeps going), with its own question and schedule (Math Academy works this way, which is how its reviews test understanding without any single question doing too much). But it's worth repeating that there's nothing wrong with simple, flashcard-like nodes. A broad web of flashcards on its own has a way of turning into true understanding, or the foundation needed for true understanding if nothing else. The related subjects you want to talk about, that excite you and the user, the applications and examples, these can all form additional concepts to add to the graph as well. It's up to you and your read on what's right for the user! A concept is basically something that the user is guaranteed to revisit and practice - if they should revisit and practice explaining something in their own words, or applying a concept in a new way, that's fine too!\n\nA blended score is where scheduling quietly goes wrong. If the user nailed one part of a concept and missed another, a score like 0.6 tells the scheduler both parts are half-remembered, so the part they know comes back sooner than it needs to and the part they don't comes back later than it should. An answer that splits like that is usually a sign the concept is two concepts, and one batch can record it cleanly: a split_concept op first (with inherit_memory false for any part earlier reviews never really tested), then one review scoring each part on what the answer showed about that part. The same batch can carry it all, so nothing has to be recorded blended first and fixed later.\n\nDon't spoil a concept's prerequisites! (Unless you want to.) If you do so, you rob the user of the chance to prove their knowledge of the prerequisite of a concept as well as the concept itself. And it affects the scheduler, because credit from a pass flows down to what the concept builds on because answering is assumed to have exercised those foundations: recalling them was part of the work. A question that hands the user a foundation breaks that assumption. If a question about the cross-entropy gradient states \"the loss is log-sum-exp minus the correct logit\", the user never had to recall that formula, yet a pass would still credit the formula's concept. So questions work best giving only the setup (the logits, which class is correct) and leaving the user to bring the rest; the same goes for descriptions, where \"Given X, explain...\" with X a prerequisite invites handing X over. When supplying something really is needed for a fair question, listing it in the review's user_was_given keeps the credit honest: those concepts, and anything reached only through them, get nothing from that review.\n\nBy the way, it might be a good idea to keep the review notes factual. They aren't really supposed to be todos for your future self. They're just supposed to be a summary of what actually happened, and what the user actually said (quote them verbatim), rather than advice for how to teach them in the future, unless you're using them to encode a specific user request or something.\n\nMarking a concept known takes it off the schedule entirely, so it fits things the user has told you they already know, or subjects where they ace the pretest.",
         annotations(
             title = "Change the knowledge graph",
             read_only_hint = false,
@@ -603,13 +629,16 @@ impl YapMcp {
         let reviewed: Vec<&str> = params
             .ops
             .iter()
-            .filter_map(|op| match op {
-                KnowledgeEvent::Review { id, .. } => Some(id.as_str()),
-                _ => None,
+            .flat_map(|op| match op {
+                KnowledgeEvent::Review { scores, .. } => {
+                    scores.iter().map(|s| s.concept.as_str()).collect()
+                }
+                _ => Vec::new(),
             })
             .collect();
-        // Each review op is the last review of its concept at that point;
-        // walk back from the end so repeated ids map to their own record.
+        // Each score in a review op is the last review of its concept at that
+        // point; walk back from the end so repeated ids map to their own
+        // record.
         let mut seen = std::collections::BTreeMap::<&str, usize>::new();
         let mut reviews: Vec<ReviewOut> = reviewed
             .iter()
@@ -649,9 +678,8 @@ impl YapMcp {
             })
             .collect();
         let reviewed_here: BTreeSet<&str> = reviews.iter().map(|r| r.concept.as_str()).collect();
-        let credit_hints = reviews
+        let linked_hints = reviews
             .iter()
-            .filter(|review| review.score >= PASSING_SCORE)
             .filter_map(|review| {
                 let linked: BTreeSet<&str> = graph
                     .links_down(&review.concept)
@@ -661,13 +689,20 @@ impl YapMcp {
                     .collect();
                 (!linked.is_empty()).then(|| {
                     format!(
-                        "'{}' passed. If the answer also clearly showed the user understands \
-                         some linked concepts, they've earned credit there too: a review for \
-                         each (same question and answer, scored on what the answer showed about \
-                         that concept) records it. Credit for a concept reviewed recently is \
-                         discounted automatically, so this won't over-count. Linked concepts: \
-                         {}.",
+                        "'{}' {}. An answer often shows something about linked concepts \
+                         too, in either direction: it can clearly show the user understands \
+                         one, or clearly show a gap in one. A review's scores can list each \
+                         of those alongside the main concept, scored on what the answer \
+                         showed about it, high or low. If this one showed something about a \
+                         linked concept that isn't scored yet, a review with the same \
+                         question and answer scoring just that concept records it. Linked \
+                         concepts not scored here: {}.",
                         review.concept,
+                        if review.score >= PASSING_SCORE {
+                            "passed"
+                        } else {
+                            "missed"
+                        },
                         linked.into_iter().collect::<Vec<_>>().join(", ")
                     )
                 })
@@ -686,7 +721,7 @@ impl YapMcp {
             reviews,
             remediation,
             split_hints,
-            credit_hints,
+            linked_hints,
             after_review,
             synced: synced == SyncStatus::Synced,
         })

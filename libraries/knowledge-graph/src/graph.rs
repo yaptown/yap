@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use weapon::data_model::Timestamped;
 
 use crate::memory::{DUE_MEMORY, Memory, PASSING_SCORE, review_credit};
-use crate::{ConceptId, DocumentId, KnowledgeEvent, TagName};
+use crate::{ConceptId, ConceptScore, DocumentId, KnowledgeEvent, TagName};
 
 /// Path weights below this don't carry implicit credit.
 const MIN_FLOW_WEIGHT: f64 = 0.05;
@@ -50,6 +50,8 @@ pub struct ReviewRecord {
     pub answer: String,
     pub notes: String,
     pub extra_credit: String,
+    /// The other concepts the same answer was scored on, with their scores.
+    pub also_scored: Vec<(ConceptId, f64)>,
     /// Repetitions this review added to the concept itself, after the
     /// early-repetition discount.
     pub applied: f64,
@@ -346,38 +348,56 @@ impl KnowledgeGraph {
         Ok(())
     }
 
-    /// Apply credit to every learned concept that `from` reaches in
-    /// `direction`, weighted by path weight. Positive credit skips concepts
-    /// awaiting an explicit re-review.
-    /// Spread a review's credit along encompassing links, skipping concepts
-    /// the question supplied (and whatever is reached only through them).
+    /// Spread one review's credits to every learned concept the scored
+    /// concepts reach along encompassing links (down for a pass, up for a
+    /// fail), weighted by path weight. Concepts in `blocked`, and whatever is
+    /// reached only through them, are skipped. Each recipient sums what it
+    /// gets from every source and takes that once, so the result doesn't
+    /// depend on the order of the scores; positive totals skip concepts
+    /// awaiting an explicit re-review. Returns, per source, its share of what
+    /// each recipient actually took.
     fn propagate(
         &mut self,
-        from: &str,
-        credit: f64,
-        given: &[ConceptId],
+        credits: &[(ConceptId, f64)],
+        blocked: &[ConceptId],
         at: DateTime<Utc>,
-    ) -> Vec<(ConceptId, f64)> {
-        let direction = if credit > 0.0 {
-            Direction::Down
-        } else {
-            Direction::Up
-        };
-        let mut propagated = Vec::new();
-        for (id, weight) in self.flow(from, direction, given) {
+    ) -> BTreeMap<ConceptId, Vec<(ConceptId, f64)>> {
+        let mut incoming: BTreeMap<ConceptId, Vec<(&ConceptId, f64)>> = BTreeMap::new();
+        for (from, credit) in credits {
+            let direction = if *credit > 0.0 {
+                Direction::Down
+            } else {
+                Direction::Up
+            };
+            for (id, weight) in self.flow(from, direction, blocked) {
+                incoming
+                    .entry(id)
+                    .or_default()
+                    .push((from, credit * weight));
+            }
+        }
+        let mut propagated: BTreeMap<ConceptId, Vec<(ConceptId, f64)>> = BTreeMap::new();
+        for (id, sources) in incoming {
+            let total: f64 = sources.iter().map(|(_, credit)| credit).sum();
             let concept = self
                 .concepts
                 .get_mut(&id)
                 .expect("links are between concepts");
-            if concept.known || (credit > 0.0 && concept.needs_explicit_review()) {
+            if total == 0.0 || concept.known || (total > 0.0 && concept.needs_explicit_review()) {
                 continue;
             }
             let Some(memory) = concept.memory.as_mut() else {
                 continue;
             };
-            let applied = memory.credit(credit * weight, at);
-            if applied.abs() >= 1e-3 {
-                propagated.push((id, applied));
+            let applied = memory.credit(total, at);
+            for (from, credit) in sources {
+                let share = applied * credit / total;
+                if share.abs() >= 1e-3 {
+                    propagated
+                        .entry(from.clone())
+                        .or_default()
+                        .push((id.clone(), share));
+                }
             }
         }
         propagated
@@ -478,47 +498,79 @@ impl KnowledgeGraph {
                 Ok(())
             }
             KnowledgeEvent::Review {
-                id,
-                score,
+                scores,
                 question,
                 answer,
                 notes,
                 extra_credit,
                 user_was_given,
             } => {
-                check_unit("score", score.0)?;
+                if scores.is_empty() {
+                    return Err("a review needs at least one score".to_string());
+                }
+                let scored: Vec<ConceptId> = scores.iter().map(|s| s.concept.clone()).collect();
+                for (i, ConceptScore { concept: id, score }) in scores.iter().enumerate() {
+                    check_unit("score", score.0)?;
+                    if self.concept(id)?.known {
+                        return Err(format!(
+                            "'{id}' is marked known; unmark it before reviewing it"
+                        ));
+                    }
+                    if scored[..i].contains(id) {
+                        return Err(format!("'{id}' is scored twice in one review"));
+                    }
+                    if user_was_given.contains(id) {
+                        return Err(format!(
+                            "'{id}' is both scored and listed in user_was_given"
+                        ));
+                    }
+                }
                 for given in user_was_given {
                     self.concept(given)?;
                 }
-                let concept = self.concept_mut(id)?;
-                if concept.known {
-                    return Err(format!(
-                        "'{id}' is marked known; unmark it before reviewing it"
-                    ));
+                // Explicit scores win: each scored concept moves on its own
+                // score, and implicit credit skips the others (and whatever
+                // is reached only through them), as it does given concepts.
+                let blocked: Vec<ConceptId> =
+                    scored.iter().chain(user_was_given).cloned().collect();
+                let credits: Vec<(ConceptId, f64)> = scores
+                    .iter()
+                    .map(|s| (s.concept.clone(), review_credit(s.score.0)))
+                    .collect();
+                // Scored concepts are blocked, so propagation never touches
+                // them and can run before their own credit lands.
+                let mut propagated = self.propagate(&credits, &blocked, at);
+                for (ConceptScore { concept: id, score }, (_, credit)) in scores.iter().zip(credits)
+                {
+                    let concept = self.concepts.get_mut(id).expect("checked above");
+                    // Only a pass starts a concept's schedule: a failed first
+                    // attempt leaves it unlearned (and still on the frontier).
+                    let applied = match (&mut concept.memory, credit > 0.0) {
+                        (Some(memory), _) => memory.credit(credit, at),
+                        (None, true) => concept.memory.insert(Memory::fresh(at)).credit(credit, at),
+                        (None, false) => 0.0,
+                    };
+                    let propagated = propagated.remove(id).unwrap_or_default();
+                    self.concepts
+                        .get_mut(id)
+                        .expect("checked above")
+                        .reviews
+                        .push(ReviewRecord {
+                            at,
+                            score: score.0,
+                            question: question.clone(),
+                            answer: answer.clone(),
+                            notes: notes.clone(),
+                            extra_credit: extra_credit.clone(),
+                            also_scored: scores
+                                .iter()
+                                .filter(|other| &other.concept != id)
+                                .map(|other| (other.concept.clone(), other.score.0))
+                                .collect(),
+                            applied,
+                            propagated,
+                        });
                 }
-                let credit = review_credit(score.0);
-                // Only a pass starts a concept's schedule: a failed first
-                // attempt leaves it unlearned (and still on the frontier).
-                let applied = match (&mut concept.memory, credit > 0.0) {
-                    (Some(memory), _) => memory.credit(credit, at),
-                    (None, true) => concept.memory.insert(Memory::fresh(at)).credit(credit, at),
-                    (None, false) => 0.0,
-                };
-                let propagated = self.propagate(id, credit, user_was_given, at);
-                self.concepts
-                    .get_mut(id)
-                    .expect("checked above")
-                    .reviews
-                    .push(ReviewRecord {
-                        at,
-                        score: score.0,
-                        question: question.clone(),
-                        answer: answer.clone(),
-                        notes: notes.clone(),
-                        extra_credit: extra_credit.clone(),
-                        applied,
-                        propagated,
-                    });
                 Ok(())
             }
             KnowledgeEvent::RetireConcept { id } => {

@@ -11,3 +11,6 @@ chrono.workspace = true
 log.workspace = true
 schemars.workspace = true
 ordered-float = { version = "5.5.1", features = ["serde"] }
+
+[dev-dependencies]
+serde_json.workspace = true

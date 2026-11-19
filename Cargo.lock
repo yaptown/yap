@@ -3726,6 +3726,7 @@ dependencies = [
  "ordered-float",
  "schemars",
  "serde",
+ "serde_json",
  "weapon",
 ]
 
