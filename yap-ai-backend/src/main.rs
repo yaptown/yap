@@ -58,14 +58,15 @@ static CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         .with_max_concurrent_requests(3)
 });
 
-/// Translation autograding runs on Gemini 3.5 Flash (low reasoning), hitting the
-/// Gemini API directly via its OpenAI-compatible endpoint. An offline eval over
-/// real user mistranslations found it ties the frontier models on
-/// agreement-with-production while being the fastest, so all translation
-/// challenges use it regardless of difficulty or auth.
+/// Translation autograding runs on Gemini 4 Hydrogen (low reasoning), hitting
+/// the Gemini API directly via its OpenAI-compatible endpoint. The eval in
+/// `yap-frontend-rs/src/translation_eval.rs` found it accepts valid readings of
+/// ambiguous lone sentences far more reliably than Gemini 3.5 Flash (96% vs 80%)
+/// at about the same cost, for ~2s more latency; Neon was slightly more
+/// accurate but too slow for the result screen.
 static TRANSLATION_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
     let api_key = std::env::var("GEMINI_API_KEY").expect("GEMINI_API_KEY must be set");
-    ChatClient::new(&api_key, "gemini-3.5-flash")
+    ChatClient::new(&api_key, "gemini-4-hydrogen")
         .with_url("https://generativelanguage.googleapis.com/v1beta/openai/")
         .with_reasoning_effort("low")
         .with_max_concurrent_requests(10)

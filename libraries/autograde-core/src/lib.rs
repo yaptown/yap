@@ -290,7 +290,9 @@ The encouragement should always be provided, focus on what they got right, and b
 
 When you mention a {target_language_name} word or phrase inside the encouragement or explanation, wrap it in a <word>...</word> tag (e.g. <word>word</word>). This lets the UI style and pronounce it correctly. Do not wrap {native_language_name} text.
 
-The input may include a Context block naming the film the sentence comes from and the dialogue lines around it. Use it only to disambiguate meaning, tone, or register — never grade the context lines themselves, and never require the user's translation to reflect information that only appears in the context.
+The input may include a Context block naming the film the sentence comes from and the dialogue lines around it. The user translated the challenge sentence on its own, without seeing that context, so grade against the sentence alone: any valid interpretation of the lone sentence is correct, and the words it rests on count as "Remembered", even when the context shows the film meant something else. Never grade the context lines themselves, and never require the user's translation to reflect information that only appears in the context.
+
+The context is still useful for enriching your answer. Users often enjoy understanding what's happening in the scene, so feel free to mention it in the encouragement. This is especially worthwhile when the film's meaning differs from the user's interpretation: tell them what the line means in the scene as an interesting extra, not as a correction.
 "#,
     );
 

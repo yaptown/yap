@@ -1,0 +1,1296 @@
+[
+  {
+    "language": "spa",
+    "imdb": "tt0039668",
+    "sentence": "Pero ve.",
+    "word": "ve",
+    "note": "ve: imperative of ir (go) or 3sg of ver (sees); the scene means she sees",
+    "answers": [
+      {
+        "text": "But go.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "But she sees.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "But he sees.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "But she goes.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "spa",
+    "imdb": "tt0056801",
+    "sentence": "Ahora ve al espejo.",
+    "word": "ve",
+    "note": "ve: tú-imperative of ir (go to the mirror) or tú-imperative of ver (look at/in the mirror; 'ver a' + object is common Latin American usage, as in directing 've a la cámara'). The scene is a screen test where the director moves the actress around the set: next line 'Ahora ve al teléfono. Despacio. No corras.' (walk slowly, don't run), so it means go.",
+    "answers": [
+      {
+        "text": "Now go to the mirror.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Now she goes to the mirror.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "spa",
+    "imdb": "tt1396484",
+    "sentence": "¡Ese fue más lejos!",
+    "word": "fue",
+    "note": "fue: preterite of ir (that one went farther) or of ser (that one was farther). The kids are throwing things in a contest: 'Gané yo' before and '–Es por distancia. –Siempre fue por masa.' after, so it means the throw went farther.",
+    "answers": [
+      {
+        "text": "That one went farther!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "That one was farther!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "That one fell farther!",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "spa",
+    "imdb": "tt27552099",
+    "sentence": "No fue a propósito.",
+    "word": "fue",
+    "note": "fue: preterite of ser (it wasn't on purpose) or of ir (he/she didn't go on purpose). The speaker is confessing a shooting: 'accidentalmente, fue un accidente, pero le disparé', so it means it wasn't on purpose (ser).",
+    "answers": [
+      {
+        "text": "It wasn't on purpose.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He didn't go on purpose.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He didn't fall on purpose.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "spa",
+    "imdb": "tt0372824",
+    "sentence": "Yo no fui.",
+    "word": "fui",
+    "note": "fui: preterite of ser (it wasn't me / I didn't do it) or of ir (I didn't go). A boy answering the teacher's 'Who is Le Querrec?' ('Soy yo, señor') protests his innocence; the follow-up 'Yo no hice nada' shows it means it wasn't me (ser).",
+    "answers": [
+      {
+        "text": "It wasn't me.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I didn't go.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I didn't know.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "spa",
+    "imdb": "tt1757678",
+    "sentence": "No como yo.",
+    "word": "como",
+    "note": "como: 'like/as' (not like me) or 1sg present of comer (I don't eat, with emphatic yo). After 'todos me están mintiendo', the reply means 'not like me' (unlike me, the stone tells the truth / I don't lie); nobody is talking about food.",
+    "answers": [
+      {
+        "text": "Not like me.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I don't eat.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I don't cook.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "spa",
+    "imdb": "tt0120202",
+    "sentence": "Llama a Howie.",
+    "word": "llama",
+    "note": "llama: tú-imperative of llamar (call Howie) or 3sg present indicative (he/she calls / is calling Howie). The producer is giving orders on set; the next line is another order to an assistant, 'Ponme con Howie Gold', so it is the imperative.",
+    "answers": [
+      {
+        "text": "Call Howie.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "She's calling Howie.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Write to Howie.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "spa",
+    "imdb": "tt4016934",
+    "sentence": "Es algo que siento.",
+    "word": "siento",
+    "note": "siento: 1sg of sentir in its 'feel' sense (something I feel) or its 'regret, be sorry about' sense (as in 'lo siento'). The speaker explains a reflexive fear: next line 'Como cuando uno retira la mano del fuego por reflejo', so it means something I feel.",
+    "answers": [
+      {
+        "text": "It's something I feel.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "It's something I regret.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "It's something I know.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "spa",
+    "imdb": "tt0382932",
+    "sentence": "¿Más vino?",
+    "word": "vino",
+    "note": "vino: noun 'wine' (more wine?) or preterite 3sg of venir (did more come / show up?). Skinner is plying Linguini with drink; Linguini answers 'No debería, pero... De acuerdo.', so it is an offer of wine.",
+    "answers": [
+      {
+        "text": "More wine?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "More bread?",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "spa",
+    "imdb": "tt0137523",
+    "sentence": "No, nada.",
+    "word": "nada",
+    "note": "nada: pronoun 'nothing' (no, nothing) or 3sg present of nadar (no, he/she swims). The exchange is '–Asegúrate. –Estoy seguro.' then 'Es un alivio. Gracias.', so it means nothing. The context reading is also the obvious one here.",
+    "answers": [
+      {
+        "text": "No, nothing.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "No, he swims.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "No, never.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "spa",
+    "imdb": "tt7485048",
+    "sentence": "Sí, sal, sal.",
+    "word": "sal",
+    "note": "sal: tú-imperative of salir (yes, come out, come out) or noun 'salt' (yes, salt, salt, e.g. answering what a dish needs). Someone is being coaxed out of hiding: next line 'No te acurruques dentro.' (don't curl up inside), so it means come out.",
+    "answers": [
+      {
+        "text": "Yes, come out, come out.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Yes, salt, salt.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Yes, come in, come in.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "fra",
+    "imdb": "tt3767372",
+    "sentence": "Vol ?",
+    "word": "vol",
+    "note": "vol = flight (noun, from voler 'to fly') or theft (noun, from voler 'to steal'). The scene means flight: the next line is \"Vol ? Qui a dit que je voulais prendre l'avion ?\" (who said I wanted to take the plane?). The corpus English (\"Theft?\") took the other reading, which is just as valid for the lone line.",
+    "answers": [
+      {
+        "text": "Flight?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Theft?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Ticket?",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "fra",
+    "imdb": "tt0050783",
+    "sentence": "Ferme.",
+    "word": "ferme",
+    "note": "ferme = imperative of fermer (close/shut), the noun 'farm', or the adjective 'firm'. The scene means close: a string of curt orders to someone getting into a car, \"Dépêche-toi. Monte.\" / \"Ferme.\" / \"Descends.\" The corpus English (\"Farm.\") took a reading that is valid only for the lone line.",
+    "answers": [
+      {
+        "text": "Close.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Farm.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Firm.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Open.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "fra",
+    "imdb": "tt0468569",
+    "sentence": "Tu vis.",
+    "word": "vis",
+    "note": "vis = present of vivre (you live) or passé simple of voir (you saw). The scene means live: the Joker's \"Tu vis.\" is followed by \"Tu meurs.\" (you die). Context picks the more obvious reading here.",
+    "answers": [
+      {
+        "text": "You live.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "You saw.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "You lie.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "fra",
+    "imdb": "tt0137523",
+    "sentence": "Il avait la pêche.",
+    "word": "pêche",
+    "note": "avoir la pêche = idiom 'to be full of energy', or literally 'to have the peach' (pêche the fruit; pêche 'fishing' gives nothing natural here). The scene means the idiom: the next line jokes \"Il avait dû faire son lavement au cappuccino\" (he must have had a cappuccino enema). The literal peach reading is valid for the lone line.",
+    "answers": [
+      {
+        "text": "He was full of energy.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He was full of beans.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He had the peach.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He had the apple.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "fra",
+    "imdb": "tt0203009",
+    "sentence": "Mes vers sont noyés !",
+    "word": "vers",
+    "note": "vers (masc. plural noun) = verses/lines of poetry or worms. The scene means verses: Toulouse-Lautrec's play is being rehearsed (the line before is the lyric \"Les collines s'animent\") and the line after complains \"Un peu de piano décoratif suffirait !\", i.e. the piano drowns out his verses. \"My worms are drowned!\" (e.g. bait) is equally valid for the lone line. The preposition 'toward' is impossible after 'mes'.",
+    "answers": [
+      {
+        "text": "My verses are drowned!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "My lines are drowned!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "My worms are drowned!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "My glasses are drowned!",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "fra",
+    "imdb": "tt1748122",
+    "sentence": "Tu sens le parfum.",
+    "word": "sens",
+    "note": "sentir le parfum = to smell of perfume (give off the smell) or to smell the perfume (perceive it). The scene means 'you smell of perfume': the girl answers \"C'est celui de ma mère.\" (it's my mother's), explaining the perfume she is wearing. The corpus English (\"You smell the perfume.\") took the other reading, also valid for the lone line. Somewhat less certain than the others: the reply also fits loosely after 'you smell the perfume'.",
+    "answers": [
+      {
+        "text": "You smell of perfume.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "You smell like perfume.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "You smell the perfume.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "You sell the perfume.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "fra",
+    "imdb": "tt8075192",
+    "sentence": "Allez, un autre tour.",
+    "word": "tour",
+    "note": "un tour (masc.) = a (magic) trick, a round, a turn, or a lap. The scene means trick: the boy is showing magic tricks, and the next lines are \"Encore plus impressionnant. Tu vas pas en revenir.\" and \"Va chercher les cartes. - Je connais le truc.\" The lone line more naturally reads as 'another round/turn'. 'Tower' would need the feminine 'une autre tour'.",
+    "answers": [
+      {
+        "text": "Come on, another trick.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Come on, another round.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Come on, another turn.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Come on, another tower.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "fra",
+    "imdb": "tt7131622",
+    "sentence": "Il marche encore.",
+    "word": "marche",
+    "note": "marcher = to walk (he still walks) or to work/function (it still works); 'il' can be he or it. The scene means it still works: it is about a flamethrower, \"J'ai un lance-flammes dans ma cabane à outils. Celui des 14 gros bras de McCluskey ?\" The corpus English (\"He still walks.\") took the other reading, also valid for the lone line.",
+    "answers": [
+      {
+        "text": "It still works.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He's still walking.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He still walks.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "It still burns.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "fra",
+    "imdb": "tt0215369",
+    "sentence": "Marche, arrêt.",
+    "word": "marche",
+    "note": "marche = 'on' (the label on a device switch, marche/arrêt = on/off) or the imperative of marcher (walk!). The scene means on/off: someone is showing how a back massager works, \"Appuie ta tête. C'est pour masser le dos.\" then \"Ça fait du bien.\" The lone line more obviously reads as 'Walk, stop.'",
+    "answers": [
+      {
+        "text": "On, off.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Walk, stop.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Sit, stop.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "fra",
+    "imdb": "tt4154756",
+    "sentence": "Son beau-père.",
+    "word": "son",
+    "note": "son = his or her (the French possessive agrees with the noun, not the possessor). The scene means her: \"Gamora... est la fille de Thanos.\" (Thanos is her stepfather). 'His stepfather' is equally valid for the lone line. Answers keep beau-père as 'stepfather' throughout (it can also mean father-in-law).",
+    "answers": [
+      {
+        "text": "Her stepfather.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "His stepfather.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Your stepfather.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "deu",
+    "imdb": "tt0073179",
+    "sentence": "Sie sind aber grausam.",
+    "word": "sie",
+    "note": "Sentence-initial 'Sie' + plural verb 'sind' = they, or formal you. The scene means formal you: she is speaking to the man, who answers 'Entschuldigung. Ich bin Chirurg. Ich muss oft Menschen weh tun...' (he apologizes for himself). The corpus translation 'They are cruel' took the other valid reading. 'She' is impossible with 'sind'.",
+    "answers": [
+      {
+        "text": "But you are cruel.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "But they are cruel.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "But she is cruel.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "deu",
+    "imdb": "tt0047478",
+    "sentence": "Sie sind da?",
+    "word": "sie",
+    "note": "Sentence-initial 'Sie' + 'sind' = they, or formal you; 'da' is here/there. The scene means they, the bandits: before it 'Da sind drei Pferde auf dem Hügel! - Die Räuber!', after it 'Aus welcher Richtung kommen sie?'. The corpus translation 'Are you there?' took the other valid reading. 'She' is impossible with 'sind'.",
+    "answers": [
+      {
+        "text": "They're here?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "You're here?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "They're there?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "She's here?",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "deu",
+    "imdb": "tt0903624",
+    "sentence": "Durchsucht sie.",
+    "word": "sie",
+    "note": "Object 'sie' = them, her, or it (a feminine noun). The scene means them: the Goblin King is told 'Zwerge, Euer Bosheit.' and the order continues 'Von oben bis unten, von allen Seiten.' about the captured dwarves. 'Him' would be 'ihn'.",
+    "answers": [
+      {
+        "text": "Search them.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Search her.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Search it.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Search him.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "deu",
+    "imdb": "tt0109424",
+    "sentence": "Ist das ihr Lieblingsessen?",
+    "word": "ihr",
+    "note": "Lowercase possessive 'ihr' = her or their (formal 'your' would be capitalised 'Ihr'). The scene means her: the next line is 'Ich kauf ihn immer für sie. Sie hat sich noch nie beklagt.' (singular 'hat'), about his girlfriend's chef salad. 'His' would be 'sein'.",
+    "answers": [
+      {
+        "text": "Is that her favorite food?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Is that their favorite food?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Is that his favorite food?",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "deu",
+    "imdb": "tt1856101",
+    "sentence": "Ich hatte das Schloss.",
+    "word": "schloss",
+    "note": "'das Schloss' = the lock or the castle/palace. The scene means lock: the next lines are 'Jetzt habe ich auch den Schlüssel. Doch der Schlüssel passt nicht. Die Tür bleibt verschlossen.' The corpus translation 'I had the castle' took the other valid reading, which is the more obvious one for the lone line. 'Key' would be 'Schlüssel'.",
+    "answers": [
+      {
+        "text": "I had the lock.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I had the castle.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I had the key.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "deu",
+    "imdb": "tt0347149",
+    "sentence": "Bewegst du das Schloss?",
+    "word": "schloss",
+    "note": "'das Schloss' = the castle/palace or the lock. The scene means castle: the film is 'Das wandelnde Schloss' (Howl's Moving Castle), Sophie remarks 'Was für ein seltsames Haus.' and Calcifer replies 'Natürlich tue ich das.' The corpus translation 'Are you moving the lock?' took the other valid reading. 'Key' would be 'Schlüssel'.",
+    "answers": [
+      {
+        "text": "Are you moving the castle?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Are you moving the lock?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Are you moving the palace?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Are you moving the key?",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "deu",
+    "imdb": "tt1069238",
+    "sentence": "Er ist ein Tor.",
+    "word": "tor",
+    "note": "'ein Tor' = a gate (das Tor) or a fool (der Tor); 'Er' = he, or it for a masculine noun. The scene means gate, with 'Er' = der Tod: before it '...wie ein Tor ist. Der Tod bedeutet nicht das Ende...', after it 'Und ich als Torwächter...'. The corpus translation 'He is a fool' took the other valid reading, which is the more obvious one for the lone line. 'Tower' would be 'Turm'.",
+    "answers": [
+      {
+        "text": "It is a gate.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He is a fool.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He is a tower.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "deu",
+    "imdb": "tt0870090",
+    "sentence": "Der da im Tor!",
+    "word": "tor",
+    "note": "'im Tor' = in goal (as goalkeeper) or in the gate/gateway. The scene means in goal: it's about a football match ('In der Kellner-Mannschaft.' and '- Ist er Verteidiger oder Stürmer? - Dein Vater?'). 'Tower' would be 'Turm'.",
+    "answers": [
+      {
+        "text": "That guy in goal!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "That one in the gateway!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "That guy in the tower!",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "deu",
+    "imdb": "tt6752992",
+    "sentence": "Das war die Bank!",
+    "word": "bank",
+    "note": "'die Bank' = the bank (financial) or the bench. The scene means the bank: it answers 'Wer hat Sie so ruiniert?', and after it 'Sie hat uns alles, was wir lieben, weggenommen.' Here the context picks the more obvious reading. 'Bar' would be 'Bar/Kneipe'.",
+    "answers": [
+      {
+        "text": "That was the bank!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "That was the bench!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "That was the bar!",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "deu",
+    "imdb": "tt0361862",
+    "sentence": "Stellt das Band ab!",
+    "word": "band",
+    "note": "Neuter 'das Band' = a (conveyor) belt, a tape (recording), or a ribbon; the music group is feminine 'die Band', so 'the band' is impossible here. The scene means the conveyor belt: the film is 'Der Maschinist', set in a machine shop, and the next line is 'Reznik! Ich hab dich, ich hab dich! Cool bleiben...' as a worker is caught in the machine. 'Abstellen' = turn off / stop.",
+    "answers": [
+      {
+        "text": "Turn off the conveyor belt!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Turn off the tape!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Turn off the light!",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "ita",
+    "imdb": "tt0762073",
+    "sentence": "Quattro venti piccoli!",
+    "word": "venti",
+    "note": "venti = twenty (numeral) or winds (plural of vento). Alone, 'four little twenties' (e.g. banknotes) is the more obvious reading. The scene is a mahjong game and means winds (the 'Little Four Winds' hand): the next line is 'Chiusura, coppia, 3 punti di bonus!'",
+    "answers": [
+      {
+        "text": "Four little winds!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Four little twenties!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Four little wines!",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "ita",
+    "imdb": "tt3402138",
+    "sentence": "Auto, parti.",
+    "word": "parti",
+    "note": "parti = go/start! (imperative of partire, also 'you leave') or parts (plural of parte). The corpus translation picked 'Car, parts.' The scene means the imperative: someone orders a remote-controlled car to drive off, and the next line is 'Grazie, auto.'",
+    "answers": [
+      {
+        "text": "Car, go.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Car, parts.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Car, stop.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "ita",
+    "imdb": "tt0376968",
+    "sentence": "Tieni, pesca!",
+    "word": "pesca",
+    "note": "pesca = fish! (imperative of pescare) or a peach (noun). Alone, 'Here, a peach!' is at least as natural as the other reading. The scene is a fishing trip and means 'fish!': the line before is 'potevamo benissimo pescare ancora', and the line after is 'Allora, abboccano?'",
+    "answers": [
+      {
+        "text": "Here, fish!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Here, a peach!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Here, swim!",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "ita",
+    "imdb": "tt2576852",
+    "sentence": "Ha riso!",
+    "word": "riso",
+    "note": "riso = laughed (past participle of ridere, 'ha riso' = he/she laughed) or rice ('ha riso' = he/she has rice). The scene means laughed: the baby princess laughs for the first time ('L'ha fatto!' follows).",
+    "answers": [
+      {
+        "text": "She laughed!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "She cried!",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "ita",
+    "imdb": "tt0112913",
+    "sentence": "Ho sbagliato piano.",
+    "word": "piano",
+    "note": "piano = floor (storey) or plan (also piano, the instrument). The corpus translation chose 'plan'. The scene means floor: a man shouts at a door, 'Avanti, vieni fuori... do fuoco a tutto il palazzo', realises he is on the wrong floor, then repeats the same threat at another door ('Blondie? So che ci sei. Avanti, vieni fuori!').",
+    "answers": [
+      {
+        "text": "I got the wrong floor.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I made the wrong plan.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I got the wrong door.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "ita",
+    "imdb": "tt0119167",
+    "sentence": "Non vale!",
+    "word": "vale",
+    "note": "non vale = that's not fair / that doesn't count (in a game), or it's not worth it (valere = to be worth). The scene means 'not fair': it is a game with a score ('Tre a due per me.' / '- Allora, che cos'è? - No!').",
+    "answers": [
+      {
+        "text": "That's not fair!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "That doesn't count!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "It's not worth it!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "It's not here!",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "ita",
+    "imdb": "tt14142060",
+    "sentence": "Sono ad Amakusa.",
+    "word": "sono",
+    "note": "sono = I am or they are. The scene means 'I am' (the obvious reading): the speaker is reporting on the phone, and the next line is 'Sono con Kikuo. Sta bene.'",
+    "answers": [
+      {
+        "text": "I'm in Amakusa.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "They're in Amakusa.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "We're in Amakusa.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "ita",
+    "imdb": "tt4712810",
+    "sentence": "Era bagnata.",
+    "word": "era",
+    "note": "era = I was / he-she-it was / you (formal Lei) were, so with feminine bagnata: she, it (feminine noun), I (female speaker) or you (formal). The corpus translation chose 'She was wet.' The scene means it: the sand in the coffin was wet ('Era piovuto, la notte prima. La sabbia bagnata pesa di più.').",
+    "answers": [
+      {
+        "text": "It was wet.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "She was wet.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I was wet.",
+        "expected": "Forgot"
+      },
+      {
+        "text": "They were wet.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "ita",
+    "imdb": "tt0116209",
+    "sentence": "Porta il turbante.",
+    "word": "porta",
+    "note": "porta = wears / carries / brings (3rd person singular of portare), or the imperative (Wear/Bring the turban!). The scene means 'he wears': the next line is 'Se porta il turbante è un sikh.'",
+    "answers": [
+      {
+        "text": "He wears a turban.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Bring the turban!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Wear the turban!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He takes off the turban.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "ita",
+    "imdb": "tt0065889",
+    "sentence": "La legge.",
+    "word": "legge",
+    "note": "legge = law (noun), or reads ('la legge' = he/she reads it, or formal 'you read it'). The scene means the law (the obvious reading): it is a speech about authority, followed by '...che deve essere immutabile e scolpita nel tempo!'",
+    "answers": [
+      {
+        "text": "The law.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He reads it.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "She reads it.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He writes it.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "por",
+    "imdb": "tt1235166",
+    "sentence": "Cuidado com a manga.",
+    "word": "manga",
+    "note": "manga = sleeve vs mango. The scene means sleeve: someone is eating and the next line is 'Está esfregando no prato.' (it's rubbing on the plate), then 'Coma um pouco, Ryad.' The corpus translation ('mango') gets it wrong, and mango is probably the more obvious lone reading.",
+    "answers": [
+      {
+        "text": "Watch out for the sleeve.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Watch out for the mango.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Watch out for the collar.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "por",
+    "imdb": "tt24326458",
+    "sentence": "Não conta nada.",
+    "word": "conta",
+    "note": "conta = (don't) tell (contar, colloquial BR imperative, or 3sg 'he doesn't tell') vs (it) doesn't count / doesn't matter. The scene means 'don't tell anything': it sits in a run of 'Não fala nada, Cy.' / 'Não vou falar.' / 'Não conta.' / 'Não vou falar, droga.' The corpus translation ('It doesn't matter at all') gets it wrong, and 'doesn't count' is the more obvious lone reading.",
+    "answers": [
+      {
+        "text": "Don't tell anything.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He doesn't tell anything.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "It doesn't count at all.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Don't eat anything.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "por",
+    "imdb": "tt1555149",
+    "sentence": "Eu fiz uma conta.",
+    "word": "conta",
+    "note": "conta = calculation (sum) vs account (BR 'fazer uma conta' = create an account). The scene means calculation: a voiceover citing prison numbers, followed by 'professor de história fazendo conta é um desastre' (a history teacher doing sums is a disaster). Lone, 'I made an account' is just as natural.",
+    "answers": [
+      {
+        "text": "I did a calculation.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I made an account.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I did a favor.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "por",
+    "imdb": "tt1081929",
+    "sentence": "Canto.",
+    "word": "canto",
+    "note": "canto = I sing (cantar 1sg) vs corner vs song/chant. The scene means I sing: the after-line is '- Cants? - Canto.' and then 'costumo andar por aí e cantar' (I usually walk around and sing). Lone, 'Corner.' is at least as likely.",
+    "answers": [
+      {
+        "text": "I sing.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Corner.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Song.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I dance.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "por",
+    "imdb": "tt0468492",
+    "sentence": "Vai mergulhar.",
+    "word": "vai",
+    "note": "vai = (it/he/you is) going to (future with ir, 3sg/você) vs Go! (imperative). The scene is people watching the creature ('Não acredito!' before, 'É enorme.' after), so it means 'It's going to dive.' Lone, 'Go dive!' is equally valid.",
+    "answers": [
+      {
+        "text": "It's going to dive.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "You're going to dive.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Go dive!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "It wants to dive.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "por",
+    "imdb": "tt6304162",
+    "sentence": "E quantas foram?",
+    "word": "foram",
+    "note": "foram = were (ser) vs went (ir). The scene means were: they are talking about past lovers ('Você deve ter dito o mesmo à sua ex-mulher'), and the answer is 'Mais de dez?', i.e. how many (women) were there. Lone, 'And how many went?' is fine too.",
+    "answers": [
+      {
+        "text": "And how many were there?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "And how many went?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "And how many came?",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "por",
+    "imdb": "tt0373760",
+    "sentence": "Não, nunca fui, não.",
+    "word": "fui",
+    "note": "fui = went (ir) vs was (ser). The scene means went: they are talking about places ('nós nunca fomos pra Amazônia', 'Gosta do Recife ou de São Paulo?'), so 'I've never been (there)'. Lone, 'No, I never was' (answering 'were you ever X?') is also valid.",
+    "answers": [
+      {
+        "text": "No, I never went, no.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "No, I've never been, no.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "No, I never was, no.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "No, I never came, no.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "por",
+    "imdb": "tt0101003",
+    "sentence": "Cedo.",
+    "word": "cedo",
+    "note": "cedo = early (adverb) vs I give in / I yield (ceder 1sg). The scene means early: the next line objects 'Amanhã é festa e nós acordaremos tarde' (tomorrow's a holiday and we'll wake up late). Here the context reading is also the obvious one.",
+    "answers": [
+      {
+        "text": "Early.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I give in.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Late.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "por",
+    "imdb": "tt6763252",
+    "sentence": "Para todos!",
+    "word": "para",
+    "note": "para = for (preposition) vs Stop! (parar imperative). The scene means for: it is a toast continuing 'Há tanta bebida para festejarmos,', followed by 'E agora, saúde!'. Here the context reading is also the obvious one; 'Stop, everyone!' is the valid alternative.",
+    "answers": [
+      {
+        "text": "For everyone!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "From everyone!",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "por",
+    "imdb": "tt1069238",
+    "sentence": "Era o chefe?",
+    "word": "era",
+    "note": "era = it/he was vs you were vs I was (ser imperfect, 1sg/3sg/você). Someone has just been on the phone ('Sim, ele está aqui. Entendi. Teatro Minato?'), and the follow-up is 'Um serviço?', so it means 'Was that (it) the boss (calling)?'. Lone, 'Was he the boss?', 'Were you the boss?' and 'Was I the boss?' are all valid.",
+    "answers": [
+      {
+        "text": "Was it the boss?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Was he the boss?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Were you the boss?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Is it the boss?",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "rus",
+    "imdb": "tt0114055",
+    "sentence": "Мою корову.",
+    "word": "мою",
+    "note": "мою = 'my' (acc. fem. of мой, agreeing with корову) or 'I wash' (1sg of мыть). The scene means 'my': it is a list of lost property, in parallel with the line just before, '- Найти пистолет мой!' (find my pistol), so 'my cow'.",
+    "answers": [
+      {
+        "text": "My cow.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I'm washing the cow.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Your cow.",
+        "expected": "Forgot"
+      },
+      {
+        "text": "I'm milking the cow.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "rus",
+    "imdb": "tt0087544",
+    "sentence": "Мою секретную комнату.",
+    "word": "мою",
+    "note": "мою = 'my' (acc. fem.) or 'I wash' (1sg of мыть). Nausicaä is showing her returning teacher a hidden place ('Учитель!' before, 'Не говори никому' after), so it is 'my secret room'; 'I'm washing the secret room' is equally grammatical for the lone line.",
+    "answers": [
+      {
+        "text": "My secret room.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I'm washing the secret room.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Our secret room.",
+        "expected": "Forgot"
+      },
+      {
+        "text": "I'm locking the secret room.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "rus",
+    "imdb": "tt0047478",
+    "sentence": "А эти дома?",
+    "word": "дома",
+    "note": "дома = 'houses' (nom./acc. pl. of дом) or 'at home' (adverb). The samurai are planning the village defence; the next line is 'Людей надо выселить оттуда' (the people must be moved out of there), so it means 'these houses'. 'And are these ones at home?' is a valid lone reading.",
+    "answers": [
+      {
+        "text": "And these houses?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "And are these ones at home?",
+        "expected": "Remembered"
+      },
+      {
+        "text": "And these streets?",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "rus",
+    "imdb": "tt1217565",
+    "sentence": "Дома он искал.",
+    "word": "дома",
+    "note": "дома = 'at home' (adverb) or 'houses' (acc. pl. of дом: 'he was looking for houses / searched the houses'). The scene means 'at home': it echoes the previous line 'А дома я искал' (and I looked at home), about something that rolled away and is hiding ('закатилась и прячется').",
+    "answers": [
+      {
+        "text": "He searched at home.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He was looking for houses.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He searched the houses.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "He searched at work.",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "rus",
+    "imdb": "tt1865505",
+    "sentence": "Три!",
+    "word": "три",
+    "note": "три = 'three' (numeral) or 'rub!/scrub!' (imperative of тереть). The scene is a count before Saoirse blows out her birthday candles ('Готовы? Раз,' follows), so it is the number 'three'.",
+    "answers": [
+      {
+        "text": "Three!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Rub!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Two!",
+        "expected": "Forgot"
+      },
+      {
+        "text": "Throw!",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "rus",
+    "imdb": "tt0060107",
+    "sentence": "Лечу!",
+    "word": "лечу",
+    "note": "лечу = 'I'm flying' (1sg of лететь) or 'I heal / I'm treating (someone)' (1sg of лечить). Efim is rising in the balloon ('Дядя, режь веревку!' before, 'Ефим! Ты куда?' after), so it is 'I'm flying!'.",
+    "answers": [
+      {
+        "text": "I'm flying!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I heal!",
+        "expected": "Remembered"
+      },
+      {
+        "text": "I'm falling!",
+        "expected": "Forgot"
+      }
+    ]
+  },
+  {
+    "language": "rus",
+    "imdb": "tt15398776",
+    "sentence": "Стекло.",
+    "word": "стекло",
+    "note": "стекло = 'glass' (noun) or 'it flowed/drained off' (past neut. of стечь). Before the Trinity test, the next line is 'Всем взять сварочное стекло' (everyone take welding glass), so it means 'glass'.",
+    "answers": [
+      {
+        "text": "Glass.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "It drained away.",
+        "expected": "Remembered"
+      },
+      {
+        "text": "Steel.",
+        "expected": "Forgot"
+      }
+    ]
+  }
+]

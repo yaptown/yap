@@ -57,6 +57,7 @@ criterion = { version = "0.8", features = ["html_reports"] }
 tokio = { workspace = true }
 reqwest = { workspace = true }
 autograde-core = { path = "../libraries/autograde-core" }
+movie-subtitles = { path = "../libraries/movie-subtitles" }
 tysm = { workspace = true }
 
 [[bench]]
