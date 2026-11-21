@@ -391,7 +391,11 @@ export function AudioButton({
             }
           } catch (error) {
             if (isAbort(error)) throw error;
-            console.error("Failed to play pre-audio:", error);
+            // The pre-audio is only a Bluetooth wake-up chime; the real clip
+            // still plays below. Warn rather than error so this handled,
+            // harmless failure isn't reported to Sentry (captureConsole
+            // forwards console.error).
+            console.warn("Failed to play pre-audio:", error);
           }
         }
 
