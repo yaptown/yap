@@ -18,6 +18,7 @@ COPY libraries/knowledge-graph/Cargo.toml libraries/knowledge-graph/Cargo.toml
 COPY libraries/imdex_map/Cargo.toml libraries/imdex_map/Cargo.toml
 COPY libraries/eyedee/Cargo.toml libraries/eyedee/Cargo.toml
 COPY libraries/autograde-core/Cargo.toml libraries/autograde-core/Cargo.toml
+COPY libraries/movie-subtitles/Cargo.toml libraries/movie-subtitles/Cargo.toml
 COPY libraries/audio-codec/Cargo.toml libraries/audio-codec/Cargo.toml
 COPY libraries/bridgerton/Cargo.toml libraries/bridgerton/Cargo.toml
 COPY libraries/bridgerton/macros/Cargo.toml libraries/bridgerton/macros/Cargo.toml
@@ -25,7 +26,7 @@ COPY libraries/yap-i18n/Cargo.toml libraries/yap-i18n/Cargo.toml
 # Trim the workspace to yap-mcp's path-dependency closure, dev-dependencies
 # included (walk the `path = ` entries starting from yap-mcp/Cargo.toml). A
 # missing member fails `cargo chef prepare` right here in the planner stage.
-RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-mcp",\n    "yap-frontend-rs",\n    "yap-frontend-reducers",\n    "language-utils",\n    "libraries/omnigram",\n    "libraries/pack-builder",\n    "libraries/weapon",\n    "libraries/knowledge-graph",\n    "libraries/imdex_map",\n    "libraries/eyedee",\n    "libraries/autograde-core",\n    "libraries/audio-codec",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n    "libraries/yap-i18n",\n]' Cargo.toml
+RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-mcp",\n    "yap-frontend-rs",\n    "yap-frontend-reducers",\n    "language-utils",\n    "libraries/omnigram",\n    "libraries/pack-builder",\n    "libraries/weapon",\n    "libraries/knowledge-graph",\n    "libraries/imdex_map",\n    "libraries/eyedee",\n    "libraries/autograde-core",\n    "libraries/movie-subtitles",\n    "libraries/audio-codec",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n    "libraries/yap-i18n",\n]' Cargo.toml
 # cargo-chef needs stub files for every target declared in the manifests
 RUN mkdir -p yap-mcp/src && echo "fn main() {}" > yap-mcp/src/main.rs
 RUN mkdir -p yap-frontend-rs/src yap-frontend-rs/benches \
@@ -44,6 +45,7 @@ RUN mkdir -p libraries/knowledge-graph/src && touch libraries/knowledge-graph/sr
 RUN mkdir -p libraries/imdex_map/src && touch libraries/imdex_map/src/lib.rs
 RUN mkdir -p libraries/eyedee/src && touch libraries/eyedee/src/lib.rs
 RUN mkdir -p libraries/autograde-core/src && touch libraries/autograde-core/src/lib.rs
+RUN mkdir -p libraries/movie-subtitles/src && touch libraries/movie-subtitles/src/lib.rs
 RUN mkdir -p libraries/audio-codec/src && touch libraries/audio-codec/src/lib.rs
 RUN mkdir -p libraries/bridgerton/src libraries/bridgerton/tests libraries/bridgerton/macros/src \
     && touch libraries/bridgerton/src/lib.rs \
@@ -75,6 +77,7 @@ COPY libraries/knowledge-graph libraries/knowledge-graph
 COPY libraries/imdex_map libraries/imdex_map
 COPY libraries/eyedee libraries/eyedee
 COPY libraries/autograde-core libraries/autograde-core
+COPY libraries/movie-subtitles libraries/movie-subtitles
 COPY libraries/audio-codec libraries/audio-codec
 COPY libraries/bridgerton libraries/bridgerton
 COPY libraries/yap-i18n libraries/yap-i18n
