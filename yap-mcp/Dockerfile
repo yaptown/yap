@@ -7,51 +7,81 @@ WORKDIR /app
 
 FROM chef AS planner
 COPY Cargo.toml Cargo.lock ./
+# >>> cargo xtask dockerfiles: manifests
 COPY yap-mcp/Cargo.toml yap-mcp/Cargo.toml
-COPY yap-frontend-rs/Cargo.toml yap-frontend-rs/Cargo.toml
-COPY yap-frontend-reducers/Cargo.toml yap-frontend-reducers/Cargo.toml
 COPY language-utils/Cargo.toml language-utils/Cargo.toml
+COPY libraries/audio-codec/Cargo.toml libraries/audio-codec/Cargo.toml
+COPY libraries/autograde-core/Cargo.toml libraries/autograde-core/Cargo.toml
+COPY libraries/bridgerton/Cargo.toml libraries/bridgerton/Cargo.toml
+COPY libraries/bridgerton/macros/Cargo.toml libraries/bridgerton/macros/Cargo.toml
+COPY libraries/eyedee/Cargo.toml libraries/eyedee/Cargo.toml
+COPY libraries/imdex_map/Cargo.toml libraries/imdex_map/Cargo.toml
+COPY libraries/knowledge-graph/Cargo.toml libraries/knowledge-graph/Cargo.toml
+COPY libraries/movie-subtitles/Cargo.toml libraries/movie-subtitles/Cargo.toml
 COPY libraries/omnigram/Cargo.toml libraries/omnigram/Cargo.toml
 COPY libraries/pack-builder/Cargo.toml libraries/pack-builder/Cargo.toml
 COPY libraries/weapon/Cargo.toml libraries/weapon/Cargo.toml
-COPY libraries/knowledge-graph/Cargo.toml libraries/knowledge-graph/Cargo.toml
-COPY libraries/imdex_map/Cargo.toml libraries/imdex_map/Cargo.toml
-COPY libraries/eyedee/Cargo.toml libraries/eyedee/Cargo.toml
-COPY libraries/autograde-core/Cargo.toml libraries/autograde-core/Cargo.toml
-COPY libraries/movie-subtitles/Cargo.toml libraries/movie-subtitles/Cargo.toml
-COPY libraries/audio-codec/Cargo.toml libraries/audio-codec/Cargo.toml
-COPY libraries/bridgerton/Cargo.toml libraries/bridgerton/Cargo.toml
-COPY libraries/bridgerton/macros/Cargo.toml libraries/bridgerton/macros/Cargo.toml
 COPY libraries/yap-i18n/Cargo.toml libraries/yap-i18n/Cargo.toml
-# Trim the workspace to yap-mcp's path-dependency closure, dev-dependencies
-# included (walk the `path = ` entries starting from yap-mcp/Cargo.toml). A
-# missing member fails `cargo chef prepare` right here in the planner stage.
-RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-mcp",\n    "yap-frontend-rs",\n    "yap-frontend-reducers",\n    "language-utils",\n    "libraries/omnigram",\n    "libraries/pack-builder",\n    "libraries/weapon",\n    "libraries/knowledge-graph",\n    "libraries/imdex_map",\n    "libraries/eyedee",\n    "libraries/autograde-core",\n    "libraries/movie-subtitles",\n    "libraries/audio-codec",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n    "libraries/yap-i18n",\n]' Cargo.toml
+COPY yap-frontend-reducers/Cargo.toml yap-frontend-reducers/Cargo.toml
+COPY yap-frontend-rs/Cargo.toml yap-frontend-rs/Cargo.toml
+# <<< cargo xtask dockerfiles
+# Trim the workspace to yap-mcp's path-dependency closure. The blocks marked
+# `cargo xtask dockerfiles` are generated from cargo metadata: edit Cargo.toml
+# and rerun `cargo xtask dockerfiles` rather than these lists.
+# >>> cargo xtask dockerfiles: members
+RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-mcp",\n    "language-utils",\n    "libraries/audio-codec",\n    "libraries/autograde-core",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n    "libraries/eyedee",\n    "libraries/imdex_map",\n    "libraries/knowledge-graph",\n    "libraries/movie-subtitles",\n    "libraries/omnigram",\n    "libraries/pack-builder",\n    "libraries/weapon",\n    "libraries/yap-i18n",\n    "yap-frontend-reducers",\n    "yap-frontend-rs",\n]' Cargo.toml
+# <<< cargo xtask dockerfiles
 # cargo-chef needs stub files for every target declared in the manifests
-RUN mkdir -p yap-mcp/src && echo "fn main() {}" > yap-mcp/src/main.rs
-RUN mkdir -p yap-frontend-rs/src yap-frontend-rs/benches \
-    && touch yap-frontend-rs/src/lib.rs \
-    && echo "fn main() {}" > yap-frontend-rs/benches/simulation.rs \
-    && echo "fn main() {}" > yap-frontend-rs/benches/profile_next_cards.rs
-RUN mkdir -p yap-frontend-reducers/src && touch yap-frontend-reducers/src/lib.rs \
-    && echo "fn main() {}" > yap-frontend-reducers/build.rs
-RUN mkdir -p language-utils/src && touch language-utils/src/lib.rs
-RUN mkdir -p libraries/omnigram/src && touch libraries/omnigram/src/lib.rs
-RUN mkdir -p libraries/pack-builder/src && touch libraries/pack-builder/src/lib.rs
-RUN mkdir -p libraries/weapon/src/bin \
+# >>> cargo xtask dockerfiles: stubs
+RUN mkdir -p yap-mcp/src \
+    && touch yap-mcp/src/lib.rs \
+    && echo "fn main() {}" > yap-mcp/src/main.rs
+RUN mkdir -p language-utils/examples language-utils/src language-utils/tests \
+    && touch language-utils/src/lib.rs \
+    && echo "fn main() {}" > language-utils/examples/dump_sentence_phonemes.rs \
+    && echo "fn main() {}" > language-utils/examples/pack_sizes.rs \
+    && echo "fn main() {}" > language-utils/examples/verify_pack_hashes.rs \
+    && echo "fn main() {}" > language-utils/tests/whitespace.rs
+RUN mkdir -p libraries/audio-codec/src \
+    && touch libraries/audio-codec/src/lib.rs
+RUN mkdir -p libraries/autograde-core/src \
+    && touch libraries/autograde-core/src/lib.rs
+RUN mkdir -p libraries/bridgerton/src libraries/bridgerton/tests \
+    && touch libraries/bridgerton/src/lib.rs \
+    && echo "fn main() {}" > libraries/bridgerton/tests/default_generics.rs \
+    && echo "fn main() {}" > libraries/bridgerton/tests/platform.rs \
+    && echo "fn main() {}" > libraries/bridgerton/tests/tokio_context.rs
+RUN mkdir -p libraries/bridgerton/macros/src \
+    && touch libraries/bridgerton/macros/src/lib.rs
+RUN mkdir -p libraries/eyedee/src \
+    && touch libraries/eyedee/src/lib.rs
+RUN mkdir -p libraries/imdex_map/src \
+    && touch libraries/imdex_map/src/lib.rs
+RUN mkdir -p libraries/knowledge-graph/src \
+    && touch libraries/knowledge-graph/src/lib.rs
+RUN mkdir -p libraries/movie-subtitles libraries/movie-subtitles/src \
+    && touch libraries/movie-subtitles/src/lib.rs \
+    && echo "fn main() {}" > libraries/movie-subtitles/build.rs
+RUN mkdir -p libraries/omnigram/src \
+    && touch libraries/omnigram/src/lib.rs
+RUN mkdir -p libraries/pack-builder/src \
+    && touch libraries/pack-builder/src/lib.rs
+RUN mkdir -p libraries/weapon/src libraries/weapon/src/bin \
     && touch libraries/weapon/src/lib.rs \
     && echo "fn main() {}" > libraries/weapon/src/bin/weapon-scope.rs
-RUN mkdir -p libraries/knowledge-graph/src && touch libraries/knowledge-graph/src/lib.rs
-RUN mkdir -p libraries/imdex_map/src && touch libraries/imdex_map/src/lib.rs
-RUN mkdir -p libraries/eyedee/src && touch libraries/eyedee/src/lib.rs
-RUN mkdir -p libraries/autograde-core/src && touch libraries/autograde-core/src/lib.rs
-RUN mkdir -p libraries/movie-subtitles/src && touch libraries/movie-subtitles/src/lib.rs
-RUN mkdir -p libraries/audio-codec/src && touch libraries/audio-codec/src/lib.rs
-RUN mkdir -p libraries/bridgerton/src libraries/bridgerton/tests libraries/bridgerton/macros/src \
-    && touch libraries/bridgerton/src/lib.rs \
-    && echo "fn main() {}" > libraries/bridgerton/tests/tokio_context.rs \
-    && touch libraries/bridgerton/macros/src/lib.rs
-RUN mkdir -p libraries/yap-i18n/src && touch libraries/yap-i18n/src/lib.rs
+RUN mkdir -p libraries/yap-i18n/src libraries/yap-i18n/tests \
+    && touch libraries/yap-i18n/src/lib.rs \
+    && echo "fn main() {}" > libraries/yap-i18n/tests/catalogs.rs
+RUN mkdir -p yap-frontend-reducers yap-frontend-reducers/src \
+    && touch yap-frontend-reducers/src/lib.rs \
+    && echo "fn main() {}" > yap-frontend-reducers/build.rs
+RUN mkdir -p yap-frontend-rs/benches yap-frontend-rs/examples yap-frontend-rs/src yap-frontend-rs/tests \
+    && touch yap-frontend-rs/src/lib.rs \
+    && echo "fn main() {}" > yap-frontend-rs/examples/profile_simulation.rs \
+    && echo "fn main() {}" > yap-frontend-rs/tests/web.rs \
+    && echo "fn main() {}" > yap-frontend-rs/benches/profile_next_cards.rs \
+    && echo "fn main() {}" > yap-frontend-rs/benches/simulation.rs
+# <<< cargo xtask dockerfiles
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
@@ -66,21 +96,23 @@ RUN cargo chef cook --release --recipe-path recipe.json --package yap-mcp
 # language_data.hash files, and this layer (rkyv packs included) is huge and
 # rarely changes — keep it above the every-commit source layers.
 COPY out out
+# >>> cargo xtask dockerfiles: sources
 COPY yap-mcp yap-mcp
-COPY yap-frontend-rs yap-frontend-rs
-COPY yap-frontend-reducers yap-frontend-reducers
 COPY language-utils language-utils
+COPY libraries/audio-codec libraries/audio-codec
+COPY libraries/autograde-core libraries/autograde-core
+COPY libraries/bridgerton libraries/bridgerton
+COPY libraries/eyedee libraries/eyedee
+COPY libraries/imdex_map libraries/imdex_map
+COPY libraries/knowledge-graph libraries/knowledge-graph
+COPY libraries/movie-subtitles libraries/movie-subtitles
 COPY libraries/omnigram libraries/omnigram
 COPY libraries/pack-builder libraries/pack-builder
 COPY libraries/weapon libraries/weapon
-COPY libraries/knowledge-graph libraries/knowledge-graph
-COPY libraries/imdex_map libraries/imdex_map
-COPY libraries/eyedee libraries/eyedee
-COPY libraries/autograde-core libraries/autograde-core
-COPY libraries/movie-subtitles libraries/movie-subtitles
-COPY libraries/audio-codec libraries/audio-codec
-COPY libraries/bridgerton libraries/bridgerton
 COPY libraries/yap-i18n libraries/yap-i18n
+COPY yap-frontend-reducers yap-frontend-reducers
+COPY yap-frontend-rs yap-frontend-rs
+# <<< cargo xtask dockerfiles
 # Drop target/ within the same layer: it's ~hundreds of MB of incremental
 # artifacts that change every commit, and mode=max cache export would ship
 # all of it to the registry each deploy.

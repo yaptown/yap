@@ -1,3 +1,4 @@
+mod dockerfiles;
 mod ios;
 mod packs;
 mod parity;
@@ -30,6 +31,8 @@ enum Task {
     Smoke(smoke::Args),
     /// Capture saved screens on web and iOS with a side-by-side gallery.
     Parity(parity::Args),
+    /// Regenerate the trimmed-workspace lists in the service Dockerfiles.
+    Dockerfiles(dockerfiles::Args),
 }
 
 fn main() {
@@ -40,6 +43,7 @@ fn main() {
         Task::Ios(args) => ios::run(args),
         Task::Smoke(args) => smoke::run(args),
         Task::Parity(args) => parity::run(args),
+        Task::Dockerfiles(args) => dockerfiles::run(args),
     };
     if let Err(error) = result {
         eprintln!("error: {error}");

@@ -64,6 +64,9 @@ jobs:
       - name: Rustfmt
         run: cargo fmt --all -- --check
 
+      - name: Dockerfile workspace lists
+        run: cargo xtask dockerfiles --check
+
       - name: Clippy
         run: cargo clippy --workspace -- -D warnings
 

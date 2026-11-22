@@ -7,36 +7,62 @@ WORKDIR /app
 
 FROM chef AS planner
 COPY Cargo.toml Cargo.lock ./
+# >>> cargo xtask dockerfiles: manifests
 COPY yap-ai-backend/Cargo.toml yap-ai-backend/Cargo.toml
 COPY language-utils/Cargo.toml language-utils/Cargo.toml
-COPY libraries/omnigram/Cargo.toml libraries/omnigram/Cargo.toml
 COPY libraries/audio-codec/Cargo.toml libraries/audio-codec/Cargo.toml
-COPY libraries/whisper/Cargo.toml libraries/whisper/Cargo.toml
-COPY libraries/rate-limit/Cargo.toml libraries/rate-limit/Cargo.toml
-COPY libraries/phoneme-verify/Cargo.toml libraries/phoneme-verify/Cargo.toml
-COPY libraries/google-speech/Cargo.toml libraries/google-speech/Cargo.toml
 COPY libraries/autograde-core/Cargo.toml libraries/autograde-core/Cargo.toml
-COPY libraries/movie-subtitles/Cargo.toml libraries/movie-subtitles/Cargo.toml
 COPY libraries/bridgerton/Cargo.toml libraries/bridgerton/Cargo.toml
 COPY libraries/bridgerton/macros/Cargo.toml libraries/bridgerton/macros/Cargo.toml
-# Trim the workspace to the backend and its transitive path dependencies.
-# cargo-chef needs every manifest, even for crates only reached indirectly.
-RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-ai-backend",\n    "language-utils",\n    "libraries/omnigram",\n    "libraries/audio-codec",\n    "libraries/whisper",\n    "libraries/rate-limit",\n    "libraries/phoneme-verify",\n    "libraries/google-speech",\n    "libraries/autograde-core",\n    "libraries/movie-subtitles",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n]' Cargo.toml
+COPY libraries/google-speech/Cargo.toml libraries/google-speech/Cargo.toml
+COPY libraries/movie-subtitles/Cargo.toml libraries/movie-subtitles/Cargo.toml
+COPY libraries/omnigram/Cargo.toml libraries/omnigram/Cargo.toml
+COPY libraries/phoneme-verify/Cargo.toml libraries/phoneme-verify/Cargo.toml
+COPY libraries/rate-limit/Cargo.toml libraries/rate-limit/Cargo.toml
+COPY libraries/whisper/Cargo.toml libraries/whisper/Cargo.toml
+# <<< cargo xtask dockerfiles
+# Trim the workspace to the backend's path-dependency closure. The blocks
+# marked `cargo xtask dockerfiles` are generated from cargo metadata: edit
+# Cargo.toml and rerun `cargo xtask dockerfiles` rather than these lists.
+# >>> cargo xtask dockerfiles: members
+RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-ai-backend",\n    "language-utils",\n    "libraries/audio-codec",\n    "libraries/autograde-core",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n    "libraries/google-speech",\n    "libraries/movie-subtitles",\n    "libraries/omnigram",\n    "libraries/phoneme-verify",\n    "libraries/rate-limit",\n    "libraries/whisper",\n]' Cargo.toml
+# <<< cargo xtask dockerfiles
 # cargo-chef needs stub files for every target declared in the manifests
-RUN mkdir -p yap-ai-backend/src && echo "fn main() {}" > yap-ai-backend/src/main.rs
-RUN mkdir -p language-utils/src && touch language-utils/src/lib.rs
-RUN mkdir -p libraries/omnigram/src && touch libraries/omnigram/src/lib.rs
-RUN mkdir -p libraries/audio-codec/src && touch libraries/audio-codec/src/lib.rs
-RUN mkdir -p libraries/whisper/src && touch libraries/whisper/src/lib.rs
-RUN mkdir -p libraries/rate-limit/src && touch libraries/rate-limit/src/lib.rs
-RUN mkdir -p libraries/phoneme-verify/src && touch libraries/phoneme-verify/src/lib.rs
-RUN mkdir -p libraries/google-speech/src && touch libraries/google-speech/src/lib.rs
-RUN mkdir -p libraries/autograde-core/src && touch libraries/autograde-core/src/lib.rs
-RUN mkdir -p libraries/movie-subtitles/src && touch libraries/movie-subtitles/src/lib.rs
-RUN mkdir -p libraries/bridgerton/src libraries/bridgerton/tests libraries/bridgerton/macros/src \
+# >>> cargo xtask dockerfiles: stubs
+RUN mkdir -p yap-ai-backend/src \
+    && echo "fn main() {}" > yap-ai-backend/src/main.rs
+RUN mkdir -p language-utils/examples language-utils/src language-utils/tests \
+    && touch language-utils/src/lib.rs \
+    && echo "fn main() {}" > language-utils/examples/dump_sentence_phonemes.rs \
+    && echo "fn main() {}" > language-utils/examples/pack_sizes.rs \
+    && echo "fn main() {}" > language-utils/examples/verify_pack_hashes.rs \
+    && echo "fn main() {}" > language-utils/tests/whitespace.rs
+RUN mkdir -p libraries/audio-codec/src \
+    && touch libraries/audio-codec/src/lib.rs
+RUN mkdir -p libraries/autograde-core/src \
+    && touch libraries/autograde-core/src/lib.rs
+RUN mkdir -p libraries/bridgerton/src libraries/bridgerton/tests \
     && touch libraries/bridgerton/src/lib.rs \
-    && echo "fn main() {}" > libraries/bridgerton/tests/tokio_context.rs \
+    && echo "fn main() {}" > libraries/bridgerton/tests/default_generics.rs \
+    && echo "fn main() {}" > libraries/bridgerton/tests/platform.rs \
+    && echo "fn main() {}" > libraries/bridgerton/tests/tokio_context.rs
+RUN mkdir -p libraries/bridgerton/macros/src \
     && touch libraries/bridgerton/macros/src/lib.rs
+RUN mkdir -p libraries/google-speech/src \
+    && touch libraries/google-speech/src/lib.rs
+RUN mkdir -p libraries/movie-subtitles libraries/movie-subtitles/src \
+    && touch libraries/movie-subtitles/src/lib.rs \
+    && echo "fn main() {}" > libraries/movie-subtitles/build.rs
+RUN mkdir -p libraries/omnigram/src \
+    && touch libraries/omnigram/src/lib.rs
+RUN mkdir -p libraries/phoneme-verify/src libraries/phoneme-verify/tests \
+    && touch libraries/phoneme-verify/src/lib.rs \
+    && echo "fn main() {}" > libraries/phoneme-verify/tests/pronunciation.rs
+RUN mkdir -p libraries/rate-limit/src \
+    && touch libraries/rate-limit/src/lib.rs
+RUN mkdir -p libraries/whisper/src \
+    && touch libraries/whisper/src/lib.rs
+# <<< cargo xtask dockerfiles
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
@@ -55,17 +81,19 @@ COPY --from=planner /app/Cargo.toml Cargo.toml
 COPY Cargo.lock .
 # Build dependencies - this is the caching Docker layer!
 RUN cargo chef cook --release --recipe-path recipe.json
+# >>> cargo xtask dockerfiles: sources
 COPY yap-ai-backend yap-ai-backend
 COPY language-utils language-utils
-COPY libraries/omnigram libraries/omnigram
 COPY libraries/audio-codec libraries/audio-codec
-COPY libraries/whisper libraries/whisper
-COPY libraries/rate-limit libraries/rate-limit
-COPY libraries/phoneme-verify libraries/phoneme-verify
-COPY libraries/google-speech libraries/google-speech
 COPY libraries/autograde-core libraries/autograde-core
-COPY libraries/movie-subtitles libraries/movie-subtitles
 COPY libraries/bridgerton libraries/bridgerton
+COPY libraries/google-speech libraries/google-speech
+COPY libraries/movie-subtitles libraries/movie-subtitles
+COPY libraries/omnigram libraries/omnigram
+COPY libraries/phoneme-verify libraries/phoneme-verify
+COPY libraries/rate-limit libraries/rate-limit
+COPY libraries/whisper libraries/whisper
+# <<< cargo xtask dockerfiles
 # Drop target/ within the same layer: it's ~hundreds of MB of incremental
 # artifacts that change every commit, and mode=max cache export would ship
 # all of it to the registry each deploy.
