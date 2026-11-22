@@ -15,18 +15,18 @@
 
 /* Each section sets its own ground and foreground scale so children can use
    the same token names on either. Themed sections follow the app: the hero's
-   world sits on paper in light mode and in a starry night in dark mode,
-   and the section showing the app's own card takes the app's ground so
-   the card's tokens sit on the surface they were designed for. */
+   world sits on paper in light mode and in a starry night in dark mode. */
 .landing-night,
 .dark .landing-themed {
   --bg: var(--night);
   --fg: var(--paper);
   --pink: #e273df;
-  --fg-soft: #e6dae5;
-  --fg-dim: #c9b7c7;
-  --rule: rgba(247, 239, 246, 0.24);
-  --rule-strong: rgba(247, 239, 246, 0.55);
+  --fg-soft: #e2d3e1;
+  --fg-dim: #b49db2;
+  --surface: rgba(247, 239, 246, 0.045);
+  --surface-hover: rgba(247, 239, 246, 0.09);
+  --rule: rgba(247, 239, 246, 0.14);
+  --rule-strong: rgba(247, 239, 246, 0.34);
   background: var(--bg);
   color: var(--fg);
 }
@@ -37,9 +37,11 @@
   /* The pink glows on the night; on paper it needs more ink. */
   --pink: #b93cb6;
   --fg-soft: #4c2f4a;
-  --fg-dim: #654b63;
-  --rule: rgba(48, 0, 48, 0.24);
-  --rule-strong: rgba(48, 0, 48, 0.55);
+  --fg-dim: #6d526b;
+  --surface: rgba(48, 0, 48, 0.035);
+  --surface-hover: rgba(48, 0, 48, 0.075);
+  --rule: rgba(48, 0, 48, 0.14);
+  --rule-strong: rgba(48, 0, 48, 0.32);
   background: var(--bg);
   color: var(--fg);
 }
@@ -63,9 +65,9 @@
   letter-spacing: -0.03em;
 }
 .landing-label {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .landing-tag {
@@ -75,15 +77,16 @@
 .landing .landing-ul {
   text-decoration: underline;
   text-decoration-thickness: 1.5px;
-  text-underline-offset: 0.22em;
+  text-underline-offset: 0.24em;
+  text-decoration-color: color-mix(in srgb, var(--pink) 65%, transparent);
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+.landing .landing-ul:hover {
   text-decoration-color: var(--pink);
 }
 
 /* The app's film grain, laid over the full-bleed sections so they read as
-   part of the app. Same texture as the shader background; blended as the
-   app does by night (the texture inverted and multiplied in), which over a
-   pale ground is also the only blend that shows at all, so it is used by
-   day as well, lightly. The app's night fog texture is left off. */
+   part of the app. */
 .landing-grain {
   position: absolute;
   inset: 0;
@@ -98,43 +101,107 @@
   pointer-events: none;
   background: radial-gradient(circle, var(--fg) 1.5px, transparent 2px) center /
     26px 26px;
-  opacity: 0.2;
+  opacity: 0.18;
 }
 
 .dark .landing-grain {
-  opacity: 0.35;
+  opacity: 0.32;
 }
 
-/* The call to action is the app's own primary button (same tokens, same
-   translucent blur), in the landing's pill and label style. */
+/* Primary and secondary actions: crisp, tactile, sentence-case buttons with
+   ordinary rounded corners (explicitly opting out of the app's squircle
+   radius override so they stay sharp rather than pillowy). */
 .landing .landing-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 48px;
-  padding: 0 24px;
-  background: color-mix(in oklab, var(--primary) 85%, transparent);
-  backdrop-filter: blur(16px);
-  color: var(--primary-foreground);
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  gap: 8px;
+  height: 46px;
+  padding: 0 22px;
+  background: var(--fg);
+  color: var(--bg);
+  border-radius: 10px;
+  corner-shape: round;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   white-space: nowrap;
+  transition: background-color 0.15s ease, opacity 0.15s ease,
+    border-color 0.15s ease;
 }
 .landing .landing-btn:hover {
-  background: color-mix(in oklab, var(--primary) 90%, transparent);
-  color: var(--primary-foreground);
+  opacity: 0.9;
+  color: var(--bg);
 }
 .landing .landing-btn-outline,
 .landing .landing-btn-outline:hover {
-  background: transparent;
-  box-shadow: inset 0 0 0 1.5px var(--rule-strong);
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
   color: var(--fg);
+  opacity: 1;
 }
 .landing .landing-btn-outline:hover {
-  background: color-mix(in oklab, var(--fg) 8%, transparent);
+  background: var(--surface-hover);
+  border-color: var(--fg-dim);
+}
+
+.landing .landing-nav-github {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  corner-shape: round;
+  border: 1px solid var(--rule-strong);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.landing .landing-nav-github:hover {
+  background: var(--surface-hover);
+  border-color: var(--fg-dim);
+  color: var(--fg);
+}
+
+.landing .landing-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  corner-shape: round;
+  border: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  color: var(--fg-dim);
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+.landing .landing-chip:hover {
+  color: var(--fg);
+  border-color: var(--rule-strong);
+}
+.landing .landing-chip[aria-selected="true"] {
+  border-color: var(--pink);
+  background: color-mix(in srgb, var(--pink) 15%, var(--bg));
+  color: var(--fg);
+}
+
+.landing .landing-specimen {
+  border-radius: 14px;
+  corner-shape: round;
+  border: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px);
 }
 
 /* Each language in the headline fades in as it takes its turn. */

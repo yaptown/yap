@@ -1,19 +1,12 @@
 import { t } from "@/lib/i18n";
-import {
-  ArrowRight,
-  Clapperboard,
-  Gauge,
-  Gift,
-  Headphones,
-  Volume2,
-  VolumeX,
-} from "lucide-react";
+import { ArrowRight, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import type { AppContextType } from "@/app/context";
 import { TargetLanguageText } from "@/components/TargetLanguageText";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import { Button } from "@/components/ui/button";
+import { GITHUB_REPO_URL, GitHubIcon } from "@/components/GitHubIcon";
 
 // What a visitor sees at /anki before they've picked a course: the pitch,
 // then the course picker, which brings them back here to build the deck.
@@ -24,22 +17,18 @@ export function AnkiIntro() {
     navigate(`/select-language?next=${encodeURIComponent("/anki")}`);
   const features = [
     {
-      Icon: Clapperboard,
       title: t("anki-intro-clips-title"),
       body: t("anki-intro-clips-body"),
     },
     {
-      Icon: Gauge,
       title: t("anki-intro-level-title"),
       body: t("anki-intro-level-body"),
     },
     {
-      Icon: Headphones,
       title: t("anki-intro-cards-title"),
       body: t("anki-intro-cards-body"),
     },
     {
-      Icon: Gift,
       title: t("anki-intro-free-title"),
       body: t("anki-intro-free-body"),
     },
@@ -49,56 +38,63 @@ export function AnkiIntro() {
       userInfo={userInfo}
       headerProps={{
         title: t("anki-page-anki-decks"),
+        showGitHub: true,
         backButton: { label: "Yap.Town", onBack: () => navigate("/") },
       }}
     >
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-14 px-5 py-10 sm:py-14">
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-12 px-5 py-10 sm:py-14">
         <section className="flex flex-col items-center gap-6 text-center">
           <h1
-            className="text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl"
+            className="text-4xl leading-[1.06] font-bold tracking-[-0.03em] sm:text-5xl"
             style={{ textWrap: "balance" }}
           >
             {t("anki-intro-title")}
           </h1>
-          <p className="max-w-xl text-lg text-muted-foreground text-pretty">
+          <p className="max-w-lg text-base leading-relaxed text-muted-foreground text-pretty sm:text-lg">
             {t("anki-intro-lede")}
           </p>
           <CardFan />
-          <Button
-            size="lg"
-            className="group h-12 px-6 text-base font-medium shadow-lg shadow-primary/25"
-            onClick={choose}
-          >
-            {t("anki-intro-make-my-deck")}
-            <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
-          </Button>
-        </section>
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {features.map(({ Icon, title, body }) => (
-            <li
-              key={title}
-              className="flex gap-4 rounded-xl border bg-card/80 p-5"
+          <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+            <Button
+              size="lg"
+              className="group h-11 rounded-[10px] bg-foreground px-4 text-[14.5px] font-semibold tracking-[-0.01em] text-background hover:bg-foreground/90 sm:px-6 sm:text-[15px] [corner-shape:round]"
+              onClick={choose}
             >
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Icon className="size-5" aria-hidden />
+              {t("anki-intro-make-my-deck")}
+              <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="h-11 rounded-[10px] border-border/80 bg-card/40 px-3.5 text-[14.5px] font-medium tracking-[-0.01em] sm:px-5 sm:text-[15px] [corner-shape:round]"
+            >
+              <a href={GITHUB_REPO_URL}>
+                <GitHubIcon className="size-4" />
+                <span>GitHub</span>
+              </a>
+            </Button>
+          </div>
+        </section>
+
+        <ol
+          className="grid list-none gap-x-10 gap-y-8 border-t border-border/60 pt-10 sm:grid-cols-2"
+          style={{ paddingLeft: 0 }}
+        >
+          {features.map(({ title, body }, index) => (
+            <li key={title} className="flex flex-col gap-1.5">
+              <span className="font-mono text-xs text-muted-foreground/70 tabular-nums">
+                0{index + 1}
               </span>
-              <div className="flex flex-col gap-1">
-                <h2 className="font-semibold">{title}</h2>
-                <p className="text-sm text-muted-foreground text-pretty">
-                  {body}
-                </p>
-              </div>
+              <h2 className="text-[15.5px] font-semibold tracking-[-0.01em] text-foreground">
+                {title}
+              </h2>
+              <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
+                {body}
+              </p>
             </li>
           ))}
-        </ul>
-        <Button
-          size="lg"
-          variant="outline"
-          className="h-12 self-center px-8 text-base font-medium"
-          onClick={choose}
-        >
-          {t("anki-intro-make-my-deck")}
-        </Button>
+        </ol>
       </main>
     </TopPageLayout>
   );
@@ -111,18 +107,18 @@ function CardFan() {
   const video = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
   const face =
-    "overflow-hidden rounded-xl border border-white/10 bg-card shadow-2xl";
+    "overflow-hidden rounded-[12px] [corner-shape:round] border border-white/12 bg-card shadow-2xl";
   const card = `absolute inset-x-0 top-0 transition-transform duration-500 ${face}`;
   const still = "aspect-[2/1] w-full object-cover";
   return (
     <div className="group relative mt-6 mb-14 aspect-[16/9] w-full max-w-[16rem] sm:max-w-sm">
       <div
-        className={`${card} -rotate-[10deg] -translate-x-[30%] translate-y-[2%] scale-90 group-hover:-rotate-[13deg] group-hover:-translate-x-[36%]`}
+        className={`${card} -translate-x-[30%] translate-y-[2%] -rotate-[10deg] scale-90 group-hover:-translate-x-[36%] group-hover:-rotate-[13deg]`}
       >
         <img src="/anki/portrait.avif" alt="" className={still} />
       </div>
       <div
-        className={`${card} rotate-[10deg] translate-x-[30%] translate-y-[2%] scale-90 group-hover:rotate-[13deg] group-hover:translate-x-[36%]`}
+        className={`${card} translate-x-[30%] translate-y-[2%] rotate-[10deg] scale-90 group-hover:translate-x-[36%] group-hover:rotate-[13deg]`}
       >
         <img src="/anki/400-blows.avif" alt="" className={still} />
       </div>
@@ -135,7 +131,7 @@ function CardFan() {
         <div className={face}>
           <button
             type="button"
-            className="relative block w-full"
+            className="relative block w-full cursor-pointer"
             aria-label={t("anki-intro-play-with-sound")}
             onClick={() => {
               const element = video.current;
@@ -157,7 +153,7 @@ function CardFan() {
               playsInline
             />
             <Lit />
-            <span className="absolute top-2 right-2 flex size-8 items-center justify-center rounded-full bg-black/40 ring-1 ring-white/25 backdrop-blur-md">
+            <span className="absolute top-2 right-2 flex size-8 items-center justify-center rounded-full bg-black/45 ring-1 ring-white/25 backdrop-blur-md">
               {muted ? (
                 <VolumeX className="size-4 text-white" />
               ) : (

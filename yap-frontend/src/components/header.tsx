@@ -9,10 +9,12 @@ import { Link } from "react-router-dom";
 import { SyncStatusDialog } from "@/browse/sync-status-dialog";
 import type { UserInfo } from "@/app/context";
 import { useAuthDialog } from "@/auth/auth-dialog-provider";
+import { GITHUB_REPO_URL, GitHubIcon } from "@/components/GitHubIcon";
 
 interface HeaderProps {
   userInfo: UserInfo | undefined;
   showSignupNag?: boolean;
+  showGitHub?: boolean;
   backButton?: {
     label: string;
     onBack: () => void;
@@ -24,6 +26,7 @@ interface HeaderProps {
 export function Header({
   userInfo,
   showSignupNag = false,
+  showGitHub = false,
   backButton,
   title = "Yap.Town",
   dailyGoalPercent,
@@ -67,6 +70,19 @@ export function Header({
           )}
         </div>
         <div className="flex items-center gap-2">
+          {showGitHub && (
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="gap-1.5 rounded-[8px] [corner-shape:round] border-border/70 bg-card/40 text-foreground"
+            >
+              <a href={GITHUB_REPO_URL} aria-label="GitHub">
+                <GitHubIcon className="size-3.5" />
+                <span className="hidden sm:inline">GitHub</span>
+              </a>
+            </Button>
+          )}
           {userInfo ? (
             <Button
               asChild

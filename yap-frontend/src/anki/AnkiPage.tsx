@@ -505,6 +505,7 @@ function AnkiScreen({
       userInfo={userInfo}
       headerProps={{
         title: t("anki-page-anki-decks"),
+        showGitHub: true,
         backButton: { label: "Yap.Town", onBack: () => navigate("/") },
       }}
     >
