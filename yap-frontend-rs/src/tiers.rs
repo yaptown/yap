@@ -2,24 +2,34 @@ use language_utils::language_pack::ArchivedFrequencyList;
 use serde::{Deserialize, Serialize};
 
 /// Tier definitions for the frequency list. Each tier covers a range of the most frequent grams.
-/// The first element is the tier name, the second is how many new words this tier adds.
+/// Each entry is the tier name, how many new words the tier adds, and how many
+/// words make up one of its levels. Esoteric levels are three times the usual
+/// size, because at the usual size they changed too often as people studied.
 type TierName = fn() -> String;
 
-const TIERS: &[(TierName, usize)] = &[
-    (|| yap_i18n::tr!("tier-elementary"), 200),
-    (|| yap_i18n::tr!("tier-core"), 300),
-    (|| yap_i18n::tr!("tier-basic"), 400),
-    (|| yap_i18n::tr!("curriculum-essential"), 500),
-    (|| yap_i18n::tr!("tier-functional"), 600),
-    (|| yap_i18n::tr!("tier-intermediate"), 700),
-    (|| yap_i18n::tr!("tier-proficient"), 800),
-    (|| yap_i18n::tr!("tier-advanced"), 900),
-    (|| yap_i18n::tr!("tier-expert"), 1000),
-    (|| yap_i18n::tr!("tier-specialized"), 1100),
-    (|| yap_i18n::tr!("tier-esoteric"), usize::MAX), // all remaining
-];
+const WORDS_PER_LEVEL: usize = 31;
 
-pub(crate) const WORDS_PER_LEVEL: usize = 31;
+const TIERS: &[(TierName, usize, usize)] = &[
+    (|| yap_i18n::tr!("tier-elementary"), 200, WORDS_PER_LEVEL),
+    (|| yap_i18n::tr!("tier-core"), 300, WORDS_PER_LEVEL),
+    (|| yap_i18n::tr!("tier-basic"), 400, WORDS_PER_LEVEL),
+    (
+        || yap_i18n::tr!("curriculum-essential"),
+        500,
+        WORDS_PER_LEVEL,
+    ),
+    (|| yap_i18n::tr!("tier-functional"), 600, WORDS_PER_LEVEL),
+    (|| yap_i18n::tr!("tier-intermediate"), 700, WORDS_PER_LEVEL),
+    (|| yap_i18n::tr!("tier-proficient"), 800, WORDS_PER_LEVEL),
+    (|| yap_i18n::tr!("tier-advanced"), 900, WORDS_PER_LEVEL),
+    (|| yap_i18n::tr!("tier-expert"), 1000, WORDS_PER_LEVEL),
+    (|| yap_i18n::tr!("tier-specialized"), 1100, WORDS_PER_LEVEL),
+    (
+        || yap_i18n::tr!("tier-esoteric"),
+        usize::MAX,
+        3 * WORDS_PER_LEVEL,
+    ), // all remaining
+];
 
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -96,14 +106,14 @@ pub(crate) fn position(frequencies: &ArchivedFrequencyList, coverage: f64) -> Es
     let words = equivalent_words(frequencies, coverage);
     let len = frequencies.entries.len();
     let mut start: usize = 0;
-    for (tier_idx, &(name, size)) in TIERS.iter().enumerate() {
+    for (tier_idx, &(name, size, level_size)) in TIERS.iter().enumerate() {
         let end = start.saturating_add(size).min(len);
         if words < end as f64 || end == len {
-            let total_levels = (end - start).div_ceil(WORDS_PER_LEVEL).max(1);
+            let total_levels = (end - start).div_ceil(level_size).max(1);
             let level_idx =
-                (((words - start as f64) / WORDS_PER_LEVEL as f64) as usize).min(total_levels - 1);
-            let level_start = start + level_idx * WORDS_PER_LEVEL;
-            let level_end = (level_start + WORDS_PER_LEVEL).min(end);
+                (((words - start as f64) / level_size as f64) as usize).min(total_levels - 1);
+            let level_start = start + level_idx * level_size;
+            let level_end = (level_start + level_size).min(end);
             let cumulative_mass: u64 = frequencies
                 .entries
                 .values()
