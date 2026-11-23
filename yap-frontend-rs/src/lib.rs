@@ -3317,7 +3317,7 @@ impl Deck {
     }
 
     /// Daily goal target in seconds.
-    pub fn get_daily_review_target(&self) -> u32 {
+    pub fn get_daily_target_seconds(&self) -> u32 {
         self.get_daily_review_target_setting().target_seconds()
     }
 
@@ -5975,7 +5975,7 @@ mod tests {
             deck.get_daily_review_target_setting(),
             DailyReviewTarget::Serious
         );
-        assert_eq!(deck.get_daily_review_target(), 15 * 60);
+        assert_eq!(deck.get_daily_target_seconds(), 15 * 60);
     }
 
     #[test]
@@ -5987,7 +5987,7 @@ mod tests {
             deck.get_daily_review_target_setting(),
             DailyReviewTarget::Casual
         );
-        assert_eq!(deck.get_daily_review_target(), 5 * 60);
+        assert_eq!(deck.get_daily_target_seconds(), 5 * 60);
     }
 
     #[test]
@@ -5997,7 +5997,7 @@ mod tests {
             deck.get_daily_review_target_setting(),
             DailyReviewTarget::Regular
         );
-        assert_eq!(deck.get_daily_review_target(), 10 * 60);
+        assert_eq!(deck.get_daily_target_seconds(), 10 * 60);
     }
 
     #[test]
