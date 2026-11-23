@@ -634,7 +634,7 @@ impl Deck {
         }
         let today = self.get_today_summary_on(day);
         let accomplishment = self.get_accomplishment()?;
-        let percent_known = self.get_percent_of_words_known();
+        let percent_known = self.get_fraction_of_words_known();
         let streak = self.get_daily_streak_on(day);
         Some(AccomplishmentView {
             target_language: self.get_target_language(),
@@ -1131,7 +1131,7 @@ impl Deck {
     fn percent_known_label(&self) -> String {
         yap_i18n::tr!(
             "stats-language-coverage",
-            percent = format!("{:.1}", self.get_percent_of_words_known() * 100.0),
+            percent = format!("{:.1}", self.get_fraction_of_words_known() * 100.0),
             language = (get_language_metadata(self.get_target_language()).common_name).to_string()
         )
     }
@@ -1367,7 +1367,7 @@ impl Deck {
         banned: Vec<ChallengeRequirements>,
         timestamp_ms: f64,
     ) -> StatsScreenView {
-        let percent_known = self.get_percent_of_words_known();
+        let percent_known = self.get_fraction_of_words_known();
         let review = self.get_review_info(banned, timestamp_ms);
         let leeches = self.get_leeches();
         let leech_count = leeches.len() as u64;
@@ -2210,7 +2210,7 @@ mod tests {
             home.up_next.action_label,
             format!("Review {} card", home.due_count)
         );
-        let percent_known = deck.get_percent_of_words_known();
+        let percent_known = deck.get_fraction_of_words_known();
         assert!(percent_known > 0.0);
         assert_eq!(
             home.cards.note,
@@ -2242,7 +2242,7 @@ mod tests {
             assert_eq!(due.total, deck.get_all_cards_summary().len() as u64);
             assert_eq!(stats.xp, deck.get_xp());
             assert_eq!(stats.total_reviews, deck.get_total_reviews());
-            assert_eq!(stats.percent_known, deck.get_percent_of_words_known());
+            assert_eq!(stats.percent_known, deck.get_fraction_of_words_known());
             assert_eq!(stats.leech_count, stats.leeches.len() as u64);
             assert_eq!(json(stats.leeches), json(deck.get_leeches()));
         }
@@ -2389,7 +2389,7 @@ mod tests {
             home.cards.note,
             Some(format!(
                 "{:.1}% of everyday French",
-                deck.get_percent_of_words_known() * 100.0
+                deck.get_fraction_of_words_known() * 100.0
             ))
         );
         assert_eq!(
