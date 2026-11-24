@@ -91,7 +91,7 @@ private struct BookCard: View {
 private enum Opening: Equatable { case paragraph(Int), end }
 
 struct BookReaderScreen: View {
-    @Environment(YapSession.self) private var session
+    let session: YapSession
     let language: Language
     let nativeLanguage: Language
     let slug: String

@@ -800,6 +800,13 @@ impl Weapon {
         // JSON to the store and let the stream's own event type decode it — exactly what the
         // sync download path does. Typing the payload here would silently assume one stream's
         // schema for every stream.
+        //
+        // Realtime also delivers streams this client never registers, such as the `knowledge`
+        // stream yap-mcp writes. Those belong to other clients, so drop them here instead of
+        // letting the store log an error about a missing stream.
+        if self.store.borrow().get_raw(stream_id.clone()).is_none() {
+            return Ok(());
+        }
         let event: Timestamped<weapon::data_model::RawJson> = serde_json::from_str(&event)?;
         self.store
             .borrow_mut()

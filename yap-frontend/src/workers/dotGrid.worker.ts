@@ -68,12 +68,20 @@ let dpr = 1;
 let frame: number | null = null;
 let lastTime = 0;
 
-function compile(type: number, src: string): WebGLShader {
-  const shader = gl!.createShader(type)!;
-  gl!.shaderSource(shader, src);
-  gl!.compileShader(shader);
-  if (!gl!.getShaderParameter(shader, gl!.COMPILE_STATUS))
-    throw new Error(gl!.getShaderInfoLog(shader) ?? "shader");
+/** Null when the context is lost (GPU reset, too many live contexts, a
+ *  backgrounded tab): WebGL calls then return null instead of throwing. */
+function compile(
+  gl: WebGLRenderingContext,
+  type: number,
+  src: string,
+): WebGLShader | null {
+  const shader = gl.createShader(type);
+  if (!shader) return null;
+  gl.shaderSource(shader, src);
+  gl.compileShader(shader);
+  if (gl.isContextLost()) return null;
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
+    throw new Error(gl.getShaderInfoLog(shader) ?? "shader");
   return shader;
 }
 
@@ -109,10 +117,23 @@ function init(
     powerPreference: "low-power",
   });
   if (!gl) return;
-  program = gl.createProgram()!;
-  gl.attachShader(program, compile(gl.VERTEX_SHADER, VERT));
-  gl.attachShader(program, compile(gl.FRAGMENT_SHADER, FRAG));
+  const vert = compile(gl, gl.VERTEX_SHADER, VERT);
+  const frag = compile(gl, gl.FRAGMENT_SHADER, FRAG);
+  program = gl.createProgram();
+  // A lost context gets the same treatment as no WebGL at all: no dot grid.
+  if (!vert || !frag || !program) {
+    gl = null;
+    program = null;
+    return;
+  }
+  gl.attachShader(program, vert);
+  gl.attachShader(program, frag);
   gl.linkProgram(program);
+  if (gl.isContextLost()) {
+    gl = null;
+    program = null;
+    return;
+  }
   if (!gl.getProgramParameter(program, gl.LINK_STATUS))
     throw new Error(gl.getProgramInfoLog(program) ?? "program");
   posBuffer = gl.createBuffer();
