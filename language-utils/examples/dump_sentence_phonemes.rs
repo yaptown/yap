@@ -1,10 +1,11 @@
 //! Write every phonemized sentence of a pack as JSONL: its text and, per gram,
-//! the gram's words and phoneme sequence (format: `sentence_phonemes`).
+//! the gram's words, their parts of speech, its corpus count, and its phoneme
+//! sequence (format: `sentence_phonemes`).
 //! Feeds TTS training in lexide/tts.
 //!
 //!   cargo run --release --example dump_sentence_phonemes -- out/eng_for_fra > eng.jsonl
 
-use language_utils::{Atom, SentenceGram, language_pack::LanguagePack};
+use language_utils::{Atom, SentenceGram, WordType, language_pack::LanguagePack};
 use std::io::Write;
 
 fn main() {
@@ -29,16 +30,24 @@ fn main() {
                 let gram = match gram {
                     SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => g,
                 };
-                let words: Vec<String> = pack
+                let (words, pos): (Vec<String>, Vec<serde_json::Value>) = pack
                     .resolve_gram(&gram.sense.gram)
                     .0
                     .into_iter()
                     .filter_map(|atom| match atom {
-                        Atom::Tok(word) => Some(word.text),
+                        Atom::Tok(word) => {
+                            let pos = match &word.word_type {
+                                WordType::Heteronym(h) => serde_json::to_value(h.pos),
+                                WordType::Other(o) => serde_json::to_value(o.other_tag),
+                            };
+                            Some((word.text, pos.unwrap()))
+                        }
                         Atom::Control(_) => None,
                     })
-                    .collect();
-                serde_json::json!({"words": words, "phonemes": sequence})
+                    .unzip();
+                // Corpus occurrences of the gram over all its senses: a rarity / surprisal prior.
+                let count = pack.gram_frequency_total(gram.sense.gram).map_or(0, |f| f.count);
+                serde_json::json!({"words": words, "pos": pos, "count": count, "phonemes": sequence})
             })
             .collect();
         let row = serde_json::json!({"text": pack.sentence_text(key), "grams": grams});
