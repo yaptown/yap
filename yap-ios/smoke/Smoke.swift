@@ -128,22 +128,22 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         check(FileManager.default.fileExists(atPath: sentinel.path))
         let summary = original.get_today_summary()
         check(summary.reviews == 0 && !summary.day_of_week.isEmpty)
-        check(original.get_daily_review_target() == 600)
+        check(original.get_daily_target_seconds() == 600)
         let root = URL(fileURLWithPath: CommandLine.arguments[1])
         let event = try String(contentsOf: root.appendingPathComponent("event-0.json"), encoding: .utf8)
         let before = notifications
         try weapon.add_remote_event(device_id: "swift-prototype-fixture", stream_id: "reviews", event: event)
         check(notifications == before + 1)
         let changed = try await deck(weapon, course)
-        check(changed.get_daily_review_target() == 1200)
-        check(original.get_daily_review_target() == 600) // independent Deck snapshots
+        check(changed.get_daily_target_seconds() == 1200)
+        check(original.get_daily_target_seconds() == 600) // independent Deck snapshots
         weapon.unsubscribe(key: listener)
         let after = notifications
         let secondEvent = try String(contentsOf: root.appendingPathComponent("event-1.json"), encoding: .utf8)
         try weapon.add_remote_event(device_id: "swift-prototype-fixture", stream_id: "reviews", event: secondEvent)
         check(notifications == after)
         let latest = try await deck(weapon, course)
-        check(latest.get_daily_review_target() == 300)
+        check(latest.get_daily_target_seconds() == 300)
         // The full Weapon impl is exported: Swift creates typed events directly.
         check(weapon.user_id == nil)
         check(weapon.num_events >= 2)
@@ -189,7 +189,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         check((response as? HTTPURLResponse)?.statusCode == 204)
         try await reopened.load_language_pack(course: course, on_progress: nil)
         let persisted = try await deck(reopened, course)
-        check(persisted.get_daily_review_target() == 1200)
+        check(persisted.get_daily_target_seconds() == 1200)
         do {
             _ = try await weapon.get_deck_state(course: course, utc_offset_seconds: 100_000)
             fatalError("expected invalid timezone error")

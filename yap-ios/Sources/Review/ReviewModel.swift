@@ -212,7 +212,7 @@ import Observation
         case "dismiss-keyboard": break
         case "status":
             DebugHarness.log("placement: startingFresh=\(String(describing: startingFresh)) historyKnown=\(historyKnown) taken=\(deck.has_taken_placement_test()) list=\(String(describing: deck.get_sentence_list()))")
-            DebugHarness.log("today: seconds=\(deck.get_today_time_spent()) target=\(deck.get_daily_review_target())")
+            DebugHarness.log("today: seconds=\(deck.get_today_time_spent()) target=\(deck.get_daily_target_seconds())")
             let info = deck.get_review_info(banned_challenge_types: banned, timestamp_ms: Self.now)
             DebugHarness.log("review: due=\(info.due_count) total=\(info.total_count) banned=\(info.due_but_banned_count) audioPending=\(info.due_but_audio_pending_count) locked=\(info.due_but_locked_count) step=\(String(describing: view?.step))")
             switch currentChallenge {

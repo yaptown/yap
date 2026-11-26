@@ -1123,7 +1123,7 @@ impl Deck {
             today_label: yap_i18n::tr!(
                 "stats-today-minutes",
                 studied = self.get_today_time_spent_on(day) / 60,
-                goal = self.get_daily_review_target() / 60
+                goal = self.get_daily_target_seconds() / 60
             ),
         }
     }
@@ -1312,17 +1312,17 @@ impl Deck {
                     before: yap_i18n::tr!(
                         "home-daily-progress.before",
                         studied = self.get_today_time_spent_on(day) / 60,
-                        goal = self.get_daily_review_target() / 60
+                        goal = self.get_daily_target_seconds() / 60
                     ),
                     emphasis: yap_i18n::tr!(
                         "home-daily-progress.goal",
                         studied = self.get_today_time_spent_on(day) / 60,
-                        goal = self.get_daily_review_target() / 60
+                        goal = self.get_daily_target_seconds() / 60
                     ),
                     after: yap_i18n::tr!(
                         "home-daily-progress.after",
                         studied = self.get_today_time_spent_on(day) / 60,
-                        goal = self.get_daily_review_target() / 60
+                        goal = self.get_daily_target_seconds() / 60
                     ),
                 },
                 daily_goal: self.get_daily_review_target_setting(),
@@ -1574,7 +1574,7 @@ impl Deck {
             target_language: self.get_target_language(),
             step,
             progress: (f64::from(self.get_today_time_spent_on(day))
-                / f64::from(self.get_daily_review_target()).max(1.0))
+                / f64::from(self.get_daily_target_seconds()).max(1.0))
             .clamp(0.0, 1.0),
             total_reviews,
             total_count: review.total_count() as u64,
@@ -2286,11 +2286,11 @@ mod tests {
         let tomorrow = deck.streak_card_view(after_midnight);
         assert_eq!(
             today.today_label,
-            format!("2 / {} min today", deck.get_daily_review_target() / 60)
+            format!("2 / {} min today", deck.get_daily_target_seconds() / 60)
         );
         assert_eq!(
             tomorrow.today_label,
-            format!("0 / {} min today", deck.get_daily_review_target() / 60)
+            format!("0 / {} min today", deck.get_daily_target_seconds() / 60)
         );
         let home = deck.home_screen_view(ReviewScreenInputs {
             timestamp_ms: after_midnight,
@@ -2401,7 +2401,7 @@ mod tests {
         assert_eq!(home.week.today.before, "0 / ");
         assert_eq!(
             home.week.today.emphasis,
-            format!("{} min", deck.get_daily_review_target() / 60)
+            format!("{} min", deck.get_daily_target_seconds() / 60)
         );
     }
 }
