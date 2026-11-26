@@ -69,7 +69,9 @@ pub fn token_count(words: &[Literal<String>]) -> usize {
         .iter()
         .filter(|literal| match &literal.word.word_type {
             WordType::Heteronym(h) => h.pos != PartOfSpeech::Sym,
-            WordType::Other(other) => other.other_tag == OtherWordType::Propn,
+            WordType::Other(other) => {
+                matches!(other.other_tag, OtherWordType::Propn | OtherWordType::Num)
+            }
         })
         .count()
 }
@@ -194,6 +196,7 @@ mod tests {
             OtherWordType::Space,
             OtherWordType::X,
             OtherWordType::Propn,
+            OtherWordType::Num,
         ]
         .into_iter()
         .map(|other_tag| Literal {
@@ -215,6 +218,6 @@ mod tests {
             },
             whitespace: language_utils::Whitespace::None,
         });
-        assert_eq!(token_count(&words), 1);
+        assert_eq!(token_count(&words), 2);
     }
 }

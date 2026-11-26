@@ -1,12 +1,12 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 3928786
-Total errors: 11058
-Accuracy: 99.72%
+Total predictions: 4121116
+Total errors: 13009
+Accuracy: 99.68%
 
 ## Error Patterns (sorted by frequency)
 
-### "can" + "'t" (5828 occurrences)
+### "can" + "'t" (5933 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
@@ -14,7 +14,7 @@ Accuracy: 99.72%
   - "I can't help it, I always want some more."
   - "I can't stand it any longer," he says.
 
-### "can" + "not" (734 occurrences)
+### "can" + "not" (744 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
@@ -30,7 +30,7 @@ Accuracy: 99.72%
   - "But winter for them is no harm, "for a poet's heart "keeps him warm."
   - "By the personal command of the Führer, "Secrecy essential to success.
 
-### "Can" + "'t" (449 occurrences)
+### "Can" + "'t" (455 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
@@ -38,13 +38,21 @@ Accuracy: 99.72%
   - "Can't you see"?
   - Can't I come in?
 
-### "," + "“" (131 occurrences)
+### "," + "“" (390 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Ah!” said he, laying down his cup, “I feared as much.
-  - Ah, yes,” he cried, “here’s the end of a long light ladder against the eaves.
-  - Ah,” said he, “I forgot that I had not seen you for some weeks.
+  - A gentle snow-slope descended at our feet toward a valley that separated our ridge from the hills immediately behind Husvik, and as we stood gazing Worsley said solemnly, “Boss, it looks too good to be true!”
+  - A look of contempt came over him, and he said, “Why not?” “Mr. Beebe—I have misled you—I have misled myself—” “Oh, rubbish, Miss Honeychurch!”
+  - After a long and silent inspection, Mr. Scogan would suddenly look up and ask, in a hoarse whisper, some horrifying question, such as, “Have you ever been hit on the head with a hammer by a young man with red hair?”
+
+### "”" + "“" (157 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A look of contempt came over him, and he said, “Why not?” “Mr. Beebe—I have misled you—I have misled myself—” “Oh, rubbish, Miss Honeychurch!”
+  - A look of contempt came over him, and he said, “Why not?” “Mr. Beebe—I have misled you—I have misled myself—” “Oh, rubbish, Miss Honeychurch!”
+  - And yet when, long afterward, I told this to one skilled in the occult, he looked grave, and said, “Bingo always turned to you in a crisis?” “Yes.”
 
 ### "say" + """ (99 occurrences)
 - Predicted: None
@@ -126,6 +134,14 @@ Accuracy: 99.72%
   - And here it is, number one from Billy Mack, it's "Christmas Is All Around."
   - And it's "more often".
 
+### "—" + "and" (45 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - After tea Mother played games with them—any game they liked—and of course their first choice was blindman's-buff, in the course of which Bobbie's forget-me-not wreath twisted itself crookedly over one of her ears and stayed there.
+  - Bill looked up at the face that was laughing down on him, and which was always inclined to reduce him—and not him alone—to a state of babbling incoherency.
+  - Dogs read our faces, our voices, even our smell—they've had thirty thousand years to practice—and they still can't figure out why we leave the house without them.
+
 ### """ + "he" (44 occurrences)
 - Predicted: None
 - Actual: Space
@@ -157,6 +173,14 @@ Accuracy: 99.72%
   - "But I can speak to my Law Reader," I continued.
   - "But I have fish waiting for me," I said.
   - "But I'm already queuing," I tell him.
+
+### ";" + "“" (37 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - As low as you can,” he answered; “I have excellent ears.
+  - Come,” cried the inspector, laughing; “it’s a very pretty diversity of opinion.
+  - I cried; “pull yourself together!” and I poured out some water from a carafe.
 
 ### "is" + """ (37 occurrences)
 - Predicted: None
@@ -238,6 +262,14 @@ Accuracy: 99.72%
   - Hey, what the hell is with this "pig" shit?
   - How can you see this "television" without any film?
 
+### "—" + "the" (22 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Baptism—the first sacrament of Christian initiation, the basis for all the other sacraments.
+  - Everything we own—the couch, the books, the fish—has to fit in that van.
+  - Everything—the whole complex movement of the universe—is as simple as that—when you can sufficiently put two and two together.
+
 ### "-" + "I" (21 occurrences)
 - Predicted: None
 - Actual: Space
@@ -254,13 +286,13 @@ Accuracy: 99.72%
   - A man's gotta do what a man's gotta do.
   - A man's gotta do what a man's gotta do.
 
-### ";" + "“" (20 occurrences)
-- Predicted: None
-- Actual: Space
+### "—" + "I" (21 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - As low as you can,” he answered; “I have excellent ears.
-  - Come,” cried the inspector, laughing; “it’s a very pretty diversity of opinion.
-  - I cried; “pull yourself together!” and I poured out some water from a carafe.
+  - A four-hour layover turned into a fourteen-hour layover, and a fourteen-hour layover turned into—I'm not kidding—a wedding.
+  - A look of contempt came over him, and he said, “Why not?” “Mr. Beebe—I have misled you—I have misled myself—” “Oh, rubbish, Miss Honeychurch!”
+  - A look of contempt came over him, and he said, “Why not?” “Mr. Beebe—I have misled you—I have misled myself—” “Oh, rubbish, Miss Honeychurch!”
 
 ### "an" + """ (20 occurrences)
 - Predicted: None
@@ -390,6 +422,14 @@ Accuracy: 99.72%
   - Can I call you "Elphie"?
   - Do I really start calling you "papa" tomorrow?
 
+### "—" + "a" (14 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A four-hour layover turned into a fourteen-hour layover, and a fourteen-hour layover turned into—I'm not kidding—a wedding.
+  - Every so often—at a bus stop, say, or in the checkout line—a perfect stranger will tell you the saddest thing that's ever happened to them, and then ask if you know what time it is.
+  - Finally he descended and carried up two other packets of mixed goods—a box of ammunition and a number of other things, all of which we got across by throwing our rope to him and hauling it back.
+
 ### """ + "by" (13 occurrences)
 - Predicted: None
 - Actual: Space
@@ -461,6 +501,14 @@ Accuracy: 99.72%
   - And what's your "idiot trap"?
   - And where's your "good morning"?
   - And your "Shondesh" is famous!
+
+### "—" + "to" (12 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - And the swallows up above started whistling at the top of their voices—thousands and millions of them—to show that they too were glad that the boy's brave uncle had been found.
+  - At the break of the poop he reeled, raised one hand to his eyes with the familiar brushing gesture, and fell down the steps—still on his feet—to the main deck, across which he staggered, falling and flinging out his arms for support.
+  - Bill looked up at the face that was laughing down on him, and which was always inclined to reduce him—and not him alone—to a state of babbling incoherency.
 
 ### """ + "me" (11 occurrences)
 - Predicted: None
@@ -550,6 +598,22 @@ Accuracy: 99.72%
   - Both spelt with "p"!
   - I thought you always started with "Tell me about your mother."
 
+### "—" + "but" (10 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He never thought that the dragon himself might help them—but then that was an idea that would never have occurred to any boy.
+  - I could tell you what happened next—but my lawyer's in the room.
+  - I'd planned to stay a week—ten days at the most—but the mountains, the light, and a certain soft-spoken carpenter had other ideas.
+
+### "—" + "that" (10 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A run-down, boarded-up, long-forgotten movie palace on the wrong side of the tracks—that's where she taught us to dance.
+  - Lightering—that's taking stuff out to boats in the harbor.
+  - To pretend to marry him until she brought the King in open conflict with him, and then having led the King to her feet to dismiss the rival who had served her turn—that was her only wise course.
+
 ### """ + "you" (9 occurrences)
 - Predicted: None
 - Actual: Space
@@ -574,6 +638,14 @@ Accuracy: 99.72%
   - And she'll let you call her "Mama."
   - Everyone in there calls her "kind-hearted" Geum-ja.
 
+### "n" + "'" (9 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - "Rock'n'roll can save the world"?
+  - Bacon, eggs, bologna, rock'n'roll, motorcycles.
+  - Music, you know, true music, not just rock'n'roll, chooses you.
+
 ### "saying" + """ (9 occurrences)
 - Predicted: None
 - Actual: Space
@@ -581,6 +653,22 @@ Accuracy: 99.72%
   - "Hyperbole" is a fancy way of saying "exaggeration."
   - And stop saying "okay" all the time, okay?
   - Carry on saying "fag"!
+
+### "that" + "—" (9 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - But as before, Aunt Polly shook her head and said “no, dear,” very decisively, yet with a still more anxious assurance that she would do anything—anything but that—to please her dear Pollyanna.
+  - Did you see that—?
+  - Everything—the whole complex movement of the universe—is as simple as that—when you can sufficiently put two and two together.
+
+### "—" + "it" (9 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It isn't the cold that gets you—it's the wet.
+  - It was good to get out of Dover Street—it was better for the growing children, better for my weary parents, better for all of us, as the clean grass is better than the dusty pavement.
+  - It's not a pet—it's a sourdough starter—but yes, its name is Kevin, and yes, I talk to it.
 
 ### """ + "as" (8 occurrences)
 - Predicted: None
@@ -614,6 +702,14 @@ Accuracy: 99.72%
   - A "ghost building"?
   - A "hysterical anthropocentrist."
 
+### "and" + "—" (8 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He drew the card, looked at it, and—for the first time all night—smiled.
+  - He walked up to the microphone, cleared his throat, and—
+  - I was going to say something clever, but then I saw the bill, and—
+
 ### "are" + """ (8 occurrences)
 - Predicted: None
 - Actual: Space
@@ -637,6 +733,14 @@ Accuracy: 99.72%
   - I do not know what "it" is.
   - I think I know what "If you build it, he will come" means.
   - It's like they don't know what "information literacy" means.
+
+### "—" + "not" (8 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - And, as Peter pointed, the tree was moving—not just the way trees ought to move when the wind blows through them, but all in one piece, as though it were a live creature and were walking down the side of the cutting.
+  - Eight o'clock—not eight-fifteen, not eight-ish—eight o'clock.
+  - It was still early—not quite ten o'clock—and it occurred to Aubrey that if he was going to patrol the neighborhood he had better fix its details in his head.
 
 ### "-" + "What" (7 occurrences)
 - Predicted: None
@@ -678,6 +782,14 @@ Accuracy: 99.72%
   - And-- and Mr. Hart's pistol was lying there between us.
   - And-- and illegal search without a warrant.
 
+### "I" + "—" (7 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - But I—
+  - He said: “I—I'll come up to tennis if I can manage it,” and went into the house.
+  - Look, I—
+
 ### "Why" + """ (7 occurrences)
 - Predicted: None
 - Actual: Space
@@ -693,6 +805,22 @@ Accuracy: 99.72%
   - What does "Ekto Gamat" mean?
   - What does "Tatoeba" mean?
   - What does "cultural relativism" mean to you?
+
+### "p." + "m." (7 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He retired on 12/31/1999, at 11:59 p.m., just in case.
+  - Meet at Broadway & 42nd St. at 7 p.m. sharp; wear a scarf, a hat, etc.
+  - The 2nd shift runs from 3 p.m. to 11 p.m., and the 3rd from 11 p.m. to 7 a.m.
+
+### "—" + "what" (7 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A cross-country road trip with my ex-husband, his ex-wife, and her ex-terminator—what could go wrong?
+  - For the first time in his life he yearned for the society of his German instructor at college, and also wondered—in the rapid irrelevance of thought—what that worthy man was now doing to earn a living.
+  - The old-growth forests—what remains of them—hold more carbon per acre than almost any other place on land, and they've been doing it, free of charge, since before we learned to count.
 
 ### """ + "now" (6 occurrences)
 - Predicted: None
@@ -725,6 +853,14 @@ Accuracy: 99.72%
   - Come on, Mr. White, I mean, you c-c-can- You can see that, can't you?
   - I'm calling because- You know that thing that happened in college?
   - I-- You have to read the actual book.
+
+### "-" + "to" (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - He could have stopped and be waiting - to surprise us when we surface.
+  - Raw little chicken things, frozen to the-- to the wood beam.
+  - The committee meets ten to twelve times a year, usually for two- to three-hour sessions.
 
 ### "--" + "he" (6 occurrences)
 - Predicted: None
@@ -774,13 +910,13 @@ Accuracy: 99.72%
   - All right, then we'll go and hunt some with my "Rufle".
   - I said, aren't you afraid of my "Rufle"?!
 
-### "n" + "'" (6 occurrences)
+### "news" + ":" (6 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - "Rock'n'roll can save the world"?
-  - Bacon, eggs, bologna, rock'n'roll, motorcycles.
-  - Music, you know, true music, not just rock'n'roll, chooses you.
+  - Bad news: so does the ransomware.
+  - Good news: the backups exist.
+  - Good news: your flight's on time.
 
 ### "than" + """ (6 occurrences)
 - Predicted: None
@@ -789,6 +925,14 @@ Accuracy: 99.72%
   - Anything's better than "Salustiana."
   - Better than "Pamela"!
   - Bigger than "Caesar's Palace"?
+
+### "them" + "—" (6 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - After tea Mother played games with them—any game they liked—and of course their first choice was blindman's-buff, in the course of which Bobbie's forget-me-not wreath twisted itself crookedly over one of her ears and stayed there.
+  - And the swallows up above started whistling at the top of their voices—thousands and millions of them—to show that they too were glad that the boy's brave uncle had been found.
+  - He never thought that the dragon himself might help them—but then that was an idea that would never have occurred to any boy.
 
 ### "was" + """ (6 occurrences)
 - Predicted: None
@@ -805,6 +949,30 @@ Accuracy: 99.72%
   - Can you write "In" and "out"?
   - How do you write "AJAX" in Kabyle?
   - How should I write "encounter" in the Slovak language?
+
+### "—" + "in" (6 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - By the age of thirty-five she'd been a short-order cook, a stand-up comic, and a vice-consul—in that order.
+  - Flying model craft and stories of manned flight go back many centuries; however, the first manned ascent—and safe descent—in modern times took place by larger hot-air balloons developed in the 18th century.
+  - For the first time in his life he yearned for the society of his German instructor at college, and also wondered—in the rapid irrelevance of thought—what that worthy man was now doing to earn a living.
+
+### "—" + "she" (6 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - And Venters thought with lightning swiftness, “I've saved her—I've unlinked her from that old life—she was watching as if I were all she had left on earth—she belongs to me!” The thought was startlingly new.
+  - And Venters thought with lightning swiftness, “I've saved her—I've unlinked her from that old life—she was watching as if I were all she had left on earth—she belongs to me!” The thought was startlingly new.
+  - Having dispatched this, and Tommy not having yet returned—which did not surprise her—she started off on a shopping expedition which, with an interval for tea and assorted creamy cakes, occupied her until well after six o'clock, and she returned to the hotel jaded, but satisfied with her purchases.
+
+### "—" + "well" (6 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Don't touch that, it's extremely—well, now you know.
+  - If the sample turns blue, the water's safe to drink; if it turns green, boil it first; and if it turns pink—well, I've never seen it turn pink.
+  - She'd been a straight-A student until—well, until Dmitri.
 
 ### """ + "a" (5 occurrences)
 - Predicted: None
@@ -966,6 +1134,38 @@ Accuracy: 99.72%
   - It's what they call "chronic".
   - This is what we call "tempura".
 
+### "er" + "—" (5 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Moreover, if she had been the person who peered at you over the gallery railing last night, don't you suppose, with her—er—belligerent disposition, she could have filled you as full of lead as a window weight?”
+  - “Oh, grass and things chiefly. I thought I should be safe with grass.” “And were you—er—safe?” asked Belvane, with a great show of anxiety.
+  - “Oh, yes,” he said, “of course, I—er—can stay.”
+
+### "her" + "—" (5 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - And Venters thought with lightning swiftness, “I've saved her—I've unlinked her from that old life—she was watching as if I were all she had left on earth—she belongs to me!” The thought was startlingly new.
+  - Having dispatched this, and Tommy not having yet returned—which did not surprise her—she started off on a shopping expedition which, with an interval for tea and assorted creamy cakes, occupied her until well after six o'clock, and she returned to the hotel jaded, but satisfied with her purchases.
+  - He remembered the first time he had danced with her—and the old waltz song began to beat in his ears and in his heart.
+
+### "him" + "—" (5 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Bill looked up at the face that was laughing down on him, and which was always inclined to reduce him—and not him alone—to a state of babbling incoherency.
+  - Her mind was busy at once, going over all the things which he had said to her and she had said to him—quiet-like.
+  - However, for the fourth time Windy Corner lay poised below him—now as a beacon in the roaring tides of darkness.
+
+### "one" + ":" (5 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Faux pas number one: she called the hors d'oeuvres “little snacks.”
+  - It's a small museum, and an odd one: nine rooms, four hundred lamps, and not a single working outlet.
+  - One, one, two, three, five, eight, thirteen, twenty-one: each is the sum of the two before it.
+
 ### "our" + """ (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -981,6 +1181,14 @@ Accuracy: 99.72%
   - God's gift to rock'n'roll.
   - Honey, you're too sweet for rock'n'roll.
   - It's just a shame you missed out on rock'n'roll.
+
+### "said" + ":" (5 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - But what pleased me most was when my old man pulled both of my ears until I howled, and said: “You common, monkey-headed, rat-tailed, sulfur-colored son of a door mat, do you know what I'm going to call you?”
+  - He said: “I—I'll come up to tennis if I can manage it,” and went into the house.
+  - One day, when I wanted her to bring me some water, she said: “Legs very tired. Legs cry much.”
 
 ### "won" + "'t" (5 occurrences)
 - Predicted: Space
@@ -998,13 +1206,69 @@ Accuracy: 99.72%
   - He wrote "Mr?"
   - He wrote "jerk".
 
-### "—" + "and" (5 occurrences)
+### "you" + "—" (5 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Don’t speak so loud, or you will be overheard—and I should be ruined.
-  - I hadn’t thought to sell to him—and he has his own jetty.
-  - Remember that the Witch is Wicked—tremendously Wicked—and ought to be killed.
+  - A look of contempt came over him, and he said, “Why not?” “Mr. Beebe—I have misled you—I have misled myself—” “Oh, rubbish, Miss Honeychurch!”
+  - It isn't the cold that gets you—it's the wet.
+  - The answer's right in front of you—no, your other front.
+
+### "—" + "at" (5 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Every so often—at a bus stop, say, or in the checkout line—a perfect stranger will tell you the saddest thing that's ever happened to them, and then ask if you know what time it is.
+  - First-time visitors tend to look up—at the arches, the angels, the blue-and-gold vault—and walk straight into the font.
+  - Most notably, box jellyfish can swim—at maximum speeds approaching four knots—whereas most species of jellyfish float wherever the current takes them, with little control over their direction.
+
+### "—" + "er" (5 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Moreover, if she had been the person who peered at you over the gallery railing last night, don't you suppose, with her—er—belligerent disposition, she could have filled you as full of lead as a window weight?”
+  - “Oh, grass and things chiefly. I thought I should be safe with grass.” “And were you—er—safe?” asked Belvane, with a great show of anxiety.
+  - “Oh, yes,” he said, “of course, I—er—can stay.”
+
+### "—" + "for" (5 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He drew the card, looked at it, and—for the first time all night—smiled.
+  - My mother Kira—I'm Amanda Kirasdotr—for longer.
+  - We sell by the pound, by the bushel, or—for friends—by the wave of a hand.
+
+### "—" + "he" (5 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Because he limped—he was lame.
+  - He promised to fix the roof by spring—he just didn't say which spring.
+  - He's not a bad singer—he's a catastrophic one.
+
+### "—" + "is" (5 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Everything—the whole complex movement of the universe—is as simple as that—when you can sufficiently put two and two together.
+  - Jim—my other half—is still in the autodoc, having his lungs cleaned.
+  - The long and short of it—mostly the long—is that the goat has been returned and nobody's pressing charges.
+
+### "—" + "my" (5 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Dinner was a five-course, three-hour, no-phones-allowed affair, and by the end of it—somewhere between the cheese and the second dessert—my parents were holding hands.
+  - I opened the fridge, and there it was—my phone.
+  - Jim—my other half—is still in the autodoc, having his lungs cleaned.
+
+### "—" + "no" (5 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - If you could just hand me the—no, the other one—thank you.
+  - My grandmother crossed the ocean alone at sixteen—no English, no money, a cardboard suitcase tied shut with string—and within ten years she owned the building.
+  - The answer's right in front of you—no, your other front.
 
 ### """ + "before" (4 occurrences)
 - Predicted: None
@@ -1070,6 +1334,14 @@ Accuracy: 99.72%
   - Don't start that "Mookie don't work" shit, all right?
   - Hey, what the hell is with this "pig" shit?
 
+### "," + "'" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - “My father used to say, 'A man who won't sharpen his own knives will eat somebody else's bread,'” the cook told us, “and I still have no idea what he meant.”
+  - “She said, 'Take the high road,' so I did,” he explained, “and now my truck's on top of a mountain.”
+  - “So I said, 'Are you threatening me?' and he said, 'No, ma'am, I'm just the plumber,'” Mrs. Albright recounted, delighted.
+
 ### ","" + "she" (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1085,14 +1357,6 @@ Accuracy: 99.72%
   - I mean, I wish I- No.
   - It's- No, it's actually- It's really complicated, okay?
   - Listen-- No, no, no!
-
-### "-" + "to" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - He could have stopped and be waiting - to surprise us when we surface.
-  - Raw little chicken things, frozen to the-- to the wood beam.
-  - This is the Alphaverse's mission - to take us back to how it's supposed to be.
 
 ### "--" + "This" (4 occurrences)
 - Predicted: None
@@ -1142,6 +1406,14 @@ Accuracy: 99.72%
   - I mean, nothing-- you know, nothing implied at all.
   - So you-- you didn't find this diary in Roxie's cell?
 
+### "1" + "/" (4 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - About 1/3 of the class chose biology, 1/4 chose physics, and the other 5/12 were still asleep.
+  - About 1/3 of the class chose biology, 1/4 chose physics, and the other 5/12 were still asleep.
+  - Add 2/3 cup of milk and 1/4 teaspoon of nutmeg.
+
 ### "Like" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1166,6 +1438,14 @@ Accuracy: 99.72%
   - And then we did "Blood Bath II".
   - How did "Jacky" get so rich?
 
+### "me" + ":" (4 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - But the artilleryman dissuaded me: “It's no kindness to the right sort of wife,” he said, “to make her a widow;” and in the end I agreed to go with him, under cover of the woods, northward as far as Street Cobham before I parted with him.
+  - It was a moment before he located me: when he did, he stood for one moment as if paralyzed, then he gave a horrible yell, and dropping his papers, bolted across the lawn to the road without stopping to look around.
+  - Somebody's gotta say it, so I guess it's gonna be me: that isn't a wig, it's a hat.
+
 ### "on" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1173,6 +1453,14 @@ Accuracy: 99.72%
   - I met you on "Blood Bath", right?
   - Put on "Jingle Bells."
   - Put on "Patricia."
+
+### "one" + "—" (4 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A well-timed pause—like this one—can do the work of a whole paragraph.
+  - Her left-hand drawer held pencils, her right-hand drawer held paper, and the middle one—locked, always locked—held whatever it was that made her smile on Fridays.
+  - I'd like a room for one—actually, make it two.
 
 ### "play" + """ (4 occurrences)
 - Predicted: None
@@ -1198,6 +1486,14 @@ Accuracy: 99.72%
   - How do you spell "deodorant"?
   - How do you spell "pretty"?
 
+### "this" + ":" (4 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ask yourself this: would you rather be right, or would you rather be at dinner?
+  - Her point was this: if the fish are dying upstream, you don't blame the fishermen downstream.
+  - So let me say just this: Carol taught in this building for thirty-eight years, and not one of us ever got away with anything.
+
 ### "under" + """ (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1214,21 +1510,61 @@ Accuracy: 99.72%
   - I don't know what the words "Secret" or "Irises" mean either.
   - Never write the words "bortsch" and "shchi" in German!
 
-### "—" + "a" (4 occurrences)
+### "—" + "like" (4 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - He has been a disappointment to me, Mr. Holmes—a grievous disappointment.
-  - McCarthy kept two servants—a man and a girl.
-  - “Ah, and what did you gather from this allusion to a band—a speckled band?”
+  - A well-timed pause—like this one—can do the work of a whole paragraph.
+  - All winter the house made noises—ticks, groans, long shivering sighs—like something trying to remember a tune.
+  - I remained at Plantation House a couple of days, and one of the rooms in the mansion, called the “west room,” being haunted, the butler, by command of his Excellency, put me up in that—like a prince.
 
-### "—" + "that" (4 occurrences)
+### "—" + "of" (4 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Lightering—that's taking stuff out to boats in the harbor.
-  - Watch out—that guy is a real snake in the grass.
-  - “Peculiar—that is the very word,” said Holmes.
+  - She frequently did that, however, when Pollyanna was talking of others—of Dr. Chilton, for instance.
+  - She loved him—of course she did—but she loved the mountain first.
+  - That day, too, I made a friend—of a sort.
+
+### "—" + "or" (4 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - From somewhere above came the metallic accuracy of a player-piano, and through the open window we could hear—or feel—the throb of the Cannonball's engine.
+  - In books, you simply leapt into another, promised the driver a sovereign—or its modern equivalent—and there you were.
+  - You never know who's listening—or, more often, who isn't.
+
+### "—" + "there" (4 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I had a whole speech prepared—there were jokes, there was a quotation from Seneca—and I got as far as “um.”
+  - Then—at last—there came a single unmistakable click.
+  - To be young, broke, and in Lisbon in late September—there's nothing like it.
+
+### "—" + "they" (4 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Dogs read our faces, our voices, even our smell—they've had thirty thousand years to practice—and they still can't figure out why we leave the house without them.
+  - That's the trouble with self-made men—they tend to worship their creator.
+  - When she exclaimed, “But Cecil's Emersons—they can't possibly be the same ones—there is that—” he did not consider that the exclamation was strange, but saw in it an opportunity of diverting the conversation while she recovered her composure.
+
+### "—" + "this" (4 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The island has no cars, no streetlights, and—this is the part people don't believe—no mosquitoes.
+  - Turn right at the church, left at the mill, and then—this is important—don't make eye contact with the rooster.
+  - We were this close—this close!—to finishing the puzzle when the cat walked by.
+
+### "—" + "you" (4 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ship fees are not cheap—you can pay monthly, for a premium.
+  - Some nights—not often, maybe once or twice a year—you can hear the whales from the kitchen.
+  - “But his wife—you said that she had ceased to love him.”
 
 ### """ + "Christopher" (3 occurrences)
 - Predicted: None
@@ -1350,6 +1686,22 @@ Accuracy: 99.72%
   - He's not fighting for Hindu freedom, ..
   - I love Bhaskor da, ..
 
+### "," + "‘" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - “He looked me dead in the eye,” Priya whispered, “and he said, ‘Your grandmother was the getaway driver.’”
+  - “What did the letter say?” “It said, and I'm quoting here, ‘Come home or don't, but feed the cat either way.’”
+  - “What she actually told the board,” said Lionel, lowering his voice as the elevator doors closed, “was, ‘You can have my resignation or you can have my silence, but you can't afford both.’”
+
+### ",”" + "“" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Finally, we judge, the animal—perhaps the bird was first—began to give utterance to particular “words,” indicative not merely of emotions, but of particular things with an emotional halo, such as “food,” “enemy,” “home.”
+  - Finally, we judge, the animal—perhaps the bird was first—began to give utterance to particular “words,” indicative not merely of emotions, but of particular things with an emotional halo, such as “food,” “enemy,” “home.”
+  - The word comes from the Greek for star (as do the words “astronomy,” “asteroid,” and, through a long chain of accidents, “disaster”).
+
 ### "-" + "a" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1357,6 +1709,14 @@ Accuracy: 99.72%
   - All those are yours-- a present.
   - But it takes a long time-- a very long time.
   - You saw them age and die - a friend, a colleague, a wife.
+
+### "-" + "and" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - All light- and sound-proof, but you can get air inside.
+  - Take care-- and eat!
+  - The so-called experts said it couldn't be done; the twelve- and thirteen-year-olds in Ms. Rowe's class hadn't heard.
 
 ### "-" + "but" (3 occurrences)
 - Predicted: None
@@ -1470,6 +1830,22 @@ Accuracy: 99.72%
   - W-- w-- what?
   - Wh-- what did Casely say when you told him the news?
 
+### "/" + "4" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - About 1/3 of the class chose biology, 1/4 chose physics, and the other 5/12 were still asleep.
+  - Add 2/3 cup of milk and 1/4 teaspoon of nutmeg.
+  - Nearly 3/4 of the surface is covered with water.
+
+### "5" + "/" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - About 1/3 of the class chose biology, 1/4 chose physics, and the other 5/12 were still asleep.
+  - He needs a 9/16 wrench, not a 5/8.
+  - The hike is rated 5/10 for difficulty and 10/10 for blisters.
+
 ### "I" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1502,6 +1878,14 @@ Accuracy: 99.72%
   - Yakul!
   - Yakul, run!
 
+### "a." + "m." (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The 2nd shift runs from 3 p.m. to 11 p.m., and the 3rd from 11 p.m. to 7 a.m.
+  - The AP exam in AP Chem starts at eight a.m.
+  - The train departs from platform 9 at 11:05 a.m.
+
 ### "asked" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1518,6 +1902,14 @@ Accuracy: 99.72%
   - He came but "he's not here."
   - Not "what", but "who"!
 
+### "but" + "—" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Look, I'd love to stay and chat, but—oh no, he's seen us—keep walking.
+  - Right, but—
+  - Yes, but—
+
 ### "confuse" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1533,6 +1925,22 @@ Accuracy: 99.72%
   - Of course not, I'm doing "Witch Watch."
   - They're doing "hat shop."
   - This is Sonic Youth doing "Superstar" by the Carpenters.
+
+### "door" + ":" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The RA taped a sign to the door: no TVs, no PCs, no DJs, and absolutely no BBQ grills, Mr. Prescott.
+  - The rules of the house were posted inside the pantry door: shoes off, lights out by ten, no arguing about politics before dessert, and whoever finishes the milk buys the milk.
+  - There's a trick to opening that door: lift, lean, and swear.
+
+### "friend" + "—" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - His learned friend—Sir Ernest nodded carelessly at Mr. Philips—had stated that if the prisoner were an innocent man, he would have come forward at the inquest to explain that it was he, and not Mr. Inglethorp, who had been the participator in the quarrel.
+  - That day, too, I made a friend—of a sort.
+  - “Oh, my friend—!” She laid her hand lightly on his arm, and he pleaded earnestly: “Ellen—why won't you tell me what's happened?” She shrugged again.
 
 ### "got" + """ (3 occurrences)
 - Predicted: None
@@ -1558,6 +1966,14 @@ Accuracy: 99.72%
   - He peddled his "miracle cure" to desperate cancer patients.
   - They called them his "Diamond Dogs."
 
+### "it" + "—" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Dinner was a five-course, three-hour, no-phones-allowed affair, and by the end of it—somewhere between the cheese and the second dessert—my parents were holding hands.
+  - The long and short of it—mostly the long—is that the goat has been returned and nobody's pressing charges.
+  - “Yes, gold! See, pounds of gold! I found it—washed it out of the stream—picked it out grain by grain, nugget by nugget!” “Gold!” he cried.
+
 ### "little" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1581,6 +1997,14 @@ Accuracy: 99.72%
   - Fucking no "but"!
   - There's no "we".
   - We have no "Pola".
+
+### "o'clock" + "—" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Eight o'clock—not eight-fifteen, not eight-ish—eight o'clock.
+  - It was nine o'clock—almost immediately afterward I looked at my watch and found it was ten.
+  - It was still early—not quite ten o'clock—and it occurred to Aubrey that if he was going to patrol the neighborhood he had better fix its details in his head.
 
 ### "out" + """ (3 occurrences)
 - Predicted: None
@@ -1630,6 +2054,22 @@ Accuracy: 99.72%
   - Do you want some "mate"?
   - I didn't spend my whole life for this, to be called some "Mr." now.
 
+### "the" + "—" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - If you could just hand me the—no, the other one—thank you.
+  - “I can't hear you over the—” The band stopped.
+  - “You were supposed to turn left at the—” “I know where I was supposed to turn.”
+
+### "then" + "—" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Now then—your turn.
+  - Turn right at the church, left at the mill, and then—this is important—don't make eye contact with the rooster.
+  - “What is it, then—a fire?”
+
 ### "understand" + """ (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1637,6 +2077,86 @@ Accuracy: 99.72%
   - Do you understand "light"?
   - I understand "boom".
   - We don't understand "embassy".
+
+### "—" + "are" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Albert Einstein called this the equivalence principle, and said that only observers who feel no force at all—including the force of gravity—are justified in concluding that they are not accelerating.
+  - I mean, you too—are Rohit?
+  - “Wait, wait, wait—are you telling me,” Oscar said, “that the whole town has known since Easter?”
+
+### "—" + "had" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Her hands—broad, scarred, astonishingly gentle—had delivered half the county.
+  - His learned friend—Sir Ernest nodded carelessly at Mr. Philips—had stated that if the prisoner were an innocent man, he would have come forward at the inquest to explain that it was he, and not Mr. Inglethorp, who had been the participator in the quarrel.
+  - Nothing—not the floods, not the fire, not even that year with the locusts—had ever closed the Blue Moon Diner.
+
+### "—" + "if" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Yet—if Mr. Wilkins had telegraphed, why not Frederick?
+  - You can have the window seat—if you'll swap me the pretzels.
+  - “Let me know as soon as your father returns—if he has any news.” “I'll do that, Mrs. Robinson,” agreed the boy.
+
+### "—" + "so" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - No sounds were to be heard in the house, so she supposed it was very early, yet she felt as if she had slept a long while—so completely rested, so perfectly content.
+  - The so-what question—so what?—is the one that kills most dissertations.
+  - You probably belong to a Family also, and will look at it from a worldly point of view and not just a sympathetic, human point of view—so you see how brave I am to lay it before you.
+
+### "—" + "ten" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'd planned to stay a week—ten days at the most—but the mountains, the light, and a certain soft-spoken carpenter had other ideas.
+  - Tony has nice children—ten or eleven of them by this time, I guess.
+  - When the curtain rose—ten minutes late, and at an angle—the audience clapped out of sheer relief.
+
+### "—" + "was" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - For—was I really gone three days?
+  - What she wanted—what she'd always wanted, though it took her fifty years to say so—was a garden of her own.
+  - What the jury never heard—what nobody heard until thirty years later, when a box of tapes turned up in a garage—was that the star witness had been in another state.
+
+### "—" + "when" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Everything—the whole complex movement of the universe—is as simple as that—when you can sufficiently put two and two together.
+  - In this way, too, she used to catch herrings on Tuesdays and Fridays—when everybody on the boat ate fish to make the beef last longer.
+  - There are days—gray, drizzly, nothing-on-the-calendar days—when a pot of soup and a well-worn mystery novel are all the happiness a person could need.
+
+### "—" + "which" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - For example, a man who received thirty-four cents an hour had a profit rate of twenty-eight and one half cents an hour—which would give him a daily income of five dollars.
+  - Having dispatched this, and Tommy not having yet returned—which did not surprise her—she started off on a shopping expedition which, with an interval for tea and assorted creamy cakes, occupied her until well after six o'clock, and she returned to the hotel jaded, but satisfied with her purchases.
+  - However, because of societal attitudes of the time—which favored the husband in any separation, with the welfare of any child acting as mitigation—Lady Byron had to present herself as a loving mother to the rest of society.
+
+### "—" + "with" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I remember going up once from Staines to Windsor—a stretch of water peculiarly rich in these mechanical monstrosities—with a party containing three ladies of this description.
+  - There she stood—soaked, furious, magnificent—with the winning ticket stuck to her forehead.
+  - “I hate your city. It has standardized all the beauty out of life. It is one big railroad station—with all the people taking tickets for the best cemeteries,” Dr. Yavitch said placidly.
+
+### "—" + "your" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Now then—your turn.
+  - “Does your—your man want to come, too?”
+  - “Now, what is your own impression as to the young lady’s—your wife’s character?”
 
 ### """ + "France" (2 occurrences)
 - Predicted: None
@@ -1841,6 +2361,41 @@ Accuracy: 99.72%
   - "That's all we ask," we'll beg on our hands and knees.
   - Is there an "ism" we haven't worshipped.
 
+### "'" + "cat" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The Williamses' cat and the Garcias' cat share custody of our porch.
+  - The Williamses' cat and the Garcias' cat share custody of our porch.
+
+### "'" + "lounge" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Jess's dog ate the teachers' lounge sign, and the teachers' dog, so to speak, ate Jess's homework.
+  - The nurses' station's down the hall, the visitors' lounge is to your left, and the patients' garden's closed on account of somebody's goat.
+
+### "'" + "phones" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - My son's school's got a new rule that students' phones must be kept in lockers, and the parents' phones've been ringing ever since.
+  - My son's school's got a new rule that students' phones must be kept in lockers, and the parents' phones've been ringing ever since.
+
+### "'" + "roll" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - My parents met at a rock 'n' roll revival in a bowling alley.
+  - Rock 'n' roll's not dead; it's just gone to bed early.
+
+### "'" + "sake" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - For the kids' sake, let's say we're getting I-C-E C-R-E-A-M.
+  - He drank sake for politeness' sake, though he disliked the taste.
+
 ### "," + "-" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1875,13 +2430,6 @@ Accuracy: 99.72%
 - Examples:
   - And he is Mohammed Ali- Yeah.
   - I know I said I'd- Yeah, I did.
-
-### "-" + "and" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - All light- and sound-proof, but you can get air inside.
-  - Take care-- and eat!
 
 ### "-" + "how" (2 occurrences)
 - Predicted: None
@@ -2051,6 +2599,41 @@ Accuracy: 99.72%
   - Jojo, who won-- who won the war?
   - Like you're the one who made them laugh-- who made them forget their troubles.
 
+### "/" + "10" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The hike is rated 5/10 for difficulty and 10/10 for blisters.
+  - The hike is rated 5/10 for difficulty and 10/10 for blisters.
+
+### "/" + "20" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - This 80/20 rule says 20% of the work does 80% of the good.
+  - Your eyesight is 20/20, Mrs. Ferreira.
+
+### "/" + "3" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - About 1/3 of the class chose biology, 1/4 chose physics, and the other 5/12 were still asleep.
+  - Add 2/3 cup of milk and 1/4 teaspoon of nutmeg.
+
+### "20" + "%" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Our total was $62.40 before the 20% tip, so let's call it $75 and split it 5 ways at $15 each.
+  - This 80/20 rule says 20% of the work does 80% of the good.
+
+### "3" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Mix the paint and water in a 3:1 ratio.
+  - The doors open at 3:45 p.m. sharp.
+
 ### "An" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2065,12 +2648,26 @@ Accuracy: 99.72%
   - At "Grand hotel London".
   - At "go", they turn and shoot at Chicó.
 
+### "Bayes" + "'" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Bayes' rule, in plain English: change your mind, but only as much as the evidence deserves.
+  - Bayes' theorem tells us how to update a prior given new evidence.
+
 ### "Don" + "'t" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Can't touch the thugs Don't touch the thugs.
   - Don-- Don't worry about it.
+
+### "He" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He—
+  - “I thought perhaps I might see Halsey coming home. He—he ought to be here.”
 
 ### "London" + "—" (2 occurrences)
 - Predicted: Space
@@ -2142,6 +2739,27 @@ Accuracy: 99.72%
   - You "don't think"?
   - You "see" better with your ears.
 
+### "a" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He can do a backflip, a double back handspring, and a—where'd he go?
+  - “I'd rather,” Dallas said, slowly, “plan one back door of a building that's going to help make this town beautiful and significant than sell all the bonds that ever floated a—whatever it is that bonds are supposed to float.”
+
+### "again" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - They come, they go, they come again—of course that was for the cloak.
+  - “Sh!—There it is again—Don't you hear that?”
+
+### "all" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Albert Einstein called this the equivalence principle, and said that only observers who feel no force at all—including the force of gravity—are justified in concluding that they are not accelerating.
+  - “I think it was very nice of him to give it me at all—let alone cups and plates,” she added.
+
 ### "always" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2184,6 +2802,20 @@ Accuracy: 99.72%
   - It boil'st!
   - It boil'st.
 
+### "books" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - However, it is proper and legitimate to speak of it, for “Nomadic Life in Palestine” is a representative book—the representative of a class of Palestine books—and a criticism upon it will serve for a criticism upon them all.
+  - I'm still pretty breathless but I am glad to get back to college and my books—I believe that I really am a student; this atmosphere of academic calm I find more bracing than New York.
+
+### "boys" + "'" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Parents' night's at seven o'clock in the girls' gym, not the boys', so please don't make last year's mistake.
+  - The girls' team won both of the boys' trophies.
+
 ### "calling" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2198,12 +2830,33 @@ Accuracy: 99.72%
   - What are your credentials ?
   - What exactly are his credentials ?
 
+### "days" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There are days—gray, drizzly, nothing-on-the-calendar days—when a pot of soup and a well-worn mystery novel are all the happiness a person could need.
+  - There are days—gray, drizzly, nothing-on-the-calendar days—when a pot of soup and a well-worn mystery novel are all the happiness a person could need.
+
 ### "do" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Let's do "Billy Zane" from the top, yes?
   - You do "The Bronze Horseman" better.
+
+### "do" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There was only one thing left to do: dance.
+  - Tucked in tight, the little fox asked one more question, as little foxes do: “Who tucks in the moon?”
+
+### "done" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - At first people refuse to believe that a strange new thing can be done, then they begin to hope it can be done, then they see it can be done—then it is done and all the world wonders why it was not done centuries ago.
+  - There's a word for what you've done—several, actually—and I'm looking them up now.
 
 ### "down" + """ (2 occurrences)
 - Predicted: None
@@ -2212,12 +2865,40 @@ Accuracy: 99.72%
   - Okay, you know, I'm just gonna put down "sports."
   - We'll put down "tourist".
 
+### "everyone" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He'd brought presents for everyone: a kite for Sam; a harmonica for little Bea, which her parents would come to regret; and, for me, an onion.
+  - The results surprised everyone: the placebo group slept better, ate better, and wrote nicer letters.
+
+### "feet" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - At the break of the poop he reeled, raised one hand to his eyes with the familiar brushing gesture, and fell down the steps—still on his feet—to the main deck, across which he staggered, falling and flinging out his arms for support.
+  - It's hot, it's crowded, and it smells like feet—I wouldn't live anywhere else.
+
 ### "film" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Is it that song from the film "Cocktail"?
   - The dinosaurs in the film "Jurassic Park" were true-to-life.
+
+### "first" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Coffee first—then the apocalypse.
+  - Finally, we judge, the animal—perhaps the bird was first—began to give utterance to particular “words,” indicative not merely of emotions, but of particular things with an emotional halo, such as “food,” “enemy,” “home.”
+
+### "following" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Pack the following: wool socks, a headlamp, two liters of water, and a sense of humor.
+  - To reset the device, do the following: unplug the power cord, wait thirty seconds, hold down the small button on the back, and plug the cord in again.
 
 ### "from" + """ (2 occurrences)
 - Predicted: None
@@ -2233,6 +2914,13 @@ Accuracy: 99.72%
   - Don't fucking "Janet" me, you prick.
   - Don't you fucking "honey" me to make up for things!
 
+### "girls" + "'" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Parents' night's at seven o'clock in the girls' gym, not the boys', so please don't make last year's mistake.
+  - The girls' team won both of the boys' trophies.
+
 ### "here" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2240,12 +2928,40 @@ Accuracy: 99.72%
   - And this here "church."
   - Here Table is "tabl" and here "tabal".
 
+### "hour" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In this hour: a mayor who governs from a houseboat, the quiet return of the American chestnut, and a listener in Tucson who wants to know whether lizards dream.
+  - To every nurse on this floor, every orderly, every volunteer who brought my mother a cup of tea at some ungodly hour: thank you, from the bottom of my heart!
+
+### "if" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - If—and it's a big if—the weather holds, and if—bigger still—the engine starts, we could be in Nassau by Sunday.
+  - If—and it's a big if—the weather holds, and if—bigger still—the engine starts, we could be in Nassau by Sunday.
+
 ### "in" + "'t" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Is there owt to drink in't fridge?
   - Though this be madness, yet there is method in't.
+
+### "ingredients" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Four ingredients: flour, water, salt, time.
+  - The recipe has only four ingredients: oats, honey, peanut butter, and self-control.
+
+### "is" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Clearly the brutal practical inference is—loose a gazelle among the ladies of your acquaintance, and you will be Emperor of the French.
+  - Well, the desert is— For a woman, it’s very tough.
 
 ### "know" + "—" (2 occurrences)
 - Predicted: Space
@@ -2261,6 +2977,20 @@ Accuracy: 99.72%
   - Or maybe "mummy", better.
   - Or maybe "these people" do not exist in your idea of India.
 
+### "mean" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Measured among women—our women at home, I mean—he had always stood high.
+  - Saber asked, “How do you mean—knowing better than to steal the money out of their wages?”
+
+### "most" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'd planned to stay a week—ten days at the most—but the mountains, the light, and a certain soft-spoken carpenter had other ideas.
+  - The fog came down so thick and so fast that the lead climber—who was ten feet away at most—disappeared mid-sentence.
+
 ### "nickname" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2268,12 +2998,54 @@ Accuracy: 99.72%
   - I go by the nickname "Itch."
   - She refers to Nostradamus with the rather cloying nickname "Nosty".
 
+### "night" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He drew the card, looked at it, and—for the first time all night—smiled.
+  - You say it is impossible for you to go earlier to bed of a night—to do so would upset the entire household.
+
+### "not" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I think not—though it would be like him.
+  - “Mrs. Beaufort may not—but Beaufort certainly does, for she was seen walking up Fifth Avenue this afternoon with him by the whole of New York.”
+
+### "now" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Act now: only $19.95, plus $6.95 shipping!
+  - Plate mentions that “The chewy crust, crispy cheese corners, and hearty meal of a slice fits precisely with what customers want right now: rich, satisfying comfort to-go.”
+
+### "now" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - That is quite cleared up now—though, indeed, it was obvious from the first.
+  - “In a month from now—sooner or later as you wish—I will guarantee you such a reign of terror in Ireland as shall shake the British Empire to its foundations.”
+
 ### "old" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Oh, what about the old "Plush Rush"?
   - So you're leaving good old "we teach you."
+
+### "or" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The far-off rumble might have been thunder, or a freight train, or—as it proved to be—my father, snoring.
+  - We sell by the pound, by the bushel, or—for friends—by the wave of a hand.
+
+### "order" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My father kept his tools in perfect order: wrenches by size, screws by length, and, in a cigar box at the back, the things he'd broken and couldn't bear to throw away.
+  - My morning, in order: alarm, snooze, alarm, snooze, cat, coffee.
 
 ### "out" + "—" (2 occurrences)
 - Predicted: Space
@@ -2288,6 +3060,20 @@ Accuracy: 99.72%
 - Examples:
   - He said he has his own "little announcement" to make.
   - What say we do our own "project assignment"?
+
+### "own" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - After sixty-odd years of marriage, they'd developed a language of their own—grunts, mostly, and one very expressive cough.
+  - Everything we own—the couch, the books, the fish—has to fit in that van.
+
+### "parents" + "'" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Mr. Reyes's students' parents' emails have filled up his inbox.
+  - My son's school's got a new rule that students' phones must be kept in lockers, and the parents' phones've been ringing ever since.
 
 ### "played" + """ (2 occurrences)
 - Predicted: None
@@ -2317,6 +3103,13 @@ Accuracy: 99.72%
   - How do you pronounce "pfirsichbaeumchen"?
   - How do you pronounce "pronounce"?
 
+### "question" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My five-year-old asked a very good question—why don't we name the spoons?—and I had no answer.
+  - The so-what question—so what?—is the one that kills most dissertations.
+
 ### "reading" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2338,12 +3131,33 @@ Accuracy: 99.72%
   - That's your idea of a sound relationship "based on mutual trust?"
   - The relationship "A loves B" is not reflexive, transitive, or symmetric.
 
+### "rights" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Fishing rights—line.
+  - Stevenson only got thirty pounds for the serial rights—I don't believe it pays to be a great author.
+
 ### "said" + "-" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Things he said - like being able to spot a phoney ID.
   - You said - he doesn't mind his business and you don't want to see him.
+
+### "said" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Say what you like about the twentieth century—and plenty has been said—it gave us jazz, penicillin, and the zipper.
+  - “You are His Majesty's Lieutenant here in Brittany,” he said—and it almost seemed to the august lord of life and death that this fellow had the incredible effrontery to address him as one man speaking to another.
+
+### "sale" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - For sale: one kayak, two paddles, three life jackets, and a whole lot of duct tape.
+  - For sale: one thousand and one nights, slightly used.
 
 ### "sang" + """ (2 occurrences)
 - Predicted: None
@@ -2352,12 +3166,33 @@ Accuracy: 99.72%
   - Tom sang "Happy Birthday" to Mary.
   - We sang "Happy Birthday" in Berber.
 
+### "sayin" + "'" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm not sayin' it's haunted, I'm just sayin' the rockin' chair's been goin' since noon.
+  - I'm not sayin' it's haunted, I'm just sayin' the rockin' chair's been goin' since noon.
+
+### "short" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In short: yes, no, and it depends.
+  - The message was short: “Found it. Come quick. Bring a goat.”
+
 ### "simple" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - A simple "here" will be fine, OK?
   - This is a question that demands more than a simple "yes" or "no" answer.
+
+### "simple" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The menu is simple: soup or salad, fish or chicken, pie or pie.
+  - Winter there is simple: you shovel, you sleep, you shovel.
 
 ### "sing" + """ (2 occurrences)
 - Predicted: None
@@ -2366,12 +3201,40 @@ Accuracy: 99.72%
   - Let's sing "Happy Birthday"!
   - You didn't sing "Nessun dorma."
 
+### "soap" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Vaccines, clean water, and soap—plain, cheap, unglamorous soap—have saved more lives than all the surgeons in history.
+  - Vaccines, clean water, and soap—plain, cheap, unglamorous soap—have saved more lives than all the surgeons in history.
+
 ### "song" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - He'll whistle that song "Morning in Florence."
   - The famous song "Ave Maria" was composed by Schubert.
+
+### "spring" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He promised to fix the roof by spring—he just didn't say which spring.
+  - The long-awaited, much-delayed, wildly over-budget opera house will finally open its doors next spring—assuming, of course, that somebody remembers to order the doors.
+
+### "stopped" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We followed the tracks as far as the creek, where they stopped—not faded, not turned, just stopped.
+  - “The results are clear,” the doctor began—and I remember noticing, of all things, that her watch had stopped—“and I think we should talk about what happens next.”
+
+### "students" + "'" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Mr. Reyes's students' parents' emails have filled up his inbox.
+  - My son's school's got a new rule that students' phones must be kept in lockers, and the parents' phones've been ringing ever since.
 
 ### "sure" + """ (2 occurrences)
 - Predicted: None
@@ -2380,6 +3243,20 @@ Accuracy: 99.72%
   - I'm not sure "implied" is good enough for a wedding day, are you?
   - Legally, I'm not sure "monkey rape" exists.
 
+### "teachers" + "'" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Jess's dog ate the teachers' lounge sign, and the teachers' dog, so to speak, ate Jess's homework.
+  - Jess's dog ate the teachers' lounge sign, and the teachers' dog, so to speak, ate Jess's homework.
+
+### "tellin" + "'" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm tellin' ya, Frankie, the guy's twice your size, and he ain't even stood up yet.
+  - What'd you go and do that for, when I'd just finished tellin' you that the paint wasn't dry?
+
 ### "text" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2387,12 +3264,12 @@ Accuracy: 99.72%
   - A coherent text "makes sense".
   - They left handbills with the text "Expropriate from enemies of the people".
 
-### "that" + "—" (2 occurrences)
+### "that" + ":" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Did you see that—?
-  - Isn't that—?
+  - Let me repeat that: four one, dash, seven seven, dash, A as in apple.
+  - The tricks of fate are cruel enough, but there scarcely could have been a worse one than that: To care for a woman as he loved Edith Carr and have her given into his arms because she was so numb with misery over her trouble with another man that she did not know or care what she did.
 
 ### "them" + """ (2 occurrences)
 - Predicted: None
@@ -2401,13 +3278,6 @@ Accuracy: 99.72%
   - Let's just call them "guests."
   - We call them "The Sorrow and the Pity"!
 
-### "then" + "—" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Now then—your turn.
-  - “What is it, then—a fire?”
-
 ### "these" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2415,12 +3285,61 @@ Accuracy: 99.72%
   - But these "gauchos" keep protesting.
   - Doctors call these "Ghost pains".
 
+### "thesis" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My sister's sixth sixth-grade science thesis: “Scissors, Sizzle, and Sassafras: Is Swiftness Synthesis?”
+  - The physicist's thesis: ions, neurons, and zooids coexist in chaos.
+
+### "things" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The job requires three things: patience, which I have; a truck, which I can borrow; and Portuguese, which I'm hoping won't come up.
+  - We only ask two things: keep the tags on, and please, check the pockets first.
+
 ### "think" + """ (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I think "great" would be an overstatement.
   - I think "potato" is the funniest word.
+
+### "think" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I think—
+  - “Of course I don't know what your relations with her have been,” returned Robert, “and I'm not curious to know, but it does look like a bit of injustice all around, don't you think—unless you intend to marry her?”
+
+### "time" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - However, because of societal attitudes of the time—which favored the husband in any separation, with the welfare of any child acting as mitigation—Lady Byron had to present herself as a loving mother to the rest of society.
+  - “I said so at the time—you remember, Amelia? I said I had never seen such eyes in a human head.”
+
+### "to" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He apologized, too, in the morning, and said he would have the cistern seen to—and very necessary, in my opinion, for the air gets into the pipes, and the groaning and screeching as goes on is something awful.
+  - “No matter where that tower treasure is, we've got to find it!” “Got to—but can we?”
+
+### "true" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The recipe, handed down from mother to daughter for five generations, says—and I swear this is true—“cook until done.”
+  - “Ma'am, is it true—what he says?” asked the rider of Jane, but his quiveringly alert eyes never left the little knot of quiet men.
+
+### "two" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Rule two: see rule one.
+  - Step two: read the instructions.
 
 ### "up" + """ (2 occurrences)
 - Predicted: None
@@ -2443,6 +3362,13 @@ Accuracy: 99.72%
   - Just want "zoo-chero" in-in the coffee.
   - That you didn't want "words."
 
+### "was" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I opened the fridge, and there it was—my phone.
+  - Only one person could've known the combination, and that person was—hang on, who's at the door?
+
 ### "what" + "?" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2464,6 +3390,20 @@ Accuracy: 99.72%
   - To the whole world - good night, good day and good morning.
   - Welcome to the world - inside the painting.
 
+### "world" + ":" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Here, in a nutshell, is the history of the world: somebody wanted something; somebody else already had it.
+  - There are two kinds of people in this world: those who finish what they start.
+
+### "yet" + "—" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - And yet—!
+  - He had overheard enough to know that this was but the case of a pair of lovers who, with less to fear of life, were yet—after the manner of their kind—more timid of heart than he.
+
 ### "you" + "--" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2478,12 +3418,40 @@ Accuracy: 99.72%
   - This kind of wrong number, like where you ..
   - Today, if you tell people that you ..
 
-### "—" + "I" (2 occurrences)
+### "—" + "all" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - My mother Kira—I'm Amanda Kirasdotr—for longer.
-  - You could have most of my flask—I'd like a bit, just in case.
+  - He had a face like a much-folded map—all creases, and not one of them leading home.
+  - His boots, his socks, his hat, and his watch—all were there.
+
+### "—" + "an" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He would have to stay there and help admire Udo—an unsatisfying prospect to a man in love.
+  - I invited Jimmie McBride, and Sallie invited his room-mate at Princeton, who visited them last summer at their camp—an awfully nice man with red hair—and Julia invited a man from New York, not very exciting, but socially irreproachable.
+
+### "—" + "can" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A well-timed pause—like this one—can do the work of a whole paragraph.
+  - “Oh, yes,” he said, “of course, I—er—can stay.”
+
+### "—" + "do" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Some people—I won't name names, but she's sitting right there—don't believe in washing lettuce.
+  - Turn right at the church, left at the mill, and then—this is important—don't make eye contact with the rooster.
+
+### "—" + "has" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Everything we own—the couch, the books, the fish—has to fit in that van.
+  - Only one of them—Pluto—has been observed in enough detail to verify that its current shape fits what would be expected from hydrostatic equilibrium.
 
 ### "—" + "here" (2 occurrences)
 - Predicted: Space
@@ -2492,40 +3460,138 @@ Accuracy: 99.72%
   - Eglow, Eglonitz—here we are, Egria.
   - Look out—here I go!
 
-### "—" + "in" (2 occurrences)
+### "—" + "just" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - It is in a German-speaking country—in Bohemia, not far from Carlsbad.
-  - Otherwise, you'll pay twice—in this life and in the next.
+  - The road goes up, and up, and—just when your knees are filing a complaint—up again.
+  - “I know I have one,” he went on, “and I'd almost swear it's in the bottom pocket—or, hold on, though, I guess it may be in the top—just wait till I put these parcels down on the sidewalk.”
 
-### "—" + "of" (2 occurrences)
+### "—" + "never" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - That day, too, I made a friend—of a sort.
-  - They come, they go, they come again—of course that was for the cloak.
+  - He had one rule—never bet against a man who's smiling—and he broke it every Friday.
+  - I shall never let it drop until the gems are found—never, Mary!
 
-### "—" + "the" (2 occurrences)
+### "—" + "oh" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - I love my family and, even more, my homeland—the land where I was born.
-  - “Why, I am a Queen—the Queen of all the Field Mice!”
+  - Look, I'd love to stay and chat, but—oh no, he's seen us—keep walking.
+  - “He was a very good King—oh, yes, really a very superior King in his way, but he was a little—well, strange.”
 
-### "—" + "you" (2 occurrences)
+### "—" + "one" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Ship fees are not cheap—you can pay monthly, for a premium.
-  - “But his wife—you said that she had ceased to love him.”
+  - A reluctant elevator boy went for a box full of straw and some milk, to which he added on his own initiative a tin of large, hard dog biscuits—one of which decomposed apathetically in the saucer of milk all afternoon.
+  - The hallway there was dimly lighted by two pale jets of gas—one far to his right, the other nearer, to his left.
 
-### "—" + "your" (2 occurrences)
+### "—" + "perhaps" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Now then—your turn.
-  - “Now, what is your own impression as to the young lady’s—your wife’s character?”
+  - Finally, we judge, the animal—perhaps the bird was first—began to give utterance to particular “words,” indicative not merely of emotions, but of particular things with an emotional halo, such as “food,” “enemy,” “home.”
+  - For the most part he was quite still during that time; it would seem he sat in the growing darkness smoking in the firelight—perhaps dozing.
+
+### "—" + "rusty" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She had, as they say, a mind like a steel trap—rusty, and illegal in thirty-seven states.
+  - Woodchucks stood erect and piped dolefully for an hour “Chee-chee!” with jaws absurdly stretched to emit so thin a note—rusty-looking, seedy fellows, also a smaller striped species which stood erect and cheeped and whistled like a Douglas squirrel.
+
+### "—" + "such" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Achilles tells Hector it is hopeless to expect that of him, declaring that “my rage, my fury would drive me now to hack your flesh away and eat you raw—such agonies you have caused me.”
+  - There is only one thing I ask in return for my help—such as it is.
+
+### "—" + "thank" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - If you could just hand me the—no, the other one—thank you.
+  - “Oh, thank you—thank you!” cried the Scarecrow.
+
+### "—" + "their" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The woman—their negotiator—wears two very large knives in her vest.
+  - “They have their maiden names—their father's names, that is.”
+
+### "—" + "then" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - At first people refuse to believe that a strange new thing can be done, then they begin to hope it can be done, then they see it can be done—then it is done and all the world wonders why it was not done centuries ago.
+  - Coffee first—then the apocalypse.
+
+### "—" + "these" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Long-haul truckers, night-shift nurses, new parents—these are the people who really know what four in the morning looks like.
+  - One thing I do know—these cops will never be my friends.
+
+### "—" + "though" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I think not—though it would be like him.
+  - That is quite cleared up now—though, indeed, it was obvious from the first.
+
+### "—" + "three" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The new library—three stories of cedar and glass, with a reading room that looks straight out into the treetops—opened on Saturday, and by noon there wasn't an empty chair.
+  - “I have been beaten four times—three times by men, and once by a woman.”
+
+### "—" + "two" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The film runs two and a half hours—two and a half hours!—and the dog dies in the first ten minutes.
+  - The treaty—two pages, unsigned, and stained with what appears to be jam—is kept in a climate-controlled vault.
+
+### "—" + "where" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He can do a backflip, a double back handspring, and a—where'd he go?
+  - Your god—where is He now?
+
+### "—" + "who" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Another owner of Tierra del Sol, Darrell Davis—who had anchored the station's newscasts prior to their cancellation—called Dean's actions malicious.
+  - The fog came down so thick and so fast that the lead climber—who was ten feet away at most—disappeared mid-sentence.
+
+### "—" + "why" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My five-year-old asked a very good question—why don't we name the spoons?—and I had no answer.
+  - “Oh, my friend—!” She laid her hand lightly on his arm, and he pleaded earnestly: “Ellen—why won't you tell me what's happened?” She shrugged again.
+
+### "—" + "would" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It's nothing—it's just—would you believe me if I said beets?
+  - “Prince Bumpo,” said the Doctor, looking thoughtfully at the bottles in his medicine-bag, “supposing I made your hair a nice blonde color—would not that do instead to make you happy?”
+
+### "—" + "yes" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Prima donna Imperial Opera of Warsaw—yes!
+  - “Probably—yes.” “Then toward morning, when everybody was asleep, your theory is that he changed the numbers again and left the train.” “I can't think of anything else,” I replied wearily.
 
 ### """ + "!" (1 occurrences)
 - Predicted: None
@@ -3445,11 +4511,515 @@ Accuracy: 99.72%
 - Examples:
   - He's "pimping" your bike right now.
 
+### "#" + "6" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Queue at window #6 and have your form ready.
+
+### "#" + "77" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Lot #77, a gilt mirror, opened at $5,000, stalled at $18,000, and sold to the man in row 2 for $22,000.
+
 ### "#" + "Kamehama" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - You couldn't even do it on that #Kamehama# thing.
+
+### "$" + "200,000" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A 20-year-old parked a $200,000 car in a fire lane.
+
+### "$" + "4.99" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Coffee is $4.99, but the refill is free.
+
+### "'" + "about" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - She's kinda shy, but once you get her talkin' about engines, you can't shut her up.
+
+### "'" + "and" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - “So I said, 'Are you threatening me?' and he said, 'No, ma'am, I'm just the plumber,'” Mrs. Albright recounted, delighted.
+
+### "'" + "argument" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The sun'd barely come up when the roosters' argument started.
+
+### "'" + "as" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Seein' as how y'all drove all this way, the least I can do's put on some coffee and find that photograph of your granddaddy's mule.
+
+### "'" + "assessments" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The archaeologist's assistants' assessments asserted that the artifacts' inscriptions' strokes were strikingly straight, whereas the sphinx's subscripts were scratched and cramped.
+
+### "'" + "association" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The thing she calls a “casserole” has been banned by the homeowners' association.
+
+### "'" + "boatswains" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Every blackguard's cupboard holds a raspberry, a corps of sergeants' boatswains, and forecastle biscuits.
+
+### "'" + "broths" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Both baths' broths froth.
+
+### "'" + "captives" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Coolers of chai and samosas circulated among the dacoits' captives, who were, it must be said, thoroughly enjoying the film set.
+
+### "'" + "chair" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'm not sayin' it's haunted, I'm just sayin' the rockin' chair's been goin' since noon.
+
+### "'" + "coasts" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ghosts' coasts boast hosts of posts.
+
+### "'" + "crafts" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Softly, swiftly, the rafts drifts' crafts shifted aft.
+
+### "'" + "creases" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The judge's niece's hostess's dresses' creases pleased the princess's nurses.
+
+### "'" + "daughter" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The Lopezes' daughter's getting married at four o'clock on Saturday, and I haven't got a thing to wear that isn't my sister's.
+
+### "'" + "defense" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - In the fourth quarter, the Bears' defense stopped them four plays in a row.
+
+### "'" + "dog" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Jess's dog ate the teachers' lounge sign, and the teachers' dog, so to speak, ate Jess's homework.
+
+### "'" + "downs" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - We've had our ups 'n' downs, but she's still my best friend.
+
+### "'" + "emails" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Mr. Reyes's students' parents' emails have filled up his inbox.
+
+### "'" + "for" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Life's what happens while you're waitin' for the cable guy.
+
+### "'" + "forecasts" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The broadcasters' forecasts suggest frosts next week, then gusts.
+
+### "'" + "garage" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You and I pick up the cake, hide it in the Hendersons' garage, and get back before she leaves work.
+
+### "'" + "garden" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The nurses' station's down the hall, the visitors' lounge is to your left, and the patients' garden's closed on account of somebody's goat.
+
+### "'" + "grass" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Isn't it funny how the neighbors' grass isn't any greener once you've mowed it?
+
+### "'" + "gruff" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Nothing's as rough as dwarves' gruff bluffs, though thugs' shrugs come close.
+
+### "'" + "gym" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Parents' night's at seven o'clock in the girls' gym, not the boys', so please don't make last year's mistake.
+
+### "'" + "halves" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Youths' mouths, truths' proofs, wolves' hooves, calves' halves, and the sheaves of months-old clothes the moths destroyed.
+
+### "'" + "handkerchiefs" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Mischief-makers' handkerchiefs fluttered from the switchboard.
+
+### "'" + "handymen" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - On Wednesdays, landlords' handymen's grandchildren's sandboxes get cleaned, sanded, and refilled with grand, bland sand.
+
+### "'" + "heel" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Achilles' heel gets all the attention, but nobody ever asks about the rest of his foot.
+
+### "'" + "helms" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Pulled, bulled, gulled, and culled, the elms' helms held, but the balms' psalms calmed only the palm trees.
+
+### "'" + "hooves" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Youths' mouths, truths' proofs, wolves' hooves, calves' halves, and the sheaves of months-old clothes the moths destroyed.
+
+### "'" + "in" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Somebody's been sleepin' in my bed, and somebody's left crumbs.
+
+### "'" + "inscriptions" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The archaeologist's assistants' assessments asserted that the artifacts' inscriptions' strokes were strikingly straight, whereas the sphinx's subscripts were scratched and cramped.
+
+### "'" + "it" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'm not sayin' it's haunted, I'm just sayin' the rockin' chair's been goin' since noon.
+
+### "'" + "locks" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ask the clerk whether the desks' locks stick.
+
+### "'" + "mascot" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The Philadelphia Phillies' mascot, the Phanatic, stole a fan's nachos.
+
+### "'" + "masks" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Wasps' masks?
+
+### "'" + "me" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You gotta be kiddin' me.
+
+### "'" + "mess" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The colonel went awry somewhere between the quay and the officers' mess.
+
+### "'" + "monthly" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ninth-graders' monthly lengths of hemp were stretched twelvefold.
+
+### "'" + "mouths" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Youths' mouths, truths' proofs, wolves' hooves, calves' halves, and the sheaves of months-old clothes the moths destroyed.
+
+### "'" + "nests" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Amidst the mists and coldest frosts, the wasps' nests burst.
+
+### "'" + "night" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Parents' night's at seven o'clock in the girls' gym, not the boys', so please don't make last year's mistake.
+
+### "'" + "old" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Nobody'd lived in the Hodges' old place since the '50s, so when a light came on in the upstairs window, everybody's dinner got cold.
+
+### "'" + "parents" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Mr. Reyes's students' parents' emails have filled up his inbox.
+
+### "'" + "prompts" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Our scripts' prompts prompted tempting attempts at subplots.
+
+### "'" + "proofs" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Youths' mouths, truths' proofs, wolves' hooves, calves' halves, and the sheaves of months-old clothes the moths destroyed.
+
+### "'" + "psalms" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Pulled, bulled, gulled, and culled, the elms' helms held, but the balms' psalms calmed only the palm trees.
+
+### "'" + "quarterback" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - In the third quarter, the Steelers blitzed, the Bengals' quarterback scrambled, and somebody in section two hundred lost an entire Bud Light to the row below.
+
+### "'" + "rescuers" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The wolfhound's yelps helped the whelps' rescuers.
+
+### "'" + "rhymes" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The gypsum mines' rhymes, primed for crime, chime in triplets.
+
+### "'" + "rooms" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - My sisters' rooms were always neat; my brother's was a swamp; mine's still a matter of opinion.
+
+### "'" + "rule" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Bayes' rule, in plain English: change your mind, but only as much as the evidence deserves.
+
+### "'" + "selves" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Wolves' selves, elves' shelves, twelve valves.
+
+### "'" + "shelves" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Wolves' selves, elves' shelves, twelve valves.
+
+### "'" + "shrugs" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Nothing's as rough as dwarves' gruff bluffs, though thugs' shrugs come close.
+
+### "'" + "since" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'm not sayin' it's haunted, I'm just sayin' the rockin' chair's been goin' since noon.
+
+### "'" + "sleeves" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - He loathes cloves, she soothes doves, they've clothes in alcoves, and the thieves' sleeves are stuffed with olives.
+
+### "'" + "so" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - “She said, 'Take the high road,' so I did,” he explained, “and now my truck's on top of a mountain.”
+
+### "'" + "station" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The nurses' station's down the hall, the visitors' lounge is to your left, and the patients' garden's closed on account of somebody's goat.
+
+### "'" + "strokes" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The archaeologist's assistants' assessments asserted that the artifacts' inscriptions' strokes were strikingly straight, whereas the sphinx's subscripts were scratched and cramped.
+
+### "'" + "students" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Socrates' students asked him questions, and he asked 'em right back.
+
+### "'" + "successes" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Businesses' successes sustain consensuses.
+
+### "'" + "swordsmen" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The triumvirs' swordsmen swore, swooned, swerved, and swam, while Gwen's tweed-clad quartet thwacked through Dvorak.
+
+### "'" + "tasks" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Asps' tasks?
+
+### "'" + "team" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The girls' team won both of the boys' trophies.
+
+### "'" + "tents" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ten tiny tots' tents tilted.
+
+### "'" + "the" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'm not sayin' it's haunted, I'm just sayin' the rockin' chair's been goin' since noon.
+
+### "'" + "theorem" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Bayes' theorem tells us how to update a prior given new evidence.
+
+### "'" + "through" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Outta the way, comin' through, hot soup!
+
+### "'" + "trophies" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The girls' team won both of the boys' trophies.
+
+### "'" + "twelfth" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The Seahawks' twelfth man shook the seismographs at the University of Washington.
+
+### "'" + "umbrella" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Charles's hat, Iris's gloves, and the Joneses' umbrella were all in the lost-and-found.
+
+### "'" + "up" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - What're you doin' up there, and why've you got my ladder?
+
+### "'" + "wake" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Bioluminescent dinoflagellates flash when they're jostled, which is why the dolphins' wake glowed an eerie, phosphorescent blue.
+
+### "'" + "words" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A quirk of the clerk's work: nerds' words irk Kirk.
+
+### "'" + "worth" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The months' worth of wraiths' wreaths withered.
+
+### "'" + "wreaths" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The months' worth of wraiths' wreaths withered.
+
+### "'" + "ya" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'm tellin' ya, Frankie, the guy's twice your size, and he ain't even stood up yet.
+
+### "'" + "you" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - What'd you go and do that for, when I'd just finished tellin' you that the paint wasn't dry?
 
 ### "'n" + "'roll" (1 occurrences)
 - Predicted: Space
@@ -3469,11 +5039,41 @@ Accuracy: 99.72%
 - Examples:
   - Have you ever listened to Beethoven's "Ninth"?
 
+### "'s" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - It's -5° outside, so wear the ugly coat.
+
+### ")" + "(" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'd like to thank my parents, my editor, and my wife (not necessarily in that order) (all right, in exactly the reverse of that order).
+
 ### "," + ""Iet" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - As the French would say, "Iet it pass".
+
+### "," + "000" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - With more than 50,000 students in 2023, it is the sixth largest campus in the US by enrollment.
+
+### "," + "dash" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Subscribe at news dot example dot com, slash, daily, dash, digest.
+
+### "," + "slash" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Subscribe at news dot example dot com, slash, daily, dash, digest.
 
 ### ","" + "Carson" (1 occurrences)
 - Predicted: None
@@ -3552,6 +5152,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - Remember what you yourself said a while ago, "If I weren't married," you said.
+
+### "-" + "6" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Solve for y: 2y - 6 = 10.
 
 ### "-" + "And" (1 occurrences)
 - Predicted: None
@@ -4483,6 +6089,294 @@ Accuracy: 99.72%
 - Examples:
   - He goes up to her-- “What happened to the horse?”
 
+### "-terminator" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A cross-country road trip with my ex-husband, his ex-wife, and her ex-terminator—what could go wrong?
+
+### "." + "300" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A .300 hitter fails 7 times out of 10.
+
+### "." + "“" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - “Fifteen minutes ago,” said I. “She has just set sail for the Spanish main with a husband and daughter and nurse and maid and valet and dog.” “Has she a nice husband?”
+
+### "..." + "So" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “All the sculptures of today, like those of the past, will end one day in pieces...So it is important to fashion one's work carefully in its smallest recess and charge every particle of matter with life.”
+
+### "..." + "There" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Jagielski said of the negotiations that led to the agreement, “We have spoken as Poles to Poles...There are no winners and losers. The important thing here is that we have understood each other and the best guarantee for what we have done is hard work.”
+
+### "/" + "12" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - About 1/3 of the class chose biology, 1/4 chose physics, and the other 5/12 were still asleep.
+
+### "/" + "16" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He needs a 9/16 wrench, not a 5/8.
+
+### "/" + "1999" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He retired on 12/31/1999, at 11:59 p.m., just in case.
+
+### "/" + "2" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Mix 3 cups of flour, 1 1/2 teaspoons of salt, and 1/4 teaspoon of yeast; wait 18 hours; then bake at 450° for 30 minutes.
+
+### "/" + "30" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Buy 2, get 1 free, through 11/30.
+
+### "/" + "31" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He retired on 12/31/1999, at 11:59 p.m., just in case.
+
+### "/" + "40" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We'll split it 60/40.
+
+### "/" + "76" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Blood pressure today: 118/76.
+
+### "/" + "8" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He needs a 9/16 wrench, not a 5/8.
+
+### "0" + "%" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Confidence: 0%.
+
+### "0" + "°C" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Water boils at 100°C and freezes at 0°C.
+
+### "10" + "/" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The hike is rated 5/10 for difficulty and 10/10 for blisters.
+
+### "100" + "°C" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Water boils at 100°C and freezes at 0°C.
+
+### "100" + "°F" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We hit 100°F three days in a row.
+
+### "11" + "/" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Buy 2, get 1 free, through 11/30.
+
+### "118" + "/" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Blood pressure today: 118/76.
+
+### "12" + "/" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He retired on 12/31/1999, at 11:59 p.m., just in case.
+
+### "15" + "%" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - What's 15% of 80?
+
+### "2" + "/" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Add 2/3 cup of milk and 1/4 teaspoon of nutmeg.
+
+### "20" + "/" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Your eyesight is 20/20, Mrs. Ferreira.
+
+### "2027" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My 3 goals for 2027: run a 10K, read 30 books, and spend less than $8 a day on coffee.
+
+### "2y" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Solve for y: 2y - 6 = 10.
+
+### "3" + "/" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Nearly 3/4 of the surface is covered with water.
+
+### "3.9" + "%" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The unemployment rate dipped 0.2 points, to 3.9%.
+
+### "31" + "/" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He retired on 12/31/1999, at 11:59 p.m., just in case.
+
+### "40" + "°" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Serve at 40°, never colder.
+
+### "400" + "°F" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Preheat to 400°F and roast for 35 minutes.
+
+### "45" + "°" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Turn the dial 90° clockwise, then 45° back.
+
+### "5" + "%" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A 5% tip?
+
+### "50" + "th" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He deadlifted 400 lbs. on his 50th birthday.
+
+### "60" + "/" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We'll split it 60/40.
+
+### "65" + "+" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ages 65+ ride free; ages 6-17 ride for $1.25; everybody else pays $2.50 and complains.
+
+### "70" + "%" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There's a 70% chance of rain on Saturday.
+
+### "8" + "²" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Since 8² = 64, the square root of 64 is 8.
+
+### "80" + "%" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - This 80/20 rule says 20% of the work does 80% of the good.
+
+### "80" + "/" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - This 80/20 rule says 20% of the work does 80% of the good.
+
+### "84" + "“" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The couch is 84“ long, and the wall is only 80”.
+
+### "9" + "%" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Battery: 9%.
+
+### "9" + "/" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He needs a 9/16 wrench, not a 5/8.
+
+### "90" + "°" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Turn the dial 90° clockwise, then 45° back.
+
+### ":" + "1" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Mix the paint and water in a 3:1 ratio.
+
+### ":" + "45" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The doors open at 3:45 p.m. sharp.
+
+### "A" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A .300 hitter fails 7 times out of 10.
+
 ### "A-" + "on" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4495,11 +6389,23 @@ Accuracy: 99.72%
 - Examples:
   - If AI "thinks", or approximates thinking, who are we?
 
+### "Achilles" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Achilles' heel gets all the attention, but nobody ever asks about the rest of his foot.
+
 ### "Age" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Age ?
+
+### "Agnès Varda" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ingmar Bergman, Federico Fellini, Satyajit Ray, and Agnès Varda: my film professor spoke of them as if they were roommates.
 
 ### "Alcohol" + "-" (1 occurrences)
 - Predicted: None
@@ -4513,11 +6419,47 @@ Accuracy: 99.72%
 - Examples:
   - My mother Kira—I'm Amanda Kirasdotr—for longer.
 
+### "Anneke" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Her middle name is Anneke: A, double N, E, K, E. The bank has spelled it with a C, with a Q, and once, somehow, with an ampersand.
+
+### "April" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - April: the umbrella I lost last year blooms at the neighbor's door.
+
 ### "As" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - As "Private and confidential".
+
+### "Asps" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Asps' tasks?
+
+### "Asteroids" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Final Fantasy, Street Fighter, Donkey Kong, Asteroids: the arcade on the boardwalk hadn't changed its lineup since the Reagan administration.
+
+### "Attn." + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Attn.: the bldg. will be closed for maintenance.
+
+### "August" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The low-lying fields by the river—flooded every March, parched every August—were all they could afford.
 
 ### "Auntie" + """ (1 occurrences)
 - Predicted: None
@@ -4530,6 +6472,42 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - Look at Bhagat Singh and Azad ..
+
+### "Baptism" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Baptism—the first sacrament of Christian initiation, the basis for all the other sacraments.
+
+### "Bar" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Does Bar—does your husband?”
+
+### "Battery" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Battery: 9%.
+
+### "Bears" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In the fourth quarter, the Bears' defense stopped them four plays in a row.
+
+### "Beebe" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A look of contempt came over him, and he said, “Why not?” “Mr. Beebe—I have misled you—I have misled myself—” “Oh, rubbish, Miss Honeychurch!”
+
+### "Bengals" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In the third quarter, the Steelers blitzed, the Bengals' quarterback scrambled, and somebody in section two hundred lost an entire Bud Light to the row below.
 
 ### "Bobby" + """ (1 occurrences)
 - Predicted: None
@@ -4548,6 +6526,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - Hey Budhan .
+
+### "Businesses" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Businesses' successes sustain consensuses.
 
 ### "But" + """ (1 occurrences)
 - Predicted: None
@@ -4573,11 +6557,23 @@ Accuracy: 99.72%
 - Examples:
   - Called "Big Statue Lane".
 
+### "Captain Biscuit" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “What kind of a name is 'Captain Biscuit'?” demanded the admiral.
+
 ### "Clifton" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - The one and only Clifton "Fou-fou" Eddie on drums!
+
+### "Confidence" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Confidence: 0%.
 
 ### "Contralto" + "—" (1 occurrences)
 - Predicted: Space
@@ -4585,11 +6581,35 @@ Accuracy: 99.72%
 - Examples:
   - Contralto—hum!
 
+### "Countess Belvane" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I wish,” she said, holding it up, “I wish that the Countess Belvane—” she stopped to think of something that would really annoy her—“I wish that the Countess shall never be able to write another rhyme again.”
+
+### "DUI" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - NYPD, LAPD, ICU, DUI: crime shows are mostly consonants.
+
 ### "Daren" + "'t" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Daren't follow them into the nebula, sir.
+
+### "Darrell Davis" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Another owner of Tierra del Sol, Darrell Davis—who had anchored the station's newscasts prior to their cancellation—called Dean's actions malicious.
+
+### "Daughter" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Previously, on The Cartographer's Daughter: Elena found the second map, and her uncle found her.
 
 ### "Don Ciccio Matara" + "-" (1 occurrences)
 - Predicted: None
@@ -4597,17 +6617,77 @@ Accuracy: 99.72%
 - Examples:
   - But to be beholden forever to Don Ciccio Matara - no, no, no.
 
+### "Dover Street" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It was good to get out of Dover Street—it was better for the growing children, better for my weary parents, better for all of us, as the clean grass is better than the dusty pavement.
+
+### "Dunedin" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Christchurch, Wellington, Auckland, Dunedin: four cities, two islands, and roughly five sheep for every person.
+
+### "Dunkin" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Lululemon leggings, a Stanley tumbler, and an iced matcha from Dunkin'.
+
 ### "Eglonitz" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Eglow, Eglonitz—here we are, Egria.
 
+### "Ellen" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Oh, my friend—!” She laid her hand lightly on his arm, and he pleaded earnestly: “Ellen—why won't you tell me what's happened?” She shrugged again.
+
+### "Emersons" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - When she exclaimed, “But Cecil's Emersons—they can't possibly be the same ones—there is that—” he did not consider that the exclamation was strange, but saw in it an opportunity of diverting the conversation while she recovered her composure.
+
 ### "English" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - It's from English "shoes".
+
+### "English" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Bayes' rule, in plain English: change your mind, but only as much as the evidence deserves.
+
+### "Eswatini" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Mozambique, Malawi, Botswana, Lesotho, Eswatini: she'd circled each one on the map in violet ink and written the word “soon” beside it.
+
+### "Europe" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “After that I lived like a young rajah in all the capitals of Europe—Paris, Venice, Rome—collecting jewels, chiefly rubies, hunting big game, painting a little, things for myself only, and trying to forget something very sad that had happened to me long ago.”
+
+### "Everything" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Everything—the whole complex movement of the universe—is as simple as that—when you can sufficiently put two and two together.
+
+### "FAQ" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - FAQ: Q. Is it BYOB?
 
 ### "FRG" + "." (1 occurrences)
 - Predicted: None
@@ -4627,6 +6707,18 @@ Accuracy: 99.72%
 - Examples:
   - For—was I really gone three days?
 
+### "Friday" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The senator's carefully worded, lawyer-approved, entirely meaningless statement was released late Friday—naturally.
+
+### "Fridays" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In this way, too, she used to catch herrings on Tuesdays and Fridays—when everybody on the boat ate fish to make the beef last longer.
+
 ### "From" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4639,11 +6731,35 @@ Accuracy: 99.72%
 - Examples:
   - Galaxy "Kin-Dza-Dza" in the Spiral, all right?
 
+### "Garcias" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The Williamses' cat and the Garcias' cat share custody of our porch.
+
+### "German" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Her Rottweiler answers only to commands in German: sitz, platz, and bleib.
+
 ### "Get" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Get'em out!
+
+### "Ghosts" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ghosts' coasts boast hosts of posts.
+
+### "Gipsy" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I may be straight descended from the ancient Romans, or I may be a Viking's daughter, or I may be the child of a Russian exile and belong by rights in a Siberian prison, or maybe I'm a Gipsy—I think perhaps I am.
 
 ### "Goes" + """ (1 occurrences)
 - Predicted: None
@@ -4663,11 +6779,35 @@ Accuracy: 99.72%
 - Examples:
   - Heil "Hittler."
 
+### "Hendersons" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You and I pick up the cake, hide it in the Hendersons' garage, and get back before she leaves work.
+
+### "Hodges" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Nobody'd lived in the Hodges' old place since the '50s, so when a light came on in the upstairs window, everybody's dinner got cold.
+
 ### "Holmes" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - He has been a disappointment to me, Mr. Holmes—a grievous disappointment.
+
+### "Hot Wheels" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Crayola, Play-Doh, Etch A Sketch, Slinky, Hot Wheels: the attic was a museum of everything we'd ever begged for.
+
+### "How" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “What an extraordinary coincidence.” “How—a coincidence?” “That my mother should have made a will on the very day of her death!”
 
 ### "I" + "'" (1 occurrences)
 - Predicted: Space
@@ -4692,6 +6832,12 @@ Accuracy: 99.72%
 - Actual: None
 - Examples:
   - We've ID'ed the guy the Major collared.
+
+### "If" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - If—and it's a big if—the weather holds, and if—bigger still—the engine starts, we could be in Nassau by Sunday.
 
 ### "Imperial Opera of Warsaw" + "—" (1 occurrences)
 - Predicted: Space
@@ -4747,6 +6893,24 @@ Accuracy: 99.72%
 - Examples:
   - Jim—my other half—is still in the autodoc, having his lungs cleaned.
 
+### "Joneses" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Charles's hat, Iris's gloves, and the Joneses' umbrella were all in the lost-and-found.
+
+### "June" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The twenty-one-year-old goalkeeper—she'd been stacking shelves in June—saved three penalties in a row.
+
+### "Juneau" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Bismarck, Pierre, Helena, Olympia, Salem, Juneau: state capitals you always forget until the quizmaster clears her throat.
+
 ### "Just" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4771,11 +6935,23 @@ Accuracy: 99.72%
 - Examples:
   - I wouldn’t frighten Kate—poor little Kate.
 
+### "King" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “He was a very good King—oh, yes, really a very superior King in his way, but he was a little—well, strange.”
+
 ### "Kira" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - My mother Kira—I'm Amanda Kirasdotr—for longer.
+
+### "KitKat" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Sephora samples, a Clif Bar, three Lyft receipts, and half a KitKat: the full contents of her purse.
 
 ### "Know" + "'" (1 occurrences)
 - Predicted: Space
@@ -4795,11 +6971,23 @@ Accuracy: 99.72%
 - Examples:
   - Like the lady in The Widow's Lapdog ?
 
+### "Laredo" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Houston, Dallas, Amarillo, Waco, El Paso, Lubbock, Laredo: Dad could sing the weather for every one of them.
+
 ### "Latin" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - The Portuguese pronoun "eu" came from Latin "ego".
+
+### "Lent" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Every year she gives up something for Lent: chocolate, coffee, gossip; every year the gossip is the first to come back.
 
 ### "Lightering" + "—" (1 occurrences)
 - Predicted: Space
@@ -4807,11 +6995,23 @@ Accuracy: 99.72%
 - Examples:
   - Lightering—that's taking stuff out to boats in the harbor.
 
+### "Lopezes" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The Lopezes' daughter's getting married at four o'clock on Saturday, and I haven't got a thing to wear that isn't my sister's.
+
 ### "Luna" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Monsieur de Luna !
+
+### "Lunchables" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A can of Pringles, two Capri Suns, and a Lunchables: breakfast of champions.
 
 ### "M" + "ookie" (1 occurrences)
 - Predicted: Space
@@ -4843,11 +7043,59 @@ Accuracy: 99.72%
 - Examples:
   - Do you know the brother of Michael Jackson ?
 
+### "Microservices" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Microservices: because one broken thing wasn't enough.
+
+### "Middle West" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - That's my Middle West—not the wheat or the prairies or the lost Swede towns, but the thrilling returning trains of my youth, and the street lamps and sleigh bells in the frosty dark and the shadows of holly wreaths thrown by lighted windows on the snow.
+
+### "Mississippi" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Mississippi: M, I, double S, I, double S, I, double P, I.
+
+### "Mr. Philips" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - His learned friend—Sir Ernest nodded carelessly at Mr. Philips—had stated that if the prisoner were an innocent man, he would have come forward at the inquest to explain that it was he, and not Mr. Inglethorp, who had been the participator in the quarrel.
+
+### "Music" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Music—” said Lucy, as if attempting some generality.
+
+### "N.B." + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - N.B.: the glue takes a full day to cure.
+
+### "Naguib Mahfouz" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Kenzaburo Oe, Wole Soyinka, Wisława Szymborska, Naguib Mahfouz: the shelf by the window belongs to the laureates.
+
 ### "Napoleon" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Then Napoleon - "My money's down the drain."
+
+### "Nero" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Caesar Augustus, Tiberius, Caligula, Claudius, Nero: five emperors, one family, and very few natural deaths.
 
 ### "No" + "—" (1 occurrences)
 - Predicted: Space
@@ -4855,11 +7103,41 @@ Accuracy: 99.72%
 - Examples:
   - “No—except that it was Leadenhall Street.”
 
+### "Nobody" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Nobody: absolutely nobody.
+
+### "Nothing" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Nothing—not the floods, not the fire, not even that year with the locusts—had ever closed the Blue Moon Diner.
+
 ### "Oh" + "--" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Oh -- so by "drinking" you mean alcohol?
+
+### "Ohio" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Monongahela, Allegheny, and Ohio: three rivers, one confluence, one very steep incline.
+
+### "Ol'" + "Bess" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ol' Bess ain't much to look at, but she's never once left me stranded.
+
+### "Open" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Wimbledon, Roland-Garros, the Australian Open: he's won all three, just not the same year.
 
 ### "Orphanage" + """ (1 occurrences)
 - Predicted: None
@@ -4873,11 +7151,35 @@ Accuracy: 99.72%
 - Examples:
   - I'M FROM A PLANE "I'm from a plane that crashed in the mountains."
 
+### "Papa" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Golf, Uniform, Lima, Papa: that spells gulp.
+
+### "Paramus" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Hoboken, Weehawken, Secaucus, Paramus: the poetry of New Jersey Transit.
+
+### "Parents" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Parents' night's at seven o'clock in the girls' gym, not the boys', so please don't make last year's mistake.
+
 ### "Paris" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Here is the Paris - Lyon train schedule.
+
+### "Pebbly Waste" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - And indeed there was quite a crowd round them on the Pebbly Waste: the Prime Minister and the Parliament and the Soccer Players and the Orphanage and the Manticora and the Rocking Horse, and indeed everyone who had been eaten by the Dragon.
 
 ### "Peculiar" + "—" (1 occurrences)
 - Predicted: Space
@@ -4891,11 +7193,29 @@ Accuracy: 99.72%
 - Examples:
   - Perhaps "Daijin"?
 
+### "Phillies" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The Philadelphia Phillies' mascot, the Phanatic, stole a fan's nachos.
+
 ### "Play" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Play "Mystification".
+
+### "Pluto" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Only one of them—Pluto—has been observed in enough detail to verify that its current shape fits what would be expected from hydrostatic equilibrium.
+
+### "Probably" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Probably—yes.” “Then toward morning, when everybody was asleep, your theory is that he changed the numbers again and left the train.” “I can't think of anything else,” I replied wearily.
 
 ### "Put" + """ (1 occurrences)
 - Predicted: None
@@ -4915,11 +7235,41 @@ Accuracy: 99.72%
 - Examples:
   - “Why, I am a Queen—the Queen of all the Field Mice!”
 
+### "Question" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Question: if the clock is always ten minutes fast, why are we always late?
+
+### "Reminder" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Reminder: call your sister.
+
+### "Remus" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Albus, Severus, Sirius, Remus: wizard parents loved their Latin.
+
+### "Ri" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Ri—te O, Cabby!” the Hopscotch hailed.
+
 ### "Robert" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - We called Robert "Bob".
+
+### "Rome" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “After that I lived like a young rajah in all the capitals of Europe—Paris, Venice, Rome—collecting jewels, chiefly rubies, hunting big game, painting a little, things for myself only, and trying to forget something very sad that had happened to me long ago.”
 
 ### "S--" + "so" (1 occurrences)
 - Predicted: None
@@ -4933,11 +7283,53 @@ Accuracy: 99.72%
 - Examples:
   - INSPECTOR SINGH "l'm Munna, the dude with a degree."
 
+### "Sassafras" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My sister's sixth sixth-grade science thesis: “Scissors, Sizzle, and Sassafras: Is Swiftness Synthesis?”
+
 ### "Saying" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Saying "good morning" to the car?
+
+### "Schmidt" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It's Schmidt: S, C, H, M, I, D, T, with no extra T.
+
+### "Scrap" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “You must be very cold in it,” said Mrs. Fisher, thin-lipped; for it showed a great deal of Scrap—the whole of her arms, for instance, and even where it covered her up it was so thin that you still saw her.
+
+### "Seahawks" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The Seahawks' twelfth man shook the seismographs at the University of Washington.
+
+### "Seein" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Seein' as how y'all drove all this way, the least I can do's put on some coffee and find that photograph of your granddaddy's mule.
+
+### "Seneca" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I had a whole speech prepared—there were jokes, there was a quotation from Seneca—and I got as far as “um.”
+
+### "September" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - To be young, broke, and in Lisbon in late September—there's nothing like it.
 
 ### "Shadow Lake" + "." (1 occurrences)
 - Predicted: None
@@ -4969,17 +7361,41 @@ Accuracy: 99.72%
 - Examples:
   - Shouting "Drop your gun, I'm a cop" even in my dreams?
 
+### "Silas" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - His father, his grandfather, his great-uncle Silas—lighthouse keepers, every one.
+
 ### "So" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - So "NK" stands for "NouKan".
 
+### "Socrates" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Socrates' students asked him questions, and he asked 'em right back.
+
 ### "Some" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Some "rabbit holes" bullshit you read in The Times?
+
+### "Spelling Bee" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Wordle, Connections, Spelling Bee: that's the order, and don't interrupt me.
+
+### "Staircase" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There's a reason they call it the Widow's Staircase: it has ninety-nine steps, no railing, and a very good view of the rocks.
 
 ### "Stanley" + """ (1 occurrences)
 - Predicted: None
@@ -5011,6 +7427,18 @@ Accuracy: 99.72%
 - Examples:
   - Then "Why?"
 
+### "Then" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Then—at last—there came a single unmistakable click.
+
+### "Thou" + "'rt" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Thou'rt welcome, stranger, though thy horse be lame and thy boots be full of water.
+
 ### "Through" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5023,17 +7451,65 @@ Accuracy: 99.72%
 - Examples:
   - He's bought a Trabbi .
 
+### "Udo" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He would have to stay there and help admire Udo—an unsatisfying prospect to a man in love.
+
+### "Unless" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Unless—
+
+### "Venice" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Tapas in Seville, pintxos in San Sebastián, cicchetti in Venice: I have devoted my sabbatical to small plates and I regret nothing, not even the anchovies.
+
+### "Vertigo" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Casablanca, Citizen Kane, Vertigo: the professor's list hasn't changed in thirty years.
+
 ### "Volga" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Last summer, on the Volga - "I'm thirty, and the crown awaits me."
 
+### "Wait" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Wait—
+
+### "Wanted" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Wanted: experienced baker, early riser, no sleepwalkers.
+
 ### "Was" + "'t" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Was't a wolf stole Sam?
+
+### "Wasps" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Wasps' masks?
+
+### "Well" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Well—the nation was very wet.
 
 ### "Were" + "'" (1 occurrences)
 - Predicted: Space
@@ -5059,6 +7535,30 @@ Accuracy: 99.72%
 - Examples:
   - Why ?
 
+### "Why" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Why—” To Miles, Kennicott hinted, “Couldn't you get Bea's cousin, Tina?”
+
+### "Williamses" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The Williamses' cat and the Garcias' cat share custody of our porch.
+
+### "Windsor" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I remember going up once from Staines to Windsor—a stretch of water peculiarly rich in these mechanical monstrosities—with a party containing three ladies of this description.
+
+### "Wolves" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Wolves' selves, elves' shelves, twelve valves.
+
 ### "Words" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5071,11 +7571,47 @@ Accuracy: 99.72%
 - Examples:
   - Y— yeah?
 
+### "Yes" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Poirot,” I asked earnestly, “have you made up your mind about this crime?” “Yes—that is to say, I believe I know how it was committed.”
+
+### "Yet" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Yet—if Mr. Wilkins had telegraphed, why not Frederick?
+
+### "Yorktown" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Lexington, Concord, Valley Forge, Yorktown: the war in four stops.
+
 ### "Your" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Your "princess".
+
+### "Youths" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Youths' mouths, truths' proofs, wolves' hooves, calves' halves, and the sheaves of months-old clothes the moths destroyed.
+
+### "Zagreb" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Sarajevo, Dubrovnik, Split, and Zagreb: four cities, four days, one very tired rental car.
+
+### "Zune" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A BlackBerry, a Palm Pilot, and a Zune: our drawer of shame.
 
 ### "a" + "--" (1 occurrences)
 - Predicted: None
@@ -5095,23 +7631,59 @@ Accuracy: 99.72%
 - Examples:
   - What is this commotion all about ?
 
+### "about" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Here I am, my lord,” said Mr. Bunter, with respectful reproach, “but if you'll excuse me saying so, downstairs is where I ought to be, with all those young women about—they'll be fingering the evidence, my lord.”
+
+### "accent" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He came home from the sea with a parrot, a limp, and a brand-new accent—Portuguese, he claimed, though no Portuguese person has ever agreed.
+
+### "accident" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A short list of things I've set on fire by accident: toast, a tablecloth, two kites, and my career.
+
+### "actually" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There's a word for what you've done—several, actually—and I'm looking them up now.
+
+### "advantage" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The theory has one great advantage: it explains everything; and it has one great flaw: it explains everything.
+
+### "advice" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My aunt gave me three pieces of advice: never lend money, never borrow a ladder, and never trust a man who irons his jeans.
+
 ### "after" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - He couldn't remember that "y" comes after "x".
 
+### "afternoon" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - To the kid on the bus who gave his seat to my mom this afternoon: your parents did a great job.
+
 ### "again" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - And again "must kill"!
-
-### "again" + "—" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - They come, they go, they come again—of course that was for the cloak.
 
 ### "ahead" + "--" (1 occurrences)
 - Predicted: None
@@ -5130,6 +7702,30 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - Before the judge, we all "can't help it".
+
+### "alone" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Her notebooks are full of words she loved for their sound alone: “lagoon,” “cellar,” “parallelogram,” “dusk.”
+
+### "alone" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Bill looked up at the face that was laughing down on him, and which was always inclined to reduce him—and not him alone—to a state of babbling incoherency.
+
+### "aloud" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - When I opened my eyes I remembered a smell of gasoline, and I said aloud: “Hasn't it passed yet?”
+
+### "alphabetical" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Her bookshelf is alphabetical: Achebe's Things Fall Apart, then Austen's Persuasion, then, misfiled and unrepentant, a battered Calvin and Hobbes.
 
 ### "already" + """ (1 occurrences)
 - Predicted: None
@@ -5161,6 +7757,18 @@ Accuracy: 99.72%
 - Examples:
   - But in the Latin alphabet, Jehovah begins with an "I."
 
+### "angle" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - When the curtain rose—ten minutes late, and at an angle—the audience clapped out of sheer relief.
+
+### "animal" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Finally, we judge, the animal—perhaps the bird was first—began to give utterance to particular “words,” indicative not merely of emotions, but of particular things with an emotional halo, such as “food,” “enemy,” “home.”
+
 ### "another" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5185,11 +7793,29 @@ Accuracy: 99.72%
 - Examples:
   - You see anything unusual or anyone—?
 
+### "anything" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Give me thirty seconds and I'll read you anything: a love letter, a lease agreement, or the rules of a board game nobody has ever finished.
+
+### "anything" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - But as before, Aunt Polly shook her head and said “no, dear,” very decisively, yet with a still more anxious assurance that she would do anything—anything but that—to please her dear Pollyanna.
+
 ### "apologize" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "I would like to apologize "for my outburst earlier.
+
+### "apologize" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Do you deny that you were listening at that door?” “I do not. I must really apologize—but your conversation was so interesting that it overcame my scruples.”
 
 ### "are--" + "How" (1 occurrences)
 - Predicted: None
@@ -5203,11 +7829,41 @@ Accuracy: 99.72%
 - Examples:
   - Est-ce que vous êtes arrivés ?
 
+### "artifacts" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The archaeologist's assistants' assessments asserted that the artifacts' inscriptions' strokes were strikingly straight, whereas the sphinx's subscripts were scratched and cramped.
+
+### "ascent" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Flying model craft and stories of manned flight go back many centuries; however, the first manned ascent—and safe descent—in modern times took place by larger hot-air balloons developed in the 18th century.
+
 ### "ask" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Why do you ask "where"?
+
+### "askin" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Nah, I'm good, but thanks for askin'.
+
+### "assistants" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The archaeologist's assistants' assessments asserted that the artifacts' inscriptions' strokes were strikingly straight, whereas the sphinx's subscripts were scratched and cramped.
+
+### "assume" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I am sure I don't know,” she interrupted, looking severely at Mrs. Wilkins, “why you should assume Lady Caroline is not telling the truth.” “I don't assume—I know,” said Mrs. Wilkins.
 
 ### "astronauts" + """ (1 occurrences)
 - Predicted: None
@@ -5221,11 +7877,47 @@ Accuracy: 99.72%
 - Examples:
   - Federal Chancellor Brandt called the attacks "cowardly and devious".
 
+### "attribute" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Critics attribute his success to a single attribute: stubbornness.
+
 ### "away" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - So can you not go away ?
+
+### "away" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He was gazing, instead, at a leaf on the ground a little distance away—and it was not even a pretty leaf.
+
+### "axes" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The graph has three axes: time, money, and regret.
+
+### "bad" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The week's news wasn't all bad: the strike's over, the ferry's running, and the zoo's lost penguin's been found.
+
+### "bags" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Dear person who writes the little jokes on tea bags: I see you, and you deserve a raise.
+
+### "balms" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Pulled, bulled, gulled, and culled, the elms' helms held, but the balms' psalms calmed only the palm trees.
 
 ### "band" + "—" (1 occurrences)
 - Predicted: Space
@@ -5233,11 +7925,59 @@ Accuracy: 99.72%
 - Examples:
   - “Ah, and what did you gather from this allusion to a band—a speckled band?”
 
+### "bandanna" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Pashmina, jodhpurs, cashmere, chintz, calico, khaki, bandanna: half of my closet arrived in English by way of India.
+
 ### "bar" + "--" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I was in a bar -- deafening music, blind drunk, everyone waiting for me.
+
+### "bare" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The tide was out, and the whole bay lay bare: ribs of sand, ropes of weed, a rowboat tipped on its side like a sleeping dog.
+
+### "baths" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Both baths' broths froth.
+
+### "be" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The far-off rumble might have been thunder, or a freight train, or—as it proved to be—my father, snoring.
+
+### "before" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - When Mr. Jamieson telephoned that night we had news for him; he told me what I had not realized before—that it would not be possible to find Halsey at once, even with this clue.
+
+### "began" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “The results are clear,” the doctor began—and I remember noticing, of all things, that her watch had stopped—“and I think we should talk about what happens next.”
+
+### "believe" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The island has no cars, no streetlights, and—this is the part people don't believe—no mosquitoes.
+
+### "bene" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Nota bene: the emeritus faculty do not validate parking.
 
 ### "bet" + "'cha" (1 occurrences)
 - Predicted: Space
@@ -5257,11 +7997,29 @@ Accuracy: 99.72%
 - Examples:
   - He had to choose between "Earthling" and "Terran" for their demonym.
 
+### "biscuits" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A reluctant elevator boy went for a box full of straw and some milk, to which he added on his own initiative a tin of large, hard dog biscuits—one of which decomposed apathetically in the saucer of milk all afternoon.
+
 ### "board" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - They had a board "Rani weds Vijay".
+
+### "board" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Dear members of the board: I regret to inform you that I regret nothing.
+
+### "book" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - However, it is proper and legitimate to speak of it, for “Nomadic Life in Palestine” is a representative book—the representative of a class of Palestine books—and a criticism upon it will serve for a criticism upon them all.
 
 ### "boredom" + ";" (1 occurrences)
 - Predicted: None
@@ -5275,11 +8033,47 @@ Accuracy: 99.72%
 - Examples:
   - I still call my boss "Mister".
 
+### "box" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Before you begin, make sure you have everything in the box: two side panels, four shelves, and a bag of screws.
+
+### "breath" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He counted under his breath: twenty-one, twenty-two, twenty-three, twenty-four.
+
+### "broadcasters" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The broadcasters' forecasts suggest frosts next week, then gusts.
+
 ### "brother" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - What are you doing brother ?
+
+### "brush" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - When I asked them if they had tooth-brushes, one of the girls replied, pointing to a brush: “Yes, sir. That is our brush. We bought it together, yesterday.”
+
+### "buddy" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Did she just call me 'buddy'?” the senator hissed to his aide.
+
+### "buffet" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There are four kinds of people at a buffet: the planners, the grazers, the stackers, and the ones who go straight to dessert.
 
 ### "bus" + ".." (1 occurrences)
 - Predicted: None
@@ -5287,11 +8081,23 @@ Accuracy: 99.72%
 - Examples:
   - From there, take a bus ..
 
+### "business" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “As a matter of business,” said the chappie—“mind you, I'm not questioning anybody's good faith, but, as a matter of strict business—I think this gentleman here ought to put himself on record before witnesses as stating that he really is a duke.”
+
 ### "but" + "--" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - No, no, no, but -- but, no, it's true.
+
+### "called" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - However, we did pull up to the point—“Picnic Point,” it is called—and dropped into a very pleasant nook under a great elm-tree, to the spreading roots of which we fastened the boat.
 
 ### "calls" + """ (1 occurrences)
 - Predicted: None
@@ -5299,11 +8105,47 @@ Accuracy: 99.72%
 - Examples:
   - And this has prompted what Mrs Bird calls "a full-blown midlife crisis".
 
+### "calves" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Youths' mouths, truths' proofs, wolves' hooves, calves' halves, and the sheaves of months-old clothes the moths destroyed.
+
+### "camouflage" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Sabotage, espionage, camouflage: French has lent us a spy's whole toolkit.
+
+### "camp" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I invited Jimmie McBride, and Sallie invited his room-mate at Princeton, who visited them last summer at their camp—an awfully nice man with red hair—and Julia invited a man from New York, not very exciting, but socially irreproachable.
+
+### "cancellation" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Another owner of Tierra del Sol, Darrell Davis—who had anchored the station's newscasts prior to their cancellation—called Dean's actions malicious.
+
 ### "car" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I can't buy that car - it costs an arm and a leg.
+
+### "carpentry" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Diplomacy, at its heart, is a kind of carpentry: you measure, you cut, you sand, and you hope that nobody leans on it.
+
+### "case" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Well, we can have a look when we go in. If the other keys are outside, then this one was probably outside too, and in that case—well, it makes it more interesting.”
 
 ### "cases" + "-" (1 occurrences)
 - Predicted: None
@@ -5329,11 +8171,47 @@ Accuracy: 99.72%
 - Examples:
   - I called the cat "Tama".
 
+### "cats" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Think of memory as a library run by cats: everything's in there somewhere, but nobody's going to fetch it for you.
+
+### "caveat" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - One caveat: those figures come from a single survey, and it only asked people who already owned a bicycle.
+
+### "caviar" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Kvass, pierogi, blini with caviar: the deli on the corner has them all.
+
+### "century" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Say what you like about the twentieth century—and plenty has been said—it gave us jazz, penicillin, and the zipper.
+
 ### "change" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - You have to change "he" for "us".
+
+### "chappie" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “As a matter of business,” said the chappie—“mind you, I'm not questioning anybody's good faith, but, as a matter of strict business—I think this gentleman here ought to put himself on record before witnesses as stating that he really is a duke.”
+
+### "charger" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Distance to the nearest charger: 14 miles.
 
 ### "cheap" + "—" (1 occurrences)
 - Predicted: Space
@@ -5341,17 +8219,53 @@ Accuracy: 99.72%
 - Examples:
   - Ship fees are not cheap—you can pay monthly, for a premium.
 
+### "chicanery" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There was about the whole enterprise a miasma of chicanery: forged provenances, spurious appraisals, and a notary who turned out to be a ventriloquist.
+
+### "children" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Tony has nice children—ten or eleven of them by this time, I guess.
+
+### "chimpanzees" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Jane Goodall named the chimpanzees: David Greybeard, Flo, Fifi, and Goliath.
+
+### "chores" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Saturday's chores: rake the leaves, clean the gutters, return the ladder, and apologize to the neighbors about the ladder.
+
 ### "christened" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - The sword was christened "Joyeuse".
 
+### "chrysanthemum" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The spelling bee came down to chrysanthemum: C, H, R, Y, S, A, N, T, H, E, M, U, M.
+
 ### "circus" + ""Medini" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Today, Gala performance by the world famous circus "Medini"!
+
+### "cities" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I've lived in three cities: Cleveland, which I loved; Phoenix, which I survived; and Tampa, which I'd rather not discuss.
 
 ### "city" + """ (1 occurrences)
 - Predicted: None
@@ -5365,17 +8279,95 @@ Accuracy: 99.72%
 - Examples:
   - Room cleaning—Excellent.
 
+### "clear" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The instructions were clear: stir constantly, and do not, under any circumstances, let it boil.
+
+### "climber" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The fog came down so thick and so fast that the lead climber—who was ten feet away at most—disappeared mid-sentence.
+
+### "close" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We were this close—this close!—to finishing the puzzle when the cat walked by.
+
+### "closely" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Case-sensitive, so listen closely: capital R, lowercase v, the numeral six, a hyphen, capital N, capital N, lowercase e, percent sign.
+
+### "coat" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Such a small thing, really—a key, a coin, a button off a coat—and yet it hanged him.
+
+### "code" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Gate code: pound, zero, eight, one, five, star.
+
+### "collation" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Alphabets often come to be associated with a standard ordering of their letters; this is for collation—namely, for listing words and other items in alphabetical order.
+
 ### "color" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - We call that color "midnight blue".
 
+### "color" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Prince Bumpo,” said the Doctor, looking thoughtfully at the bottles in his medicine-bag, “supposing I made your hair a nice blonde color—would not that do instead to make you happy?”
+
+### "come" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The bell rings, the doors fly open, and out they come—muddy, howling, free.
+
+### "comedy" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Three things matter in comedy—timing.
+
+### "comin" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Outta the way, comin' through, hot soup!
+
 ### "commanded" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I commanded "about face"!
+
+### "complaint" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The road goes up, and up, and—just when your knees are filing a complaint—up again.
+
+### "condition" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She had one condition: no accordions.
 
 ### "conditioned" + ".." (1 occurrences)
 - Predicted: None
@@ -5389,11 +8381,29 @@ Accuracy: 99.72%
 - Examples:
   - And simultaneously confining "me" within set limits.
 
+### "consul" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - By the age of thirty-five she'd been a short-order cook, a stand-up comic, and a vice-consul—in that order.
+
+### "conversation" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He was quite unable to make a dash for liberty, however, since Lomax had the unpleasant habit of retaining a hold upon a person with whom he was engaged in serious conversation—doubtless the result of long experience.
+
 ### "cooled" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Fire has completely cooled ..
+
+### "could" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Try as she could—and she tried hard—Priscilla had never seen a vision or succeeded in establishing any communication with the Spirit World.
 
 ### "country" + "—" (1 occurrences)
 - Predicted: Space
@@ -5401,11 +8411,41 @@ Accuracy: 99.72%
 - Examples:
   - It is in a German-speaking country—in Bohemia, not far from Carlsbad.
 
+### "creed" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I was so absorbed in my own thoughts that I think I should have gone by without paying them much heed, but suddenly I remembered the Professor's creed—to preach the gospel of books in and out of season.
+
+### "crosswalk" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - So I'm, you know, I'm walking along, and, bam, there it is, right in the middle of the, uh, the crosswalk: a live lobster.
+
+### "d'" + "seated" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The maître d' seated us beside a papier-mâché giraffe.
+
+### "dacoits" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Coolers of chai and samosas circulated among the dacoits' captives, who were, it must be said, thoroughly enjoying the film set.
+
 ### "de" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Et de "coun."
+
+### "dead" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Speak!” he cried, “and tell us whether you are alive or dead—and where is the rest of you?” “Oh, don't be a stupid ass!” said Harris's head.
 
 ### "death" + "-" (1 occurrences)
 - Predicted: None
@@ -5437,17 +8477,71 @@ Accuracy: 99.72%
 - Examples:
   - That is in one dekan—sorry, two hours.
 
+### "descent" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Flying model craft and stories of manned flight go back many centuries; however, the first manned ascent—and safe descent—in modern times took place by larger hot-air balloons developed in the 18th century.
+
+### "desert" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There are, broadly speaking, three ways to cross the desert: at night, which is cold; by day, which is foolish; or by air, which, the guide pointed out, would have been his first suggestion.
+
+### "desks" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ask the clerk whether the desks' locks stick.
+
+### "dessert" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Dinner was a five-course, three-hour, no-phones-allowed affair, and by the end of it—somewhere between the cheese and the second dessert—my parents were holding hands.
+
+### "detail" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In the pride of being a housewife she loved every detail—the brocade armchair with the weak back, even the brass water-cock on the hot-water reservoir, when she had become familiar with it by trying to scour it to brilliance.
+
 ### "developed" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - She developed "alequestesia".
 
+### "did" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She loved him—of course she did—but she loved the mountain first.
+
 ### "die" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - You saw them age and die - a friend, a colleague, a wife.
+
+### "difficulty" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Here's the difficulty: the patients who most need the treatment are too sick to travel, and the hospital that offers it is an ocean away.
+
+### "dingy" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Also his neckties are quite dingy—black and brown, where they used to be scarlet and purple.
+
+### "disappointment" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The contents of the time capsule were a disappointment: three forks, a coupon, and a note saying “sorry.”
 
 ### "do" + "es" (1 occurrences)
 - Predicted: Space
@@ -5467,11 +8561,53 @@ Accuracy: 99.72%
 - Examples:
   - Does he have a doctorate ?
 
+### "doin" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - What're you doin' up there, and why've you got my ladder?
+
+### "dolphins" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Bioluminescent dinoflagellates flash when they're jostled, which is why the dolphins' wake glowed an eerie, phosphorescent blue.
+
+### "door" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A half-eaten sandwich, a still-warm cup of tea, an open door—whoever it was, we'd missed them by minutes.
+
+### "dot" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Half past nine, a quarter to ten, ten on the dot—and still no sign of the groom.
+
+### "down" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - With every step, you set something down: a worry, a deadline, an old argument.
+
 ### "drawback" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Brilliant people have one major drawback - they don't know how to lose.
+
+### "dresses" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The judge's niece's hostess's dresses' creases pleased the princess's nurses.
+
+### "drifts" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Softly, swiftly, the rafts drifts' crafts shifted aft.
 
 ### "drink" + "'st" (1 occurrences)
 - Predicted: Space
@@ -5485,11 +8621,59 @@ Accuracy: 99.72%
 - Examples:
   - To drink or not to drink - that is the question.
 
+### "drivin’" + "this" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ma'am, I've been drivin’ this bus for twenty-two years, and I ain't never seen a horse use exact change.
+
+### "dropped" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The plane dropped—a hundred feet, two hundred, who knows—and then, with a bump that sent the coffee to the ceiling, it caught.
+
+### "drove" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Go at once and fetch me a report of my horses.” “Miss Withersteen!... You mean the big drove—down in the sage-cleared fields?”
+
+### "dwarves" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Nothing's as rough as dwarves' gruff bluffs, though thugs' shrugs come close.
+
 ### "ear" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I'll whisper in your ear "shsh" and you'll be quiet.
+
+### "early" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It was still early—not quite ten o'clock—and it occurred to Aubrey that if he was going to patrol the neighborhood he had better fix its details in his head.
+
+### "earnestly" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Oh, my friend—!” She laid her hand lightly on his arm, and he pleaded earnestly: “Ellen—why won't you tell me what's happened?” She shrugged again.
+
+### "earth" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - And Venters thought with lightning swiftness, “I've saved her—I've unlinked her from that old life—she was watching as if I were all she had left on earth—she belongs to me!” The thought was startlingly new.
+
+### "eight" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The baby weighed seven pounds—no, eight—and had a full head of jet-black hair.
 
 ### "either" + """ (1 occurrences)
 - Predicted: None
@@ -5497,17 +8681,101 @@ Accuracy: 99.72%
 - Examples:
   - The Spanish word "langosta" can mean either "lobster" or "locust".
 
+### "elegant" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The exploit was almost elegant: one unchecked pointer, one malformed packet, and the whole server handed over its memory.
+
+### "elements" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Living shorelines use plants or other natural elements—sometimes in combination with harder shoreline structures—to stabilize estuarine coasts, bays, and tributaries.
+
+### "elms" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Pulled, bulled, gulled, and culled, the elms' helms held, but the balms' psalms calmed only the palm trees.
+
+### "elves" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Wolves' selves, elves' shelves, twelve valves.
+
+### "emergency" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In the event of an emergency—fire, flood, or a visit from the district manager—use the rear exit.
+
+### "ending" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - They've rewritten the ending—again.
+
 ### "enemies" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Always forgive your enemies - nothing annoys them so much.
 
+### "engaged" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Fanny dropped her eyes, and the spark was concealed, but a movement of her lower lip betokened a tendency to laugh, as she replied, “There hasn't been much gossip lately, except the report that Lucy Morgan and Fred Kinney are engaged—and that's quite old, by this time.”
+
 ### "enjoyed" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - You told me she enjoyed "The Human Apparatus".
+
+### "entry" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Her diary for that year contains a single entry: “Too busy.”
+
+### "equivalent" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In books, you simply leapt into another, promised the driver a sovereign—or its modern equivalent—and there you were.
+
+### "even" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “But I haven't even—” “Out.” “It's raining!” “Then I suggest,” she said, opening the door, “that you walk between the drops.”
+
+### "evening" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She could see Matthew's face smiling at her as he had smiled when they parted at the gate that last evening—she could hear his voice saying, “My girl—my girl that I'm proud of.”
+
+### "everything" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The old man taught me everything: how to set a snare, how to read the clouds, how to lose at checkers without complaining.
+
+### "everything" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The will left everything—everything!—to the parrot.
+
+### "exactly" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Between forty and fifty thousand starlings—nobody can count them exactly—wheel over the pier every night at dusk.
 
 ### "exciting" + """ (1 occurrences)
 - Predicted: None
@@ -5527,11 +8795,35 @@ Accuracy: 99.72%
 - Examples:
   - I submit this as exhibit "X."
 
+### "existed" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “They are the records of centuries of the most watchful, observant and suspicious government that ever existed—in which every thing was written down and nothing spoken out.”
+
+### "explain" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I dare say she'll be able to explain—she's got a tongue of her own, that's certain. Maybe they were out of boys of the brand you wanted.”
+
+### "explanations" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Scientists had two explanations: either the birds were steering by the stars, or they could somehow feel the earth's magnetic field; the truth, it now appears, is both.
+
 ### "expression" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Do you know the expression "thank you?"
+
+### "extremely" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Don't touch that, it's extremely—well, now you know.
 
 ### "face" + ".." (1 occurrences)
 - Predicted: None
@@ -5539,11 +8831,29 @@ Accuracy: 99.72%
 - Examples:
   - Get another face ..
 
+### "faces" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The coast here has two faces: in summer it's all umbrellas, ice cream, and shrieking children; in winter it belongs to the wind, the gulls, and one old man with a metal detector.
+
 ### "factories" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "Arise, plants and factories "And close your ranks.
+
+### "facts" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Consider the facts: the ladder was too short, the wind was too strong, and the groom had never actually serenaded anyone before.
+
+### "family" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - As in other cultures, the fate of other family members depended on the assets of a family: wealthy Basque families tended to provide for all children in some way, while less-affluent families may have had only one asset to provide to one child.
 
 ### "far" + "." (1 occurrences)
 - Predicted: None
@@ -5551,17 +8861,41 @@ Accuracy: 99.72%
 - Examples:
   - Of course it's far .
 
+### "far" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Here's what we know so far: the window was locked, the safe was open, and the dog didn't bark.
+
 ### "father" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Are you ashamed of calling your father "Dad"?
 
+### "father" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Two things are infinite, according to my father: the universe, and the line at the post office.
+
 ### "feel" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I feel "slightly" grateful.
+
+### "feel" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - From somewhere above came the metallic accuracy of a player-piano, and through the open window we could hear—or feel—the throb of the Cannonball's engine.
+
+### "feeling" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - His whole nature swamped by a new feeling—burnt up with thirst—a cooling spring in sight.
 
 ### "few" + """ (1 occurrences)
 - Predicted: None
@@ -5581,6 +8915,24 @@ Accuracy: 99.72%
 - Examples:
   - I have to finish "Robbers".
 
+### "firelight" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - For the most part he was quite still during that time; it would seem he sat in the growing darkness smoking in the firelight—perhaps dozing.
+
+### "first" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The worst burst first: third-degree burns, dirt, hurt, and thirst.
+
+### "fish" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Everything we own—the couch, the books, the fish—has to fit in that van.
+
 ### "fishhook" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5593,11 +8945,35 @@ Accuracy: 99.72%
 - Examples:
   - You could have most of my flask—I'd like a bit, just in case.
 
+### "flaw" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The theory has one great advantage: it explains everything; and it has one great flaw: it explains everything.
+
+### "floors" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Somewhere between the third and fourth floors—I know this sounds unlikely—the elevator began to sing.
+
+### "follows" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The committee's recommendations are as follows: first, that the bridge be repaired; second, that the toll be lowered; and third, that the troll be given a desk job.
+
 ### "forbid" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - God forbid - the money would be on the table tomorrow.
+
+### "forests" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The old-growth forests—what remains of them—hold more carbon per acre than almost any other place on land, and they've been doing it, free of charge, since before we learned to count.
 
 ### "forever" + """ (1 occurrences)
 - Predicted: None
@@ -5623,11 +8999,29 @@ Accuracy: 99.72%
 - Examples:
   - How many modules must unite to form "consciousness"?
 
+### "forty" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Love, fifteen, thirty, forty: tennis scoring makes no sense.
+
 ### "found" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - I shall never let it drop until the gems are found—never, Mary!
+
+### "founder" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Here's a question I ask every founder: if your product vanished overnight, who would notice first, how loudly would they complain, and would they pay you to stop complaining?
+
+### "four" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It was coded message number four: lima, echo, mike, oscar, november.
 
 ### "four" + "—" (1 occurrences)
 - Predicted: Space
@@ -5635,11 +9029,17 @@ Accuracy: 99.72%
 - Examples:
   - “No one knows it but you four—and myself,” replied Oz.
 
-### "friend" + "—" (1 occurrences)
+### "franc" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - That day, too, I made a friend—of a sort.
+  - Again he demanded more, and got a franc—demanded more, and it was refused.
+
+### "fridge" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In the fridge: one lemon, half an onion, a jar of mustard, and regret.
 
 ### "friends" + "?" (1 occurrences)
 - Predicted: None
@@ -5647,11 +9047,41 @@ Accuracy: 99.72%
 - Examples:
   - Where are all my friends ?
 
+### "friends" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We sell by the pound, by the bushel, or—for friends—by the wave of a hand.
+
+### "fugue" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - What you're hearing is a fugue: the subject enters in the alto, then the tenor answers at the fifth.
+
 ### "game" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Participate in the game "Who is this face?"
+
+### "garage" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - What the jury never heard—what nobody heard until thirty years later, when a box of tapes turned up in a garage—was that the star witness had been in another state.
+
+### "gas" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The hallway there was dimly lighted by two pale jets of gas—one far to his right, the other nearer, to his left.
+
+### "gentle" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Her hands—broad, scarred, astonishingly gentle—had delivered half the county.
 
 ### "get" + """ (1 occurrences)
 - Predicted: None
@@ -5671,6 +9101,12 @@ Accuracy: 99.72%
 - Examples:
   - If she knew I'm getting kicked by buffaloes, she'll kick me out.
 
+### "girl" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She could see Matthew's face smiling at her as he had smiled when they parted at the gate that last evening—she could hear his voice saying, “My girl—my girl that I'm proud of.”
+
 ### "go" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5689,17 +9125,47 @@ Accuracy: 99.72%
 - Examples:
   - Where did all the love go ?
 
+### "go" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - So take your change and go—to the devil if you like.
+
+### "goalkeeper" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The twenty-one-year-old goalkeeper—she'd been stacking shelves in June—saved three penalties in a row.
+
 ### "god" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Your god—where is He now?
 
+### "goin" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm not sayin' it's haunted, I'm just sayin' the rockin' chair's been goin' since noon.
+
 ### "going" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - No, I'm going "home" home.
+
+### "goin’" + "before" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - We oughta get goin’ before the snow gets any worse.
+
+### "gone" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I counted the stairs on the night you were gone: there were thirteen to midnight and thirteen to dawn.
 
 ### "gonna" + """ (1 occurrences)
 - Predicted: None
@@ -5719,6 +9185,30 @@ Accuracy: 99.72%
 - Examples:
   - Well, yes, of course the pay is good—too good.
 
+### "goods" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Finally he descended and carried up two other packets of mixed goods—a box of ammunition and a number of other things, all of which we got across by throwing our rope to him and hauling it back.
+
+### "grade" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The high-water mark of my athletic career came in fourth grade—dodgeball, last one standing, hiding behind the piano.
+
+### "graders" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ninth-graders' monthly lengths of hemp were stretched twelvefold.
+
+### "gravity" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Albert Einstein called this the equivalence principle, and said that only observers who feel no force at all—including the force of gravity—are justified in concluding that they are not accelerating.
+
 ### "guy" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5737,11 +9227,47 @@ Accuracy: 99.72%
 - Examples:
   - You said you had "A Mother's Love" written here?
 
+### "had" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I used to think that courage was something you had—like brown eyes, or perfect pitch—and not, as I learned that winter, something you did.
+
+### "hair" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I invited Jimmie McBride, and Sallie invited his room-mate at Princeton, who visited them last summer at their camp—an awfully nice man with red hair—and Julia invited a man from New York, not very exciting, but socially irreproachable.
+
 ### "half" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Jim—my other half—is still in the autodoc, having his lungs cleaned.
+
+### "handless" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I'll surrender,” cried the stranger, though he had Jaffers down, and in another moment he stood up panting, a strange figure, headless and handless—for he had pulled off his right glove now as well as his left.
+
+### "hands" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Her hands—broad, scarred, astonishingly gentle—had delivered half the county.
+
+### "happened" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It was in June, two months after America's entrance into the war, that the momentous event happened—the visit of the great Percy Bresnahan, the millionaire president of the Velvet Motor Car Company of Boston, the one native son who was always to be mentioned to strangers.
+
+### "hard" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Try as she could—and she tried hard—Priscilla had never seen a vision or succeeded in establishing any communication with the Spirit World.
 
 ### "has" + """ (1 occurrences)
 - Predicted: None
@@ -5755,11 +9281,47 @@ Accuracy: 99.72%
 - Examples:
   - Much more as our names here have .
 
+### "have" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I've been meaning to write—I really have—but the weeks go by, and the pen runs dry, and here we are.
+
+### "head" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I've only held his head—I haven't given him a mite of medicine. But I'm glad I was here.”
+
+### "hear" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - From somewhere above came the metallic accuracy of a player-piano, and through the open window we could hear—or feel—the throb of the Cannonball's engine.
+
+### "heard" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - What the jury never heard—what nobody heard until thirty years later, when a box of tapes turned up in a garage—was that the star witness had been in another state.
+
 ### "heart" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "But winter for them is no harm, "for a poet's heart "keeps him warm."
+
+### "heat" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Salt, fat, acid, heat—master those, and the rest is garnish.
+
+### "hedge" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Glimpsed through the hedge: eight sheep, asleep, and a shepherd's crook.
 
 ### "help" + "—" (1 occurrences)
 - Predicted: Space
@@ -5785,17 +9347,41 @@ Accuracy: 99.72%
 - Examples:
   - À quelle heure ?
 
+### "hikers" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A warning to hikers: the bridge at mile nine is out, the river is high, and the ranger is in a mood.
+
 ### "hill--" + "sounds" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - A hunchback from Crespin, hiding on the hill-- sounds fishy.
 
-### "him" + "—" (1 occurrences)
+### "him" + ":" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - I hadn’t thought to sell to him—and he has his own jetty.
+  - I'll say this for him: he never once blamed the wind.
+
+### "hinges" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The company makes hinges: big ones, small ones, brass ones, quiet ones; if it opens and shuts, they've thought about it.
+
+### "hint" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Password hint: your first pet, capitalized, followed by a dollar sign.
+
+### "his" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Peter sowed vegetable seeds in his—carrots and onions and turnips.
 
 ### "hit" + """ (1 occurrences)
 - Predicted: None
@@ -5809,11 +9395,41 @@ Accuracy: 99.72%
 - Examples:
   - I love my family and, even more, my homeland—the land where I was born.
 
+### "homeowners" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The thing she calls a “casserole” has been banned by the homeowners' association.
+
+### "hotel" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You promised me a quiet, kid-friendly, family-owned hotel—this is a bowling alley with beds.
+
 ### "hour" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "Mr Pu Yi and his family have been given one hour "to leave the Forbidden City.
+
+### "hour" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - For example, a man who received thirty-four cents an hour had a profit rate of twenty-eight and one half cents an hour—which would give him a daily income of five dollars.
+
+### "hours" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The film runs two and a half hours—two and a half hours!—and the dog dies in the first ten minutes.
+
+### "hundred" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Minus two, plus nine, times one hundred: seven hundred.
 
 ### "hypothesis" + """ (1 occurrences)
 - Predicted: None
@@ -5821,17 +9437,53 @@ Accuracy: 99.72%
 - Examples:
   - You call the violent blow hypothesis "improbable".
 
+### "igloo" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A kayak, an anorak, a parka, and an igloo: English raided the Arctic, too.
+
+### "imitated" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Aristotle also adds this on the matter of retaining the action of doing good once imitated: “Once the habits of ethics or immorality become entrenched, they are difficult to break.”
+
 ### "impetuous" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - She is impetuous—volcanic, I was about to say.
 
+### "important" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Turn right at the church, left at the mill, and then—this is important—don't make eye contact with the rooster.
+
+### "impressively" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Up the street apiece he broke silence and said impressively: “It was a lie—that is my opinion of it!”
+
+### "in" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There was one problem with the break-in—it wasn't their house they'd broken into, but ours—and ours has geese.
+
 ### "indicated" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - “That which my son himself indicated—that of the cupboard of the lumber-room.”
+
+### "individuality" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Another feature is that the locomotor activity of an animalcule often shows a distinct individuality: it may swim, for instance, in a loose spiral.
 
 ### "infamous" + """ (1 occurrences)
 - Predicted: None
@@ -5851,11 +9503,29 @@ Accuracy: 99.72%
 - Examples:
   - I don't suffer from insanity - I enjoy it!
 
+### "inscriptions" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The archaeologist's assistants' assessments asserted that the artifacts' inscriptions' strokes were strikingly straight, whereas the sphinx's subscripts were scratched and cramped.
+
+### "instructions" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “What on earth shall I do?” “I suggest that you telephone to the Redfield Bank,” he said, “and countermand your brother's instructions—that is, unless you think you've made a mistake? I don't want to take advantage of you.”
+
 ### "into" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Uh, the Bates Motel in Psycho was not separated into "little bungalows."
+
+### "into" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A four-hour layover turned into a fourteen-hour layover, and a fourteen-hour layover turned into—I'm not kidding—a wedding.
 
 ### "invaded" + """ (1 occurrences)
 - Predicted: None
@@ -5863,23 +9533,29 @@ Accuracy: 99.72%
 - Examples:
   - This country has been invaded "peacefully".
 
+### "investigators" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - One thing puzzled the investigators: both sets of footprints led in.
+
 ### "is" + "'t" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Fowler, what is't?
 
-### "is" + "—" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Well, the desert is— For a woman, it’s very tough.
-
 ### "is--" + "Why" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Why is-- Why did he use his name?
+
+### "ish" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Eight o'clock—not eight-fifteen, not eight-ish—eight o'clock.
 
 ### "isn't" + """ (1 occurrences)
 - Predicted: None
@@ -5905,11 +9581,41 @@ Accuracy: 99.72%
 - Examples:
   - No doubt about it -- they're scouts.
 
+### "it" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Picture it: a warm night, a wooden dock, forty people in white linen, and one very confused moose.
+
+### "items" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Today's agenda has four items: the budget, the leaky roof, the summer picnic, and the mystery of the missing stapler.
+
+### "itinerary" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Our itinerary: Monday, the cathedral; Tuesday, the catacombs; Wednesday, a lie-down.
+
 ### "its" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Anyway its "best before" was two months ago.
+
+### "jam" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The treaty—two pages, unsigned, and stained with what appears to be jam—is kept in a climate-controlled vault.
+
+### "jest" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The gist of the jest: just adjust the joists.
 
 ### "job" + "?" (1 occurrences)
 - Predicted: None
@@ -5929,11 +9635,65 @@ Accuracy: 99.72%
 - Examples:
   - Combien de jours ?
 
+### "judges" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The winner will be chosen by three judges: a chef, a critic, and somebody who's just really hungry.
+
+### "judiciously" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “We shall, of course, approach him at once, point out the possibly serious consequences, and beg him to defer publication of the Memoirs for at least a month, and in any case to permit them to be judiciously—er—edited.”
+
+### "just" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It's nothing—it's just—would you believe me if I said beets?
+
 ### "kid" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - They call the kid "kid."
+
+### "kiddin" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You gotta be kiddin' me.
+
+### "kidding" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A four-hour layover turned into a fourteen-hour layover, and a fourteen-hour layover turned into—I'm not kidding—a wedding.
+
+### "kids" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - For the kids' sake, let's say we're getting I-C-E C-R-E-A-M.
+
+### "kind" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He had overheard enough to know that this was but the case of a pair of lovers who, with less to fear of life, were yet—after the manner of their kind—more timid of heart than he.
+
+### "knock" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Three quick taps, a pause, two slow taps, another pause, and then one long knock: that was our signal.
+
+### "knots" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Most notably, box jellyfish can swim—at maximum speeds approaching four knots—whereas most species of jellyfish float wherever the current takes them, with little control over their direction.
 
 ### "know" + "'" (1 occurrences)
 - Predicted: Space
@@ -5947,11 +9707,29 @@ Accuracy: 99.72%
 - Examples:
   - Everyone knows "fine" is a cry for help.
 
+### "knows" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The plane dropped—a hundred feet, two hundred, who knows—and then, with a bump that sent the coffee to the ceiling, it caught.
+
+### "landlords" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - On Wednesdays, landlords' handymen's grandchildren's sandboxes get cleaned, sanded, and refilled with grand, bland sand.
+
 ### "last" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Ivan - "Our squadron's last "And deadly battle.
+
+### "last" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Then—at last—there came a single unmistakable click.
 
 ### "le" + ""coun" (1 occurrences)
 - Predicted: None
@@ -5965,11 +9743,47 @@ Accuracy: 99.72%
 - Examples:
   - France seems to be swinging left - Britain to the right.
 
+### "lesson" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Every distributed system eventually teaches you the same lesson: clocks lie.
+
 ### "letter" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - The letter "U."
+
+### "level" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Tide stations around the globe tell us what is happening at a local level—the height of the water as measured along the coast relative to a specific point on land.
+
+### "library" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The new library—three stories of cedar and glass, with a reading room that looks straight out into the treetops—opened on Saturday, and by noon there wasn't an empty chair.
+
+### "lidar" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Sonar, radar, lidar: three ways of shouting into the dark and listening for the answer.
+
+### "lie" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Up the street apiece he broke silence and said impressively: “It was a lie—that is my opinion of it!”
+
+### "life" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - And Venters thought with lightning swiftness, “I've saved her—I've unlinked her from that old life—she was watching as if I were all she had left on earth—she belongs to me!” The thought was startlingly new.
 
 ### "like" + ""What's Happening Brother?" (1 occurrences)
 - Predicted: None
@@ -5977,11 +9791,23 @@ Accuracy: 99.72%
 - Examples:
   - Listen to Marvin Gaye, a song like "What's Happening Brother?"
 
+### "like" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We can go anywhere you like: the bottom of the sea, the rings of Saturn, or your aunt's living room in nineteen seventy-nine.
+
 ### "liked" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I liked "house."
+
+### "liked" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - After tea Mother played games with them—any game they liked—and of course their first choice was blindman's-buff, in the course of which Bobbie's forget-me-not wreath twisted itself crookedly over one of her ears and stayed there.
 
 ### "limped" + "—" (1 occurrences)
 - Predicted: Space
@@ -5989,11 +9815,65 @@ Accuracy: 99.72%
 - Examples:
   - Because he limped—he was lame.
 
+### "line" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Every so often—at a bus stop, say, or in the checkout line—a perfect stranger will tell you the saddest thing that's ever happened to them, and then ask if you know what time it is.
+
+### "listen" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - As a general thing, however, Miss Polly would not listen—long.
+
+### "listening" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You never know who's listening—or, more often, who isn't.
+
+### "little" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “He was a very good King—oh, yes, really a very superior King in his way, but he was a little—well, strange.”
+
+### "lives" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He lives two lives: accountant by day, drummer by night.
+
+### "locked" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Her left-hand drawer held pencils, her right-hand drawer held paper, and the middle one—locked, always locked—held whatever it was that made her smile on Fridays.
+
+### "locusts" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Nothing—not the floods, not the fire, not even that year with the locusts—had ever closed the Blue Moon Diner.
+
+### "long" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The long and short of it—mostly the long—is that the goat has been returned and nobody's pressing charges.
+
 ### "longer" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - No longer "forever" and "for eternity."
+
+### "looked" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She hadn't meant to smile at Mr. Wilkins, not ever; but really he looked—and then his voice on the top of the rest of him, oblivious of the towel and his legs, and talking just like a church.
 
 ### "lost" + """ (1 occurrences)
 - Predicted: None
@@ -6007,11 +9887,41 @@ Accuracy: 99.72%
 - Examples:
   - "I found a new woman and we laugh a lot "and do the tongue-kiss.
 
+### "loud" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I overlooked what she was doing and I said out loud: “Mrs. Shimerda, don't you put that strong yellow soap near that baby. You'll blister its little skin.”
+
 ### "love" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - How great that you love "Rimbaud".
+
+### "lower" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A woman's standard of truthfulness was tacitly held to be lower: she was the subject creature, and versed in the arts of the enslaved.
+
+### "lowercase" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The Wi-Fi password is all lowercase: purple, underscore, walrus, underscore, nine nine.
+
+### "luck" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I don't believe in luck—knock on wood.
+
+### "lunch" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - To whoever took my lunch: I hope you like liver.
 
 ### "mad" + "—" (1 occurrences)
 - Predicted: Space
@@ -6019,11 +9929,29 @@ Accuracy: 99.72%
 - Examples:
   - “I was mad—insane.”
 
+### "magnificent" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There she stood—soaked, furious, magnificent—with the winning ticket stuck to her forehead.
+
+### "makers" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Mischief-makers' handkerchiefs fluttered from the switchboard.
+
 ### "making" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Yeah, not get so hung up on making "our Claire."
+
+### "makin’" + "me" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You're makin’ me nervous.
 
 ### "man" + "-" (1 occurrences)
 - Predicted: None
@@ -6031,11 +9959,47 @@ Accuracy: 99.72%
 - Examples:
   - Well, I guess I am a rather interesting man - refined, intelligent.
 
+### "manager" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In the event of an emergency—fire, flood, or a visit from the district manager—use the rear exit.
+
 ### "many" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Excuse me, how many "m" in "tomorrow"?
+
+### "map" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He had a face like a much-folded map—all creases, and not one of them leading home.
+
+### "maples" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I gave a quick glance around at the comfortable house under its elms and maples—saw the big, red barn shining in the sun and the pump under the grape arbour.
+
+### "market" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Overheard at the farmers market: “I don't trust a tomato that round.”
+
+### "matchmakers" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Enzymes are tiny matchmakers: they hold two molecules at just the right angle and wait for chemistry.
+
+### "maître d'" + "who" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Nobody does schadenfreude quite like a maître d' who's just watched an influencer get turned away for wearing espadrilles.
 
 ### "me" + "—" (1 occurrences)
 - Predicted: Space
@@ -6067,6 +10031,18 @@ Accuracy: 99.72%
 - Examples:
   - Yes but meanwhile "we're gonna escort you, it's safer".
 
+### "measure" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He was, by any reasonable measure—height, weight, reach, record—the worse fighter, and he won in two rounds.
+
+### "meat" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Uncle Herbert made his hardy perennial joke when he helped Aunt Wellington to the cold meat—“Mary, will you have a little lamb?” Aunt Mildred told the same old story of once finding a lost ring in a turkey's crop.
+
 ### "mechanic" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6079,17 +10055,71 @@ Accuracy: 99.72%
 - Examples:
   - So you're going to Africa to meet "Great Hunger"?
 
+### "meeting" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Minutes of the last meeting: called to order at seven; adjourned, due to bees, at seven-oh-four.
+
+### "men" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - That's the trouble with self-made men—they tend to worship their creator.
+
 ### "mentions" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - He mentions "a pathological scruple."
 
+### "mica" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Feldspar, quartz, and mica: those are the main minerals in granite.
+
+### "midnight" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My upstairs neighbor at midnight: bowling.
+
+### "mines" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The gypsum mines' rhymes, primed for crime, chime in triplets.
+
 ### "mission" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - This is the Alphaverse's mission - to take us back to how it's supposed to be.
+
+### "mitigation" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - However, because of societal attitudes of the time—which favored the husband in any separation, with the welfare of any child acting as mitigation—Lady Byron had to present herself as a loving mother to the rest of society.
+
+### "mixed" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The weather will be mixed: sunny in the valleys, foggy along the coast, and, above five thousand feet, entirely none of our business.
+
+### "monstrosities" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I remember going up once from Staines to Windsor—a stretch of water peculiarly rich in these mechanical monstrosities—with a party containing three ladies of this description.
+
+### "months" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The months' worth of wraiths' wreaths withered.
 
 ### "most" + "-" (1 occurrences)
 - Predicted: None
@@ -6103,11 +10133,35 @@ Accuracy: 99.72%
 - Examples:
   - "Let them bring me to your holy mountain "in the place where you dwell.
 
+### "movements" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The symphony has four movements: the first is stormy; the second, slow and grave; the third, a sort of drunken waltz; and the fourth, which he finished on his deathbed, is nothing but light.
+
 ### "movie" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I really wanted to see the movie "Nasrai."
+
+### "moving" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - And, as Peter pointed, the tree was moving—not just the way trees ought to move when the wind blows through them, but all in one piece, as though it were a live creature and were walking down the side of the cutting.
+
+### "much" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I've mained support for nine years, through three studios, two expansions, and one divorce, and I'll tell you this much: nobody thanks the healer until the healer logs off.
+
+### "mud" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Blue-green algae, sky-high humidity, knee-deep mud—welcome to field season.
 
 ### "music" + "-" (1 occurrences)
 - Predicted: None
@@ -6115,11 +10169,29 @@ Accuracy: 99.72%
 - Examples:
   - She prefers quiet music - the baroque, for example.
 
+### "my" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My wife says I never finish my—
+
+### "myself" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A look of contempt came over him, and he said, “Why not?” “Mr. Beebe—I have misled you—I have misled myself—” “Oh, rubbish, Miss Honeychurch!”
+
 ### "mythic" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I have always imagined both as entirely mythic - but I would like to hear more.
+
+### "n't" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Keep your hands and arms inside the car at all times, and whatever you do, don't—
 
 ### "name" + ".." (1 occurrences)
 - Predicted: None
@@ -6127,11 +10199,41 @@ Accuracy: 99.72%
 - Examples:
   - Get another name ..
 
+### "name" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Tuppence was undecided for the moment whether to put him down as an actor or a lawyer, but her doubts were soon solved as he gave her his name: Sir James Peel Edgerton.
+
 ### "named" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - The sword was named "Joyeuse".
+
+### "names" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The mountain has three names: the one on the map, the one the climbers use, and the one the villagers won't say out loud.
+
+### "names" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “They have their maiden names—their father's names, that is.”
+
+### "ne" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He's what you'd call a ne'er-do-well, though he's done pretty well out of it.
+
+### "necklace" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “In order that what you might tell me may help me, if it will,” I said constrainedly, “it would be necessary, perhaps, that you tell it to the police. Since they have found the end of the necklace—” “The end of the necklace!” she repeated slowly.
 
 ### "need" + """ (1 occurrences)
 - Predicted: None
@@ -6145,6 +10247,24 @@ Accuracy: 99.72%
 - Examples:
   - The woman—their negotiator—wears two very large knives in her vest.
 
+### "neighbor" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “This Mr. Gatsby you spoke of is my neighbor—” I began.
+
+### "neighbors" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Isn't it funny how the neighbors' grass isn't any greener once you've mowed it?
+
+### "nerds" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A quirk of the clerk's work: nerds' words irk Kirk.
+
 ### "never" + "--" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6157,11 +10277,35 @@ Accuracy: 99.72%
 - Examples:
   - Instead they did something that I had never ..
 
+### "never" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In other fields the amateur may occasionally hope to compete successfully with the man who has made a business of what is to him but a sport, but at boxing never: and the whole demeanour of Bugs Butler showed that he had laid this truth to heart.
+
 ### "new" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - And we have two new "apart-ners."
+
+### "news" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Well, the good news is we found the leak; the bad news—
+
+### "next" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I could tell you what happened next—but my lawyer's in the room.
+
+### "nicely" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We had been getting along so nicely: by his advice I had scribbled a thing or two; inspired by Raffles, I had even done an article on our own jewel robbery; and for the moment I was quite satisfied with this sort of adventure.
 
 ### "nicknamed" + """ (1 occurrences)
 - Predicted: None
@@ -6169,11 +10313,59 @@ Accuracy: 99.72%
 - Examples:
   - He was nicknamed "The Potato King."
 
+### "nights" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Some nights—not often, maybe once or twice a year—you can hear the whales from the kitchen.
+
+### "ninety" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Twelve thirty-four and fifty-six seconds on the seventh of August, nineteen ninety: somebody noticed, took a picture, and framed it.
+
+### "noises" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - All winter the house made noises—ticks, groans, long shivering sighs—like something trying to remember a tune.
+
+### "noon" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The verdict came back at noon: guilty on all counts.
+
+### "not" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ada Lovelace saw what Charles Babbage did not: that his engine could do more than arithmetic.
+
 ### "not" + "just" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Then why notjust wear one?
+
+### "not" + "——" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I wouldn't change places with Mike, not——” “Please don't call him Mike, Pa.”
+
+### "note" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Woodchucks stood erect and piped dolefully for an hour “Chee-chee!” with jaws absurdly stretched to emit so thin a note—rusty-looking, seedy fellows, also a smaller striped species which stood erect and cheeped and whistled like a Douglas squirrel.
+
+### "nothing" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It's nothing—it's just—would you believe me if I said beets?
 
 ### "notify" + """ (1 occurrences)
 - Predicted: None
@@ -6187,17 +10379,41 @@ Accuracy: 99.72%
 - Examples:
   - The Latin noun "hortus" belongs to the o-declension.
 
+### "novel" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - At age seventy-three, he finished his first novel: nine hundred and twelve pages.
+
+### "novelist" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She's an award-winning, best-selling, high-flying novelist—and she still can't parallel park.
+
 ### "now" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - And now "Il Matto" will show us his most dangerous attraction!
 
-### "now" + "—" (1 occurrences)
+### "number" + ":" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - That is quite cleared up now—though, indeed, it was obvious from the first.
+  - Vehicle identification number: one, H, G, C, M, eight, two.
+
+### "numbers" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The lottery numbers: 5, 12, 23, 31, 48, and a bonus of 9.
+
+### "nurses" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The nurses' station's down the hall, the visitors' lounge is to your left, and the patients' garden's closed on account of somebody's goat.
 
 ### "n’t" + "—" (1 occurrences)
 - Predicted: Space
@@ -6211,11 +10427,23 @@ Accuracy: 99.72%
 - Examples:
   - He is happy to munch our left-o'ers.
 
+### "obvious" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - What the garden needed was obvious: water, weeding, and a fence that the deer couldn't laugh at.
+
 ### "occasion" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - This is a special occasion - the birthday of our dear friend Gosha.
+
+### "octopuses" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Some facts about octopuses: they have three hearts, blue blood, and a low opinion of aquariums.
 
 ### "of" + "jeans" (1 occurrences)
 - Predicted: Space
@@ -6229,11 +10457,41 @@ Accuracy: 99.72%
 - Examples:
   - Could you send a few ofyour guys at least?
 
+### "officers" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The colonel went awry somewhere between the quay and the officers' mess.
+
+### "official" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It's official: the pumpkin weighs more than the farmer.
+
+### "often" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Every so often—at a bus stop, say, or in the checkout line—a perfect stranger will tell you the saddest thing that's ever happened to them, and then ask if you know what time it is.
+
+### "old" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The violin was old—older than the house, older than the town, older than the country itself.
+
 ### "on" + ""People Today" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Friends, stay with us for more surprises on "People Today".
+
+### "on" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A hill I will die on: sandwiches taste better cut diagonally.
 
 ### "on" + "?" (1 occurrences)
 - Predicted: None
@@ -6246,6 +10504,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - And just one "m" in "communism"!
+
+### "ones" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - When she exclaimed, “But Cecil's Emersons—they can't possibly be the same ones—there is that—” he did not consider that the exclamation was strange, but saw in it an opportunity of diverting the conversation while she recovered her composure.
 
 ### "op" + """ (1 occurrences)
 - Predicted: None
@@ -6265,11 +10529,41 @@ Accuracy: 99.72%
 - Examples:
   - Albert Jerska, operation "Engerling".
 
+### "operator" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Tell the operator: kilo, one, oscar, niner, niner.
+
+### "opinion" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Unpopular opinion: the sequel was better, and you only hate it because you were older.
+
 ### "other" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I can't think of any other "ruins."
+
+### "other" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There were the usual couples intent on each other: my new state of mind made me regard them with tolerance.
+
+### "others" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She frequently did that, however, when Pollyanna was talking of others—of Dr. Chilton, for instance.
+
+### "ours" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There was one problem with the break-in—it wasn't their house they'd broken into, but ours—and ours has geese.
 
 ### "ourselves" + """ (1 occurrences)
 - Predicted: None
@@ -6283,17 +10577,71 @@ Accuracy: 99.72%
 - Examples:
   - Get out'a here!
 
+### "over" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The contestants came from all over: Lagos, Nigeria; Lima, Peru; Lyon, France; and Lima, Ohio.
+
 ### "overheard" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Don’t speak so loud, or you will be overheard—and I should be ruined.
 
+### "own" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I never learned the constellations, so I made my own: the Teapot and the Broken Chair, the Dog Without a Bone.
+
 ### "paint" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I'm going to paint "The Last Judgement".
+
+### "pamphlet" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - They'd come for the waterfall—the tallest in the hemisphere, according to the pamphlet—and found a trickle.
+
+### "paper" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “She made us come right in, and sign our names at the bottom of a long paper—under where she'd signed.” “Did you see anything of what was written above her signature?” asked Poirot sharply.
+
+### "pardon" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Yes, we will; indeed we will,” said Bobbie, earnestly; “but we do beg your pardon—and really we haven't caught a single fish. I'd tell you directly if we had, honor bright I would.”
+
+### "parents" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Long-haul truckers, night-shift nurses, new parents—these are the people who really know what four in the morning looks like.
+
+### "particularly" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Literally, regularly, similarly, particularly: say those quickly and see what happens.
+
+### "parts" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The plan has three parts: first, we repair the roofs of the older schools; second, we hire reading teachers for every elementary grade; and third, we pay for it without raising the sales tax.
+
+### "passengers" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Attention passengers: the moving walkway is ending.
 
 ### "paste" + """ (1 occurrences)
 - Predicted: None
@@ -6307,6 +10655,24 @@ Accuracy: 99.72%
 - Examples:
   - The future has many paths - choose wisely.
 
+### "patience" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Time, money, patience—we'd run out of two and were borrowing the third.
+
+### "patients" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The nurses' station's down the hall, the visitors' lounge is to your left, and the patients' garden's closed on account of somebody's goat.
+
+### "pause" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A well-timed pause—like this one—can do the work of a whole paragraph.
+
 ### "pawn" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6319,11 +10685,53 @@ Accuracy: 99.72%
 - Examples:
   - If I don't sell them at this price how can I afford to pay "protection money"?
 
+### "people" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Here's what surprised me about moving to a village of two hundred people: everybody knows your business, and everybody brings soup.
+
+### "people" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Some people—I won't name names, but she's sitting right there—don't believe in washing lettuce.
+
+### "pet" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It's not a pet—it's a sourdough starter—but yes, its name is Kevin, and yes, I talk to it.
+
+### "phlegm" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Phthalates and phlegm: two words nobody spells right on the first try.
+
+### "phone" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A quick review of the new phone: the camera's stunning, the battery's fine, the charger costs extra, and it still can't find a signal in my kitchen.
+
+### "photosphere" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Here let us return to and see what more we know about the photosphere—the sun's surface.
+
 ### "physics" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Hitler called quantum physics "Jewish science."
+
+### "pickings" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She watched with peculiar interest one stratum: the old ladies, the white-haired, fair-handed women of fifty and sixty and even seventy, spinsters and widows, for whom life was nothing but a desk and a job of petty pickings—mailing circulars or assorting letters or checking up lists.
 
 ### "pierced" + "'st" (1 occurrences)
 - Predicted: Space
@@ -6331,17 +10739,101 @@ Accuracy: 99.72%
 - Examples:
   - You almost pierced'st me!
 
+### "ping" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A radar beep, a laser dot, a sonar ping: they were all acronyms once.
+
+### "pink" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - If the sample turns blue, the water's safe to drink; if it turns green, boil it first; and if it turns pink—well, I've never seen it turn pink.
+
+### "pitch" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I used to think that courage was something you had—like brown eyes, or perfect pitch—and not, as I learned that winter, something you did.
+
+### "pizza" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I have one rule about pineapple on pizza: mind your own slice.
+
+### "place" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You're going to love this place—the light, the quiet, the half-mad landlady and her one-eyed cat.
+
+### "plainly" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Let me put it plainly: the money's gone.
+
+### "plan" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The tortoise and I have a similar plan: we'll get there tomorrow, as slow as we can.
+
 ### "plan" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - But who changed the plan ?
 
+### "plan" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Ah, there's a great deal to be said for that plan—indeed I think my uncle Egmont used to say he found it less agitating not to read the morning papers till after dinner,” said Mrs. Archer responsively.
+
+### "plate" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Van number plate: Oscar, one, Bravo, Romeo, Hotel.
+
+### "plumbing" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Remember the golden rule of plumbing: hot on the left, cold on the right, and don't chew your fingernails.
+
+### "pocket" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I know I have one,” he went on, “and I'd almost swear it's in the bottom pocket—or, hold on, though, I guess it may be in the top—just wait till I put these parcels down on the sidewalk.”
+
 ### "poems" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - He sang the words of his poems ..
+
+### "point" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - However, we did pull up to the point—“Picnic Point,” it is called—and dropped into a very pleasant nook under a great elm-tree, to the spreading roots of which we fastened the boat.
+
+### "politeness" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He drank sake for politeness' sake, though he disliked the taste.
+
+### "poor" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - They were poor—not picturesquely poor, not movie poor, just plain cold-in-February poor.
 
 ### "positive" + "…" (1 occurrences)
 - Predicted: None
@@ -6355,6 +10847,36 @@ Accuracy: 99.72%
 - Examples:
   - “She was as bright as possible—at least until after the ceremony.”
 
+### "pounds" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The baby weighed seven pounds—no, eight—and had a full head of jet-black hair.
+
+### "power" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Zenith's a city with gigantic power—gigantic buildings, gigantic machines, gigantic transportation,” meditated Doane.
+
+### "practice" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Dogs read our faces, our voices, even our smell—they've had thirty thousand years to practice—and they still can't figure out why we leave the house without them.
+
+### "prediction" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Bold prediction: in ten years, we'll look back on reply-all the way we look back on smoking in airplanes.
+
+### "prepared" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I had a whole speech prepared—there were jokes, there was a quotation from Seneca—and I got as far as “um.”
+
 ### "press" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6367,11 +10889,29 @@ Accuracy: 99.72%
 - Examples:
   - We can only take so much pressure - before the boat will be crushed.
 
+### "previously" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Among the pieces he played was his own first composition, written two years previously: a short piece called “The Course of the Danube.”
+
 ### "print" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I said print "station."
+
+### "prize" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The twenty-three-year-old violinist, a late-blooming, self-taught musician from a one-stoplight town, won the top prize—and then gave her prize money to her former high-school orchestra.
+
+### "promises" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The new mayor kept all her promises: she paved the roads, lit the park, and never, not once, cut a ribbon.
 
 ### "pronoun" + """ (1 occurrences)
 - Predicted: None
@@ -6397,6 +10937,12 @@ Accuracy: 99.72%
 - Examples:
   - No quarter !
 
+### "question" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Today we're asking a deceptively simple question: why do we sleep?
+
 ### "quickly" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6409,11 +10955,29 @@ Accuracy: 99.72%
 - Examples:
   - Hey, did you hear me quote "The Spanish Inquisition"?
 
+### "radon" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Helium, neon, argon, krypton, xenon, radon: the noble gases, in order.
+
 ### "rage" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I killed him in a fit of rage - it wasn't premeditated.
+
+### "rained" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Stained, strained, sprained, trained, rained: each lost a letter or two.
+
+### "raised" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - But when they got the boat lowered, it looked such a frail, clumsy thing as one saw it from the rail above, that the cry was raised: “Women and children first!”
 
 ### "rather" + """ (1 occurrences)
 - Predicted: None
@@ -6421,11 +10985,29 @@ Accuracy: 99.72%
 - Examples:
   - So we're gonna take this rather "COOL" than venimous, ok?
 
+### "raw" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Achilles tells Hector it is hopeless to expect that of him, declaring that “my rage, my fury would drive me now to hack your flesh away and eat you raw—such agonies you have caused me.”
+
+### "read" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The sign on the gate read: “Beware of everything.”
+
 ### "really" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Is his name really "Don't Gamble"?
+
+### "really" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Such a small thing, really—a key, a coin, a button off a coat—and yet it hanged him.
 
 ### "recite" + """ (1 occurrences)
 - Predicted: None
@@ -6433,17 +11015,41 @@ Accuracy: 99.72%
 - Examples:
   - Just recite "Vande Matram".
 
+### "record" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He was, by any reasonable measure—height, weight, reach, record—the worse fighter, and he won in two rounds.
+
+### "referee" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The referee—may his whistle rust—gave them a penalty in the ninety-third minute.
+
 ### "remain" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - What guarantee is there that I'll remain "me"?
 
+### "remained" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Only one question remained: who was going to tell the swans?
+
 ### "remains" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - They won't do anything as long as it remains "harmless."
+
+### "remarked" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - When I reached the hotel office I found a blank and innocent-looking individual waiting for me, who coolly remarked: “I heard you talk at a meeting last night. I rather liked your talk, and so I came in this morning to hear you talk some more.”
 
 ### "remote" + ".." (1 occurrences)
 - Predicted: None
@@ -6457,6 +11063,30 @@ Accuracy: 99.72%
 - Examples:
   - Married to a cop, is a waitress in the restaurant "Crimea".
 
+### "returned" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Having dispatched this, and Tommy not having yet returned—which did not surprise her—she started off on a shopping expedition which, with an interval for tea and assorted creamy cakes, occupied her until well after six o'clock, and she returned to the hotel jaded, but satisfied with her purchases.
+
+### "returns" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Let me know as soon as your father returns—if he has any news.” “I'll do that, Mrs. Robinson,” agreed the boy.
+
+### "review" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - After three months with this electric bike, here's my honest review: it's heavy, it squeaks, and I will never give it back.
+
+### "rich" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My brother-in-law's get-rich-quick schemes have, so far, made exactly one person rich—a man in Nevada.
+
 ### "right" + "‐" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -6469,17 +11099,77 @@ Accuracy: 99.72%
 - Examples:
   - "He leadeth me in the paths of righteousness "for his name's sake.
 
-### "rights" + "—" (1 occurrences)
+### "risk" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Fishing rights—line.
+  - And as film company revenues dropped, so did their appetite for risk—particularly the risk represented by Kurosawa's costly production methods.
+
+### "river" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The low-lying fields by the river—flooded every March, parched every August—were all they could afford.
 
 ### "robbery" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Revolutionaries in Latin America call bank robbery "expropriation".
+
+### "rockin" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm not sayin' it's haunted, I'm just sayin' the rockin' chair's been goin' since noon.
+
+### "role" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We're looking for a self-motivated, detail-oriented, quick-thinking person to fill a hard-to-fill, part-time, entry-level role—must like dogs.
+
+### "room" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Now bring your attention to the sounds in the room: the near ones, the far ones, and the quiet between them.
+
+### "roosters" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The sun'd barely come up when the roosters' argument started.
+
+### "rose" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - When the curtain rose—ten minutes late, and at an angle—the audience clapped out of sheer relief.
+
+### "row" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Bookkeeper has three double letters in a row: O O, K K, E E.
+
+### "rule" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He had one rule—never bet against a man who's smiling—and he broke it every Friday.
+
+### "runway" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Haute couture met wabi-sabi on the runway: frayed chiffon, mended chambray, and a crepe de chine kimono with one sleeve conspicuously missing.
+
+### "rust" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The referee—may his whistle rust—gave them a penalty in the ninety-third minute.
 
 ### "sales" + "girls" (1 occurrences)
 - Predicted: Space
@@ -6499,11 +11189,65 @@ Accuracy: 99.72%
 - Examples:
   - I saw "Star Wars" some months ago.
 
+### "says" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The recipe, handed down from mother to daughter for five generations, says—and I swear this is true—“cook until done.”
+
+### "scarecrow" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Indeed, the crown alone betokened majesty; in all else the, Scarecrow King was but a simple scarecrow—flimsy, awkward, and unsubstantial.
+
+### "science" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Two hard problems remain in computer science: naming things, invalidating caches, and off-by-one errors.
+
 ### "screams" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Kentucky screams "fuck".
+
+### "screen" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Write to the address on the screen: P O box nine nine, Omaha, Nebraska, six eight one oh one.
+
+### "scripts" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Our scripts' prompts prompted tempting attempts at subplots.
+
+### "seat" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You can have the window seat—if you'll swap me the pretzels.
+
+### "seconds" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Twelfths, sixteenths, thirty-seconds: pick a fraction and stick with it.
+
+### "secret" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Every stage magician knows the secret: people don't watch your hands; they watch your eyes.
+
+### "secretary" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Two Ls, two Ss, one very tired secretary: M, I, L, L, I, S, S.
 
 ### "see" + "-" (1 occurrences)
 - Predicted: None
@@ -6529,17 +11273,65 @@ Accuracy: 99.72%
 - Examples:
   - I have seen "Star Wars" twice.
 
+### "self" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Note to self: never again accept a dinner invitation from a man who owns a taxidermy shop.
+
+### "sense" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - For a long time, thinking of that spirit of his, and what she felt it should be, she had a persistent sense: “It must be there!” but she had determined to believe this folly no longer.
+
+### "sergeants" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Every blackguard's cupboard holds a raspberry, a corps of sergeants' boatswains, and forecastle biscuits.
+
 ### "servants" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - McCarthy kept two servants—a man and a girl.
 
+### "seven" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Reviewing every bench in my city, part seven: good view, bad slats, aggressive squirrel.
+
+### "sharps" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The key of F sharp minor has three sharps: F, C, and G.
+
 ### "shepherd" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - "The Lord is my shepherd "I shall not want.
+
+### "shirt" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Dungarees, khakis, and a madras shirt: that's the whole wardrobe.
+
+### "shlimazel" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Such a shlimazel: he gets hit by every pigeon in Brooklyn.
+
+### "shoppers" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Attention, shoppers: the store will be closing in fifteen minutes.
 
 ### "shouldn't" + "just" (1 occurrences)
 - Predicted: Space
@@ -6565,11 +11357,47 @@ Accuracy: 99.72%
 - Examples:
   - Are you showing "Nastrus" again?
 
+### "shutters" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - At the first clash the girl screamed, stood screaming for a moment by the fireplace, and then ran to open the shutters—possibly with an idea of escaping by the shattered window.
+
+### "sighs" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - All winter the house made noises—ticks, groans, long shivering sighs—like something trying to remember a tune.
+
+### "sight" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It was love at first sight—hers, anyway; he wasn't wearing his glasses.
+
 ### "sign" + ""&" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - The sign "&" stands for "and".
+
+### "simple" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The choice was simple—stay and be bored, or go and be terrified—and it took me all of four seconds.
+
+### "since" + "’seventy" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Dad's of the opinion that nothing worth watching's been made since ’seventy-four.
+
+### "singer" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He's not a bad singer—he's a catastrophic one.
 
 ### "singing" + """ (1 occurrences)
 - Predicted: None
@@ -6589,17 +11417,83 @@ Accuracy: 99.72%
 - Examples:
   - I want to take a small round sir ..
 
+### "sir" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - When they find they are not likely to sell out, they approach a citizen mysteriously, and say in a low voice—“Last copy, sir: double price; paper just been suppressed!”
+
+### "sisters" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My sisters' rooms were always neat; my brother's was a swamp; mine's still a matter of opinion.
+
+### "sittin’" + "down" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - When the fiddler's hot and the floor's been swept, there ain't a soul in Harlan County who'll stay sittin’ down.
+
+### "six" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Breakfast was served at six: porridge, kippers, and silence.
+
+### "sixteen" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My grandmother crossed the ocean alone at sixteen—no English, no money, a cardboard suitcase tied shut with string—and within ten years she owned the building.
+
 ### "sleep" + "'st" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - The Count of Montmirail sleep'st at Montmirail.
 
+### "sleepin" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Somebody's been sleepin' in my bed, and somebody's left crumbs.
+
+### "smell" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Dogs read our faces, our voices, even our smell—they've had thirty thousand years to practice—and they still can't figure out why we leave the house without them.
+
+### "smiling" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He had one rule—never bet against a man who's smiling—and he broke it every Friday.
+
+### "sneeze" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - When the blaze shot up and burned clearly old Mombi scattered a handful of magical powder over the fire, which straightway gave off a rich violet vapor, filling all the tent with its fragrance and forcing the Saw-Horse to sneeze—although he had been warned to keep quiet.
+
+### "so" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - What she wanted—what she'd always wanted, though it took her fifty years to say so—was a garden of her own.
+
 ### "so" + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Do you have complexes, because you're so … so small?
+
+### "soloists" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ms. Abernathy introduced the soloists: Dmitri, Anneliese, and Giancarlo.
 
 ### "son" + """ (1 occurrences)
 - Predicted: None
@@ -6612,6 +11506,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - He doesn't sound "fragile".
+
+### "sovereign" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In books, you simply leapt into another, promised the driver a sovereign—or its modern equivalent—and there you were.
 
 ### "speak" + """ (1 occurrences)
 - Predicted: None
@@ -6631,6 +11531,36 @@ Accuracy: 99.72%
 - Examples:
   - Retired from operatic stage—ha!
 
+### "staircase" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My main concern is the staircase: it's two inches too narrow, and the city will never approve it.
+
+### "star" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Nobody expected the substitute—a late call-up, a nobody, a last-minute replacement for an injured star—to score four.
+
+### "starlings" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Between forty and fifty thousand starlings—nobody can count them exactly—wheel over the pier every night at dusk.
+
+### "starter" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It's not a pet—it's a sourdough starter—but yes, its name is Kevin, and yes, I talk to it.
+
+### "station" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I hate your city. It has standardized all the beauty out of life. It is one big railroad station—with all the people taking tickets for the best cemeteries,” Dr. Yavitch said placidly.
+
 ### "steeples" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6642,6 +11572,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - Sami didn't want to call his stepfather "Dad."
+
+### "steps" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - At the break of the poop he reeled, raised one hand to his eyes with the familiar brushing gesture, and fell down the steps—still on his feet—to the main deck, across which he staggered, falling and flinging out his arms for support.
 
 ### "still" + ""healthy" (1 occurrences)
 - Predicted: None
@@ -6655,6 +11591,30 @@ Accuracy: 99.72%
 - Examples:
   - Do you still -- Your family, do they know you do this?
 
+### "still" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - If—and it's a big if—the weather holds, and if—bigger still—the engine starts, we could be in Nassau by Sunday.
+
+### "stomachs" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We'd planned for rain, for wind, for lost passports and upset stomachs—for everything, in short, but good weather.
+
+### "stone" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The blacksmith's fire, the sexton's bell, the miller's turning stone: they told me all there was to tell, and left me there alone.
+
+### "stood" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There she stood—soaked, furious, magnificent—with the winning ticket stuck to her forehead.
+
 ### "story" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6667,11 +11627,71 @@ Accuracy: 99.72%
 - Examples:
   - With his flight began another story - the story of war, and it's still going on.
 
+### "story" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Tonight's top story: after nineteen days of talks, the dockworkers and the port authority have reached an agreement.
+
 ### "story" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - And the story— Well, there’s this Hungarian count.
+
+### "straight" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - So let me get this straight: you traded a working car for a goat?
+
+### "strange" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - One thing about it is very strange: it never has even a skim of ice upon its surface, although lakes in the same range of mountains, lying in a lower and warmer temperature, freeze over in winter.
+
+### "straps" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Wristwatch straps: Irish or Swiss?
+
+### "stratum" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She watched with peculiar interest one stratum: the old ladies, the white-haired, fair-handed women of fifty and sixty and even seventy, spinsters and widows, for whom life was nothing but a desk and a job of petty pickings—mailing circulars or assorting letters or checking up lists.
+
+### "stream" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Yes, gold! See, pounds of gold! I found it—washed it out of the stream—picked it out grain by grain, nugget by nugget!” “Gold!” he cried.
+
+### "street" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She lives in a big old-fashioned brick house with white trimmings set back from the street—exactly the kind of house that I used to look at so curiously when I was in the John Grier Home, and wonder what it could be like inside.
+
+### "string" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My grandmother crossed the ocean alone at sixteen—no English, no money, a cardboard suitcase tied shut with string—and within ten years she owned the building.
+
+### "structures" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Living shorelines use plants or other natural elements—sometimes in combination with harder shoreline structures—to stabilize estuarine coasts, bays, and tributaries.
+
+### "substitute" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Nobody expected the substitute—a late call-up, a nobody, a last-minute replacement for an injured star—to score four.
 
 ### "suggest" + """ (1 occurrences)
 - Predicted: None
@@ -6679,11 +11699,47 @@ Accuracy: 99.72%
 - Examples:
   - I thus suggest "Princess Kaguya".
 
+### "summer" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The quintessence of summer: cicadas, peaches, and a hammock in dappled shade.
+
 ### "sung" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Let there be sung "Non nobis" and "Te Deum."
+
+### "suppose" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Oh, of course,” interrupted the man, sharply, all the old bitterness coming back to his voice; “I can be glad, too, for all the rest, I suppose—the nurse, and the doctor, and that confounded woman in the kitchen!”
+
+### "swan" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - To the neighbor whose hedge I trimmed by mistake, into the shape of what I'd hoped was a swan: I'm deeply sorry.
+
+### "swim" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Most notably, box jellyfish can swim—at maximum speeds approaching four knots—whereas most species of jellyfish float wherever the current takes them, with little control over their direction.
+
+### "syrup" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Grandma's cough syrup: it's purple, it's awful, and it works.
+
+### "sysadmins" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There's an old saying among sysadmins: it's always DNS.
 
 ### "take" + """ (1 occurrences)
 - Predicted: None
@@ -6691,11 +11747,35 @@ Accuracy: 99.72%
 - Examples:
   - Can't take "no" for an answer?
 
+### "take" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Hot take: soup is just savory tea.
+
+### "takes" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The river gives, and the river takes: in a good year it leaves a foot of black soil on the fields, and in a bad year it leaves the fields somewhere else.
+
 ### "talk" + "--" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Don't all talk -- don't all talk at the same time.
+
+### "talk" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In defense of small talk: it's how strangers check that the bridge can hold before they walk across it.
+
+### "talkin" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She's kinda shy, but once you get her talkin' about engines, you can't shut her up.
 
 ### "tat" + "?" (1 occurrences)
 - Predicted: None
@@ -6720,6 +11800,12 @@ Accuracy: 99.72%
 - Actual: Space
 - Examples:
   - Combien de temps ?
+
+### "terrified" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The choice was simple—stay and be bored, or go and be terrified—and it took me all of four seconds.
 
 ### "that" + "-" (1 occurrences)
 - Predicted: None
@@ -6757,11 +11843,29 @@ Accuracy: 99.72%
 - Examples:
   - Only their "welcome" has clout.
 
+### "them" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The options, as I see them: run, hide, or apologize.
+
 ### "themselves" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - They call themselves "Ash People."
+
+### "then" + "——" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I wonder if you couldn't copy that and make a strong, original piece out of it for your violin, Elnora?” There was one tense breath, then——“I could try,” said Elnora simply.
+
+### "there" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Some people—I won't name names, but she's sitting right there—don't believe in washing lettuce.
 
 ### "there" + "⁈" (1 occurrences)
 - Predicted: Space
@@ -6775,17 +11879,59 @@ Accuracy: 99.72%
 - Examples:
   - Thinks they "dilute his talent".
 
+### "thieves" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He loathes cloves, she soothes doves, they've clothes in alcoves, and the thieves' sleeves are stuffed with olives.
+
+### "things" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “It's pleasant, but sometimes I feel shut off from things—the steel stacks, and the everlasting cards smeared all over with red rubber stamps.”
+
 ### "thinking" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I was thinking "big ego".
 
+### "third" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Two-thirds of the class passed; the other third—God love them—spelled their own names wrong.
+
+### "thirst" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - His whole nature swamped by a new feeling—burnt up with thirst—a cooling spring in sight.
+
 ### "thought" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Have you ever in your life thought "It should have been me"?
+
+### "thought" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - For the first time in his life he yearned for the society of his German instructor at college, and also wondered—in the rapid irrelevance of thought—what that worthy man was now doing to earn a living.
+
+### "three" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Step three: call someone who has read the instructions.
+
+### "thugs" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Nothing's as rough as dwarves' gruff bluffs, though thugs' shrugs come close.
 
 ### "time" + "-" (1 occurrences)
 - Predicted: None
@@ -6798,6 +11944,12 @@ Accuracy: 99.72%
 - Actual: None
 - Examples:
   - “I have been beaten four times—three times by men, and once by a woman.”
+
+### "tip" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Here's a tip: you can interrupt me at any time, even in the middle of a sentence.
 
 ### "title" + """ (1 occurrences)
 - Predicted: None
@@ -6817,11 +11969,29 @@ Accuracy: 99.72%
 - Examples:
   - I am too old to go to "Neverland", son.
 
+### "toaster" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - What I need is a no-frills, no-nonsense, easy-to-clean toaster—what I have has Bluetooth.
+
 ### "today" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Tomorrow, tomorrow, just not today - say all lazy people.
+
+### "today" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Blood pressure today: 118/76.
+
+### "together" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - On performing after the Roskilde tragedy, Vedder said that “playing, facing crowds, being together—it enabled us to start processing it.”
 
 ### "tomorrow" + "—" (1 occurrences)
 - Predicted: Space
@@ -6829,11 +11999,53 @@ Accuracy: 99.72%
 - Examples:
   - If you asked me, I’d go home tomorrow— if you wanted.
 
+### "tones" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Our visitors never do such dreadful things,” said Lucy, while her brother, in whose memory the boiled egg had already grown unsubstantial, exclaimed in irritable tones: “Just what I've been trying to convince Cousin Charlotte of, Lucy, for the last half hour.”
+
 ### "too" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - I mean, you too—are Rohit?
+
+### "top" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Okay, from the top: five, six, seven, eight!
+
+### "top" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I know I have one,” he went on, “and I'd almost swear it's in the bottom pocket—or, hold on, though, I guess it may be in the top—just wait till I put these parcels down on the sidewalk.”
+
+### "tots" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ten tiny tots' tents tilted.
+
+### "toward" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In the midst of the ceremony Selina had her moment of panic when she actually saw herself running shrieking from this company, this man, this house, down the road, on, on toward—toward what?
+
+### "town" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She reverted to her resolution to change the town—awaken it, prod it, “reform” it.
+
+### "tracks" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A run-down, boarded-up, long-forgotten movie palace on the wrong side of the tracks—that's where she taught us to dance.
 
 ### "translate" + """ (1 occurrences)
 - Predicted: None
@@ -6841,17 +12053,53 @@ Accuracy: 99.72%
 - Examples:
   - It's easy to translate "I am" into any language.
 
+### "trap" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She had, as they say, a mind like a steel trap—rusty, and illegal in thirty-seven states.
+
+### "treaty" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The treaty—two pages, unsigned, and stained with what appears to be jam—is kept in a climate-controlled vault.
+
+### "treetops" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The new library—three stories of cedar and glass, with a reading room that looks straight out into the treetops—opened on Saturday, and by noon there wasn't an empty chair.
+
 ### "triple" + "–" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - This house has triple–pane windows.
 
+### "triumvirs" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The triumvirs' swordsmen swore, swooned, swerved, and swam, while Gwen's tweed-clad quartet thwacked through Dvorak.
+
 ### "trust" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Who can one trust ?
+
+### "truths" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Youths' mouths, truths' proofs, wolves' hooves, calves' halves, and the sheaves of months-old clothes the moths destroyed.
+
+### "turn" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - To pretend to marry him until she brought the King in open conflict with him, and then having led the King to her feet to dismiss the rival who had served her turn—that was her only wise course.
 
 ### "twice" + "—" (1 occurrences)
 - Predicted: Space
@@ -6877,11 +12125,35 @@ Accuracy: 99.72%
 - Examples:
   - "Center" und "Friedrich's Grove".
 
+### "unhesitatingly" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In cases of abounding youth and exceptional energy and desire for effort I should say unhesitatingly: Keep going, day in, day out.
+
+### "universe" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Everything—the whole complex movement of the universe—is as simple as that—when you can sufficiently put two and two together.
+
+### "unlikely" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Somewhere between the third and fourth floors—I know this sounds unlikely—the elevator began to sing.
+
 ### "unload" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - You have to unload—take the fish from me and pass the baskets up to the jetty.
+
+### "until" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She'd been a straight-A student until—well, until Dmitri.
 
 ### "unusual" + "-" (1 occurrences)
 - Predicted: None
@@ -6889,11 +12161,77 @@ Accuracy: 99.72%
 - Examples:
   - Nothing unusual - oh, until one day, I met a caveman who thought he was Jesus.
 
+### "up" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - First-time visitors tend to look up—at the arches, the angels, the blue-and-gold vault—and walk straight into the font.
+
+### "upfront" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I want to be upfront: this estimate is rough, and the real number could easily be twice as high.
+
 ### "upon" + "'t" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Oh, fie upon't!
+
+### "us" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Look, I'd love to stay and chat, but—oh no, he's seen us—keep walking.
+
+### "useful" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “In most civilized countries a kind of animal is kept which is no longer useful—” “They are a protection,” Terry insisted.
+
+### "varied" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Her advice to young reporters never varied: get the name of the dog.
+
+### "vault" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - First-time visitors tend to look up—at the arches, the angels, the blue-and-gold vault—and walk straight into the font.
+
+### "version" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Here's the short version: the library needs a new roof, the city can't afford one, and the vote is next Tuesday.
+
+### "view" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You probably belong to a Family also, and will look at it from a worldly point of view and not just a sympathetic, human point of view—so you see how brave I am to lay it before you.
+
+### "visitors" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The nurses' station's down the hall, the visitors' lounge is to your left, and the patients' garden's closed on account of somebody's goat.
+
+### "voice" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - When they find they are not likely to sell out, they approach a citizen mysteriously, and say in a low voice—“Last copy, sir: double price; paper just been suppressed!”
+
+### "voices" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - And the swallows up above started whistling at the top of their voices—thousands and millions of them—to show that they too were glad that the boy's brave uncle had been found.
 
 ### "von" + """ (1 occurrences)
 - Predicted: None
@@ -6907,11 +12245,29 @@ Accuracy: 99.72%
 - Examples:
   - I voted "remain".
 
+### "wait" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Wait, wait, wait—are you telling me,” Oscar said, “that the whole town has known since Easter?”
+
+### "waitin" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Life's what happens while you're waitin' for the cable guy.
+
 ### "waiting" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - He could have stopped and be waiting - to surprise us when we surface.
+
+### "wanderlust" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Zeitgeist, doppelgänger, wanderlust: German really does have a word for everything.
 
 ### "want" + "—" (1 occurrences)
 - Predicted: Space
@@ -6919,11 +12275,29 @@ Accuracy: 99.72%
 - Examples:
   - No, I want— Turn over.
 
+### "wanted" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - What she wanted—what she'd always wanted, though it took her fifty years to say so—was a garden of her own.
+
+### "warning" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - My mother's letters would always close with the same warning: wear a hat, and don't trust the fish.
+
 ### "wasn't" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - That wasn't "Lethal Weapon"!
+
+### "wasps" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Amidst the mists and coldest frosts, the wasps' nests burst.
 
 ### "watch" + "—" (1 occurrences)
 - Predicted: Space
@@ -6937,6 +12311,12 @@ Accuracy: 99.72%
 - Examples:
   - He cried watching "Café Muller".
 
+### "waterfall" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - They'd come for the waterfall—the tallest in the hemisphere, according to the pamphlet—and found a trickle.
+
 ### "wealth" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -6949,11 +12329,41 @@ Accuracy: 99.72%
 - Examples:
   - How dare you call your cousin's wedding "wretched"?
 
+### "wedding" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She quotes The Princess Bride at every wedding: “Mawage.”
+
+### "week" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'd planned to stay a week—ten days at the most—but the mountains, the light, and a certain soft-spoken carpenter had other ideas.
+
+### "weight" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I simply can't get used to the idea of nothing having any weight—look here!” laughed Dorothy, as she took a boiled ham out of the refrigerator and hung it upon an imaginary hook in the air, where it remained motionless.
+
 ### "weird" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - You're weird - I like you.
+
+### "well" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You're handing over the doubts as well: the second choice, the third choice, and how close each one came.
+
+### "whelps" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The wolfhound's yelps helped the whelps' rescuers.
 
 ### "when" + """ (1 occurrences)
 - Predicted: None
@@ -6961,11 +12371,23 @@ Accuracy: 99.72%
 - Examples:
   - Everyone listen up when "the Captain” gives a command.
 
+### "while" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - No sounds were to be heard in the house, so she supposed it was very early, yet she felt as if she had slept a long while—so completely rested, so perfectly content.
+
 ### "whispered" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - He whispered "I love you" into my ear and then kissed me on the cheek.
+
+### "whistle" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - When the lights go on again, the applause becomes deafening, and as Mr. Neff walks triumphantly away, the little boys in the audience will whistle: “There she goes, there she goes, all dressed up in her Sunday clothes!”
 
 ### "who" + """ (1 occurrences)
 - Predicted: None
@@ -6985,17 +12407,47 @@ Accuracy: 99.72%
 - Examples:
   - If you have so many problems then why ..
 
+### "wife" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Then you can laugh, and call out to a neighbor, or even to the man's wife: “Hey, what do you know? Steve here thinks he's going to get some corn up in this soil!”
+
 ### "wife" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - “But his wife—you said that she had ceased to love him.”
 
+### "wingnuts" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A gyrfalcon's feathers, a wolfish growl, a quahog's shell, and the clang of wingnuts: the haphazard soundscape of a roughhouse shipyard.
+
+### "wipers" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Tires, oil, brakes, belts, lights, wipers: if it wears out, we'll replace it.
+
+### "wish" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “In a month from now—sooner or later as you wish—I will guarantee you such a reign of terror in Ireland as shall shake the British Empire to its foundations.”
+
 ### "wishing" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - And then this Russian tradition of wishing "A light steam".
+
+### "wolves" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Youths' mouths, truths' proofs, wolves' hooves, calves' halves, and the sheaves of months-old clothes the moths destroyed.
 
 ### "woman" + "-" (1 occurrences)
 - Predicted: None
@@ -7009,11 +12461,53 @@ Accuracy: 99.72%
 - Examples:
   - The woman—their negotiator—wears two very large knives in her vest.
 
+### "women" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Measured among women—our women at home, I mean—he had always stood high.
+
+### "wondered" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - For the first time in his life he yearned for the society of his German instructor at college, and also wondered—in the rapid irrelevance of thought—what that worthy man was now doing to earn a living.
+
+### "word" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - With laconic brevity, the Spartans answered the threat in a single word: if.
+
 ### "words" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Or perhaps he searched for words - words that could express his pain.
+
+### "words" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Three words: location, location, location.
+
+### "work" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A quirk of the clerk's work: nerds' words irk Kirk.
+
+### "workers" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Banded sugar ants are polymorphic, and colonies have two types of workers: minor workers and major workers that have different size ranges.
+
+### "works" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Here's how it works: Imagine lying down on a soft mattress and then getting up from the same spot.
 
 ### "workshop" + """ (1 occurrences)
 - Predicted: None
@@ -7033,11 +12527,35 @@ Accuracy: 99.72%
 - Examples:
   - Or else in this world ..
 
+### "world" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Sallie is the most entertaining person in the world—and Julia Rutledge Pendleton the least so.
+
 ### "would" + "'st" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - I would'st look upon the face of my rescuer.
+
+### "wouldn't" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I wish you wouldn't—” he started.
+
+### "wraiths" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The months' worth of wraiths' wreaths withered.
+
+### "write" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I've been meaning to write—I really have—but the weeks go by, and the pen runs dry, and here we are.
 
 ### "written" + """ (1 occurrences)
 - Predicted: None
@@ -7051,6 +12569,18 @@ Accuracy: 99.72%
 - Examples:
   - Don't get me wrong -- I love this type.
 
+### "y" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Solve for y: 2y - 6 = 10.
+
+### "year" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Some nights—not often, maybe once or twice a year—you can hear the whales from the kitchen.
+
 ### "yelling" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -7063,23 +12593,17 @@ Accuracy: 99.72%
 - Examples:
   - Not at all, my partner asked me to stop and check the yellow "Beetle."
 
-### "yet" + "—" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - And yet—!
-
 ### "you" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Hopefully, being ridiculous doesn't kill you !
 
-### "you" + "—" (1 occurrences)
+### "you" + ":" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - “Oh, thank you—thank you!” cried the Scarecrow.
+  - Restaurants, I beg of you: the music can be loud, or the tables can be close together, but if you do both, I'm on a date with the man behind me.
 
 ### "you" + "…" (1 occurrences)
 - Predicted: None
@@ -7087,11 +12611,23 @@ Accuracy: 99.72%
 - Examples:
   - No, you … you are free, Hanna.
 
+### "your" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Does your—your man want to come, too?”
+
 ### "yourself" + """ (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - But first say it to yourself "I am a woman" is a truth.
+
+### "yourself" + ":" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Say to yourself: “I will know something about the French Revolution, or the rise of railways, or the works of John Keats.”
 
 ### "‐" + "hand" (1 occurrences)
 - Predicted: Space
@@ -7105,11 +12641,71 @@ Accuracy: 99.72%
 - Examples:
   - This house has triple–pane windows.
 
+### "—" + "BAGPIPES" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “—BAGPIPES!” he bellowed into the sudden hush.
+
+### "—" + "Do" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Sh!—There it is again—Don't you hear that?”
+
 ### "—" + "Excellent" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Room cleaning—Excellent.
+
+### "—" + "God" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Two-thirds of the class passed; the other third—God love them—spelled their own names wrong.
+
+### "—" + "Lady Byron" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - However, because of societal attitudes of the time—which favored the husband in any separation, with the welfare of any child acting as mitigation—Lady Byron had to present herself as a loving mother to the rest of society.
+
+### "—" + "Paris" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “After that I lived like a young rajah in all the capitals of Europe—Paris, Venice, Rome—collecting jewels, chiefly rubies, hunting big game, painting a little, things for myself only, and trying to forget something very sad that had happened to me long ago.”
+
+### "—" + "Pluto" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Only one of them—Pluto—has been observed in enough detail to verify that its current shape fits what would be expected from hydrostatic equilibrium.
+
+### "—" + "Portuguese" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He came home from the sea with a parrot, a limp, and a brand-new accent—Portuguese, he claimed, though no Portuguese person has ever agreed.
+
+### "—" + "Priscilla" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Try as she could—and she tried hard—Priscilla had never seen a vision or succeeded in establishing any communication with the Spirit World.
+
+### "—" + "Sir Ernest" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - His learned friend—Sir Ernest nodded carelessly at Mr. Philips—had stated that if the prisoner were an innocent man, he would have come forward at the inquest to explain that it was he, and not Mr. Inglethorp, who had been the participator in the quarrel.
+
+### "—" + "There" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Sh!—There it is again—Don't you hear that?”
 
 ### "—" + "You" (1 occurrences)
 - Predicted: Space
@@ -7117,35 +12713,197 @@ Accuracy: 99.72%
 - Examples:
   - My Dear Mr. Sherlock Holmes—You really did it very well.
 
-### "—" + "all" (1 occurrences)
+### "—" + "actually" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - His boots, his socks, his hat, and his watch—all were there.
+  - I'd like a room for one—actually, make it two.
 
-### "—" + "are" (1 occurrences)
+### "—" + "after" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - I mean, you too—are Rohit?
+  - He had overheard enough to know that this was but the case of a pair of lovers who, with less to fear of life, were yet—after the manner of their kind—more timid of heart than he.
 
-### "—" + "at" (1 occurrences)
+### "—" + "again" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - “She was as bright as possible—at least until after the ceremony.”
+  - They've rewritten the ending—again.
 
-### "—" + "but" (1 occurrences)
+### "—" + "almost" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - It is one of these cases—but, hullo, here is Lestrade!
+  - It was nine o'clock—almost immediately afterward I looked at my watch and found it was ten.
+
+### "—" + "although" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - When the blaze shot up and burned clearly old Mombi scattered a handful of magical powder over the fire, which straightway gave off a rich violet vapor, filling all the tent with its fragrance and forcing the Saw-Horse to sneeze—although he had been warned to keep quiet.
+
+### "—" + "any" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - After tea Mother played games with them—any game they liked—and of course their first choice was blindman's-buff, in the course of which Bobbie's forget-me-not wreath twisted itself crookedly over one of her ears and stayed there.
+
+### "—" + "anything" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - But as before, Aunt Polly shook her head and said “no, dear,” very decisively, yet with a still more anxious assurance that she would do anything—anything but that—to please her dear Pollyanna.
+
+### "—" + "as" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The far-off rumble might have been thunder, or a freight train, or—as it proved to be—my father, snoring.
+
+### "—" + "assuming" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The long-awaited, much-delayed, wildly over-budget opera house will finally open its doors next spring—assuming, of course, that somebody remembers to order the doors.
+
+### "—" + "awaken" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She reverted to her resolution to change the town—awaken it, prod it, “reform” it.
+
+### "—" + "began" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Finally, we judge, the animal—perhaps the bird was first—began to give utterance to particular “words,” indicative not merely of emotions, but of particular things with an emotional halo, such as “food,” “enemy,” “home.”
+
+### "—" + "belligerent" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Moreover, if she had been the person who peered at you over the gallery railing last night, don't you suppose, with her—er—belligerent disposition, she could have filled you as full of lead as a window weight?”
+
+### "—" + "bigger" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - If—and it's a big if—the weather holds, and if—bigger still—the engine starts, we could be in Nassau by Sunday.
+
+### "—" + "black" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Also his neckties are quite dingy—black and brown, where they used to be scarlet and purple.
+
+### "—" + "broad" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Her hands—broad, scarred, astonishingly gentle—had delivered half the county.
+
+### "—" + "burnt" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - His whole nature swamped by a new feeling—burnt up with thirst—a cooling spring in sight.
+
+### "—" + "by" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We sell by the pound, by the bushel, or—for friends—by the wave of a hand.
+
+### "—" + "called" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Another owner of Tierra del Sol, Darrell Davis—who had anchored the station's newscasts prior to their cancellation—called Dean's actions malicious.
+
+### "—" + "carrots" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Peter sowed vegetable seeds in his—carrots and onions and turnips.
+
+### "—" + "collecting" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “After that I lived like a young rajah in all the capitals of Europe—Paris, Venice, Rome—collecting jewels, chiefly rubies, hunting big game, painting a little, things for myself only, and trying to forget something very sad that had happened to me long ago.”
+
+### "—" + "demanded" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Again he demanded more, and got a franc—demanded more, and it was refused.
+
+### "—" + "disappeared" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The fog came down so thick and so fast that the lead climber—who was ten feet away at most—disappeared mid-sentence.
+
+### "—" + "dodgeball" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The high-water mark of my athletic career came in fourth grade—dodgeball, last one standing, hiding behind the piano.
+
+### "—" + "does" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Does Bar—does your husband?”
+
+### "—" + "dogs" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “We had, in the very old days, these,” said Somel, and sketched with swift sure touches a sort of sheep or llama, “and these”—dogs, of two or three kinds, “that that”—pointing to my absurd but recognizable horse.
+
+### "—" + "doubtless" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He was quite unable to make a dash for liberty, however, since Lomax had the unpleasant habit of retaining a hold upon a person with whom he was engaged in serious conversation—doubtless the result of long experience.
+
+### "—" + "down" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Go at once and fetch me a report of my horses.” “Miss Withersteen!... You mean the big drove—down in the sage-cleared fields?”
 
 ### "—" + "eastern" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - The postmark is London—eastern division.
+
+### "—" + "edited" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “We shall, of course, approach him at once, point out the possibly serious consequences, and beg him to defer publication of the Memoirs for at least a month, and in any case to permit them to be judiciously—er—edited.”
+
+### "—" + "eight" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Eight o'clock—not eight-fifteen, not eight-ish—eight o'clock.
+
+### "—" + "everything" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The will left everything—everything!—to the parrot.
+
+### "—" + "exactly" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She lives in a big old-fashioned brick house with white trimmings set back from the street—exactly the kind of house that I used to look at so curiously when I was in the John Grier Home, and wonder what it could be like inside.
 
 ### "—" + "except" (1 occurrences)
 - Predicted: Space
@@ -7159,11 +12917,47 @@ Accuracy: 99.72%
 - Examples:
   - We are faddy people, you know—faddy but kindhearted.
 
-### "—" + "for" (1 occurrences)
+### "—" + "fire" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - My mother Kira—I'm Amanda Kirasdotr—for longer.
+  - In the event of an emergency—fire, flood, or a visit from the district manager—use the rear exit.
+
+### "—" + "flimsy" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Indeed, the crown alone betokened majesty; in all else the, Scarecrow King was but a simple scarecrow—flimsy, awkward, and unsubstantial.
+
+### "—" + "flooded" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The low-lying fields by the river—flooded every March, parched every August—were all they could afford.
+
+### "—" + "gave" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The referee—may his whistle rust—gave them a penalty in the ninety-third minute.
+
+### "—" + "gigantic" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Zenith's a city with gigantic power—gigantic buildings, gigantic machines, gigantic transportation,” meditated Doane.
+
+### "—" + "gray" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There are days—gray, drizzly, nothing-on-the-calendar days—when a pot of soup and a well-worn mystery novel are all the happiness a person could need.
+
+### "—" + "grunts" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - After sixty-odd years of marriage, they'd developed a language of their own—grunts, mostly, and one very expressive cough.
 
 ### "—" + "ha" (1 occurrences)
 - Predicted: Space
@@ -7171,11 +12965,29 @@ Accuracy: 99.72%
 - Examples:
   - Retired from operatic stage—ha!
 
-### "—" + "he" (1 occurrences)
+### "—" + "hang" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Because he limped—he was lame.
+  - Only one person could've known the combination, and that person was—hang on, who's at the door?
+
+### "—" + "have" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Vaccines, clean water, and soap—plain, cheap, unglamorous soap—have saved more lives than all the surgeons in history.
+
+### "—" + "height" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He was, by any reasonable measure—height, weight, reach, record—the worse fighter, and he won in two rounds.
+
+### "—" + "held" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Her left-hand drawer held pencils, her right-hand drawer held paper, and the middle one—locked, always locked—held whatever it was that made her smile on Fridays.
 
 ### "—" + "her" (1 occurrences)
 - Predicted: Space
@@ -7183,11 +12995,35 @@ Accuracy: 99.72%
 - Examples:
   - I see—her ladyship’s waiting-maid.
 
+### "—" + "hers" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It was love at first sight—hers, anyway; he wasn't wearing his glasses.
+
+### "—" + "hold" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The old-growth forests—what remains of them—hold more carbon per acre than almost any other place on land, and they've been doing it, free of charge, since before we learned to count.
+
 ### "—" + "hum" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Contralto—hum!
+
+### "—" + "including" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Albert Einstein called this the equivalence principle, and said that only observers who feel no force at all—including the force of gravity—are justified in concluding that they are not accelerating.
+
+### "—" + "indeed" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Ah, there's a great deal to be said for that plan—indeed I think my uncle Egmont used to say he found it less agitating not to read the morning papers till after dinner,” said Mrs. Archer responsively.
 
 ### "—" + "insane" (1 occurrences)
 - Predicted: Space
@@ -7195,17 +13031,35 @@ Accuracy: 99.72%
 - Examples:
   - “I was mad—insane.”
 
-### "—" + "is" (1 occurrences)
+### "—" + "keep" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Jim—my other half—is still in the autodoc, having his lungs cleaned.
+  - Look, I'd love to stay and chat, but—oh no, he's seen us—keep walking.
 
-### "—" + "it" (1 occurrences)
+### "—" + "knock" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - “It—it’s not actionable,” he stammered.
+  - I don't believe in luck—knock on wood.
+
+### "—" + "knowing" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Saber asked, “How do you mean—knowing better than to steal the money out of their wages?”
+
+### "—" + "let" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I think it was very nice of him to give it me at all—let alone cups and plates,” she added.
+
+### "—" + "lighthouse" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - His father, his grandfather, his great-uncle Silas—lighthouse keepers, every one.
 
 ### "—" + "line" (1 occurrences)
 - Predicted: Space
@@ -7213,17 +13067,137 @@ Accuracy: 99.72%
 - Examples:
   - Fishing rights—line.
 
-### "—" + "my" (1 occurrences)
+### "—" + "locked" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Jim—my other half—is still in the autodoc, having his lungs cleaned.
+  - Her left-hand drawer held pencils, her right-hand drawer held paper, and the middle one—locked, always locked—held whatever it was that made her smile on Fridays.
 
-### "—" + "never" (1 occurrences)
+### "—" + "long" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - I shall never let it drop until the gems are found—never, Mary!
+  - As a general thing, however, Miss Polly would not listen—long.
+
+### "—" + "look" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I simply can't get used to the idea of nothing having any weight—look here!” laughed Dorothy, as she took a boiled ham out of the refrigerator and hung it upon an imaginary hook in the air, where it remained motionless.
+
+### "—" + "loose" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Clearly the brutal practical inference is—loose a gazelle among the ladies of your acquaintance, and you will be Emperor of the French.
+
+### "—" + "mailing" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She watched with peculiar interest one stratum: the old ladies, the white-haired, fair-handed women of fifty and sixty and even seventy, spinsters and widows, for whom life was nothing but a desk and a job of petty pickings—mailing circulars or assorting letters or checking up lists.
+
+### "—" + "master" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Salt, fat, acid, heat—master those, and the rest is garnish.
+
+### "—" + "may" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The referee—may his whistle rust—gave them a penalty in the ninety-third minute.
+
+### "—" + "more" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He had overheard enough to know that this was but the case of a pair of lovers who, with less to fear of life, were yet—after the manner of their kind—more timid of heart than he.
+
+### "—" + "mostly" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The long and short of it—mostly the long—is that the goat has been returned and nobody's pressing charges.
+
+### "—" + "muddy" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The bell rings, the doors fly open, and out they come—muddy, howling, free.
+
+### "—" + "must" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We're looking for a self-motivated, detail-oriented, quick-thinking person to fill a hard-to-fill, part-time, entry-level role—must like dogs.
+
+### "—" + "namely" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Alphabets often come to be associated with a standard ordering of their letters; this is for collation—namely, for listing words and other items in alphabetical order.
+
+### "—" + "naturally" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The senator's carefully worded, lawyer-approved, entirely meaningless statement was released late Friday—naturally.
+
+### "—" + "nobody" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Between forty and fifty thousand starlings—nobody can count them exactly—wheel over the pier every night at dusk.
+
+### "—" + "now" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - However, for the fourth time Windy Corner lay poised below him—now as a beacon in the roaring tides of darkness.
+
+### "—" + "okay" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm telling you, there's no way that bridge will hold a truck that—okay, I stand corrected.
+
+### "—" + "older" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The violin was old—older than the house, older than the town, older than the country itself.
+
+### "—" + "opened" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The new library—three stories of cedar and glass, with a reading room that looks straight out into the treetops—opened on Saturday, and by noon there wasn't an empty chair.
+
+### "—" + "our" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Measured among women—our women at home, I mean—he had always stood high.
+
+### "—" + "particularly" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - And as film company revenues dropped, so did their appetite for risk—particularly the risk represented by Kurosawa's costly production methods.
+
+### "—" + "picked" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Yes, gold! See, pounds of gold! I found it—washed it out of the stream—picked it out grain by grain, nugget by nugget!” “Gold!” he cried.
+
+### "—" + "plain" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Vaccines, clean water, and soap—plain, cheap, unglamorous soap—have saved more lives than all the surgeons in history.
 
 ### "—" + "please" (1 occurrences)
 - Predicted: Space
@@ -7231,11 +13205,35 @@ Accuracy: 99.72%
 - Examples:
   - “But don’t strike me—please don’t—and I’ll do anything you want me to.”
 
+### "—" + "pointing" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “We had, in the very old days, these,” said Somel, and sketched with swift sure touches a sort of sheep or llama, “and these”—dogs, of two or three kinds, “that that”—pointing to my absurd but recognizable horse.
+
 ### "—" + "poor" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - I wouldn’t frighten Kate—poor little Kate.
+
+### "—" + "possibly" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - At the first clash the girl screamed, stood screaming for a moment by the fireplace, and then ran to open the shutters—possibly with an idea of escaping by the shattered window.
+
+### "—" + "push" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - One, two, three, and—push!
+
+### "—" + "quiet" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Her mind was busy at once, going over all the things which he had said to her and she had said to him—quiet-like.
 
 ### "—" + "quite" (1 occurrences)
 - Predicted: Space
@@ -7249,17 +13247,83 @@ Accuracy: 99.72%
 - Examples:
   - “Oh, it won’t do—really it won’t,” said Holmes suavely.
 
+### "—" + "safe" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Oh, grass and things chiefly. I thought I should be safe with grass.” “And were you—er—safe?” asked Belvane, with a great show of anxiety.
+
+### "—" + "saved" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The twenty-one-year-old goalkeeper—she'd been stacking shelves in June—saved three penalties in a row.
+
+### "—" + "saw" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I gave a quick glance around at the comfortable house under its elms and maples—saw the big, red barn shining in the sun and the pump under the grape arbour.
+
+### "—" + "several" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There's a word for what you've done—several, actually—and I'm looking them up now.
+
+### "—" + "smiled" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He drew the card, looked at it, and—for the first time all night—smiled.
+
+### "—" + "soaked" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There she stood—soaked, furious, magnificent—with the winning ticket stuck to her forehead.
+
+### "—" + "sometimes" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Living shorelines use plants or other natural elements—sometimes in combination with harder shoreline structures—to stabilize estuarine coasts, bays, and tributaries.
+
+### "—" + "somewhere" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Dinner was a five-course, three-hour, no-phones-allowed affair, and by the end of it—somewhere between the cheese and the second dessert—my parents were holding hands.
+
+### "—" + "sooner" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “In a month from now—sooner or later as you wish—I will guarantee you such a reign of terror in Ireland as shall shake the British Empire to its foundations.”
+
 ### "—" + "sorry" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - That is in one dekan—sorry, two hours.
 
-### "—" + "such" (1 occurrences)
+### "—" + "spelled" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - There is only one thing I ask in return for my help—such as it is.
+  - Two-thirds of the class passed; the other third—God love them—spelled their own names wrong.
+
+### "—" + "stay" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The choice was simple—stay and be bored, or go and be terrified—and it took me all of four seconds.
+
+### "—" + "still" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - At the break of the poop he reeled, raised one hand to his eyes with the familiar brushing gesture, and fell down the steps—still on his feet—to the main deck, across which he staggered, falling and flinging out his arms for support.
 
 ### "—" + "take" (1 occurrences)
 - Predicted: Space
@@ -7267,41 +13331,29 @@ Accuracy: 99.72%
 - Examples:
   - You have to unload—take the fish from me and pass the baskets up to the jetty.
 
-### "—" + "thank" (1 occurrences)
+### "—" + "te" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - “Oh, thank you—thank you!” cried the Scarecrow.
+  - “Ri—te O, Cabby!” the Hopscotch hailed.
 
-### "—" + "their" (1 occurrences)
+### "—" + "thousands" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - The woman—their negotiator—wears two very large knives in her vest.
+  - And the swallows up above started whistling at the top of their voices—thousands and millions of them—to show that they too were glad that the boy's brave uncle had been found.
 
-### "—" + "these" (1 occurrences)
+### "—" + "ticks" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - One thing I do know—these cops will never be my friends.
+  - All winter the house made noises—ticks, groans, long shivering sighs—like something trying to remember a tune.
 
-### "—" + "though" (1 occurrences)
+### "—" + "timing" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - That is quite cleared up now—though, indeed, it was obvious from the first.
-
-### "—" + "three" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - “I have been beaten four times—three times by men, and once by a woman.”
-
-### "—" + "to" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Health is better than wealth—to him who has wealth only.
+  - Three things matter in comedy—timing.
 
 ### "—" + "too" (1 occurrences)
 - Predicted: Space
@@ -7309,11 +13361,41 @@ Accuracy: 99.72%
 - Examples:
   - Well, yes, of course the pay is good—too good.
 
+### "—" + "toward" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In the midst of the ceremony Selina had her moment of panic when she actually saw herself running shrieking from this company, this man, this house, down the road, on, on toward—toward what?
+
 ### "—" + "tremendously" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Remember that the Witch is Wicked—tremendously Wicked—and ought to be killed.
+
+### "—" + "under" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “She made us come right in, and sign our names at the bottom of a long paper—under where she'd signed.” “Did you see anything of what was written above her signature?” asked Poirot sharply.
+
+### "—" + "unless" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “Of course I don't know what your relations with her have been,” returned Robert, “and I'm not curious to know, but it does look like a bit of injustice all around, don't you think—unless you intend to marry her?”
+
+### "—" + "up" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The road goes up, and up, and—just when your knees are filing a complaint—up again.
+
+### "—" + "use" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - In the event of an emergency—fire, flood, or a visit from the district manager—use the rear exit.
 
 ### "—" + "volcanic" (1 occurrences)
 - Predicted: Space
@@ -7321,11 +13403,17 @@ Accuracy: 99.72%
 - Examples:
   - She is impetuous—volcanic, I was about to say.
 
-### "—" + "was" (1 occurrences)
+### "—" + "washed" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - For—was I really gone three days?
+  - “Yes, gold! See, pounds of gold! I found it—washed it out of the stream—picked it out grain by grain, nugget by nugget!” “Gold!” he cried.
+
+### "—" + "we" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Time, money, patience—we'd run out of two and were borrowing the third.
 
 ### "—" + "wears" (1 occurrences)
 - Predicted: Space
@@ -7333,23 +13421,89 @@ Accuracy: 99.72%
 - Examples:
   - The woman—their negotiator—wears two very large knives in her vest.
 
-### "—" + "where" (1 occurrences)
+### "—" + "welcome" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Your god—where is He now?
+  - Blue-green algae, sky-high humidity, knee-deep mud—welcome to field season.
 
-### "—" + "yes" (1 occurrences)
+### "—" + "were" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Prima donna Imperial Opera of Warsaw—yes!
+  - The low-lying fields by the river—flooded every March, parched every August—were all they could afford.
+
+### "—" + "whatever" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - “I'd rather,” Dallas said, slowly, “plan one back door of a building that's going to help make this town beautiful and significant than sell all the bonds that ever floated a—whatever it is that bonds are supposed to float.”
+
+### "—" + "wheel" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Between forty and fifty thousand starlings—nobody can count them exactly—wheel over the pier every night at dusk.
+
+### "—" + "whereas" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Most notably, box jellyfish can swim—at maximum speeds approaching four knots—whereas most species of jellyfish float wherever the current takes them, with little control over their direction.
+
+### "—" + "whoever" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A half-eaten sandwich, a still-warm cup of tea, an open door—whoever it was, we'd missed them by minutes.
+
+### "’" + "cheese" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Fish 'n’ chips, mac 'n’ cheese, and a side o’ slaw, comin’ right up!
+
+### "’" + "chips" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Fish 'n’ chips, mac 'n’ cheese, and a side o’ slaw, comin’ right up!
+
+### "’" + "double" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - She's been workin’ double shifts at St. Mary's, so she hasn't had time to fix the car, let alone fix her brother's life.
+
+### "’" + "right" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Fish 'n’ chips, mac 'n’ cheese, and a side o’ slaw, comin’ right up!
+
+### "’" + "slaw" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Fish 'n’ chips, mac 'n’ cheese, and a side o’ slaw, comin’ right up!
+
+### "’" + "train" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - By the time the sheriff'd got his boots on, they'd crossed the county line, sold the horses, and bought themselves a couple o’ train tickets to Santa Fe.
 
 ### "’s" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - “Now, what is your own impression as to the young lady’s—your wife’s character?”
+
+### "“" + "long" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The couch is 84“ long, and the wall is only 80”.
 
 ### "”" + "(" (1 occurrences)
 - Predicted: None

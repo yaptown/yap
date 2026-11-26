@@ -317,7 +317,12 @@ pub async fn run(
             &mut segmented.nlp_sentences,
             &mut segmented.restricted_nlp_sentences,
         );
-        later_stages(*course, segmented, &mut readings, &mut stages).await?;
+        let manual: std::collections::HashSet<String> = sources
+            .manual_texts()
+            .into_iter()
+            .map(str::to_owned)
+            .collect();
+        later_stages(*course, segmented, &manual, &mut readings, &mut stages).await?;
     }
     Ok(())
 }
@@ -325,6 +330,7 @@ pub async fn run(
 async fn later_stages(
     course: language_utils::Course,
     mut segmented: crate::pipeline::SegmentedCorpus,
+    manual: &std::collections::HashSet<String>,
     readings: &mut crate::readings::CorpusReadings,
     stages: &mut std::fs::File,
 ) -> Result<()> {
@@ -383,20 +389,38 @@ async fn later_stages(
     {
         return Ok(());
     }
+    if measure!(
+        "heteronym-readings",
+        readings.read_english_heteronyms(
+            lang,
+            &segmented.nlp_sentences,
+            &segmented.restricted_nlp_sentences,
+            &segmented.interners,
+            &inventories,
+        )
+    )
+    .is_none()
+    {
+        return Ok(());
+    }
     let encoded: Vec<_> = segmented
         .nlp_sentences
         .iter()
         .map(|(text, info)| (text.clone(), info.sentence.clone()))
         .collect();
-    let sentences = crate::pipeline::drop_sentences_with_rare_grams(
-        crate::pipeline::sentence_grams(
-            &encoded,
-            &segmented.nlp_sentences,
-            &segmented.gram_vocabulary,
-            readings,
-            &readings.canonical_phrases(&segmented.nlp_sentences),
-        ),
+    let sentences = crate::pipeline::sentence_grams(
+        &encoded,
+        &segmented.nlp_sentences,
         &segmented.gram_vocabulary,
+        readings,
+        &readings.canonical_phrases(&segmented.nlp_sentences),
+    );
+    let manual_grams =
+        crate::pipeline::manual_grams(&sentences, &manual.iter().map(String::as_str).collect());
+    let sentences = crate::pipeline::drop_sentences_with_rare_grams(
+        sentences,
+        &segmented.gram_vocabulary,
+        &manual_grams,
     );
     let frequencies = pack_builder::aggregate_sense_frequencies(
         &crate::frequencies::compute_reading_gram_frequencies(
@@ -406,7 +430,10 @@ async fn later_stages(
     );
     let filtered: Vec<_> = frequencies
         .iter()
-        .filter(|entry| entry.count > 3 && (overlays_complete || entry.gram.gram.len() == 1))
+        .filter(|entry| {
+            crate::pipeline::teaches(&entry.gram.gram, entry.count, &manual_grams)
+                && (overlays_complete || entry.gram.gram.len() == 1)
+        })
         .cloned()
         .collect();
     if !overlays_complete {

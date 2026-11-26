@@ -92,4 +92,23 @@ mod tests {
             assert_eq!(serde_json::to_string(&old).unwrap(), wrapped);
         }
     }
+
+    /// Reviews of sentences with numbers ("1984") store them as `NUM` words.
+    /// Older clients can't read the tag, so such an event is preserved
+    /// unrecognized there (as above), never misread.
+    #[test]
+    fn number_words_roundtrip_in_reviews() {
+        let json = r#"{"type":"Perfect","challenge":"1984","submission":"1984","literals":[[{"word":{"text":"1984","word_type":{"type":"Other","other_tag":"NUM"}},"whitespace":""},null]]}"#;
+        let result: SentenceReviewResult = serde_json::from_str(json).unwrap();
+        let SentenceReviewResult::Perfect { literals, .. } = &result else {
+            panic!("{result:?}")
+        };
+        assert_eq!(
+            literals[0].0.word.word_type,
+            language_utils::WordType::Other(language_utils::OtherWord {
+                other_tag: language_utils::OtherWordType::Num
+            })
+        );
+        assert_eq!(serde_json::to_string(&result).unwrap(), json);
+    }
 }

@@ -18,6 +18,7 @@ mod alignment;
 mod canonical;
 mod corrections;
 mod coverings;
+pub mod english;
 pub mod furigana;
 mod hierarchy;
 mod inflections;

@@ -25,9 +25,6 @@ pub(crate) fn expand_spanish_word(
         if ["'", "-", "—", "–", "'", "'"].contains(&text) {
             return None;
         }
-        if text.chars().all(|c| c.is_numeric()) {
-            return None;
-        }
 
         let text = text.to_lowercase();
         let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
@@ -59,9 +56,6 @@ pub(crate) fn expand_english_word(
         if ["'", "-", "—", "–", "'", "'"].contains(&text) {
             return None;
         }
-        if text.chars().all(|c| c.is_numeric()) {
-            return None;
-        }
 
         let text = text.to_lowercase();
         let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
@@ -86,9 +80,6 @@ pub(crate) fn expand_german_word(
         }
 
         if ["'", "-", "—", "–", "'", "'"].contains(&text) {
-            return None;
-        }
-        if text.chars().all(|c| c.is_numeric()) {
             return None;
         }
 
@@ -165,9 +156,6 @@ pub(crate) fn expand_french_word(
         }
 
         if ["'", "-", "—", "–", "'", "'"].contains(&text) {
-            return None;
-        }
-        if text.chars().all(|c| c.is_numeric()) {
             return None;
         }
 
@@ -258,9 +246,6 @@ pub(crate) fn expand_korean_word(
     if ["'", "-", "—", "–", "'", "'"].contains(&text) {
         return None;
     }
-    if text.chars().all(|c| c.is_numeric()) {
-        return None;
-    }
 
     let text = text.to_lowercase();
     let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
@@ -310,11 +295,10 @@ pub(crate) fn lexide_token_to_literal(
                 language,
                 is_first_word,
             ) {
-                Some(h) => language_utils::WordType::Heteronym(h),
-                // If heteronym creation failed for a non-special POS tag, mark as unknown
-                None => language_utils::WordType::Other(language_utils::OtherWord {
-                    other_tag: language_utils::OtherWordType::X,
-                }),
+                Ok(h) => language_utils::WordType::Heteronym(h),
+                Err(other_tag) => {
+                    language_utils::WordType::Other(language_utils::OtherWord { other_tag })
+                }
             }
         }
     };
@@ -328,7 +312,10 @@ pub(crate) fn lexide_token_to_literal(
     }
 }
 
-/// Create a Heteronym from lexide token components
+/// Create a Heteronym from lexide token components, or say what other kind
+/// of word it is: a number in digits (not a word to learn), an English
+/// possessive apostrophe ("the boys' room": obvious, like punctuation), or
+/// unknown.
 fn heteronym_from_lexide_token(
     text: &str,
     lemma: &str,
@@ -336,8 +323,8 @@ fn heteronym_from_lexide_token(
     proper_nouns: &BTreeMap<String, Heteronym<String>>,
     language: language_utils::Language,
     is_first_word: bool,
-) -> Option<Heteronym<String>> {
-    use language_utils::{PartOfSpeech, PartOfSpeechTag};
+) -> Result<Heteronym<String>, language_utils::OtherWordType> {
+    use language_utils::{OtherWordType, PartOfSpeech, PartOfSpeechTag};
 
     // Convert PartOfSpeechTag to PartOfSpeech, filtering out invalid types
     let pos = match pos_tag {
@@ -360,7 +347,7 @@ fn heteronym_from_lexide_token(
         | PartOfSpeechTag::Punct
         | PartOfSpeechTag::Space
         | PartOfSpeechTag::X => {
-            return None;
+            return Err(OtherWordType::X);
         }
     };
 
@@ -384,11 +371,11 @@ fn heteronym_from_lexide_token(
             // Simple normalization for unsupported languages
             let text = strip_punctuation(text);
             if text.is_empty() {
-                return None;
+                return Err(OtherWordType::X);
             }
             let text = text.to_lowercase();
             let lemma = lemma.to_lowercase();
-            return Some(Heteronym {
+            return Ok(Heteronym {
                 word: text,
                 lemma,
                 pos,
@@ -396,18 +383,123 @@ fn heteronym_from_lexide_token(
         }
     };
 
+    let digits = strip_punctuation(text);
+    if !digits.is_empty() && digits.chars().all(char::is_numeric) {
+        return Err(OtherWordType::Num);
+    }
+    if language == language_utils::Language::English
+        && pos == PartOfSpeech::Part
+        && matches!(text, "'" | "’")
+        && matches!(lemma, "'s" | "’s")
+    {
+        return Err(OtherWordType::Punct);
+    }
+
     let heteronym = if let Some(heteronym) = proper_nouns.get(&text.to_lowercase()) {
         let (word, lemma, expanded_pos) =
-            expand_word(&heteronym.word, &heteronym.lemma, None, is_first_word)?;
+            expand_word(&heteronym.word, &heteronym.lemma, None, is_first_word)
+                .ok_or(OtherWordType::X)?;
         let pos = expanded_pos.unwrap_or(heteronym.pos);
         Heteronym { word, lemma, pos }
     } else {
-        let (word, lemma, expanded_pos) = expand_word(text, lemma, Some(pos), is_first_word)?;
+        let (word, lemma, expanded_pos) =
+            expand_word(text, lemma, Some(pos), is_first_word).ok_or(OtherWordType::X)?;
         let pos = expanded_pos.unwrap_or(pos);
         Heteronym { word, lemma, pos }
     };
 
     // Punctuation and proper nouns are already filtered out during PartOfSpeechTag -> PartOfSpeech conversion
 
-    Some(heteronym)
+    Ok(heteronym)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use language_utils::{Language, OtherWordType, WordType};
+
+    fn word_type(
+        text: &str,
+        pos: lexide::pos::PartOfSpeech,
+        lemma: &str,
+        language: Language,
+    ) -> WordType<String> {
+        let token = lexide::Token {
+            text: lexide::Text { text: text.into() },
+            whitespace: lexide::Whitespace::None,
+            pos,
+            lemma: lexide::Lemma {
+                lemma: lemma.into(),
+            },
+            dep: lexide::DependencyRelation::Dep,
+            head: 0,
+        };
+        lexide_token_to_literal(&token, &BTreeMap::new(), language, false)
+            .word
+            .word_type
+    }
+
+    fn other(tag: OtherWordType) -> WordType<String> {
+        WordType::Other(language_utils::OtherWord { other_tag: tag })
+    }
+
+    #[test]
+    fn digits_are_numbers_not_unknown_words() {
+        use lexide::pos::PartOfSpeech as P;
+        for language in [
+            Language::English,
+            Language::French,
+            Language::SpanishLatinAmerican,
+            Language::German,
+            Language::Korean,
+        ] {
+            assert_eq!(
+                word_type("1984", P::Num, "1984", language),
+                other(OtherWordType::Num)
+            );
+            assert_eq!(
+                word_type("42.", P::Num, "42", language),
+                other(OtherWordType::Num)
+            );
+        }
+        // Not only digits: still an ordinary word.
+        assert!(matches!(
+            word_type("3.5", P::Num, "3.5", Language::English),
+            WordType::Heteronym(_)
+        ));
+        assert!(matches!(
+            word_type("1990s", P::Noun, "1990s", Language::English),
+            WordType::Heteronym(_)
+        ));
+        // The simple normalizer's languages keep their digits as words, as before.
+        assert!(matches!(
+            word_type("1984", P::Num, "1984", Language::Japanese),
+            WordType::Heteronym(_)
+        ));
+    }
+
+    #[test]
+    fn english_possessive_apostrophe_is_obvious_and_quotes_stay_punctuation() {
+        use lexide::pos::PartOfSpeech as P;
+        for apostrophe in ["'", "’"] {
+            assert_eq!(
+                word_type(apostrophe, P::Part, "'s", Language::English),
+                other(OtherWordType::Punct)
+            );
+            assert_eq!(
+                word_type(apostrophe, P::Punct, apostrophe, Language::English),
+                other(OtherWordType::Punct)
+            );
+        }
+        // The clitic 's stays a learnable word.
+        assert!(matches!(
+            word_type("'s", P::Part, "'s", Language::English),
+            WordType::Heteronym(_)
+        ));
+        // Any other lone apostrophe is still unknown.
+        assert_eq!(
+            word_type("'", P::Noun, "'", Language::English),
+            other(OtherWordType::X)
+        );
+    }
 }

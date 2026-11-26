@@ -13,7 +13,7 @@ impl<S: Clone + Eq + std::hash::Hash + std::fmt::Debug> UnigramToken for Atom<S>
     fn is_excluded_from_sequences(&self) -> bool {
         matches!(
             self,
-            Atom::Tok(word) if matches!(&word.word_type, WordType::Other(o) if o.other_tag == OtherWordType::Propn)
+            Atom::Tok(word) if matches!(&word.word_type, WordType::Other(o) if matches!(o.other_tag, OtherWordType::Propn | OtherWordType::Num))
         )
     }
 }

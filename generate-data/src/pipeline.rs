@@ -194,17 +194,43 @@ pub fn load_banned_words(
         .collect())
 }
 
-/// Initial gram frequencies from the vocabulary, for filtering (the full
-/// gram+phrase frequencies are computed after filtering).
+/// Whether a course teaches a gram this frequent in its corpus. Each one
+/// becomes a card and a dictionary entry, and what occurs in three sentences or
+/// fewer is often not a real word, unless a manual sentence uses it.
+pub fn teaches(gram: &Gram<String>, count: u32, manual_grams: &HashSet<Gram<String>>) -> bool {
+    count > 3 || manual_grams.contains(gram)
+}
+
+/// The learnable grams of the sentences someone added by hand (`manual.txt`).
+pub fn manual_grams(
+    sentences: &[(
+        String,
+        language_utils::ReadingSentence<Gram<String>, String>,
+    )],
+    manual: &HashSet<&str>,
+) -> HashSet<Gram<String>> {
+    sentences
+        .iter()
+        .filter(|(text, _)| manual.contains(text.as_str()))
+        .flat_map(|(_, sentence)| {
+            sentence
+                .grams
+                .iter()
+                .filter_map(language_utils::SentenceGram::learnable)
+                .map(|gram| gram.sense.gram.clone())
+        })
+        .collect()
+}
+
 /// Keep only sentences whose every learnable reading-tagged gram (gram, sense
-/// and reading) occurs in more than three sentences. Each one becomes a card
-/// and a dictionary entry, and rarer ones are often not real words.
+/// and reading) the course [`teaches`].
 pub fn drop_sentences_with_rare_grams(
     sentences: Vec<(
         String,
         language_utils::ReadingSentence<Gram<String>, String>,
     )>,
     gram_vocabulary: &[GramVocabEntry<String>],
+    manual_grams: &HashSet<Gram<String>>,
 ) -> Vec<(
     String,
     language_utils::ReadingSentence<Gram<String>, String>,
@@ -213,7 +239,7 @@ pub fn drop_sentences_with_rare_grams(
     let common: HashSet<_> =
         crate::frequencies::compute_reading_gram_frequencies(&sentences, gram_vocabulary)
             .into_iter()
-            .filter(|entry| entry.count > 3)
+            .filter(|entry| teaches(&entry.gram.sense.gram, entry.count, manual_grams))
             .map(|entry| entry.gram)
             .collect();
     sentences
@@ -636,20 +662,30 @@ pub async fn segment_corpus(
             .collect();
 
     // Filter out sentences containing unknown (X) POS tags
-    let sentence_literals: BTreeMap<String, Vec<language_utils::Literal<String>>> =
-        sentence_literals
-            .into_iter()
-            .filter(|(_, words)| {
-                !words.iter().any(|word| {
-                    matches!(
-                        &word.word.word_type,
-                        language_utils::WordType::Other(language_utils::OtherWord {
-                            other_tag: language_utils::OtherWordType::X
-                        })
-                    )
-                })
+    let (sentence_literals, unknown): (BTreeMap<_, _>, BTreeMap<_, _>) =
+        sentence_literals.into_iter().partition(|(_, words)| {
+            !words.iter().any(|word| {
+                matches!(
+                    &word.word.word_type,
+                    language_utils::WordType::Other(language_utils::OtherWord {
+                        other_tag: language_utils::OtherWordType::X
+                    })
+                )
             })
-            .collect();
+        });
+    let sentence_literals: BTreeMap<String, Vec<language_utils::Literal<String>>> =
+        sentence_literals;
+    if !unknown.is_empty() {
+        println!(
+            "Dropped {} sentences with a word of unknown type (X), e.g. {:?}",
+            unknown.len(),
+            unknown
+                .keys()
+                .step_by((unknown.len() / 5).max(1))
+                .take(5)
+                .collect::<Vec<_>>()
+        );
+    }
 
     // Restricted literals keep their original merge order below.
     let restricted_literals =
@@ -1184,6 +1220,74 @@ mod tests {
         };
         assert!(!encoding.readings_ready());
         assert!(!encoding.overlays_ready());
+    }
+
+    #[test]
+    fn rare_grams_of_manual_sentences_are_taught() {
+        use language_utils::{
+            Atom, Heteronym, PartOfSpeech, ReadingTaggedGram, SentenceGram, SentenceGrams,
+            TaggedGram, Word, WordType,
+        };
+        let gram = |text: &str| {
+            Gram(vec![Atom::Tok(Word {
+                text: text.into(),
+                word_type: WordType::Heteronym(Heteronym {
+                    word: text.into(),
+                    lemma: text.into(),
+                    pos: PartOfSpeech::Noun,
+                }),
+            })])
+        };
+        let (cat, jowl, wattle) = (gram("cat"), gram("jowl"), gram("wattle"));
+        let vocabulary: Vec<_> = [&cat, &jowl, &wattle]
+            .into_iter()
+            .map(|atoms| GramVocabEntry {
+                atoms: atoms.clone(),
+                frequency: 1,
+            })
+            .collect();
+        let sentence = |text: &str, grams: &[&Gram<String>]| {
+            (
+                text.to_owned(),
+                SentenceGrams {
+                    grams: grams
+                        .iter()
+                        .map(|&gram| {
+                            SentenceGram::Learnable(ReadingTaggedGram::without_reading(
+                                TaggedGram {
+                                    gram: gram.clone(),
+                                    sense: None,
+                                },
+                            ))
+                        })
+                        .collect(),
+                    capitalize_first: false,
+                    multiword_terms: vec![],
+                    low_confidence_multiword_terms: vec![],
+                },
+            )
+        };
+        let sentences = vec![
+            sentence("1", &[&cat]),
+            sentence("2", &[&cat]),
+            sentence("3", &[&cat]),
+            sentence("4", &[&cat]),
+            sentence("jowl", &[&cat, &jowl]),
+            sentence("wattle", &[&cat, &wattle]),
+        ];
+        let kept = |manual: &[&str]| {
+            let manual_grams = manual_grams(&sentences, &manual.iter().copied().collect());
+            drop_sentences_with_rare_grams(sentences.clone(), &vocabulary, &manual_grams)
+                .into_iter()
+                .map(|(text, _)| text)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(kept(&[]), ["1", "2", "3", "4"]);
+        assert_eq!(kept(&["jowl"]), ["1", "2", "3", "4", "jowl"]);
+        let manual_grams = manual_grams(&sentences, &HashSet::from(["jowl"]));
+        assert!(teaches(&jowl, 1, &manual_grams));
+        assert!(!teaches(&wattle, 1, &manual_grams));
+        assert!(teaches(&wattle, 4, &manual_grams));
     }
 
     #[test]

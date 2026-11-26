@@ -1336,6 +1336,9 @@ pub enum OtherWordType {
     Space, // space
     #[serde(rename = "X")]
     X, // other/unknown
+    /// A number written in digits ("1984"): read aloud, but not a word to learn.
+    #[serde(rename = "NUM")]
+    Num,
 }
 
 /// Information about a non-heteronym word

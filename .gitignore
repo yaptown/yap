@@ -72,6 +72,7 @@ out/*/missing_senses.jsonl
 out/*/phrasebook.jsonl
 out/*/proper_noun_definitions.jsonl
 out/*/encoded_sentences.jsonl
+out/*/tts_sentences.jsonl
 out/*/pronunciation_to_words.jsonl
 out/*/supertokens.txt
 out/*/top_grams.txt

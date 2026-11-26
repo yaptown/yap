@@ -1,0 +1,5649 @@
+{
+ "absent": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ˈæ b s ə n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "æ b s ˈɛ n t"
+  }
+ ],
+ "abstract": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈæ b s t ɹ æ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "æ b s t ɹ ˈæ k t"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ˈæ b s t ɹ æ k t"
+  }
+ ],
+ "abstracts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈæ b s t ɹ æ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "æ b s t ɹ ˈæ k t s"
+  }
+ ],
+ "abuse": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ə b j ˈuː s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə b j ˈuː z"
+  }
+ ],
+ "abuses": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ə b j ˈuː s ə z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə b j ˈuː z ə z"
+  }
+ ],
+ "addict": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈæ d ɪ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə d ˈɪ k t"
+  }
+ ],
+ "addicts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈæ d ɪ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə d ˈɪ k t s"
+  }
+ ],
+ "advocate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˈæ d v ə k ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈæ d v ə k ˌeɪ t"
+  }
+ ],
+ "advocates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˈæ d v ə k ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈæ d v ə k ˌeɪ t s"
+  }
+ ],
+ "affect": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈæ f ɛ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə f ˈɛ k t"
+  }
+ ],
+ "affects": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈæ f ɛ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə f ˈɛ k t s"
+  }
+ ],
+ "affiliate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ə f ˈɪ l ɪ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə f ˈɪ l ɪ ˌeɪ t"
+  }
+ ],
+ "affiliates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ə f ˈɪ l ɪ ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə f ˈɪ l ɪ ˌeɪ t s"
+  }
+ ],
+ "aged": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈeɪ dʒ d"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ˈeɪ dʒ ə d"
+  }
+ ],
+ "aggregate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˈæ ɡ ɹ ə ɡ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈæ ɡ ɹ ə ɡ ˌeɪ t"
+  }
+ ],
+ "aggregates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˈæ ɡ ɹ ə ɡ ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈæ ɡ ɹ ə ɡ ˌeɪ t s"
+  }
+ ],
+ "alleged": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə l ˈɛ dʒ d"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ə l ˈɛ dʒ ə d"
+  }
+ ],
+ "alternate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˈɔː l t ɚ n ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈɔː l t ɚ n ˌeɪ t"
+  }
+ ],
+ "alternates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˈɔː l t ɚ n ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈɔː l t ɚ n ˌeɪ t s"
+  }
+ ],
+ "animate": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ˈæ n ɪ m ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈæ n ɪ m ˌeɪ t"
+  }
+ ],
+ "annex": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈæ n ɛ k s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə n ˈɛ k s"
+  }
+ ],
+ "annexes": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈæ n ɛ k s ə z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə n ˈɛ k s ə z"
+  }
+ ],
+ "appropriate": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ə p ɹ ˈoʊ p ɹ ɪ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə p ɹ ˈoʊ p ɹ ɪ ˌeɪ t"
+  }
+ ],
+ "approximate": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ə p ɹ ˈɑː k s ə m ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə p ɹ ˈɑː k s ə m ˌeɪ t"
+  }
+ ],
+ "arithmetic": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ə ɹ ˈɪ θ m ə t ˌɪ k"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ˌæ ɹ ɪ θ m ˈɛ ɾ ɪ k"
+  }
+ ],
+ "articulate": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ɑːɹ t ˈɪ k j ʊ l ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɑːɹ t ˈɪ k j ʊ l ˌeɪ t"
+  }
+ ],
+ "associate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ə s ˈoʊ s ɪ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə s ˈoʊ s ɪ ˌeɪ t"
+  }
+ ],
+ "associates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ə s ˈoʊ s ɪ ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə s ˈoʊ s ɪ ˌeɪ t s"
+  }
+ ],
+ "attribute": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈæ t ɹ ə b j uː t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə t ɹ ˈɪ b j uː t"
+  }
+ ],
+ "attributes": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈæ t ɹ ə b j uː t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə t ɹ ˈɪ b j uː t s"
+  }
+ ],
+ "august": [
+  {
+   "capitalized": true,
+   "gloss": "the month",
+   "pos": [
+    "PROPN",
+    "NOUN"
+   ],
+   "reading": "ˈɔː ɡ ə s t"
+  },
+  {
+   "gloss": "majestic",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ɔː ɡ ˈʌ s t"
+  }
+ ],
+ "bass": [
+  {
+   "gloss": "low-pitched music, voice or instrument",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "b ˈeɪ s"
+  },
+  {
+   "gloss": "the fish",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "b ˈæ s"
+  }
+ ],
+ "beloved": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "b ə l ˈʌ v d"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "b ə l ˈʌ v ə d"
+  }
+ ],
+ "blessed": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "b l ˈɛ s t"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "b l ˈɛ s ə d"
+  }
+ ],
+ "bow": [
+  {
+   "gloss": "bend forward",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "b ˈaʊ"
+  },
+  {
+   "gloss": "a bend forward, or the front of a ship",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "b ˈaʊ"
+  },
+  {
+   "gloss": "a weapon for arrows, a knot or ribbon, or a violin bow",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "b ˈoʊ"
+  }
+ ],
+ "bows": [
+  {
+   "gloss": "bends forward",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "b ˈaʊ z"
+  },
+  {
+   "gloss": "bends forward, or ship fronts",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "b ˈaʊ z"
+  },
+  {
+   "gloss": "weapons for arrows, knots or ribbons, or violin bows",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "b ˈoʊ z"
+  }
+ ],
+ "cleanly": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "k l ˈɛ n l i"
+  },
+  {
+   "gloss": "adverb",
+   "pos": [
+    "ADV"
+   ],
+   "reading": "k l ˈiː n l i"
+  }
+ ],
+ "close": [
+  {
+   "gloss": "near",
+   "pos": [
+    "ADJ",
+    "ADV"
+   ],
+   "reading": "k l ˈoʊ s"
+  },
+  {
+   "gloss": "shut, or an end",
+   "pos": [
+    "VERB",
+    "NOUN"
+   ],
+   "reading": "k l ˈoʊ z"
+  }
+ ],
+ "closer": [
+  {
+   "gloss": "nearer",
+   "pos": [
+    "ADJ",
+    "ADV"
+   ],
+   "reading": "k l ˈoʊ s ɚ"
+  },
+  {
+   "gloss": "one who closes",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k l ˈoʊ z ɚ"
+  }
+ ],
+ "combat": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː m b æ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə m b ˈæ t"
+  }
+ ],
+ "combine": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː m b aɪ n"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə m b ˈaɪ n"
+  }
+ ],
+ "combines": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː m b aɪ n z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə m b ˈaɪ n z"
+  }
+ ],
+ "commune": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː m j uː n"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə m j ˈuː n"
+  }
+ ],
+ "compact": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː m p æ k t"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "k ə m p ˈæ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə m p ˈæ k t"
+  }
+ ],
+ "compliment": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː m p l ɪ m ə n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ˈɑː m p l ɪ m ˌɛ n t"
+  }
+ ],
+ "compliments": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː m p l ɪ m ə n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ˈɑː m p l ɪ m ˌɛ n t s"
+  }
+ ],
+ "compound": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː m p aʊ n d"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə m p ˈaʊ n d"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "k ˈɑː m p aʊ n d"
+  }
+ ],
+ "compounds": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː m p aʊ n d z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə m p ˈaʊ n d z"
+  }
+ ],
+ "compress": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː m p ɹ ɛ s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə m p ɹ ˈɛ s"
+  }
+ ],
+ "compresses": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː m p ɹ ɛ s ə z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə m p ɹ ˈɛ s ə z"
+  }
+ ],
+ "conduct": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n d ʌ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n d ˈʌ k t"
+  }
+ ],
+ "conducts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n d ʌ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n d ˈʌ k t s"
+  }
+ ],
+ "confines": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n f aɪ n z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n f ˈaɪ n z"
+  }
+ ],
+ "conflict": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n f l ɪ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n f l ˈɪ k t"
+  }
+ ],
+ "conflicts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n f l ɪ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n f l ˈɪ k t s"
+  }
+ ],
+ "conglomerate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "k ə n ɡ l ˈɑː m ɚ ɹ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n ɡ l ˈɑː m ɚ ɹ ˌeɪ t"
+  }
+ ],
+ "conglomerates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "k ə n ɡ l ˈɑː m ɚ ɹ ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n ɡ l ˈɑː m ɚ ɹ ˌeɪ t s"
+  }
+ ],
+ "conjugate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "k ˈɑː n dʒ ə ɡ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ˈɑː n dʒ ə ɡ ˌeɪ t"
+  }
+ ],
+ "conscript": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n s k ɹ ɪ p t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n s k ɹ ˈɪ p t"
+  }
+ ],
+ "conscripts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n s k ɹ ɪ p t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n s k ɹ ˈɪ p t s"
+  }
+ ],
+ "console": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n s oʊ l"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n s ˈoʊ l"
+  }
+ ],
+ "consoles": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n s oʊ l z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n s ˈoʊ l z"
+  }
+ ],
+ "consort": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n s ɔːɹ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n s ˈɔːɹ t"
+  }
+ ],
+ "consorts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n s ɔːɹ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n s ˈɔːɹ t s"
+  }
+ ],
+ "construct": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n s t ɹ ʌ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n s t ɹ ˈʌ k t"
+  }
+ ],
+ "constructs": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n s t ɹ ʌ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n s t ɹ ˈʌ k t s"
+  }
+ ],
+ "consummate": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "k ˈɑː n s ə m ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ˈɑː n s ə m ˌeɪ t"
+  }
+ ],
+ "content": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n t ɛ n t"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "k ə n t ˈɛ n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n t ˈɛ n t"
+  }
+ ],
+ "contents": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n t ɛ n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n t ˈɛ n t s"
+  }
+ ],
+ "contest": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n t ɛ s t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n t ˈɛ s t"
+  }
+ ],
+ "contests": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n t ɛ s t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n t ˈɛ s t s"
+  }
+ ],
+ "contract": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n t ɹ æ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n t ɹ ˈæ k t"
+  }
+ ],
+ "contracts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n t ɹ æ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n t ɹ ˈæ k t s"
+  }
+ ],
+ "contrast": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n t ɹ æ s t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n t ɹ ˈæ s t"
+  }
+ ],
+ "contrasts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n t ɹ æ s t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n t ɹ ˈæ s t s"
+  }
+ ],
+ "converse": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n v ɜː s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n v ˈɜː s"
+  }
+ ],
+ "converses": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n v ɜː s ə z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n v ˈɜː s ə z"
+  }
+ ],
+ "convert": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n v ɜː t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n v ˈɜː t"
+  }
+ ],
+ "converts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n v ɜː t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n v ˈɜː t s"
+  }
+ ],
+ "convict": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n v ɪ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n v ˈɪ k t"
+  }
+ ],
+ "convicts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "k ˈɑː n v ɪ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ə n v ˈɪ k t s"
+  }
+ ],
+ "coordinate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "k oʊ ˈɔːɹ d ə n ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k oʊ ˈɔːɹ d ə n ˌeɪ t"
+  }
+ ],
+ "coordinates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "k oʊ ˈɔːɹ d ə n ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k oʊ ˈɔːɹ d ə n ˌeɪ t s"
+  }
+ ],
+ "correlate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "k ˈɔːɹ ɹ ə l ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ˈɔːɹ ɹ ə l ˌeɪ t"
+  }
+ ],
+ "correlates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "k ˈɔːɹ ɹ ə l ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ˈɔːɹ ɹ ə l ˌeɪ t s"
+  }
+ ],
+ "crooked": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ɹ ˈʊ k t"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "k ɹ ˈʊ k ɪ d"
+  }
+ ],
+ "cursed": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "k ˈɜː s t"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "k ˈɜː s ə d"
+  }
+ ],
+ "decrease": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈiː k ɹ iː s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ə k ɹ ˈiː s"
+  }
+ ],
+ "decreases": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈiː k ɹ iː s ə z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ə k ɹ ˈiː s ə z"
+  }
+ ],
+ "defect": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈiː f ɛ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ə f ˈɛ k t"
+  }
+ ],
+ "defects": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈiː f ɛ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ə f ˈɛ k t s"
+  }
+ ],
+ "degenerate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "d ə dʒ ˈɛ n ɚ ɹ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ə dʒ ˈɛ n ɚ ɹ ˌeɪ t"
+  }
+ ],
+ "degenerates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "d ə dʒ ˈɛ n ɚ ɹ ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ə dʒ ˈɛ n ɚ ɹ ˌeɪ t s"
+  }
+ ],
+ "delegate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "d ˈɛ l ə ɡ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ˈɛ l ə ɡ ˌeɪ t"
+  }
+ ],
+ "delegates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "d ˈɛ l ə ɡ ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ˈɛ l ə ɡ ˌeɪ t s"
+  }
+ ],
+ "deliberate": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "d ə l ˈɪ b ɚ ɹ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ə l ˈɪ b ɚ ɹ ˌeɪ t"
+  }
+ ],
+ "desert": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈɛ z ɚ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ə z ˈɜː t"
+  }
+ ],
+ "deserts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈɛ z ɚ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ə z ˈɜː t s"
+  }
+ ],
+ "designate": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "d ˈɛ z ɪ ɡ n ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ˈɛ z ɪ ɡ n ˌeɪ t"
+  }
+ ],
+ "deviate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "d ˈiː v ɪ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ˈiː v ɪ ˌeɪ t"
+  }
+ ],
+ "deviates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "d ˈiː v ɪ ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ˈiː v ɪ ˌeɪ t s"
+  }
+ ],
+ "diffuse": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "d ɪ f j ˈuː s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ɪ f j ˈuː z"
+  }
+ ],
+ "digest": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈaɪ dʒ ɛ s t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d aɪ dʒ ˈɛ s t"
+  }
+ ],
+ "digests": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈaɪ dʒ ɛ s t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d aɪ dʒ ˈɛ s t s"
+  }
+ ],
+ "discard": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈɪ s k ɑːɹ d"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ɪ s k ˈɑːɹ d"
+  }
+ ],
+ "discards": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈɪ s k ɑːɹ d z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ɪ s k ˈɑːɹ d z"
+  }
+ ],
+ "discharge": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈɪ s tʃ ɑːɹ dʒ"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ɪ s tʃ ˈɑːɹ dʒ"
+  }
+ ],
+ "discharges": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈɪ s tʃ ɑːɹ dʒ ə z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ɪ s tʃ ˈɑːɹ dʒ ə z"
+  }
+ ],
+ "discount": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈɪ s k aʊ n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ɪ s k ˈaʊ n t"
+  }
+ ],
+ "discounts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈɪ s k aʊ n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ɪ s k ˈaʊ n t s"
+  }
+ ],
+ "document": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈɑː k j uː m ə n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ˈɑː k j uː m ˌɛ n t"
+  }
+ ],
+ "documents": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈɑː k j uː m ə n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ˈɑː k j uː m ˌɛ n t s"
+  }
+ ],
+ "does": [
+  {
+   "gloss": "form of do",
+   "pos": [
+    "VERB",
+    "AUX"
+   ],
+   "reading": "d ˈʌ z"
+  },
+  {
+   "gloss": "female deer",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈoʊ z"
+  }
+ ],
+ "dogged": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ˈɔ ɡ d"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "d ˈɔ ɡ ə d"
+  }
+ ],
+ "dove": [
+  {
+   "gloss": "the bird",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "d ˈʌ v"
+  },
+  {
+   "gloss": "past of dive",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ˈoʊ v"
+  }
+ ],
+ "duplicate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "d ˈuː p l ə k ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ˈuː p l ə k ˌeɪ t"
+  }
+ ],
+ "duplicates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "d ˈuː p l ə k ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "d ˈuː p l ə k ˌeɪ t s"
+  }
+ ],
+ "elaborate": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ə l ˈæ b ɚ ɹ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ə l ˈæ b ɚ ɹ ˌeɪ t"
+  }
+ ],
+ "entrance": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɛ n t ɹ ə n s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɛ n t ɹ ˈæ n s"
+  }
+ ],
+ "entrances": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɛ n t ɹ ə n s ə z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɛ n t ɹ ˈæ n s ə z"
+  }
+ ],
+ "escort": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɛ s k ɔːɹ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɛ s k ˈɔːɹ t"
+  }
+ ],
+ "escorts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɛ s k ɔːɹ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɛ s k ˈɔːɹ t s"
+  }
+ ],
+ "estimate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˈɛ s t ə m ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈɛ s t ə m ˌeɪ t"
+  }
+ ],
+ "estimates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˈɛ s t ə m ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈɛ s t ə m ˌeɪ t s"
+  }
+ ],
+ "evening": [
+  {
+   "gloss": "time of day",
+   "pos": [
+    "NOUN",
+    "INTJ"
+   ],
+   "reading": "ˈiː v n ɪ ŋ"
+  },
+  {
+   "gloss": "making even",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈiː v ə n ɪ ŋ"
+  }
+ ],
+ "excise": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɛ k s aɪ z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɛ k s ˈaɪ z"
+  }
+ ],
+ "excuse": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɪ k s k j ˈuː s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ k s k j ˈuː z"
+  }
+ ],
+ "excuses": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɪ k s k j ˈuː s ə z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ k s k j ˈuː z ə z"
+  }
+ ],
+ "expatriate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ɛ k s p ˈeɪ t ɹ ɪ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɛ k s p ˈeɪ t ɹ ɪ ˌeɪ t"
+  }
+ ],
+ "expatriates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ɛ k s p ˈeɪ t ɹ ɪ ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɛ k s p ˈeɪ t ɹ ɪ ˌeɪ t s"
+  }
+ ],
+ "exploit": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɛ k s p l ɔɪ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɛ k s p l ˈɔɪ t"
+  }
+ ],
+ "exploits": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɛ k s p l ɔɪ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɛ k s p l ˈɔɪ t s"
+  }
+ ],
+ "export": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɛ k s p ɔːɹ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɛ k s p ˈɔːɹ t"
+  }
+ ],
+ "exports": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɛ k s p ɔːɹ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɛ k s p ˈɔːɹ t s"
+  }
+ ],
+ "extract": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɛ k s t ɹ æ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɛ k s t ɹ ˈæ k t"
+  }
+ ],
+ "extracts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɛ k s t ɹ æ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɛ k s t ɹ ˈæ k t s"
+  }
+ ],
+ "ferment": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "f ˈɜː m ɛ n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "f ɚ m ˈɛ n t"
+  }
+ ],
+ "ferments": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "f ˈɜː m ɛ n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "f ɚ m ˈɛ n t s"
+  }
+ ],
+ "fragment": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "f ɹ ˈæ ɡ m ə n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "f ɹ æ ɡ m ˈɛ n t"
+  }
+ ],
+ "fragments": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "f ɹ ˈæ ɡ m ə n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "f ɹ æ ɡ m ˈɛ n t s"
+  }
+ ],
+ "frequent": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "f ɹ ˈiː k w ə n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "f ɹ ə k w ˈɛ n t"
+  }
+ ],
+ "graduate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ɡ ɹ ˈæ dʒ uː ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɡ ɹ ˈæ dʒ uː ˌeɪ t"
+  }
+ ],
+ "graduates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ɡ ɹ ˈæ dʒ uː ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɡ ɹ ˈæ dʒ uː ˌeɪ t s"
+  }
+ ],
+ "house": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "h ˈaʊ s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "h ˈaʊ z"
+  }
+ ],
+ "impact": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ m p æ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ m p ˈæ k t"
+  }
+ ],
+ "impacts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ m p æ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ m p ˈæ k t s"
+  }
+ ],
+ "implant": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ m p l æ n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ m p l ˈæ n t"
+  }
+ ],
+ "implants": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ m p l æ n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ m p l ˈæ n t s"
+  }
+ ],
+ "implement": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ m p l ə m ə n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈɪ m p l ə m ˌɛ n t"
+  }
+ ],
+ "implements": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ m p l ə m ə n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈɪ m p l ə m ˌɛ n t s"
+  }
+ ],
+ "import": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ m p ɔːɹ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ m p ˈɔːɹ t"
+  }
+ ],
+ "imports": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ m p ɔːɹ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ m p ˈɔːɹ t s"
+  }
+ ],
+ "imprint": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ m p ɹ ɪ n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ m p ɹ ˈɪ n t"
+  }
+ ],
+ "imprints": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ m p ɹ ɪ n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ m p ɹ ˈɪ n t s"
+  }
+ ],
+ "incense": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n s ɛ n s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ n s ˈɛ n s"
+  }
+ ],
+ "incenses": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n s ɛ n s ə z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ n s ˈɛ n s ə z"
+  }
+ ],
+ "incline": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ ŋ k l aɪ n"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ ŋ k l ˈaɪ n"
+  }
+ ],
+ "inclines": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ ŋ k l aɪ n z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ ŋ k l ˈaɪ n z"
+  }
+ ],
+ "increase": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ ŋ k ɹ iː s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ ŋ k ɹ ˈiː s"
+  }
+ ],
+ "increases": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ ŋ k ɹ iː s ə z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ ŋ k ɹ ˈiː s ə z"
+  }
+ ],
+ "initiate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ɪ n ˈɪ ʃ ɪ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ n ˈɪ ʃ ɪ ˌeɪ t"
+  }
+ ],
+ "initiates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ɪ n ˈɪ ʃ ɪ ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ n ˈɪ ʃ ɪ ˌeɪ t s"
+  }
+ ],
+ "inlay": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n l eɪ"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ n l ˈeɪ"
+  }
+ ],
+ "insert": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n s ɜː t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ n s ˈɜː t"
+  }
+ ],
+ "instrument": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n s t ɹ ə m ə n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈɪ n s t ɹ ə m ˌɛ n t"
+  }
+ ],
+ "insult": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n s ʌ l t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ n s ˈʌ l t"
+  }
+ ],
+ "insults": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n s ʌ l t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ n s ˈʌ l t s"
+  }
+ ],
+ "intercept": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n t ɚ s ɛ p t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌɪ n t ɚ s ˈɛ p t"
+  }
+ ],
+ "intercepts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n t ɚ s ɛ p t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌɪ n t ɚ s ˈɛ p t s"
+  }
+ ],
+ "interchange": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n t ɚ tʃ eɪ n dʒ"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌɪ n t ɚ tʃ ˈeɪ n dʒ"
+  }
+ ],
+ "intimate": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ˈɪ n t ə m ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈɪ n t ə m ˌeɪ t"
+  }
+ ],
+ "intrigue": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n t ɹ iː ɡ"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ n t ɹ ˈiː ɡ"
+  }
+ ],
+ "intrigues": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n t ɹ iː ɡ z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ n t ɹ ˈiː ɡ z"
+  }
+ ],
+ "invalid": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n v ə l ɪ d"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ɪ n v ˈæ l ɪ d"
+  }
+ ],
+ "invite": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n v aɪ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ n v ˈaɪ t"
+  }
+ ],
+ "invites": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɪ n v aɪ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɪ n v ˈaɪ t s"
+  }
+ ],
+ "isolate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˈaɪ s ə l ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈaɪ s ə l ˌeɪ t"
+  }
+ ],
+ "isolates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˈaɪ s ə l ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈaɪ s ə l ˌeɪ t s"
+  }
+ ],
+ "job": [
+  {
+   "gloss": "work",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "dʒ ˈɑː b"
+  },
+  {
+   "capitalized": true,
+   "gloss": "the biblical figure",
+   "pos": [
+    "PROPN"
+   ],
+   "reading": "dʒ ˈoʊ b"
+  }
+ ],
+ "laminate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "l ˈæ m ə n ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "l ˈæ m ə n ˌeɪ t"
+  }
+ ],
+ "laminates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "l ˈæ m ə n ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "l ˈæ m ə n ˌeɪ t s"
+  }
+ ],
+ "lead": [
+  {
+   "gloss": "guide, direct or be ahead",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "l ˈiː d"
+  },
+  {
+   "gloss": "first place, clue, main role, leash or cable",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "l ˈiː d"
+  },
+  {
+   "gloss": "the metal, or pencil graphite",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "l ˈɛ d"
+  }
+ ],
+ "leads": [
+  {
+   "gloss": "guides, directs",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "l ˈiː d z"
+  },
+  {
+   "gloss": "clues, main roles, leashes or cables",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "l ˈiː d z"
+  }
+ ],
+ "learned": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "l ˈɜː n d"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "l ˈɜː n ə d"
+  }
+ ],
+ "legged": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "l ˈɛ ɡ d"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "l ˈɛ ɡ ə d"
+  }
+ ],
+ "legitimate": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "l ə dʒ ˈɪ ɾ ə m ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "l ə dʒ ˈɪ ɾ ə m ˌeɪ t"
+  }
+ ],
+ "live": [
+  {
+   "gloss": "reside or be alive",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "l ˈɪ v"
+  },
+  {
+   "gloss": "alive, or broadcast as it happens",
+   "pos": [
+    "ADJ",
+    "ADV"
+   ],
+   "reading": "l ˈaɪ v"
+  }
+ ],
+ "lives": [
+  {
+   "gloss": "resides or is alive",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "l ˈɪ v z"
+  },
+  {
+   "gloss": "plural of life",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "l ˈaɪ v z"
+  }
+ ],
+ "minute": [
+  {
+   "gloss": "sixty seconds",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "m ˈɪ n ɪ t"
+  },
+  {
+   "gloss": "tiny",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "m aɪ n ˈuː t"
+  }
+ ],
+ "mishit": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "m ˈɪ s h ɪ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "m ɪ s h ˈɪ t"
+  }
+ ],
+ "misprint": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "m ˈɪ s p ɹ ɪ n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "m ɪ s p ɹ ˈɪ n t"
+  }
+ ],
+ "misprints": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "m ˈɪ s p ɹ ɪ n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "m ɪ s p ɹ ˈɪ n t s"
+  }
+ ],
+ "misread": [
+  {
+   "gloss": "present tense, imperative or infinitive",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "m ɪ s ɹ ˈiː d"
+  },
+  {
+   "gloss": "past tense or past participle",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "m ɪ s ɹ ˈɛ d"
+  }
+ ],
+ "misuse": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "m ɪ s j ˈuː s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "m ɪ s j ˈuː z"
+  }
+ ],
+ "moderate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "m ˈɑː d ɚ ɹ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "m ˈɑː d ɚ ɹ ˌeɪ t"
+  }
+ ],
+ "moderates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "m ˈɑː d ɚ ɹ ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "m ˈɑː d ɚ ɹ ˌeɪ t s"
+  }
+ ],
+ "mouth": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "m ˈaʊ θ"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "m ˈaʊ ð"
+  }
+ ],
+ "multiply": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "m ˈʌ l t ə p l ˌaɪ"
+  },
+  {
+   "gloss": "adverb",
+   "pos": [
+    "ADV"
+   ],
+   "reading": "m ˈʌ l t ə p l i"
+  }
+ ],
+ "nice": [
+  {
+   "gloss": "pleasant",
+   "pos": [
+    "ADJ",
+    "ADV"
+   ],
+   "reading": "n ˈaɪ s"
+  },
+  {
+   "capitalized": true,
+   "gloss": "the French city",
+   "pos": [
+    "PROPN"
+   ],
+   "reading": "n ˈiː s"
+  }
+ ],
+ "number": [
+  {
+   "gloss": "numeral",
+   "pos": [
+    "NOUN",
+    "VERB"
+   ],
+   "reading": "n ˈʌ m b ɚ"
+  },
+  {
+   "gloss": "more numb",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "n ˈʌ m ɚ"
+  }
+ ],
+ "object": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɑː b dʒ ɛ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɑː b dʒ ˈɛ k t"
+  }
+ ],
+ "objects": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɑː b dʒ ɛ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɑː b dʒ ˈɛ k t s"
+  }
+ ],
+ "offset": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɔː f s ɛ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɔː f s ˈɛ t"
+  }
+ ],
+ "offsets": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɔː f s ɛ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɔː f s ˈɛ t s"
+  }
+ ],
+ "ornament": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɔːɹ n ə m ə n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈɔːɹ n ə m ˌɛ n t"
+  }
+ ],
+ "ornaments": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈɔːɹ n ə m ə n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˈɔːɹ n ə m ˌɛ n t s"
+  }
+ ],
+ "overestimate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˌoʊ v ɚ ɹ ˈɛ s t ə m ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ ɹ ˈɛ s t ə m ˌeɪ t"
+  }
+ ],
+ "overflow": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈoʊ v ɚ f l oʊ"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ f l ˈoʊ"
+  }
+ ],
+ "overflows": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈoʊ v ɚ f l oʊ z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ f l ˈoʊ z"
+  }
+ ],
+ "overhang": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈoʊ v ɚ h æ ŋ"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ h ˈæ ŋ"
+  }
+ ],
+ "overhangs": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈoʊ v ɚ h æ ŋ z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ h ˈæ ŋ z"
+  }
+ ],
+ "overhaul": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈoʊ v ɚ h ɔː l"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ h ˈɔː l"
+  }
+ ],
+ "overhauls": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈoʊ v ɚ h ɔː l z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ h ˈɔː l z"
+  }
+ ],
+ "overlap": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈoʊ v ɚ l æ p"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ l ˈæ p"
+  }
+ ],
+ "overlaps": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈoʊ v ɚ l æ p s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ l ˈæ p s"
+  }
+ ],
+ "override": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈoʊ v ɚ ɹ aɪ d"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ ɹ ˈaɪ d"
+  }
+ ],
+ "overrides": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈoʊ v ɚ ɹ aɪ d z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ ɹ ˈaɪ d z"
+  }
+ ],
+ "overrun": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈoʊ v ɚ ɹ ʌ n"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ ɹ ˈʌ n"
+  }
+ ],
+ "overruns": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈoʊ v ɚ ɹ ʌ n z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ ɹ ˈʌ n z"
+  }
+ ],
+ "overthrow": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈoʊ v ɚ θ ɹ oʊ"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ θ ɹ ˈoʊ"
+  }
+ ],
+ "overuse": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˌoʊ v ɚ ɹ j ˈuː s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ ɹ j ˈuː z"
+  }
+ ],
+ "overuses": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˌoʊ v ɚ ɹ j ˈuː s ə z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌoʊ v ɚ ɹ j ˈuː z ə z"
+  }
+ ],
+ "peaked": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ˈiː k t"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "p ˈiː k ə d"
+  }
+ ],
+ "perfect": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "p ˈɜː f ɛ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɚ f ˈɛ k t"
+  }
+ ],
+ "perfume": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ˈɜː f j uː m"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɚ f j ˈuː m"
+  }
+ ],
+ "permit": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ˈɜː m ɪ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɚ m ˈɪ t"
+  }
+ ],
+ "permits": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ˈɜː m ɪ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɚ m ˈɪ t s"
+  }
+ ],
+ "polish": [
+  {
+   "gloss": "shine",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ˈɑː l ɪ ʃ"
+  },
+  {
+   "capitalized": false,
+   "gloss": "a shine, or what gives it",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ˈɑː l ɪ ʃ"
+  },
+  {
+   "capitalized": true,
+   "gloss": "of Poland",
+   "pos": [
+    "ADJ",
+    "PROPN",
+    "NOUN"
+   ],
+   "reading": "p ˈoʊ l ɪ ʃ"
+  }
+ ],
+ "postulate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "p ˈɑː s tʃ ə l ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ˈɑː s tʃ ə l ˌeɪ t"
+  }
+ ],
+ "postulates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "p ˈɑː s tʃ ə l ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ˈɑː s tʃ ə l ˌeɪ t s"
+  }
+ ],
+ "precipitate": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "p ɹ ə s ˈɪ p ə t ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɹ ə s ˈɪ p ə t ˌeɪ t"
+  }
+ ],
+ "predicate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "p ɹ ˈɛ d ə k ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɹ ˈɛ d ə k ˌeɪ t"
+  }
+ ],
+ "present": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ɹ ˈɛ z ə n t"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "p ɹ ˈɛ z ə n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɹ ɪ z ˈɛ n t"
+  }
+ ],
+ "presents": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ɹ ˈɛ z ə n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɹ ɪ z ˈɛ n t s"
+  }
+ ],
+ "proceeds": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ɹ ˈoʊ s iː d z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɹ ə s ˈiː d z"
+  }
+ ],
+ "produce": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ɹ ˈoʊ d uː s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɹ ə d ˈuː s"
+  }
+ ],
+ "progress": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ɹ ˈɑː ɡ ɹ ɛ s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɹ ə ɡ ɹ ˈɛ s"
+  }
+ ],
+ "progresses": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ɹ ˈɑː ɡ ɹ ɛ s ə z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɹ ə ɡ ɹ ˈɛ s ə z"
+  }
+ ],
+ "project": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ɹ ˈɑː dʒ ɛ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɹ ə dʒ ˈɛ k t"
+  }
+ ],
+ "projects": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ɹ ˈɑː dʒ ɛ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɹ ə dʒ ˈɛ k t s"
+  }
+ ],
+ "protest": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ɹ ˈoʊ t ɛ s t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɹ ə t ˈɛ s t"
+  }
+ ],
+ "protests": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ɹ ˈoʊ t ɛ s t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɹ ə t ˈɛ s t s"
+  }
+ ],
+ "purport": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ˈɜː p ɔːɹ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɚ p ˈɔːɹ t"
+  }
+ ],
+ "purports": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "p ˈɜː p ɔːɹ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "p ɚ p ˈɔːɹ t s"
+  }
+ ],
+ "ragged": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ˈæ ɡ d"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ɹ ˈæ ɡ ə d"
+  }
+ ],
+ "read": [
+  {
+   "gloss": "present tense, imperative or infinitive",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ˈiː d"
+  },
+  {
+   "gloss": "past tense or past participle",
+   "pos": [
+    "VERB",
+    "ADJ"
+   ],
+   "reading": "ɹ ˈɛ d"
+  },
+  {
+   "gloss": "something to read",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː d"
+  }
+ ],
+ "reading": [
+  {
+   "gloss": "from read",
+   "pos": [
+    "VERB",
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː d ɪ ŋ"
+  },
+  {
+   "capitalized": true,
+   "gloss": "the English town",
+   "pos": [
+    "PROPN"
+   ],
+   "reading": "ɹ ˈɛ d ɪ ŋ"
+  }
+ ],
+ "rebel": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈɛ b ə l"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə b ˈɛ l"
+  }
+ ],
+ "rebels": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈɛ b ə l z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə b ˈɛ l z"
+  }
+ ],
+ "rebound": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː b aʊ n d"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə b ˈaʊ n d"
+  }
+ ],
+ "rebounds": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː b aʊ n d z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə b ˈaʊ n d z"
+  }
+ ],
+ "recall": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː k ɔː l"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə k ˈɔː l"
+  }
+ ],
+ "recalls": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː k ɔː l z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə k ˈɔː l z"
+  }
+ ],
+ "recoil": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː k ɔɪ l"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə k ˈɔɪ l"
+  }
+ ],
+ "recoils": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː k ɔɪ l z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə k ˈɔɪ l z"
+  }
+ ],
+ "record": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈɛ k ɚ d"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə k ˈɔːɹ d"
+  }
+ ],
+ "records": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈɛ k ɚ d z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə k ˈɔːɹ d z"
+  }
+ ],
+ "recount": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː k aʊ n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə k ˈaʊ n t"
+  }
+ ],
+ "recounts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː k aʊ n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə k ˈaʊ n t s"
+  }
+ ],
+ "redress": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː d ɹ ɛ s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə d ɹ ˈɛ s"
+  }
+ ],
+ "refill": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː f ɪ l"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː f ˈɪ l"
+  }
+ ],
+ "refills": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː f ɪ l z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː f ˈɪ l z"
+  }
+ ],
+ "refund": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː f ʌ n d"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə f ˈʌ n d"
+  }
+ ],
+ "refunds": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː f ʌ n d z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə f ˈʌ n d z"
+  }
+ ],
+ "refuse": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈɛ f j uː s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə f j ˈuː z"
+  }
+ ],
+ "reject": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː dʒ ɛ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə dʒ ˈɛ k t"
+  }
+ ],
+ "rejects": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː dʒ ɛ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə dʒ ˈɛ k t s"
+  }
+ ],
+ "relay": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː l eɪ"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː l ˈeɪ"
+  }
+ ],
+ "relays": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː l eɪ z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː l ˈeɪ z"
+  }
+ ],
+ "remake": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː m eɪ k"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː m ˈeɪ k"
+  }
+ ],
+ "remakes": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː m eɪ k s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː m ˈeɪ k s"
+  }
+ ],
+ "replay": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː p l eɪ"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː p l ˈeɪ"
+  }
+ ],
+ "replays": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː p l eɪ z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː p l ˈeɪ z"
+  }
+ ],
+ "reprint": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː p ɹ ɪ n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː p ɹ ˈɪ n t"
+  }
+ ],
+ "reprints": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː p ɹ ɪ n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː p ɹ ˈɪ n t s"
+  }
+ ],
+ "reread": [
+  {
+   "gloss": "present tense, imperative or infinitive",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː ɹ ˈiː d"
+  },
+  {
+   "gloss": "past tense or past participle",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː ɹ ˈɛ d"
+  }
+ ],
+ "rerun": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː ɹ ʌ n"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː ɹ ˈʌ n"
+  }
+ ],
+ "reruns": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː ɹ ʌ n z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː ɹ ˈʌ n z"
+  }
+ ],
+ "research": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː s ɜː tʃ"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə s ˈɜː tʃ"
+  }
+ ],
+ "reset": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː s ɛ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː s ˈɛ t"
+  }
+ ],
+ "resets": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː s ɛ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː s ˈɛ t s"
+  }
+ ],
+ "resume": [
+  {
+   "gloss": "continue",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ə z ˈuː m"
+  },
+  {
+   "gloss": "CV",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈɛ z ə m ˌeɪ"
+  }
+ ],
+ "retake": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː t eɪ k"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː t ˈeɪ k"
+  }
+ ],
+ "retakes": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː t eɪ k s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː t ˈeɪ k s"
+  }
+ ],
+ "reuse": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ iː j ˈuː s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː j ˈuː z"
+  }
+ ],
+ "reuses": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ iː j ˈuː s ə z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː j ˈuː z ə z"
+  }
+ ],
+ "rewrite": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː ɹ aɪ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː ɹ ˈaɪ t"
+  }
+ ],
+ "rewrites": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈiː ɹ aɪ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ iː ɹ ˈaɪ t s"
+  }
+ ],
+ "row": [
+  {
+   "gloss": "a line",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈoʊ"
+  },
+  {
+   "gloss": "a quarrel",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈaʊ"
+  },
+  {
+   "gloss": "propel a boat with oars",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ˈoʊ"
+  },
+  {
+   "gloss": "quarrel",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ˈaʊ"
+  }
+ ],
+ "rows": [
+  {
+   "gloss": "lines",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈoʊ z"
+  },
+  {
+   "gloss": "quarrels",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ɹ ˈaʊ z"
+  },
+  {
+   "gloss": "propels a boat with oars",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ɹ ˈoʊ z"
+  }
+ ],
+ "segment": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "s ˈɛ ɡ m ə n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ɛ ɡ m ˈɛ n t"
+  }
+ ],
+ "segments": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "s ˈɛ ɡ m ə n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ɛ ɡ m ˈɛ n t s"
+  }
+ ],
+ "separate": [
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "s ˈɛ p ɹ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ˈɛ p ɚ ɹ ˌeɪ t"
+  }
+ ],
+ "separates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "s ˈɛ p ɹ ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ˈɛ p ɚ ɹ ˌeɪ t s"
+  }
+ ],
+ "sow": [
+  {
+   "gloss": "plant seed",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ˈoʊ"
+  },
+  {
+   "gloss": "a female pig",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "s ˈaʊ"
+  }
+ ],
+ "sows": [
+  {
+   "gloss": "plants seed",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ˈoʊ z"
+  },
+  {
+   "gloss": "female pigs",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "s ˈaʊ z"
+  }
+ ],
+ "subject": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "s ˈʌ b dʒ ɛ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ə b dʒ ˈɛ k t"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "s ˈʌ b dʒ ɛ k t"
+  }
+ ],
+ "subordinate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "s ə b ˈɔːɹ d ə n ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ə b ˈɔːɹ d ə n ˌeɪ t"
+  }
+ ],
+ "subordinates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "s ə b ˈɔːɹ d ə n ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ə b ˈɔːɹ d ə n ˌeɪ t s"
+  }
+ ],
+ "supplement": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "s ˈʌ p l ə m ə n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ˈʌ p l ə m ˌɛ n t"
+  }
+ ],
+ "supplements": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "s ˈʌ p l ə m ə n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ˈʌ p l ə m ˌɛ n t s"
+  }
+ ],
+ "supposed": [
+  {
+   "gloss": "past of suppose, or alleged",
+   "pos": [
+    "VERB",
+    "ADJ"
+   ],
+   "reading": "s ə p ˈoʊ z d"
+  },
+  {
+   "gloss": "with to: obliged or expected",
+   "pos": [
+    "VERB",
+    "ADJ",
+    "AUX"
+   ],
+   "reading": "s ə p ˈoʊ s t"
+  }
+ ],
+ "surrogate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "s ˈɜː ɹ ə ɡ ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ˈɜː ɹ ə ɡ ˌeɪ t"
+  }
+ ],
+ "survey": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "s ˈɜː v eɪ"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ɚ v ˈeɪ"
+  }
+ ],
+ "surveys": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "s ˈɜː v eɪ z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ɚ v ˈeɪ z"
+  }
+ ],
+ "suspect": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "s ˈʌ s p ɛ k t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ə s p ˈɛ k t"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "s ˈʌ s p ɛ k t"
+  }
+ ],
+ "suspects": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "s ˈʌ s p ɛ k t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ə s p ˈɛ k t s"
+  }
+ ],
+ "syndicate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "s ˈɪ n d ə k ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "s ˈɪ n d ə k ˌeɪ t"
+  }
+ ],
+ "tear": [
+  {
+   "gloss": "rip",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "t ˈɛɹ"
+  },
+  {
+   "gloss": "a drop from the eye",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ˈɪɹ"
+  },
+  {
+   "gloss": "a rip",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ˈɛɹ"
+  }
+ ],
+ "tears": [
+  {
+   "gloss": "rips",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "t ˈɛɹ z"
+  },
+  {
+   "gloss": "drops from the eye, crying",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ˈɪɹ z"
+  },
+  {
+   "gloss": "rips",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ˈɛɹ z"
+  }
+ ],
+ "torment": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ˈɔːɹ m ɛ n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "t ɔːɹ m ˈɛ n t"
+  }
+ ],
+ "torments": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ˈɔːɹ m ɛ n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "t ɔːɹ m ˈɛ n t s"
+  }
+ ],
+ "transfer": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ɹ ˈæ n s f ɜː"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "t ɹ æ n s f ˈɜː"
+  }
+ ],
+ "transfers": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ɹ ˈæ n s f ɜː z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "t ɹ æ n s f ˈɜː z"
+  }
+ ],
+ "transform": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ɹ ˈæ n s f ɔːɹ m"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "t ɹ æ n s f ˈɔːɹ m"
+  }
+ ],
+ "transforms": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ɹ ˈæ n s f ɔːɹ m z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "t ɹ æ n s f ˈɔːɹ m z"
+  }
+ ],
+ "transplant": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ɹ ˈæ n s p l æ n t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "t ɹ æ n s p l ˈæ n t"
+  }
+ ],
+ "transplants": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ɹ ˈæ n s p l æ n t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "t ɹ æ n s p l ˈæ n t s"
+  }
+ ],
+ "transport": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ɹ ˈæ n s p ɔːɹ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "t ɹ æ n s p ˈɔːɹ t"
+  }
+ ],
+ "transports": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "t ɹ ˈæ n s p ɔːɹ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "t ɹ æ n s p ˈɔːɹ t s"
+  }
+ ],
+ "undercut": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈʌ n d ɚ k ʌ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌʌ n d ɚ k ˈʌ t"
+  }
+ ],
+ "undercuts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈʌ n d ɚ k ʌ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌʌ n d ɚ k ˈʌ t s"
+  }
+ ],
+ "underestimate": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˌʌ n d ɚ ɹ ˈɛ s t ə m ə t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌʌ n d ɚ ɹ ˈɛ s t ə m ˌeɪ t"
+  }
+ ],
+ "underestimates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˌʌ n d ɚ ɹ ˈɛ s t ə m ə t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ˌʌ n d ɚ ɹ ˈɛ s t ə m ˌeɪ t s"
+  }
+ ],
+ "update": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˈʌ p d eɪ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ʌ p d ˈeɪ t"
+  }
+ ],
+ "updates": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN",
+    "ADJ"
+   ],
+   "reading": "ˈʌ p d eɪ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ʌ p d ˈeɪ t s"
+  }
+ ],
+ "upgrade": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈʌ p ɡ ɹ eɪ d"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ʌ p ɡ ɹ ˈeɪ d"
+  }
+ ],
+ "upgrades": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈʌ p ɡ ɹ eɪ d z"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ʌ p ɡ ɹ ˈeɪ d z"
+  }
+ ],
+ "uplift": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈʌ p l ɪ f t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ʌ p l ˈɪ f t"
+  }
+ ],
+ "uplifts": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈʌ p l ɪ f t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ʌ p l ˈɪ f t s"
+  }
+ ],
+ "upset": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈʌ p s ɛ t"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ʌ p s ˈɛ t"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "ʌ p s ˈɛ t"
+  }
+ ],
+ "upsets": [
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "ˈʌ p s ɛ t s"
+  },
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "ʌ p s ˈɛ t s"
+  }
+ ],
+ "use": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "j ˈuː z"
+  },
+  {
+   "gloss": "with to: habitual (did use to)",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "j ˈuː s"
+  },
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "j ˈuː s"
+  }
+ ],
+ "used": [
+  {
+   "gloss": "past of use, or second-hand",
+   "pos": [
+    "VERB",
+    "ADJ"
+   ],
+   "reading": "j ˈuː z d"
+  },
+  {
+   "gloss": "with to: habitual (used to do), or accustomed (used to it)",
+   "pos": [
+    "VERB",
+    "ADJ",
+    "AUX"
+   ],
+   "reading": "j ˈuː s t"
+  }
+ ],
+ "uses": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "j ˈuː z ə z"
+  },
+  {
+   "gloss": "noun",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "j ˈuː s ə z"
+  }
+ ],
+ "wicked": [
+  {
+   "gloss": "verb",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "w ˈɪ k t"
+  },
+  {
+   "gloss": "adjective",
+   "pos": [
+    "ADJ"
+   ],
+   "reading": "w ˈɪ k ə d"
+  }
+ ],
+ "wind": [
+  {
+   "gloss": "moving air",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "w ˈɪ n d"
+  },
+  {
+   "gloss": "turn, coil or meander",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "w ˈaɪ n d"
+  }
+ ],
+ "winds": [
+  {
+   "gloss": "moving air",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "w ˈɪ n d z"
+  },
+  {
+   "gloss": "turns, coils or meanders",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "w ˈaɪ n d z"
+  }
+ ],
+ "wound": [
+  {
+   "gloss": "an injury",
+   "pos": [
+    "NOUN"
+   ],
+   "reading": "w ˈuː n d"
+  },
+  {
+   "gloss": "injure",
+   "lemma": "wound",
+   "pos": [
+    "VERB"
+   ],
+   "reading": "w ˈuː n d"
+  },
+  {
+   "gloss": "past of wind (turn, coil)",
+   "lemma": "wind",
+   "pos": [
+    "VERB",
+    "ADJ"
+   ],
+   "reading": "w ˈaʊ n d"
+  }
+ ]
+}

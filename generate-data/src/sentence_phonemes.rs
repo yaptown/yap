@@ -55,6 +55,66 @@ pub fn phonemize_sentences(
     out
 }
 
+/// Write every phonemized sentence as a TTS training row (lexide/tts):
+/// its text and, per gram, the gram's words, their parts of speech, the
+/// gram's corpus count over all its senses, and its phoneme sequence. The
+/// same rows `language-utils`' `dump_sentence_phonemes` reads out of a pack,
+/// but for every phonemized sentence, before pack filters drop any. Returns
+/// (rows written, rows with a supplied reading).
+pub fn write_tts_rows(
+    path: &std::path::Path,
+    sentences: &[(String, ReadingSentence<Gram<String>, String>)],
+    phonemes: &FxHashMap<String, Vec<String>>,
+    frequencies: &[language_utils::ReadingGramFrequencyEntry<String>],
+) -> std::io::Result<(usize, usize)> {
+    use language_utils::{Atom, WordType};
+    use std::io::Write;
+    let mut counts = FxHashMap::<&Gram<String>, u32>::default();
+    for entry in frequencies {
+        *counts.entry(&entry.gram.sense.gram).or_default() += entry.count;
+    }
+    let mut out = std::io::BufWriter::new(std::fs::File::create(path)?);
+    let (mut written, mut read) = (0, 0);
+    for (text, sentence) in sentences {
+        let Some(sequences) = phonemes.get(text) else {
+            continue;
+        };
+        let mut has_reading = false;
+        let grams: Vec<_> = sentence
+            .grams
+            .iter()
+            .zip(sequences)
+            .map(|(SentenceGram::Learnable(gram) | SentenceGram::Obvious(gram), sequence)| {
+                has_reading |= gram.reading.is_some();
+                let (words, pos): (Vec<&str>, Vec<serde_json::Value>) = gram
+                    .sense
+                    .gram
+                    .iter()
+                    .filter_map(|atom| match atom {
+                        Atom::Tok(word) => Some((
+                            word.text.as_str(),
+                            match &word.word_type {
+                                WordType::Heteronym(h) => serde_json::to_value(h.pos),
+                                WordType::Other(o) => serde_json::to_value(o.other_tag),
+                            }
+                            .unwrap(),
+                        )),
+                        Atom::Control(_) => None,
+                    })
+                    .unzip();
+                let count = counts.get(&gram.sense.gram).copied().unwrap_or(0);
+                serde_json::json!({"words": words, "pos": pos, "count": count, "phonemes": sequence})
+            })
+            .collect();
+        serde_json::to_writer(&mut out, &serde_json::json!({"text": text, "grams": grams}))?;
+        out.write_all(b"\n")?;
+        written += 1;
+        read += usize::from(has_reading);
+    }
+    out.flush()?;
+    Ok((written, read))
+}
+
 /// How the finished pack stores phonemes, read back from its archive.
 pub fn print_stats(pack: &language_utils::language_pack::LanguagePack) {
     let (mut without, mut occurrences, mut marked, mut max_variant) = (0, 0u64, 0u64, 0);
@@ -111,6 +171,8 @@ fn sentence_phonemes(
         .flat_map(|(i, gram)| gram.sense.gram.iter().map(move |atom| (i, atom.clone())));
     let mut rendered = String::new();
     let mut gram_spans = vec![None::<(usize, usize)>; grams.len()];
+    // Each gram's words, in order (English readings are per word).
+    let mut word_spans = vec![Vec::new(); grams.len()];
     let mut token_spans = Vec::new();
     // Where a multi-word gram's words break (see the format docs): the byte
     // each later word starts at.
@@ -127,6 +189,7 @@ fn sentence_phonemes(
         rendered.push_str(&word.text);
         let end = rendered.len();
         rendered.push_str(whitespace.as_str());
+        word_spans[i].push((start, end));
         if start < end {
             token_spans.push((start, end));
             if let Some((gram, previous_end)) = previous_token
@@ -152,7 +215,7 @@ fn sentence_phonemes(
         .collect();
 
     let mut readings = Vec::new();
-    for (gram, &(start, end)) in grams.iter().zip(&gram_spans) {
+    for (i, (gram, &(start, end))) in grams.iter().zip(&gram_spans).enumerate() {
         let Some(reading) = &gram.reading else {
             continue;
         };
@@ -182,6 +245,23 @@ fn sentence_phonemes(
                     cursor = next;
                 }
                 assert_eq!(cursor, end, "ruby segments spell {surface:?}");
+            }
+            Language::English => {
+                let words: Vec<_> = crate::readings::english::word_readings(reading).collect();
+                assert_eq!(
+                    words.len(),
+                    word_spans[i].len(),
+                    "a reading per word of {reading:?}"
+                );
+                for (reading, &(start, end)) in words.into_iter().zip(&word_spans[i]) {
+                    if !reading.is_empty() {
+                        readings.push(g2p::Reading {
+                            start,
+                            end,
+                            reading: reading.to_owned(),
+                        });
+                    }
+                }
             }
             _ => {}
         }
@@ -448,6 +528,62 @@ mod tests {
         );
         assert_eq!(sequences[0], "% w a t a ɕ i", "{sequences:?}");
         assert_eq!(sequences[2], "% t o ɾ aꜜ k ɯ̥ᵝ t a a", "{sequences:?}");
+    }
+
+    /// English readings reach g2p per word of their gram.
+    #[test]
+    fn english_readings_pronounce_their_words() {
+        use language_utils::{
+            Atom, Heteronym, PartOfSpeech, ReadingTaggedGram, SentenceGrams, TaggedGram, Word,
+            WordType,
+        };
+        let word = |text: &str, pos: PartOfSpeech| {
+            Atom::Tok(Word {
+                text: text.to_owned(),
+                word_type: WordType::Heteronym(Heteronym {
+                    word: text.to_owned(),
+                    lemma: text.to_owned(),
+                    pos,
+                }),
+            })
+        };
+        let gram = |atoms: Vec<Atom<String>>, reading: Option<&str>| {
+            SentenceGram::Learnable(ReadingTaggedGram {
+                sense: TaggedGram {
+                    gram: Gram::from(atoms),
+                    sense: None,
+                },
+                reading: reading.map(str::to_owned),
+            })
+        };
+        let sentence = |reading: Option<&str>| SentenceGrams {
+            grams: vec![
+                gram(vec![word("i", PartOfSpeech::Pron)], None),
+                gram(
+                    vec![
+                        word("read", PartOfSpeech::Verb),
+                        word("it", PartOfSpeech::Pron),
+                    ],
+                    reading,
+                ),
+            ],
+            capitalize_first: true,
+            multiword_terms: vec![],
+            low_confidence_multiword_terms: vec![],
+        };
+        let phonemes = |reading| {
+            sentence_phonemes(
+                Language::English,
+                g2p::Language::English,
+                "I read it",
+                &sentence(reading),
+                None,
+            )
+            .unwrap()
+        };
+        assert!(phonemes(Some("ɹ ˈɛ d | "))[1].contains('ɛ'));
+        assert!(phonemes(Some("ɹ ˈiː d | "))[1].contains("iː"));
+        assert_eq!(phonemes(Some(" | "))[1], phonemes(None)[1]);
     }
 
     #[test]

@@ -36,6 +36,17 @@ pub struct TargetSentences {
     pub restricted_sentences: Vec<(String, Vec<PimsleurLesson>)>,
 }
 
+impl TargetSentences {
+    /// The app sentences someone added by hand.
+    pub fn manual_texts(&self) -> HashSet<&str> {
+        self.app_sentences
+            .iter()
+            .filter(|(_, _, source)| source.is_manual())
+            .map(|(text, _, _)| text.as_str())
+            .collect()
+    }
+}
+
 const DEFAULT_TARGET_SENTENCE_COUNT: usize = 200_000;
 
 /// macOS XProtect's `XProtect_MACOS_DAILYDUMPLING_UNST` yara rule SIGKILLs

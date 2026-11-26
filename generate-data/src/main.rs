@@ -325,13 +325,22 @@ async fn main() -> anyhow::Result<()> {
                 &inventories,
             )
             .await?;
+        readings
+            .read_english_heteronyms(
+                course.target_language,
+                &nlp_sentences,
+                &restricted_nlp_sentences,
+                &interners,
+                &inventories,
+            )
+            .await?;
         let generate_data::pipeline::CourseDirs {
             corpus_dir,
             target_language_dir,
             native_specific_dir,
         } = generate_data::pipeline::course_dirs(course)?;
         let banned_words = generate_data::pipeline::load_banned_words(course)?;
-        let restricted_sentences = sentence_corpus.restricted_sentences;
+        let restricted_sentences = std::mem::take(&mut sentence_corpus.restricted_sentences);
         let lang = course.target_language;
         let source_data_path = format!(
             "./generate-data/data/{}",
@@ -384,11 +393,16 @@ async fn main() -> anyhow::Result<()> {
         // Save unfiltered sentences (including restricted) for computing accurate per-source total gram counts
         let unfiltered_encoded_sentences = all_encoded_sentences_with_grams;
 
+        let manual_grams = generate_data::pipeline::manual_grams(
+            &encoded_sentences_with_grams,
+            &sentence_corpus.manual_texts(),
+        );
         let encoded_sentences_count_before = encoded_sentences_with_grams.len();
         let mut encoded_sentences_with_grams =
             generate_data::pipeline::drop_sentences_with_rare_grams(
                 encoded_sentences_with_grams,
                 &gram_vocabulary,
+                &manual_grams,
             );
 
         println!(
@@ -406,10 +420,12 @@ async fn main() -> anyhow::Result<()> {
         let gram_frequencies = pack_builder::aggregate_sense_frequencies(&reading_frequencies);
         let master_total_count: u64 = gram_frequencies.iter().map(|e| e.count as u64).sum();
 
-        // Filter to only include those with count > 3
+        // Filter to only include the grams the course teaches
         let filtered_gram_frequencies: Vec<GramFrequencyEntry<String>> = gram_frequencies
             .iter()
-            .filter(|entry| entry.count > 3)
+            .filter(|entry| {
+                generate_data::pipeline::teaches(&entry.gram.gram, entry.count, &manual_grams)
+            })
             .cloned()
             .collect();
 
@@ -1903,6 +1919,19 @@ async fn main() -> anyhow::Result<()> {
             encoded_sentences_with_grams.len(),
             phonemes_timer.elapsed().as_secs_f64(),
             sentence_phonemes.missing
+        );
+        // TTS training reads these (lexide/tts); every run rewrites them.
+        let tts_rows = native_specific_dir.join("tts_sentences.jsonl");
+        let (written, with_readings) = generate_data::sentence_phonemes::write_tts_rows(
+            &tts_rows,
+            &encoded_sentences_with_grams,
+            &sentence_phonemes.phonemes,
+            &reading_frequencies,
+        )?;
+        println!(
+            "sentence phonemes[{}]: wrote {written} TTS rows ({with_readings} with readings) to {}",
+            course.target_language.code(),
+            tts_rows.display()
         );
 
         // Create consolidated data structure
